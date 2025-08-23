@@ -1,0 +1,41 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/FF/0/force.dat";
+                reference "verification/short/FF/0/force.dat";
+                variables "(pressure_x pressure_y pressure_z)";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/VR_mesh/0/volumeReport.tsv";
+                reference "verification/short/VR_mesh/0/volumeReport.tsv";
+                variables "aspectRatiomean" "determinantmean" "nonOrthogonalitymean" "skewnessmean" "volumeRatiomean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/FF/0/force.dat";
+                reference "verification/long/FF/0/force.dat";
+                variables "(pressure_x pressure_y pressure_z)";
+            }
+            {
+                result "postProcessing/VR_mesh/0/volumeReport.tsv";
+                reference "verification/long/VR_mesh/0/volumeReport.tsv";
+                variables "aspectRatiomean" "determinantmean" "nonOrthogonalitymean" "skewnessmean" "volumeRatiomean";
+            }
+        );
+    }
+);

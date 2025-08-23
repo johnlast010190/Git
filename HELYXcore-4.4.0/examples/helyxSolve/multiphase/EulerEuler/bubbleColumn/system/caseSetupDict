@@ -1,0 +1,387 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    system
+    {
+        controlDict
+        {
+            deltaT          0.005;
+            endTime         100;
+            writeInterval   1;
+            adjustTimeStep  no;
+        }
+    }
+    functions
+    {
+        VR1
+        {
+            type volumeReport;
+            fields (U.air p T.air T.water);
+            libs ( "libreport.so" );
+            executeControl writeTime;
+            writeControl writeTime;
+        }
+        fieldAverage1
+        {
+            type            fieldAverage;
+            libs            ("libfieldFunctionObjects.so");
+            writeControl    writeTime;
+            fields
+            (
+                U.air
+                {
+                     mean        on;
+                     prime2Mean  off;
+                     base        time;
+                }
+
+                U.water
+                {
+                     mean        on;
+                     prime2Mean  off;
+                     base        time;
+                }
+
+                alpha.air
+                {
+                     mean        on;
+                     prime2Mean  off;
+                     base        time;
+                }
+
+                p
+                {
+                     mean        on;
+                     prime2Mean  off;
+                     base        time;
+                }
+            );
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( transient ras multiphaseEuler energy );
+        turbulenceModel laminar;
+        materials ( water air );
+        materialProperties
+        {
+            materialType    multiphase;
+            //passivePhase none;
+            air
+            {
+                materialType    fluid;
+                equationOfState perfectGas;
+                muModel         scalarFunction1;
+                muModelCoeffs
+                {
+                    mu              1.84e-05;
+                }
+                thermodynamics  hConst;
+                molWeight       28.9;
+                thermodynamicsCoeffs
+                {
+                    Cp              1007;
+                    Hf              0;
+                }
+                kappaModel      kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr              0.7;
+                }
+
+                phaseModel      pure;
+                phaseModelCoeffs
+                {
+                    diameterModel   isothermal;
+                    diameterModelCoeffs
+                    {
+                        d0              0.003;
+                        p0              0;
+                    }
+                    residualAlpha   1e-6;
+                }
+            }
+            water
+            {
+                materialType    fluid;
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho         1000;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          3.645e-4;
+                }
+                molWeight   18.0;
+                thermodynamics  hConst;
+                thermodynamicsCoeffs
+                {
+                    Cp          4195;
+                    Hf          0;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr          2.289;
+                }
+
+                phaseModel      pure;
+                phaseModelCoeffs
+                {
+                    diameterModel   constant;
+                    diameterModelCoeffs
+                    {
+                        d               1e-4;
+                    }
+                    residualAlpha   1e-6;
+                }
+            }
+            water_air
+            {
+                dragModel SchillerNaumann;
+                dragModelCoeffs
+                {
+                    residualRe      1e-3;
+                    swarmCorrectionModel none;
+                }
+                heatTransferModel RanzMarshall;
+                heatTransferModelCoeffs
+                {
+                    residualAlpha   1e-4;
+                }
+                virtualMassModel constantCoefficient;
+                virtualMassModelCoeffs
+                {
+                    Cvm             0.5;
+                }
+                aspectRatioModel constant;
+                aspectRatioModelCoeffs
+                {
+                    E0              1.0;
+                }
+
+                surfaceTensionModel constant;
+                surfaceTensionModelCoeffs
+                {
+                    sigma           0.07;
+                }
+            }
+            air_water
+            {
+                dragModel SchillerNaumann;
+                dragModelCoeffs
+                {
+                    residualRe      1e-3;
+                    swarmCorrectionModel none;
+                }
+                heatTransferModel RanzMarshall;
+                heatTransferModelCoeffs
+                {
+                    residualAlpha   1e-4;
+                }
+                virtualMassModel constantCoefficient;
+                virtualMassModelCoeffs
+                {
+                    Cvm             0.5;
+                }
+                aspectRatioModel constant;
+                aspectRatioModelCoeffs
+                {
+                    E0              1.0;
+                }
+            }
+
+            referenceFields
+            {
+                p [1 -1 -2 0 0 0 0] 101325;
+            }
+        }
+        constant
+        {
+            g
+            {
+                value           (0 -9.81 0);
+            }
+        }
+        system
+        {
+            fvOptions
+            {
+                volumeFractionSolver
+                {
+                    nAlphaSubCycles 2;
+                    //nAlphaCorr      2;
+                    //nAlphaSubCycles 1;
+                    //MULESCorr       yes;
+                    //nLimiterIter    5;
+                }
+            }
+            fvSolution
+            {
+                PIMPLE
+                {
+                    nOuterCorrectors 3;
+                    nCorrectors 1;
+
+                    //nOuterCorrectors 1;
+                    //nCorrectors 2;
+                }
+            }
+        }
+        boundaryMesh
+        {
+            inlet
+            {
+                type inlet;
+            }
+            outlet
+            {
+                type outlet;
+            }
+            walls
+            {
+                type wall;
+            }
+            defaultFaces
+            {
+                type empty;
+            }
+        }
+        fields
+        {
+            U.water { initialisation{type fixedValue; value uniform ( 0 0 0 );} }
+            U.air { initialisation{type fixedValue; value uniform ( 0 0.1 0 );} }
+            p { initialisation{type buoyantPressure; value uniform 0;} }
+            T.water { initialisation{type fixedValue; value uniform 350;} }
+            T.air { initialisation{type fixedValue; value uniform 300;} }
+            alpha.water
+            {
+                initialisation
+                {
+                    type cellSet;
+                    defaultValue uniform 0;
+                    setSources
+                    (
+                        boxToCell
+                        {
+                            box (0 0 -0.1) (0.15 0.701 0.1);
+                            value 1;
+                        }
+                    );
+                }
+            }
+            alpha.air
+            {
+                initialisation
+                {
+                    type cellSet;
+                    defaultValue uniform 1;
+                    setSources
+                    (
+                        boxToCell
+                        {
+                            box (0 0 -0.1) (0.15 0.701 0.1);
+                            value 0;
+                        }
+                    );
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                alpha.air
+                {
+                    type             fixedValue;
+                    value            uniform 0.5;
+                }
+                alpha.water
+                {
+                    type             fixedValue;
+                    value            uniform 0.5;
+                }
+                U.air
+                {
+                    type             fixedValue;
+                    value            uniform (0 0.1 0);
+                }
+                U.water
+                {
+                    type             fixedValue;
+                    value            uniform (0 0 0);
+                }
+                T.air
+                {
+                    type             fixedValue;
+                    value            uniform 300;
+                }
+                T.water
+                {
+                    type             fixedValue;
+                    value            uniform 350;
+                }
+            }
+            outlet
+            {
+                alpha.air
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 1;
+                    value           uniform 1;
+                }
+                alpha.water
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 0;
+                    value           uniform 0;
+                }
+                p
+                {
+                    type            totalPressure;
+                    p0              uniform 0;
+                    U               U.air;
+                    phi             phiv.air;
+                    rho             thermo:rho.air;
+                    value           uniform 0;
+                }
+                T.air
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 300;
+                    value           uniform 300;
+                }
+                T.water
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 350;
+                    value           uniform 350;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

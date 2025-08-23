@@ -1,0 +1,462 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom startTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 500;
+            deltaT constant 1;
+            writeControl timeStep;
+            writeInterval 100;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+        SR-fan
+        {
+            functionObjectLibs ( "libreport.so" );
+            logToFile       yes;
+            weighting       flux;
+            fluxName        phi;
+            fields          ( p );
+            surfaces        ( { type patch; name fan; } );
+            constraints
+            (
+                {
+                    type boundBox;
+                    min ( -1000 -1000 -1000 );
+                    max ( 1000 1000 1000 );
+                    keepInside true;
+                }
+            );
+            executeControl  timeStep;
+            type            surfaceReport;
+            regions         ( region0 );
+            homogeneity     false;
+            writeControl    timeStep;
+            writeInterval   1;
+            executeInterval 1;
+            outputFileFormat tsv;
+        }
+        SR-fan_slave
+        {
+            functionObjectLibs ( "libreport.so" );
+            logToFile       yes;
+            weighting       flux;
+            fluxName        phi;
+            fields          ( p );
+            surfaces        ( { type patch; name fan_slave; } );
+            constraints
+            (
+                {
+                    type boundBox;
+                    min ( -1000 -1000 -1000 );
+                    max ( 1000 1000 1000 );
+                    keepInside true;
+                }
+            );
+            executeControl  timeStep;
+            type            surfaceReport;
+            regions         ( region0 );
+            homogeneity     false;
+            writeControl    timeStep;
+            writeInterval   1;
+            executeInterval 1;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (steady ras);
+        boundaryMesh
+        {
+            ffminx
+            {
+                type wall;
+            }
+            ffmaxx
+            {
+                type patch;
+            }
+            ffminy
+            {
+                type patch;
+            }
+            ffmaxy
+            {
+                type patch;
+            }
+            ffminz
+            {
+                type patch;
+            }
+            ffmaxz
+            {
+                type patch;
+            }
+            frame
+            {
+                type wall;
+            }
+            fan
+            {
+                type cyclicAMI;
+                neighbourPatch fan_slave;
+                matchTolerance 1.0E-4;
+            }
+            fan_slave
+            {
+                type cyclicAMI;
+                neighbourPatch fan;
+                matchTolerance 1.0E-4;
+            }
+        }
+        turbulenceModel kOmegaSST;
+        materials (air);
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.0;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type turbulentIL;
+                    I 0.05;
+                    L 0.01;
+                    Uref 1.0;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type turbulentIL;
+                    I 0.05;
+                    L 0.01;
+                    Uref 1.0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            ffminx
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+            }
+            ffmaxx
+            {
+                U
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type totalPressure;
+                    value uniform 0.0;
+                    p0 uniform 0.0;
+                    gamma 1.4;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    value uniform 0.1;
+                    intensity 0.05;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    value uniform 0.01;
+                    mixingLength 0.01;
+                }
+                nut
+                {
+                    type calculated;
+                    value uniform 0.001;
+                }
+            }
+            ffminy
+            {
+                U
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type totalPressure;
+                    value uniform 0.0;
+                    p0 uniform 0.0;
+                    gamma 1.4;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    value uniform 0.1;
+                    intensity 0.05;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    value uniform 0.01;
+                    mixingLength 0.01;
+                }
+                nut
+                {
+                    type calculated;
+                    value uniform 0.001;
+                }
+            }
+            ffmaxy
+            {
+                U
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type totalPressure;
+                    value uniform 0.0;
+                    p0 uniform 0.0;
+                    gamma 1.4;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    value uniform 0.1;
+                    intensity 0.05;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    value uniform 0.01;
+                    mixingLength 0.01;
+                }
+                nut
+                {
+                    type calculated;
+                    value uniform 0.001;
+                }
+            }
+            ffminz
+            {
+                U
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type totalPressure;
+                    value uniform 0.0;
+                    p0 uniform 0.0;
+                    gamma 1.4;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    value uniform 0.1;
+                    intensity 0.05;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    value uniform 0.01;
+                    mixingLength 0.01;
+                }
+                nut
+                {
+                    type calculated;
+                    value uniform 0.001;
+                }
+            }
+            ffmaxz
+            {
+                U
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type totalPressure;
+                    value uniform 0.0;
+                    p0 uniform 0.0;
+                    gamma 1.4;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    value uniform 0.1;
+                    intensity 0.05;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    value uniform 0.01;
+                    mixingLength 0.01;
+                }
+                nut
+                {
+                    type calculated;
+                    value uniform 0.001;
+                }
+            }
+            frame
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 1e-20;
+                }
+                omega
+                {
+                    type omegaWallFunction;
+                    value uniform 1;
+                }
+                nut
+                {
+                    type nutUSpaldingWallFunction;
+                    value uniform 0.001;
+                }
+            }
+            fan
+            {
+                U
+                {
+                    type cyclicAMI;
+                }
+                p
+                {
+                    type fanPressureAMI;
+                    patchType cyclicAMI;
+                    jump uniform 0;
+                    fanCurve table ( (0 200) (4 0 ));
+                    flowDirection (1 0 1);
+                    relax 0.5;
+                    value uniform 0;
+                }
+                k
+                {
+                    type cyclicAMI;
+                }
+                omega
+                {
+                    type cyclicAMI;
+                }
+                nut
+                {
+                    type cyclicAMI;
+                }
+            }
+            fan_slave
+            {
+                U
+                {
+                    type cyclicAMI;
+                }
+                p
+                {
+                    type fanPressureAMI;
+                    patchType cyclicAMI;
+                    jump uniform 0;
+                    fanCurve table ( (0 200) (4 0 ));
+                    flowDirection (1 0 1);
+                    relax 0.5;
+                    value uniform 0;
+                }
+                k
+                {
+                    type cyclicAMI;
+                }
+                omega
+                {
+                    type cyclicAMI;
+                }
+                nut
+                {
+                    type cyclicAMI;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

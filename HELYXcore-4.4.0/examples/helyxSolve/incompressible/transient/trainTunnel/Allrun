@@ -1,0 +1,20 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy geometry from resources directory
+mkdir -p constant/triSurface
+cp "$HELYX_TUTORIALS"/resources/geometry/trainTunnel/* constant/triSurface/
+
+helyxRun -p helyxHexMesh -constant
+helyxRun checkMesh -allRegions -writeAllMetrics -latestTime
+helyxRun postProcess -fields '( aspectRatio determinant nonOrthogonality skewness volumeRatio )' -dict system/controlDict.mesh
+helyxRun caseSetup
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch trainTunnel.foam
+
+#------------------------------------------------------------------------------

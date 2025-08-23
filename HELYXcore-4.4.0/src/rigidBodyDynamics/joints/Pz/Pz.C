@@ -1,0 +1,101 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : 4.4.0
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) 2016 OpenFOAM Foundation
+
+\*---------------------------------------------------------------------------*/
+
+#include "joints/Pz/Pz.H"
+#include "rigidBodyModel/rigidBodyModel.H"
+#include "db/runTimeSelection/construction/addToRunTimeSelectionTable.H"
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+namespace Foam
+{
+namespace RBD
+{
+namespace joints
+{
+    defineTypeNameAndDebug(Pz, 0);
+
+    addToRunTimeSelectionTable
+    (
+        joint,
+        Pz,
+        dictionary
+    );
+}
+}
+}
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+Foam::RBD::joints::Pz::Pz()
+:
+    joint(1)
+{
+    S_[0] = spatialVector(0, 0, 0, 0, 0, 1);
+}
+
+
+Foam::RBD::joints::Pz::Pz(const dictionary& dict)
+:
+    joint(1)
+{
+    S_[0] = spatialVector(0, 0, 0, 0, 0, 1);
+}
+
+
+Foam::autoPtr<Foam::RBD::joint> Foam::RBD::joints::Pz::clone() const
+{
+    return autoPtr<joint>(new Pz(*this));
+}
+
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+Foam::RBD::joints::Pz::~Pz()
+{}
+
+
+// * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
+
+void Foam::RBD::joints::Pz::jcalc
+(
+    joint::XSvc& J,
+    const scalarField& q,
+    const scalarField& qDot
+) const
+{
+    J.X = Xt(S_[0].l()*q[qIndex_]);
+    J.S1 = S_[0];
+    J.v = S_[0]*qDot[qIndex_];
+    J.c = Zero;
+}
+
+
+// ************************************************************************* //

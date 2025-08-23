@@ -1,0 +1,149 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : 4.4.0
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) 2011-2016 OpenFOAM Foundation
+    (c) 2024 Engys Ltd.
+
+Class
+    Foam::extendedCentredFaceToCellStencil
+
+Description
+
+SourceFiles
+    extendedCentredFaceToCellStencil.C
+
+\*---------------------------------------------------------------------------*/
+
+#ifndef extendedCentredFaceToCellStencil_H
+#define extendedCentredFaceToCellStencil_H
+
+#include "fvMesh/extendedStencil/faceToCell/extendedFaceToCellStencil.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+class faceToCellStencil;
+
+/*---------------------------------------------------------------------------*\
+              Class extendedCentredFaceToCellStencil Declaration
+\*---------------------------------------------------------------------------*/
+
+class extendedCentredFaceToCellStencil
+:
+    public extendedFaceToCellStencil
+{
+    // Private data
+
+        //- Swap map for getting neigbouring data
+        autoPtr<distributionMap> mapPtr_;
+
+        //- Per face the stencil.
+        labelListList stencil_;
+
+
+public:
+
+    // Constructors
+
+        //- Construct from uncompacted face stencil
+        explicit extendedCentredFaceToCellStencil(const faceToCellStencil&);
+
+        //- Disallow default bitwise copy construction
+        extendedCentredFaceToCellStencil
+        (
+            const extendedCentredFaceToCellStencil&
+        ) = delete;
+
+
+    // Member Functions
+
+        //- Return reference to the parallel distribution map
+        const distributionMap& map() const
+        {
+            return mapPtr_();
+        }
+
+        //- Return reference to the stencil
+        const labelListList& stencil() const
+        {
+            return stencil_;
+        }
+
+        //- After removing elements from the stencil adapt the schedule (map).
+        void compact();
+
+        //- Use map to get the data into stencil order
+        template<class T>
+        void collectData
+        (
+            const SurfaceField<T>& fld,
+            List<List<T>>& stencilFld
+        ) const
+        {
+            extendedFaceToCellStencil::collectData
+            (
+                map(),
+                stencil(),
+                fld,
+                stencilFld
+            );
+        }
+
+        //- Sum surface field contributions to create cell values
+        template<class Type>
+        tmp<VolField<Type>> weightedSum
+        (
+            const SurfaceField<Type>& fld,
+            const List<List<scalar>>& stencilWeights
+        ) const
+        {
+            return extendedFaceToCellStencil::weightedSum
+            (
+                map(),
+                stencil(),
+                fld,
+                stencilWeights
+            );
+        }
+
+
+    // Member Operators
+
+        //- Disallow default bitwise assignment
+        void operator=(const extendedCentredFaceToCellStencil&) = delete;
+};
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

@@ -1,0 +1,102 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : 4.4.0
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) 2014-2015 OpenFOAM Foundation
+
+\*---------------------------------------------------------------------------*/
+
+#include "Moraga.H"
+#include "../../../eulerianPhasePair/eulerianPhasePair/eulerianPhasePair.H"
+#include "finiteVolume/fvc/fvcGrad.H"
+#include "db/runTimeSelection/construction/addToRunTimeSelectionTable.H"
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+namespace Foam
+{
+namespace eulerianLiftModels
+{
+    defineTypeNameAndDebug(Moraga, 0);
+    addToRunTimeSelectionTable(eulerianLiftModel, Moraga, dictionary);
+}
+}
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+Foam::eulerianLiftModels::Moraga::Moraga
+(
+    const dictionary& dict,
+    const eulerianPhasePair& pair
+)
+:
+    eulerianLiftModel(dict, pair)
+{}
+
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+Foam::eulerianLiftModels::Moraga::~Moraga()
+{}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+Foam::tmp<Foam::volScalarField> Foam::eulerianLiftModels::Moraga::Cl() const
+{
+    volScalarField Re(pair_.Re());
+
+    volScalarField sqrSr
+    (
+        sqr(pair_.dispersed().d())
+       /pair_.continuous().nu()
+       *mag(fvc::grad(pair_.continuous().U()))
+    );
+
+    if
+    (
+        min(Re).value() < 1200.0
+     || max(Re).value() > 18800.0
+     || min(sqrSr).value() < 0.0016
+     || max(sqrSr).value() > 0.04
+    )
+    {
+        WarningInFunction
+            << "Re and/or Sr are out of the range of applicability of the "
+            << "Moraga model. Clamping to range bounds"
+            << endl;
+    }
+
+    Re.min(1200.0);
+    Re.max(18800.0);
+
+    sqrSr.min(0.0016);
+    sqrSr.max(0.04);
+
+    return 0.2*exp(- Re*sqrSr/3.6e5 - 0.12)*exp(Re*sqrSr/3.0e7);
+}
+
+
+// ************************************************************************* //

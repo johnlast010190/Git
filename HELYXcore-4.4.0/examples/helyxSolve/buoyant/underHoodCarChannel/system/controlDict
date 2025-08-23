@@ -1,0 +1,104 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     helyxSolve;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         50;
+
+deltaT          constant 1;
+
+writeControl    timeStep;
+
+writeInterval   500;
+
+purgeWrite      2;
+
+writeFormat     ascii;
+
+writePrecision  10;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   6;
+
+graphFormat     raw;
+
+runTimeModifiable yes;
+
+libs            1 ( "" );
+
+adjustTimeStep  false;
+
+maxCo           0;
+
+maxAlphaCo      0;
+
+maxDeltaT       0;
+
+functions
+{
+    ZF
+    {
+        functionObjectLibs ( "libforces.so" );
+        nAveragingSteps 1;
+        verbose         true;
+        logToFile       true;
+        executeControl  timeStep;
+        type            zoneForces;
+        writeControl    timeStep;
+        writeInterval   1;
+        regions         1 ( region0 );
+    }
+    FR
+    {
+        functionObjectLibs ( "libforces.so" );
+        directForceDensity false;
+        p               p;
+        U               U;
+        rhoName         rhoInf;
+        rhoInf          1.205;
+        pRef            0;
+        CofR            ( 0 50 0 );
+        patches         ( A_44444_testcar_5050_Y0.00_R0.01_WALL_L_Barge_Board_8_8 A_44444_testcar_5050_Y0.00_R0.01_WALL_L_Barge_Board_fine_4_4 A_44444_testcar_5050_Y0.00_R0.01_WALL_L_DY_Suspension_4_4 A_44444_testcar_5050_Y0.00_R0.01_WALL_L_POROUS_Radiator_8_8 A_44444_testcar_5050_Y0.00_R0.01_WALL_L_ROTFR_front_wheel_4_8 A_44444_testcar_5050_Y0.00_R0.01_WALL_L_ROTFR_wheel_4_8 A_44444_testcar_5050_Y0.00_R0.01_WALL_L_ROTRR_wheel_4_8 A_44444_testcar_5050_Y0.00_R0.01_WALL_L_ROTRR_wheel_spokes_4_8 A_44444_testcar_5050_Y0.00_R0.01_WALL_L_body_8_8 A_44444_testcar_5050_Y0.00_R0.01_WALL_R_Barge_Board_8_8 A_44444_testcar_5050_Y0.00_R0.01_WALL_R_Barge_Board_fine_4_4 A_44444_testcar_5050_Y0.00_R0.01_WALL_R_DY_Suspension_4_4 A_44444_testcar_5050_Y0.00_R0.01_WALL_R_POROUS_Radiator_8_8 A_44444_testcar_5050_Y0.00_R0.01_WALL_R_ROTFR_front_wheel_4_8 A_44444_testcar_5050_Y0.00_R0.01_WALL_R_ROTFR_wheel_4_8 A_44444_testcar_5050_Y0.00_R0.01_WALL_R_ROTRR_wheel_4_8 A_44444_testcar_5050_Y0.00_R0.01_WALL_R_ROTRR_wheel_spokes_4_8 A_44444_testcar_5050_Y0.00_R0.01_WALL_R_body_8_8 );
+        executeControl  timeStep;
+        type            forces;
+        regions         ( region0 );
+        writeControl    timeStep;
+        writeInterval   1;
+    }
+    VR
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( p U T );
+        executeControl  timeStep;
+        type            volumeReport;
+        regions         ( region0 );
+        writeControl    timeStep;
+        writeInterval   1;
+    }
+}
+
+
+// ************************************************************************* //

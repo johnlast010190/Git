@@ -1,0 +1,143 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom startTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 100.0;
+            deltaT constant 1.0;
+        }
+    }
+    functions
+    {
+        SR_in
+        {
+            type surfaceReport;
+            fields ( U p );
+            weighting flux;
+            directionAware true;
+            surfaces
+            (
+                {
+                    type patch;
+                    name in;
+                }
+            );
+            writeControl onEnd;
+            executeControl onEnd;
+            functionObjectLibs ("libreport.so" );
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (steady ras);
+        boundaryMesh
+        {
+            in
+            {
+                type inlet;
+            }
+            cylinder
+            {
+                type wall;
+            }
+            out
+            {
+                type outlet;
+            }
+        }
+        turbulenceModel kOmegaSST;
+        materials (air);
+        materialProperties
+        {
+            air
+            {
+                equationOfStateCoeffs
+                {
+                    rho 1.177;
+                }
+                muModelCoeffs
+                {
+                    mu constant 1.846E-5;
+                }
+                kappaModelCoeffs
+                {
+                    kappa 0.0262;
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type potentialFlow;
+                    initialiseUBCs true;
+                    rhoRef 1.177;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type potentialFlow;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type Prandtl;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type Prandtl;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            in
+            {
+                U
+                {
+                    value uniform ( 0.0 0.0 0.0 );
+                    type            swirlFlowRateInletVelocity;
+                    flowRate        constant 0.2;
+                    rpm             constant 100;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

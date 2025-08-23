@@ -1,0 +1,209 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         2;
+            deltaT          1e-06;
+            writeControl    adjustableRunTime;
+            writeInterval   0.01;
+            writePrecision  8;
+            maxCo           0.25;
+            maxAlphaCo      0.25;
+            maxDeltaT       1e-04;
+        }
+    }
+    functions
+    {
+        VF
+        {
+            type volFieldValue;
+            fields ( alpha.water );
+            operation average;
+            writeFields no;
+            writeControl onEnd;
+            executeControl onEnd;
+            functionObjectLibs ("libfieldFunctionObjects.so" );
+            outputFileFormat tsv;
+        }
+        VR
+        {
+            type            volumeReport;
+            fields          ( U p );
+            writeControl    onEnd;
+            executeControl  onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( transient ras vof dynamic );
+        materials ( water air );
+        materialProperties
+        {
+            water
+            {
+                equationOfStateCoeffs
+                {
+                    rho            1033.8948;
+                }
+                muModelCoeffs
+                {
+                    mu              1.011999989;
+                }
+            }
+            air
+            {
+                equationOfStateCoeffs
+                {
+                    rho              1.0;
+                }
+                muModelCoeffs
+                {
+                    mu              1.48e-05;
+                }
+            }
+            air_water
+            {
+                surfaceTensionModelCoeffs
+                {
+                    sigma           0.070;
+                }
+            }
+        }
+        constant
+        {
+            g
+            {
+                value           ( 0 -9.81 0 );
+            }
+            dynamicMeshDict
+            {
+                GIBChanger
+                {
+                    type            solidBody;
+                    libs            ("libfvMeshGIBChangers.so");
+
+                    solidBodyCoeffs
+                    {
+                        triSurfaceName  inletBox.stl;
+                        region0Patch    (atmosphere);
+                        limitNegFieldNames (alpha.water);
+                        motionFunctions
+                        {
+                            referenceFrame oscillatingFrame;
+                        }
+                    }
+                }
+            }
+        }
+        system
+        {
+            meshObjects
+            {
+                oscillatingFrame
+                {
+                    type            dynamicMotionCoordinateFrame;
+                    motionFunction
+                    {
+                        type            oscillatingLinearMotion;
+                        amplitude       (0.025  0 0 );
+                        omega           6.283185;
+                    }
+                    coordinateSystem
+                    {
+                        type            cartesian;
+                        origin          (0 0 0);
+                        e1              ( 1 0 0 );
+                        e2              ( 0 1 0 );
+                    }
+                }
+            }
+        }
+        fields
+        {
+            alpha.water
+            {
+                initialisation
+                {
+                    value    uniform 0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            atmosphere
+            {
+                U
+                {
+                    type            zeroGradient;
+                }
+                p
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+            }
+            ib1
+            {
+                U
+                {
+                    type            multiphaseGIBvelocityInlet;
+                    injectVel       ( 0 -0.5 0 );
+                    angle           5;
+                    value           uniform ( 0 -0.5 0 );
+                }
+                alpha.water
+                {
+                    type            multiphaseGIBalphaInlet;
+                    alphaInlet      1;
+                    injectDir       ( 0 -1 0 );
+                    angle           5;
+                    value           uniform 1;
+                }
+            }
+            ib2
+            {
+                U
+                {
+                    type            fixedValueZone;
+                    value           uniform ( 0 0 0 );
+                }
+                p
+                {
+                    type            fixedValueZone;
+                    value           uniform 0;
+                    cellZoneValue   0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,114 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : 4.4.0
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) 2023 Engys Ltd.
+
+\*---------------------------------------------------------------------------*/
+
+#include "meshes/polyMesh/polyPatches/derived/nonConformalOrig/nonConformalOrigPolyPatch.H"
+#include "db/runTimeSelection/construction/addToRunTimeSelectionTable.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+    defineTypeNameAndDebug(nonConformalOrigPolyPatch, 0);
+
+    addToRunTimeSelectionTable(polyPatch, nonConformalOrigPolyPatch, word);
+    addToRunTimeSelectionTable
+    (
+        polyPatch,
+        nonConformalOrigPolyPatch,
+        dictionary
+    );
+}
+
+
+// * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * * //
+
+Foam::nonConformalOrigPolyPatch::nonConformalOrigPolyPatch
+(
+    const word& name,
+    const label size,
+    const label start,
+    const label index,
+    const polyBoundaryMesh& bm,
+    const word& patchType
+)
+:
+    directPolyPatch(name, size, start, index, bm, patchType)
+{}
+
+
+Foam::nonConformalOrigPolyPatch::nonConformalOrigPolyPatch
+(
+    const word& name,
+    const dictionary& dict,
+    const label index,
+    const polyBoundaryMesh& bm,
+    const word& patchType
+)
+:
+    directPolyPatch(name, dict, index, bm, patchType)
+{}
+
+
+Foam::nonConformalOrigPolyPatch::nonConformalOrigPolyPatch
+(
+    const nonConformalOrigPolyPatch& pp,
+    const polyBoundaryMesh& bm
+)
+:
+    directPolyPatch(pp, bm)
+{}
+
+
+Foam::nonConformalOrigPolyPatch::nonConformalOrigPolyPatch
+(
+    const nonConformalOrigPolyPatch& pp,
+    const polyBoundaryMesh& bm,
+    const label index,
+    const label newSize,
+    const label newStart
+)
+:
+    directPolyPatch(pp, bm, index, newSize, newStart)
+{}
+
+
+Foam::nonConformalOrigPolyPatch::nonConformalOrigPolyPatch
+(
+    const nonConformalOrigPolyPatch& pp,
+    const polyBoundaryMesh& bm,
+    const label index,
+    const labelUList& mapAddressing,
+    const label newStart
+)
+:
+    directPolyPatch(pp, bm, index, mapAddressing, newStart)
+{}
+
+
+// ************************************************************************* //

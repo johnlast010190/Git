@@ -1,0 +1,312 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+    }
+    regionGroups    1 ( fluid 1 ( region0 ) );
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            stopAt          endTime;
+            endTime         1000;
+            deltaT          1;
+            writeControl    timeStep;
+            writeInterval   100;
+        }
+    }
+    functions
+    {
+        WSS
+        {
+            type            wallShearStress;
+            libs            ("libfieldFunctionObjects.so");
+            executeControl  onEnd;
+            writeControl    onEnd;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state           ( steady ras );
+        turbulenceModel kOmega;
+        materials       ( discDefault );
+        materialProperties
+        {
+            discDefault
+            {
+                materialType    fluid;
+                molWeight       16.0;
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho 1e-3;
+                }
+                thermodynamics  hConst;
+                thermodynamicsCoeffs
+                {
+                    Cp          4195;
+                    Hf          0;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          1e-8;
+                }
+                kappaModel scalarFunction1;
+                kappaModelCoeffs
+                {
+                    kappa       0.0282;
+                }
+            }
+        }
+        constant
+        {
+            g
+            {
+                dimensions      [ 0 1 -2 0 0 0 0 ];
+                value           ( 0 0 -9.81 );
+            }
+        }
+        system
+        {
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default         steadyState;
+                }
+                gradSchemes
+                {
+                    default         Gauss linear;
+                }
+                divSchemes
+                {
+                    default         bounded Gauss limitedLinear 1;
+                    div(phi,U)      bounded Gauss linearUpwind grad(U);
+                    div((nuEff*dev2(T(grad(U))))) Gauss linear;
+                    div(nonlinearStress) Gauss linear;
+                }
+                laplacianSchemes
+                {
+                    default         Gauss linear corrected;
+                }
+                interpolationSchemes
+                {
+                    default         linear;
+                }
+                snGradSchemes
+                {
+                    default         corrected;
+                }
+                wallDist
+                {
+                    method meshWave;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    p
+                    {
+                        solver          GAMG;
+                        tolerance       1e-06;
+                        relTol          0.1;
+                        smoother        GaussSeidel;
+                    }
+                    "(U|k|omega)"
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        tolerance       1e-05;
+                        relTol          0.1;
+                    }
+                }
+                SIMPLE
+                {
+                    nNonOrthogonalCorrectors 0;
+                    consistent      true;
+                    residualControl
+                    {
+                        p               1e-2;
+                        U               1e-3;
+                        "(k|omega)"     1e-3;
+                    }
+                }
+                relaxationFactors
+                {
+                    equations
+                    {
+                        U               0.9;
+                        ".*"            0.9;
+                    }
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                p
+                {
+                    type            zeroGradient;
+                }
+                U
+                {
+                    type            fixedValue;
+                    value           uniform ( 10 0 0 );
+                }
+                k
+                {
+                    type            turbulentIntensityKineticEnergyInlet;
+                    intensity       0.05;
+                    value           uniform 0.1;
+                }
+                omega
+                {
+                    type            turbulentMixingLengthFrequencyInlet;
+                    mixingLength    0.01;
+                    phi             phi;
+                    k               k;
+                    value           uniform 0.01;
+                }
+                nut
+                {
+                    type            calculated;
+                    value           uniform 0;
+                }
+            }
+            outlet
+            {
+                p
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+                U
+                {
+                    type            zeroGradient;
+                }
+                k
+                {
+                    type            turbulentIntensityKineticEnergyInlet;
+                    intensity       0.05;
+                    value           uniform 0.1;
+                }
+                omega
+                {
+                    type            turbulentMixingLengthFrequencyInlet;
+                    mixingLength    0.01;
+                    phi             phi;
+                    k               k;
+                    value           uniform 0.01;
+                }
+                nut
+                {
+                    type            calculated;
+                    value           uniform 0;
+                }
+            }
+            upperWall
+            {
+                p
+                {
+                    type            zeroGradient;
+                }
+                U
+                {
+                    type            noSlip;
+                    value           uniform ( 0 0 0 );
+                }
+                k
+                {
+                    type            kqRWallFunction;
+                    value           uniform 0.1;
+                }
+                omega
+                {
+                    type            omegaWallFunction;
+                    value           uniform 0.01;
+                    Cmu             0.09;
+                    kappa           0.41;
+                    E               9.8;
+                    beta1           0.075;
+                    blended         true;
+                }
+                nut
+                {
+                    type            nutkWallFunction;
+                    Cmu             0.09;
+                    kappa           0.41;
+                    E               9.8;
+                    value           uniform 0;
+                }
+            }
+            lowerWall
+            {
+                p
+                {
+                    type            zeroGradient;
+                }
+                U
+                {
+                    type            noSlip;
+                    value           uniform ( 0 0 0 );
+                }
+                k
+                {
+                    type            kqRWallFunction;
+                    value           uniform 0.1;
+                }
+                omega
+                {
+                    type            omegaWallFunction;
+                    value           uniform 0.01;
+                    Cmu             0.09;
+                    kappa           0.41;
+                    E               9.8;
+                    beta1           0.075;
+                    blended         true;
+                }
+                nut
+                {
+                    type            nutkWallFunction;
+                    Cmu             0.09;
+                    kappa           0.41;
+                    E               9.8;
+                    value           uniform 0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,48 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*-----------------------------------------------------------------------------
+Description
+    Write graph data for specified fields along a line, specified by start
+    and end points.
+
+\*---------------------------------------------------------------------------*/
+
+// Sampling and I/O settings
+#includeEtc "caseDicts/postProcessing/graphs/sampleDict.cfg"
+
+// Override settings here, e.g.
+// setConfig { type midPoint; }
+
+type            sets;
+libs            ("libsampling.so");
+
+writeControl    writeTime;
+
+interpolationScheme cellPoint;
+
+setFormat   raw;
+
+setConfig
+{
+    type    midPoint;  // midPoint
+    axis    distance;  // x, y, z, xyz
+}
+
+sets
+(
+    line
+    {
+        $setConfig;
+        start (0 0 0);
+        end   (0 1 0);
+    }
+);
+
+fields  (U);
+
+
+// ************************************************************************* //

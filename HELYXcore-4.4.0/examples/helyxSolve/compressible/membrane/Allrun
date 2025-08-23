@@ -1,0 +1,38 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy input surface from resources directory
+mkdir -p constant/triSurface
+cp $HELYX_TUTORIALS/resources/geometry/membrane/* constant/triSurface/
+
+# Background mesh
+helyxRun blockMesh
+
+# Decomposition
+helyxRun decomposePar
+
+# Mesh
+helyxRun helyxHexMesh
+
+# Create cell zone for pipe region
+helyxRun topoSet
+
+# Split mesh into multiple regions
+helyxRun splitMeshRegions -overwrite -zoneToRegionMap '( (pipe (pipe)) )'
+
+# Delete non-region mesh files
+rm -r processor*/constant/polyMesh
+
+# Setup
+helyxRun caseSetup
+
+# Run
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch membrane.foam
+
+#------------------------------------------------------------------------------

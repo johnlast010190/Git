@@ -1,0 +1,224 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom latestTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 500;
+            deltaT 1;
+            writeControl timeStep;
+            writeInterval 100;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type volumeReport;
+            regions ( region0 );
+            fields ( U p );
+            writeControl timeStep;
+            writeInterval 1;
+            executeControl timeStep;
+            executeInterval 1;
+            functionObjectLibs ( "libreport.so" );
+            outputFileFormat tsv;
+        }
+        fp1
+        {
+            functionObjectLibs ( "libfieldFunctionObjects.so" );
+            operations      ( { operation Urel; write true; } );
+            executeControl  timeStep;
+            writeControl    outputTime;
+            type            fieldProcess;
+            calculationControl continuous;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (steady ras);
+        boundaryMesh
+        {
+            inlet { type wall; }
+            outlet { type outlet; }
+            bottom { type wall; }
+            top { type wall; }
+            back { type empty; }
+            front { type empty; }
+            AMI_half0
+            {
+                type cyclicAMI;
+                matchTolerance  0.002;
+                neighbourPatch  AMI_half1;
+            }
+            AMI_half1
+            {
+                type cyclicAMI;
+                matchTolerance  0.002;
+                neighbourPatch  AMI_half0;
+            }
+        }
+        turbulenceModel kOmegaSST;
+        materials (air);
+        system
+        {
+            fvOptions
+            {
+                cylinder_MRF
+                {
+                    type MRFSource;
+                    MRFSourceCoeffs
+                    {
+                        selectionMode all;
+                        referenceFrame rotFrame;
+                    }
+                }
+            }
+            meshObjects
+            {
+                rotFrame
+                {
+                    type            motionCoordinateFrame;
+                    motionFunction
+                    {
+                        type vehicleMotion;
+                        vehicleMotionCoeffs
+                        {
+                            vehicleSpeed    constant -30;
+                            invTurnRadius   constant  0;
+                        }
+                    }
+                    coordinateSystem
+                    {
+                        type cartesian;
+                        origin ( 0 -1 0.5 );
+                        e1 (1 0 0);
+                        e2 (0 1 0);
+                    }
+                }
+            }
+        }
+        fields
+        {
+            U { initialisation { type fixedValue; value uniform ( 0 0 0 ); } }
+            p { initialisation { type fixedValue; value uniform 0; } }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type inletOutlet;
+                    value uniform ( 0 0 0 );
+                    inletValue uniform ( 0 0 0 );
+                }
+                p { type zeroGradient; }
+            }
+            outlet
+            {
+                U
+                {
+                    type inletOutlet;
+                    value uniform ( 0 0 0 );
+                    inletValue uniform ( 0 0 0 );
+                }
+                p { type fixedValue; value uniform 0; }
+            }
+            bottom
+            {
+                U
+                {
+                    type fixedValueVelocity;
+                    value uniform ( 0 0 0);
+                    referenceFrame rotFrame;
+                }
+                p { type zeroGradient; }
+            }
+            top
+            {
+                U
+                {
+                    type fixedValueVelocity;
+                    value uniform ( 0 0 0);
+                    referenceFrame rotFrame;
+                }
+                p { type zeroGradient; }
+            }
+            AMI_half0
+            {
+                p
+                {
+                    type            porousBafflePressureAMI;
+                    patchType       cyclicAMI;
+                    referenceFrame  rotFrame;
+                    d               100;
+                    f               50;
+                    length          0.015;
+                    uniformJump     false;
+                    Ct1             0.1;
+                    Ct2             1;
+                    alternativeModel false;
+                    jump            uniform 0;
+                    value           uniform 0;
+                }
+            }
+            AMI_half1
+            {
+                p
+                {
+                    type            porousBafflePressureAMI;
+                    patchType       cyclicAMI;
+                    referenceFrame  rotFrame;
+                    d               100;
+                    f               50;
+                    length          0.015;
+                    uniformJump     false;
+                    Ct1             0.1;
+                    Ct2             1;
+                    alternativeModel false;
+                    jump            uniform 0;
+                    value           uniform 0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

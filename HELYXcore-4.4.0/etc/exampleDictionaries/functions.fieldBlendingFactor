@@ -1,0 +1,95 @@
+fbf1
+{
+    functionObjectLibs ( "libfieldFunctionObjects.so" );
+    region          region0;
+    type            fieldBlendingFactor;
+    outputControl outputTime;
+    
+    
+    blendingSources // static blending sources
+    (
+        zonalDES
+        {
+            type zonalDES;
+            CDES 1;
+            minValue 0; 
+            maxValue 1;
+            minCoeff 0;
+            maxCoeff 1;
+            functionType cubic;
+            write   false;
+        }
+    
+        fs1
+        {
+            type faceSet;
+            interceptValue 0.5;
+            posCoeff 0.9;
+            negCoeff 1;
+            functionType heaviside;
+            write   false;
+            setSources
+            (
+                boxToFace
+                {
+                   box   (0.5 0.1 -1) (0.7 0.3 1);
+                }
+            );
+        }
+        fs2
+        {
+            type faceSet;
+            interceptValue 0.5;
+            posCoeff 0.9;
+            negCoeff 1;
+            functionType heaviside;
+            write   false;
+            setSources
+            (
+                boxToFace
+                {
+                   box   (-2 0.3 -1) (0.4 0.5 1);
+                }
+            );
+        }
+    );
+
+
+    fieldBlending
+    (
+    
+        U
+        {
+            // limits relative increase in blending factor
+            stabilise 10;
+
+            blendingSources
+            (
+                cfl1
+                {
+                    type cfl;
+                    minValue 2; 
+                    maxValue 5;
+                    minCoeff 1;
+                    maxCoeff 0;
+                    functionType cubic;
+                    phi phi;
+                    rho rho; //compressible only
+                    write   false;
+                }
+
+                Peclet1
+                {
+                    type Pe;
+                    minValue 5000;
+                    maxValue 8000;
+                    minCoeff 1;
+                    maxCoeff 0.8;
+                    functionType linear;
+                    phi phi;
+                    write   false;
+                }
+            );
+        }
+    );
+}

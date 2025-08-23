@@ -1,0 +1,222 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom startTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 400;
+            deltaT 1;
+            writeControl timeStep;
+            writeInterval 50;
+            purgeWrite 0;
+            writeFormat ascii;
+            writePrecision 6;
+            timeFormat general;
+            timePrecision 6;
+            runTimeModifiable yes;
+            adjustTimeStep false;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+
+regions
+{
+    region0
+    {
+        state (steady ras);
+        boundaryMesh
+        {
+            inlet
+            {
+                type inlet;
+            }
+            outlet
+            {
+                type outlet;
+            }
+            top
+            {
+                type patch;
+            }
+            ground
+            {
+                type wall;
+            }
+            sides
+            {
+                type patch;
+            }
+            cube
+            {
+                type wall;
+            }
+        }
+        turbulenceModel kEpsilon;
+        materials (air);
+        materialProperties
+        {
+            air
+            {
+                equationOfStateCoeffs
+                {
+                    rho 1.225;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cp 1004.4;
+                }
+                muModelCoeffs
+                {
+                    mu 1.7885e-05;
+                }
+                kappaModelCoeffs
+                {
+                    Pr 1.0;
+                }
+                referenceFields
+                {
+                    p [ 1 -1 -2 0 0 0 0 ] 0;
+                }
+            }
+        }
+        system
+        {
+            fvSolution
+            {
+            }
+            fvSchemes
+            {
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform (3 0 0);
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.357075;
+                }
+            }
+            epsilon
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 1.125;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            atmBoundaryLayer
+            {
+                Uref            10.0;
+                Zref            10.0;
+                zDir            (0 1 0);
+                flowDir         (1 0 0);
+                z0              uniform 0.03;
+                zGround         uniform 0.0;
+            }
+            inlet
+            {
+                U
+                {
+                    type            atmBoundaryLayerInletVelocity;
+                    $atmBoundaryLayer;
+                    value           uniform (10 0 0);
+                }
+                k
+                {
+                    type            atmBoundaryLayerInletK;
+                    $atmBoundaryLayer;
+                    value           uniform 0.357075;
+                }
+                epsilon
+                {
+                    type            atmBoundaryLayerInletEpsilon;
+                    $atmBoundaryLayer;
+                    value           uniform 1.125;
+                }
+            }
+            top
+            {
+                U { type slip; }
+                p { type slip; }
+                k { type slip; }
+                epsilon { type slip; }
+                alphat { type slip; }
+            }
+            sides
+            {
+                U { type slip; }
+                p { type slip; }
+                k { type slip; }
+                epsilon { type slip; }
+                alphat { type slip; }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

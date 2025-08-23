@@ -1,0 +1,40 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Create mesh
+helyxRun blockMesh
+
+# Split mesh into solid and gas regions
+helyxRun splitMeshRegions -cellZonesOnly -overwrite
+
+# Copy toposet dict
+cp system/topoSetDict system/gas/topoSetDict
+
+# Setup
+helyxRun caseSetup
+
+rm 0/gas/CO2 0/gas/H2O
+rm -rf constant/polyMesh
+
+cp system/decomposeParDict system/gas/decomposeParDict
+cp system/decomposeParDict system/solid/decomposeParDict
+
+# Decompose the case
+helyxRun decomposePar -allRegions
+
+# Re-balance the mesh
+helyxRun redistributePar -allRegions -overwrite
+
+# Crate gas region
+helyxRun topoSet -region gas
+
+# Run solver
+helyxRun helyxSolve
+
+# Reconstruct the case
+helyxRun reconstructPar -allRegions -newTimes
+
+#------------------------------------------------------------------------------

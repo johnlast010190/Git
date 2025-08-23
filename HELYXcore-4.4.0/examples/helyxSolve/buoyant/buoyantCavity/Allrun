@@ -1,0 +1,28 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Create initial mesh in series
+helyxRun blockMesh
+
+# Decompose initial mesh
+helyxRun decomposePar
+
+# Setup
+helyxRun caseSetup
+
+# Run
+helyxRun helyxSolve
+
+# Run post-processing
+helyxRun -log log.postProcess.sample postProcess -latestTime -func sample
+
+# Generate validation graphs against experimental results
+./validation/createGraphs
+
+# Create dummy file for ParaView visualisation
+touch buoyantCavity.foam
+
+#------------------------------------------------------------------------------

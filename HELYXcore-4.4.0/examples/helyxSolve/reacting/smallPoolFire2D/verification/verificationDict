@@ -1,0 +1,37 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/probes/0/T.tsv";
+                reference "verification/short/probes/0/T.tsv";
+                variables "Probe 0";
+            }
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/short/VR/0/volumeReport.tsv";
+                variables "Tmin" "Tmax" "Tmean" "TstDev" "Umin" "Umax" "Umean" "UstDev" "pmin" "pmax" "pmean";
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/probes/0/T.tsv";
+                reference "verification/long/probes/0/T.tsv";
+                variables "Probe 0";
+            }
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/long/VR/0/volumeReport.tsv";
+                variables "Tmin" "Tmax" "Tmean" "TstDev" "Umin" "Umax" "Umean" "UstDev" "pmin" "pmax" "pmean";
+            }
+        );
+    }
+);

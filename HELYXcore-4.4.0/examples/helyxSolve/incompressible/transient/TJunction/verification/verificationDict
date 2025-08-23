@@ -1,0 +1,22 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/probes/0/p";
+                md5 "8d7aa8cb65a4b6729b81e1b8aed4c662";
+            }
+            {
+                result "postProcessing/probes/0/U";
+                md5 "c0d87e45dc55674cf472bbd179035120";
+            }
+        );
+    }
+
+    // No long run, md5 validation.
+);
+
+tags asan;

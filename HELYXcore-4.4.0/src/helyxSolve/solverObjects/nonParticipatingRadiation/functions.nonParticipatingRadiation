@@ -1,0 +1,7 @@
+    radiation
+    {
+        type            nonParticipatingRadiation;
+        functionObjectLibs ( "libhelyxSolve.so" );
+        region          region0;
+    }
+

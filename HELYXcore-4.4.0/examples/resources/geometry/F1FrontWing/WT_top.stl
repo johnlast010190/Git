@@ -1,0 +1,128 @@
+solid zone0
+ facet normal -2.273736754e-16 2.273736754e-16 1
+  outer loop
+   vertex -1500 -1500 1000
+   vertex -1000 -1500 1000
+   vertex -1000 -1000 1000
+  endloop
+ endfacet
+ facet normal -2.273736754e-16 2.273736754e-16 1
+  outer loop
+   vertex -1500 -1500 1000
+   vertex -1000 -1000 1000
+   vertex -1500 -1000 1000
+  endloop
+ endfacet
+ facet normal 2.273736754e-16 -2.273736754e-16 1
+  outer loop
+   vertex -1500 -1000 1000
+   vertex -1000 -1000 1000
+   vertex -1000 -500 1000
+  endloop
+ endfacet
+ facet normal 2.273736754e-16 -2.273736754e-16 1
+  outer loop
+   vertex -1500 -1000 1000
+   vertex -1000 -500 1000
+   vertex -1500 -500 1000
+  endloop
+ endfacet
+ facet normal -2.273736754e-16 2.273736754e-16 1
+  outer loop
+   vertex -1500 -500 1000
+   vertex -1000 -500 1000
+   vertex -1000 0 1000
+  endloop
+ endfacet
+ facet normal -2.273736754e-16 2.273736754e-16 1
+  outer loop
+   vertex -1500 -500 1000
+   vertex -1000 0 1000
+   vertex -1500 0 1000
+  endloop
+ endfacet
+ facet normal 2.273736754e-16 2.584939414e-32 1
+  outer loop
+   vertex -1000 -1500 1000
+   vertex -500 -1500 1000
+   vertex -500 -1000 1000
+  endloop
+ endfacet
+ facet normal 2.273736754e-16 2.584939414e-32 1
+  outer loop
+   vertex -1000 -1500 1000
+   vertex -500 -1000 1000
+   vertex -1000 -1000 1000
+  endloop
+ endfacet
+ facet normal 0 -2.273736754e-16 1
+  outer loop
+   vertex -500 -1500 1000
+   vertex 0 -1500 1000
+   vertex 0 -1000 1000
+  endloop
+ endfacet
+ facet normal 0 -2.273736754e-16 1
+  outer loop
+   vertex -500 -1500 1000
+   vertex 0 -1000 1000
+   vertex -500 -1000 1000
+  endloop
+ endfacet
+ facet normal -0 0 1
+  outer loop
+   vertex -1000 -1000 1000
+   vertex -500 -1000 1000
+   vertex -500 -500 1000
+  endloop
+ endfacet
+ facet normal -0 0 1
+  outer loop
+   vertex -1000 -1000 1000
+   vertex -500 -500 1000
+   vertex -1000 -500 1000
+  endloop
+ endfacet
+ facet normal -2.273736754e-16 2.273736754e-16 1
+  outer loop
+   vertex -500 -1000 1000
+   vertex 0 -1000 1000
+   vertex 0 -500 1000
+  endloop
+ endfacet
+ facet normal -2.273736754e-16 2.273736754e-16 1
+  outer loop
+   vertex -500 -1000 1000
+   vertex 0 -500 1000
+   vertex -500 -500 1000
+  endloop
+ endfacet
+ facet normal 2.273736754e-16 0 1
+  outer loop
+   vertex -1000 -500 1000
+   vertex -500 -500 1000
+   vertex -500 0 1000
+  endloop
+ endfacet
+ facet normal 2.273736754e-16 0 1
+  outer loop
+   vertex -1000 -500 1000
+   vertex -500 0 1000
+   vertex -1000 0 1000
+  endloop
+ endfacet
+ facet normal 0 0 1
+  outer loop
+   vertex -500 -500 1000
+   vertex 0 -500 1000
+   vertex 0 0 1000
+  endloop
+ endfacet
+ facet normal 0 0 1
+  outer loop
+   vertex -500 -500 1000
+   vertex 0 0 1000
+   vertex -500 0 1000
+  endloop
+ endfacet
+endsolid zone0

@@ -1,0 +1,189 @@
+#------------------------------------------------------------------------------
+# Query database for helyxAdjoint Log extraction.
+# Each line stands for one query:
+#
+#    [{section:|endSection:}]variable '/' line selector '/' column selector [ '/' section ]
+#
+# e.g.
+#    kMin/bounding k,/min:
+#
+# The extraction will select a line using 'bounding k,' and in the line
+# takes the word following 'min:' as the value.
+#
+# The 2nd and 3rd columns both contain extended regular expressions.
+#
+# If the 2nd (line selector) column contains bracketed subexpressions, then
+# these are used to replace '\1', '\2', etc in the first (name) column.
+#
+# The 3rd column must contain one bracketed subexpression, which extracts the
+# value of the variable from the line selected by the 2nd column expression.
+#
+# If the 4th ('section') column is specified, the query term is interpreted to
+# be part of the section of the named type, whereas if it is absent, it is
+# interpreted in the context of time iterations.
+#
+# Patterns for section beginnings and ends are declared by prepending "section:"
+# or "endSection:" to the first column. The 2nd column
+# then defines the pattern which triggers the beginning of the section, and
+# the bracketed subexpression in the third column is used as the section name
+# attached to variables declared to be in the section.
+#
+# Special sections are 'timeIteration', 'objective' and 'subIteration'
+# which delimit time iterations, objective iterations and sub-iterations.
+# They must be declared in the reverse of the above order in order to work
+# properly, i.e. subIteration, then objective, then timeIteration.
+#
+#------------------------------------------------------------------------------
+
+#- String to recognize new objective by (iterations across primal and objectives)
+section:objective/^(Primal|Adjoint) Sub-cycle: 1$/^(Primal|Adjoint) Sub-cycle: 1$
+sectionName:objective/^Adjoint Solution for objective: /^Adjoint Solution for objective: ([^[:space:]]*)
+
+#- String to recognize new time iteration
+section:timeIteration/^[[:space:]]*Time = /Time = ([^[:space:],]*)
+
+#- Simulation time:
+Time/^[[:space:]]*Time = /Time = ([^[:space:],]*)
+
+#- Execution time:
+executionTime/^ExecutionTime = /ExecutionTime = ([^[:space:],]*)
+subExecutionTime/Sub-cycle: ExecutionTime = /ExecutionTime = ([^[:space:],]*)/subIteration
+
+#- Continuity errors:
+contLocal/time step continuity errors :/sum local = ([^[:space:],]*)
+contGlobal/time step continuity errors :/ global = ([^[:space:],]*)
+contCumulative/time step continuity errors :/cumulative = ([^[:space:],]*)
+subContLocal/time step continuity errors :/sum local = ([^[:space:],]*)/subIteration
+subContGlobal/time step continuity errors :/ global = ([^[:space:],]*)/subIteration
+subContCumulative/time step continuity errors :/cumulative = ([^[:space:],]*)/subIteration
+
+#- Courant no:
+CourantMax/Courant Number /max: ([^[:space:],]*)
+CourantMean/Courant Number /mean: ([^[:space:],]*)
+subCourantMax/Courant Number /max: ([^[:space:],]*)/subIteration
+subCourantMean/Courant Number /mean: ([^[:space:],]*)/subIteration
+
+#- Adjoint topology changes
+fluidVolAbs/Fluid volume -/absolute:[[:space:]]*([^[:space:]]*)
+fluidVolFrac/Fluid volume -/fractional:[[:space:]]*([^[:space:]]*)
+fluidVolChange/Fluid volume -/change:[[:space:]]*([^[:space:]]*)
+blockedVolAbs/Blocked volume -/absolute:[[:space:]]*([^[:space:]]*)
+blockedVolFrac/Blocked volume -/fractional:[[:space:]]*([^[:space:]]*)
+blockedVolChange/Blocked volume -/change:[[:space:]]*([^[:space:]]*)
+surfAreaAbs/Surface area -/absolute:[[:space:]]*([^[:space:]]*)
+surfAreaFrac/Surface area -/fractional:[[:space:]]*([^[:space:]]*)
+surfAreaChange/Surface area -/change:[[:space:]]*([^[:space:]]*)
+
+
+#- Adjoint objectives output
+
+# type: pressureLoss
+\1_pressureLoss_objective/^([^:]*):pressureLoss/Total pressure losses = ([^[:space:],]*)
+
+# type: curvatureSqr
+\1_curvatureSqr_objective/^([^:]*):curvatureSqr/Curvature squared = ([^[:space:],]*)
+
+# type: powerLoss
+\1_powerLoss_objective/^([^:]*):powerLoss/Power losses = ([^[:space:],]*)
+
+# type: flowrate
+\1_flowrate_outletFlowRate/^([^:]*):flowRate/raw objective value (outlet flow rate): ([^[:space:],]*)
+
+# type: force
+\1_force_forceInDirection/^([^:]*):force/magnitude in objective direction \(.*\):([^[:space:],]*)
+\1_force_totalForce/^([^:]*):force/Total force: \(([^)]*)
+
+# type: moment
+\1_moment_totalForce/^([^:]*):moment/Total Force: ([^[:space:],]*)
+\1_moment_totalRotorPower/^([^:]*):moment/Power at rotor: ([^[:space:],]*)
+\1_moment_objective/^([^:]*):moment/raw objective value \(moment\): ([^[:space:],]*)
+
+# type: volumePowerLoss
+\1_volumePowerLoss_objective/^([^:]*):volumePowerLoss/Power losses = ([^[:space:],]*)
+
+# type: pumpEfficiency
+\1_pumpEfficiency_powerGain/^([^:]*):pumpEfficiency/PowerGain\(W\) : ([^[:space:],]*)
+\1_pumpEfficiency_TOmega/^([^:]*):pumpEfficiency/TOmega \(W\): ([^[:space:],]*)
+\1_pumpEfficiency_efficiency/^([^:]*):pumpEfficiency/Pump Eff \(%\): ([^[:space:],]*)
+
+# type: rearLift
+\1_rearLift_totalForce/^([^:]*):rearLift/Total force: ([^[:space:],]*)
+\1_rearLift_totalMoment/^([^:]*):rearLift/Total moment: ([^[:space:],]*)
+\1_rearLift_objective/^([^:]*):rearLift/raw objective value: ([^[:space:],]*)
+
+# type: shearStress
+\1_shearStress_shearStress/^([^:]*):shearStress/raw objective value (shearStress): ([^[:space:],]*)
+
+# type: swirl
+\1_swirl_meanSwirl/^([^:]*):swirl/Mean swirl: ([^[:space:],]*)
+\1_swirl_objective/^([^:]*):swirl/raw objective value: ([^[:space:],]*)
+
+# type: uniformity
+\1_uniformity_uniformityIndex/^([^:]*):uniformity/Uniformity index: ([^[:space:],]*)
+\1_uniformity_objective/^([^:]*):uniformity/raw objective value: ([^[:space:],]*)
+
+# type: volume
+\1_volume_fluidVol/^([^:]*):volume /Fluid volume: ([^[:space:],]*)
+\1_volume_fluidVolPercent/^([^:]*):volume /ge of total volume: ([^[:space:],]*)
+\1_volume_fluidVolChange/^([^:]*):volume /hange in fluid volume: ([^[:space:],]*)
+
+# type: volumeConstraint
+section:volumeConstraint/^[^:]*:volumeConstraint/^([^:]*):volumeConstraint
+volConstraint_fluidVol/Fluid volume:/Fluid volume: ([^[:space:],]*)/volumeConstraint
+volConstraint_fluidVolPercent/Percentage/fluid volume: ([^[:space:],]*)/volumeConstraint
+volConstraint_objective/objective value/\(fraction - current_fraction\): ([^[:space:],]*)/volumeConstraint
+endSection:volumeConstraint/^[[:space:]]*$/()
+
+# type: massFlowSplit
+section:massflowSplit/^[^:]*:massflowSplit/^([^:]*):massflowSplit
+massflowSplit_\1/^\t([^:]*)/^\t[^:]*:[[:space:]]*([^[:space:]]*)/massflowSplit
+massFlowSplit_objective/raw objective value:/raw objective value:[[:space:]]*([^[:space:]]*)/massflowSplit
+endSection:massflowSplit/^[[:space:]]*$/()
+
+#- K bounding
+kMin/bounding k,/min: ([^[:space:],]*)
+kMax/bounding k,/max: ([^[:space:],]*)
+kAvg/bounding k,/average: ([^[:space:],]*)
+subkMin/bounding k,/min: ([^[:space:],]*)/subIteration
+subkMax/bounding k,/max: ([^[:space:],]*)/subIteration
+subkAvg/bounding k,/average: ([^[:space:],]*)/subIteration
+
+#- epsilon bounding
+epsMin/bounding epsilon,/min: ([^[:space:],]*)
+epsMax/bounding epsilon,/max: ([^[:space:],]*)
+epsAvg/bounding epsilon,/average: ([^[:space:],]*)
+subEpsMin/bounding epsilon,/min: ([^[:space:],]*)/subIteration
+subEpsMax/bounding epsilon,/max: ([^[:space:],]*)/subIteration
+subEpsAvg/bounding epsilon,/average: ([^[:space:],]*)/subIteration
+
+#- alpha bounding
+alpha1Min/Min\(alpha1\) =/Min\(alpha1\) = ([^[:space:],]*)
+alpha1Max/Max\(alpha1\) =/Max\(alpha1\) = ([^[:space:],]*)
+subAlpha1Min/Min\(alpha1\) =/Min\(alpha1\) = ([^[:space:],]*)/subIteration
+subAlpha1Max/Max\(alpha1\) =/Max\(alpha1\) = ([^[:space:],]*)/subIteration
+
+#- AMI
+AMIMin/AMI: Patch source sum/average = ([^[:space:],]*)
+subAMIMin/AMI: Patch source sum/average = ([^[:space:],]*)/subIteration
+
+#- Special for combustion code:
+minFu/min\(fu\) = /min\(fu\) = ([^[:space:],]*)
+minFt/min\(ft\) = /min\(ft\) = ([^[:space:],]*)
+subMinFu/min\(fu\) = /min\(fu\) = ([^[:space:],]*)/subIteration
+subMinFt/min\(ft\) = /min\(ft\) = ([^[:space:],]*)/subIteration
+
+# type: turbulentNoise
+\1_turbulentNoise_objective/^([^:]*):turbulentNoise/raw objective value: ([^[:space:],]*)
+
+#- Topology convergence
+\1_convergence_currentRate/^([^:]*): Current rate/Current rate = ([^[:space:],]*)
+\1_convergence_meanRate/^([^:]*): Current rate/Mean rate = ([^[:space:],]*)
+
+#- Wall function data - line begins with Rey =
+Rey/Rey = /Rey = ([^[:space:],]*)
+uTau/Rey = /uTau = ([^[:space:],]*)
+nutPlus/Rey = /nut\+ = ([^[:space:],]*)
+yPlus/Rey = /y\+ = ([^[:space:],]*)
+uPlus/Rey = /u\+ = ([^[:space:],]*)
+kPlus/Rey = /k\+ = ([^[:space:],]*)
+epsilonPlus/Rey = /epsilon+ = ([^[:space:],]*)

@@ -1,0 +1,79 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      binary;
+    class       dictionary;
+    arch        "LSB;label=32;scalar=64";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     helyxSolve;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         1500;
+
+deltaT          constant 1;
+
+writeControl    timeStep;
+
+writeInterval   500;
+
+purgeWrite      1;
+
+writeFormat     binary;
+
+writePrecision  10;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   6;
+
+graphFormat     raw;
+
+runTimeModifiable true;
+
+libs            ( "" );
+
+writeEndTime    true;
+
+adjustTimeStep  false;
+
+maxCo           0;
+
+maxAlphaCo      0;
+
+minDeltaT       0;
+
+maxDeltaT       0;
+
+functions
+{
+        VR
+        {
+            functionObjectLibs ( "libreport.so" );
+            logToFile       true;
+            fields          ( aspectRatio determinant nonOrthogonality skewness volumeRatio );
+            executeControl  onEnd;
+            writeControl    onEnd;
+            type            volumeReport;
+            outputFileFormat tsv;
+        }
+}
+
+
+// ************************************************************************* //

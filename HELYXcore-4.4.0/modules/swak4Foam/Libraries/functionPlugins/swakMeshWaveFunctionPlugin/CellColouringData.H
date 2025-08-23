@@ -1,0 +1,170 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : dev
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) ICE Stroemungsfoschungs GmbH
+    (c) 1991-2008 OpenCFD Ltd.
+
+Class
+    Foam::CellColouringData
+
+Description
+    Helper class for Coloring the cells so that no two have the same colour.
+    Two different sets of data
+    - for cells
+      - a list of the neighbour faces and the values their cells
+      - the current colour
+    - for faces
+      - colour to propagate from the cell
+      - Indicator variable that tells the face to propagate to the next cell
+
+SourceFiles
+    CellColouringData.C
+
+Contributors/Copyright:
+    2014, 2016-2017 Bernhard F.W. Gschaider <bgschaid@hfd-research.com>
+
+ SWAK Revision: $Id$
+\*---------------------------------------------------------------------------*/
+
+#ifndef CellColouringData_H
+#define CellColouringData_H
+
+#include "helpers/FaceCellWaveData.H"
+
+#include "meshes/meshShapes/cell/cell.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+/*---------------------------------------------------------------------------*\
+                           Class FaceCellWave Declaration
+\*---------------------------------------------------------------------------*/
+
+
+class CellColouringData
+:
+    public FaceCellWaveData
+{
+    label colour_;
+
+    labelList colours_;
+
+    bool goOn_;
+
+public:
+
+    inline CellColouringData();
+
+    inline CellColouringData(const cell &);
+
+    inline label colour() const;
+
+    inline label calcColour() const;
+
+    inline label nextFace(const cell&c) const;
+
+    inline void setColour(label col,bool goOn=false);
+
+#ifdef FOAM_FACECELLWAVE_HAS_TRACKINGDATA
+    template<class TrackingData>
+#endif
+    inline bool valid(
+#ifdef FOAM_FACECELLWAVE_HAS_TRACKINGDATA
+        TrackingData &
+#endif
+    ) const;
+
+    inline bool goOn() const;
+
+#ifdef FOAM_FACECELLWAVE_HAS_TRACKINGDATA
+    template<class TrackingData>
+#endif
+    inline bool updateCell
+    (
+        const polyMesh& mesh,
+        const label thisCellI,
+        const label neighbourFaceI,
+        const CellColouringData& neighbourInfo,
+        const scalar tol
+#ifdef FOAM_FACECELLWAVE_HAS_TRACKINGDATA
+        ,TrackingData &
+#endif
+    );
+
+#ifdef FOAM_FACECELLWAVE_HAS_TRACKINGDATA
+    template<class TrackingData>
+#endif
+    inline bool updateFace
+    (
+        const polyMesh& mesh,
+        const label thisFaceI,
+        const label neighbourCellI,
+        const CellColouringData& neighbourInfo,
+        const scalar tol
+#ifdef FOAM_FACECELLWAVE_HAS_TRACKINGDATA
+        ,TrackingData &
+#endif
+    );
+
+#ifdef FOAM_FACECELLWAVE_HAS_TRACKINGDATA
+    template<class TrackingData>
+#endif
+    inline bool updateFace
+    (
+        const polyMesh&,
+        const label thisFaceI,
+        const CellColouringData& neighbourInfo,
+        const scalar tol
+#ifdef FOAM_FACECELLWAVE_HAS_TRACKINGDATA
+        ,TrackingData &
+#endif
+    );
+
+    inline bool operator!=(const CellColouringData &rhs) const;
+
+    friend inline Ostream& operator<<(Ostream&, const CellColouringData&);
+    friend inline Istream& operator>>(Istream&, CellColouringData&);
+
+#ifdef FOAM_FACECELLWAVE_HAS_TRACKINGDATA
+    template<class TrackingData>
+    inline bool equal(const CellColouringData &rhs,TrackingData &td) const;
+#endif
+};
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "CellColouringData.C"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

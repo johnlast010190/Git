@@ -1,0 +1,26 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/d1/VR1/10/volumeReport.dat";
+                reference "verification/short/d1/VR1/10/volumeReport.dat";
+                variables "U.rain1mean" "alpha.rain1mean";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/d16/VR16/10/volumeReport.dat";
+                reference "verification/short/d16/VR16/10/volumeReport.dat";
+                variables "U.rain1mean" "alpha.rain1mean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+
+    // No long run, case too lengthy.
+);

@@ -1,0 +1,41 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/FE/0/fractionalEffectiveDose.dat";
+                reference "verification/short/FE/0/fractionalEffectiveDose.dat";
+                variables "FED (incapacitation)" "FED (CO)" "HV_CO2" "FED (O2)";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/VR/0/volumeReport.dat";
+                reference "verification/short/VR/0/volumeReport.dat";
+                variables "Tmax" "Tmean" "Umax" "Umean" "pmax" "pmean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/FE/0/fractionalEffectiveDose.dat";
+                reference "verification/long/FE/0/fractionalEffectiveDose.dat";
+                variables "FED (incapacitation)" "FED (CO)" "HV_CO2" "FED (O2)";
+            }
+            {
+                result "postProcessing/VR/0/volumeReport.dat";
+                reference "verification/long/VR/0/volumeReport.dat";
+                variables "Tmax" "Tmean" "Umax" "Umean" "pmax" "pmean";
+            }
+        );
+    }
+);

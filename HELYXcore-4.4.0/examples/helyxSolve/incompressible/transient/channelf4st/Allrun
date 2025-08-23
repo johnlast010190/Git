@@ -1,0 +1,13 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Run case1
+./case1/Allrun
+
+# Run case2
+./case2/Allrun
+
+#------------------------------------------------------------------------------

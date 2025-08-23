@@ -1,0 +1,16 @@
+solid Cube.004
+facet normal 2.38418579102e-07 1.0 2.08616256714e-07
+  outer loop
+    vertex -0.999999642372 1.00000035763 -1.0
+    vertex -0.999999940395 1.0 1.0
+    vertex 1.00000047684 0.999999463558 1.0
+  endloop
+endfacet
+facet normal 2.38418579102e-07 1.0 2.08616256714e-07
+  outer loop
+    vertex -0.999999642372 1.00000035763 -1.0
+    vertex 1.00000047684 0.999999463558 1.0
+    vertex 1.0 0.999999940395 -1.0
+  endloop
+endfacet
+endsolid

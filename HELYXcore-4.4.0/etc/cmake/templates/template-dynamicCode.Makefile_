@@ -1,0 +1,44 @@
+#!/usr/bin/make
+
+CXX = ${CMAKE_CXX_COMPILER}
+
+CXX_FLAGS = ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${UPPER_CMAKE_BUILD_TYPE}}
+CXX_FLAGS += ${OF_COMPILE_DEFINITIONS}
+# These are treated specially in CMake
+CXX_FLAGS += -fPIC -std=c++17
+
+INCLUDES = -I$(HELYX_PROJECT_DIR)/src/OpenFOAM -I$(HELYX_PROJECT_DIR)/src/OSspecific/POSIX -I@DYNCODE_THIRDPARTY_MPI_INC@
+
+# Options from the dynamicCode dictionary (evaluated at run-time)
+DYNAMIC_CODE_OPTIONS = |DYNAMIC_CODE_OPTIONS|
+
+LFLAGS = -shared ${CMAKE_SHARED_LINKER_FLAGS} ${CMAKE_SHARED_LINKER_FLAGS${UPPER_CMAKE_BUILD_TYPE}} -L$(HELYX_PROJECT_DIR)/platforms/$(HELYX_OPTIONS)/lib -L$(HELYX_PROJECT_DIR)/platforms/$(HELYX_OPTIONS)/lib/$(HELYX_MPI_NAME)
+
+# Define some default libs
+LIBS = -lOpenFOAM -lm -ldl |LINK_LIBS|
+
+# Evaluated source files at run-time
+SRCS = |SOURCE_FILES|
+
+OBJS = $(SRCS:.C=.o)
+
+# define the output file
+MAIN = |LIBRARY_NAME|
+
+
+.PHONY: depend clean
+
+all: $(MAIN)
+	@echo  |LIBRARY_NAME| compiled
+
+$(MAIN): $(OBJS)
+	$(CXX) $(CXX_FLAGS) $(INCLUDES) $(DYNAMIC_CODE_OPTIONS) -o $(MAIN) $(OBJS) $(LFLAGS) $(LIBS)
+
+.C.o:
+	$(CXX) $(CXX_FLAGS) $(INCLUDES) $(DYNAMIC_CODE_OPTIONS) -c $<  -o $@
+
+clean:
+	$(RM) *.o *~ $(MAIN)
+
+depend: $(SRCS)
+	makedepend $(INCLUDES) $^

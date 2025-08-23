@@ -1,0 +1,305 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    functions
+    {
+        LD
+        {
+            type liftDrag;
+            regions ( region0 );
+            patches ( walls );
+            porosity true;
+            nAveragingSteps 1;
+            outputRegionData true;
+            liftDirection ( 0.0 1.0 0.0 );
+            dragDirection ( 1.0 0.0 0.0 );
+            Uinf ( 25.75 3.62 0.0 );
+            Pref 0.0;
+            rhoInf 1.205;
+            referenceArea 1.75;
+            referenceLength 35.0;
+            referencePoint ( 0.0 0.0 0.0 );
+            wheelbase 1.0;
+            binData
+            {
+                nBins 100;
+                axis ( 1.0 0.0 0.0 );
+            }
+            writeControl onEnd;
+            writeInterval 1;
+            executeControl onEnd;
+            executeInterval 1;
+            functionObjectLibs ("libforces.so" );
+            outputFileFormat tsv;
+        }
+    }
+    system
+    {
+        fvSchemes
+        {
+            ddtSchemes
+            {
+                default steadyState;
+            }
+            gradSchemes
+            {
+                default Gauss linear;
+            }
+            divSchemes
+            {
+                default none;
+                div(phi,U) bounded Gauss linearUpwindV gradU;
+                div(phi,nuTilda) bounded Gauss linearUpwind grad(nuTilda);
+                div((nuEff*dev2(T(grad(U))))) Gauss linear;
+            }
+            laplacianSchemes
+            {
+                default Gauss linear corrected;
+            }
+            interpolationSchemes
+            {
+                default linear;
+            }
+            snGradSchemes
+            {
+                default corrected;
+            }
+            wallDist
+            {
+                method meshWave;
+            }
+        }
+        fvSolution
+        {
+            solvers
+            {
+                p
+                {
+                    solver GAMG;
+                    tolerance 1e-06;
+                    relTol 0.1;
+                    smoother GaussSeidel;
+                }
+                U
+                {
+                    solver smoothSolver;
+                    smoother GaussSeidel;
+                    nSweeps 2;
+                    tolerance 1e-08;
+                    relTol 0.1;
+                }
+                nuTilda
+                {
+                    solver smoothSolver;
+                    smoother GaussSeidel;
+                    nSweeps 2;
+                    tolerance 1e-08;
+                    relTol 0.1;
+                }
+            }
+            relaxationFactors
+            {
+                fields
+                {
+                    p 0.3;
+                }
+                equations
+                {
+                    U 0.7;
+                    nuTilda 0.7;
+                }
+            }
+            SIMPLE
+            {
+                nNonOrthogonalCorrectors 0;
+                pRefCell 0;
+                pRefValue 0.0;
+                modifiedMomentumInterp true;
+                residualControl
+                {
+                    U 1.0E-6;
+                    p 1.0E-6;
+                    nuTilda 1.0E-5;
+                }
+            }
+            cache
+            {
+                grad(U) ;
+            }
+        }
+        controlDict
+        {
+            application helyxSolve;
+            startFrom latestTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 500;
+            deltaT 1;
+            writeControl timeStep;
+            writeInterval 500;
+            purgeWrite 0;
+            writeFormat ascii;
+            writePrecision 6;
+            writeCompression uncompressed;
+            timeFormat general;
+            timePrecision 6;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (steady ras);
+        boundaryMesh
+        {
+            inlet { type inlet; }
+            outlet { type outlet; }
+            walls { type wall; }
+            frontAndBack { type empty; }
+        }
+        turbulenceModel SpalartAllmaras;
+        materials (material);
+        materialProperties
+        {
+            material
+            {
+                materialType    fluid;
+                energy          sensibleEnthalpy;
+                molWeight       28.97;
+                muModel         scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          1.205e-5;
+                }
+                thermodynamics  hConst;
+                thermodynamicsCoeffs
+                {
+                    Cp          1007;
+                    Hf          0.0;
+                }
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho         1.205;
+                }
+
+                kappaModel      kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr          0.7;
+                }
+
+                referenceFields
+                {
+                    p           [1 -1 -2 0 0 0 0] 100000;
+                }
+            }
+        }
+        fields
+        {
+            U { initialisation { type fixedValue; value uniform ( 25.75 3.62 0.0 ); } }
+            p { initialisation { type fixedValue; value uniform 0.0; } }
+            nuTilda { initialisation { type fixedValue; value uniform 0.14; } }
+            nut { initialisation { type fixedValue; value uniform 0.14; } }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type freestreamVelocity;
+                    freestreamValue uniform ( 25.75 3.62 0.0 );
+                    value uniform ( 25.75 3.62 0.0 );
+                }
+                p
+                {
+                    type freestreamPressure;
+                    freestreamValue uniform 0.0;
+                    value uniform 0.0;
+                }
+                nuTilda
+                {
+                    type freestream;
+                    freestreamValue uniform 0.14;
+                }
+                nut
+                {
+                    type freestream;
+                    freestreamValue uniform 0.14;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type freestreamVelocity;
+                    freestreamValue uniform ( 25.75 3.62 0.0 );
+                    value uniform ( 25.75 3.62 0.0 );
+                }
+                p
+                {
+                    type freestreamPressure;
+                    freestreamValue uniform 0.0;
+                    value uniform 0.0;
+                }
+                nuTilda
+                {
+                    type freestream;
+                    freestreamValue uniform 0.14;
+                }
+                nut
+                {
+                    type freestream;
+                    freestreamValue uniform 0.14;
+                }
+            }
+            walls
+            {
+                U { type noSlip; }
+                p { type zeroGradient; }
+                nuTilda
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+                nut
+                {
+                    type nutUSpaldingWallFunction;
+                    value uniform 0.0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

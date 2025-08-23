@@ -1,0 +1,194 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom latestTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 500;
+            deltaT 1;
+            writeControl timeStep;
+            writeInterval 100;
+            writeFormat ascii;
+            writePrecision 10;
+            runTimeModifiable yes;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type volumeReport;
+            regions ( region0 );
+            fields ( U p );
+            writeControl timeStep;
+            writeInterval 1;
+            executeControl timeStep;
+            executeInterval 1;
+            functionObjectLibs ( "libreport.so" );
+            outputFileFormat tsv;
+        }
+        fp1
+        {
+            functionObjectLibs ( "libfieldFunctionObjects.so" );
+            operations      ( { operation Urel; write true; } );
+            executeControl  timeStep;
+            writeControl    outputTime;
+            type            fieldProcess;
+            calculationControl continuous;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (steady ras);
+        boundaryMesh
+        {
+            inlet { type wall; }
+            outlet { type outlet; }
+            bottom { type wall; }
+            top { type wall; }
+            back { type empty; }
+            front { type empty; }
+            cylinder { type wall; }
+        }
+        turbulenceModel kOmegaSST;
+        materials (air);
+        system
+        {
+            fvOptions
+            {
+                cylinder_MRF
+                {
+                    type MRFSource;
+                    MRFSourceCoeffs
+                    {
+                        selectionMode all;
+                        referenceFrame rotFrame;
+                    }
+                }
+            }
+            meshObjects
+            {
+                rotFrame
+                {
+                    type            motionCoordinateFrame;
+                    motionFunction
+                    {
+                        type vehicleMotion;
+                        vehicleMotionCoeffs
+                        {
+                            vehicleSpeed    constant -30;
+                            invTurnRadius   constant  0;
+                        }
+                    }
+                    coordinateSystem
+                    {
+                        type cartesian;
+                        origin ( 0 -1.0 0.5 );
+                        e1 (1 0 0);
+                        e2 (0 1 0);
+                    }
+                }
+            }
+        }
+        fields
+        {
+            U { initialisation { type fixedValue; value uniform ( 0 0 0 ); } }
+            p { initialisation { type fixedValue; value uniform 0; } }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type inletOutlet;
+                    value uniform ( 0 0 0 );
+                    inletValue uniform ( 0 0 0 );
+                }
+                p { type zeroGradient; }
+            }
+            outlet
+            {
+                U
+                {
+                    type inletOutlet;
+                    value uniform ( 0 0 0 );
+                    inletValue uniform ( 0 0 0 );
+                }
+                p
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            bottom
+            {
+                U
+                {
+                    type fixedValueVelocity;
+                    value uniform ( 0 0 0 );
+                    referenceFrame rotFrame;
+                }
+                p { type zeroGradient; }
+            }
+            top
+            {
+                U
+                {
+                    type fixedValueVelocity;
+                    value uniform ( 0 0 0 );
+                    referenceFrame rotFrame;
+                }
+                p { type zeroGradient; }
+            }
+            cylinder
+            {
+                U
+                {
+                    type fixedValueVelocity;
+                    value uniform ( 0 0 0 );
+                    referenceFrame rotFrame;
+                }
+                p { type zeroGradient; }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,41 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/element/VR_element/0/volumeReport.tsv";
+                reference "verification/short/element/VR_element/0/volumeReport.tsv";
+                variables "Tmean";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/default/VR_default/0/volumeReport.tsv";
+                reference "verification/short/default/VR_default/0/volumeReport.tsv";
+                variables "Tmean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/element/VR_element/0/volumeReport.tsv";
+                reference "verification/long/element/VR_element/0/volumeReport.tsv";
+                variables "Tmean";
+            }
+            {
+                result "postProcessing/default/VR_default/0/volumeReport.tsv";
+                reference "verification/long/default/VR_default/0/volumeReport.tsv";
+                variables "Tmean";
+            }
+        );
+    }
+);

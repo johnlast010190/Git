@@ -1,0 +1,20 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Construct mesh
+m4 system/blockMeshDict.m4 > system/blockMeshDict
+helyxRun blockMesh
+helyxRun topoSet
+helyxRun setsToZones -noFlipMap
+
+helyxRun decomposePar
+helyxRun caseSetup
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch mixerVessel2D.foam
+
+#------------------------------------------------------------------------------

@@ -1,0 +1,235 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields  true;
+        resetBoundaryFields  true;
+        resetSystemDicts     true;
+        resetConstDicts      true;
+        resetBoundaryMesh    false;
+        deleteUnusedFields   true;
+    }
+    system
+    {
+        controlDict
+        {
+            application    helyxSolve;
+            startFrom      startTime;
+            startTime      0;
+            stopAt         endTime;
+            endTime        0.02;
+            deltaT         2e-6;
+            writeControl   adjustableRunTime;
+            writeInterval  2e-4;
+            writePrecision 16;
+            maxCo          0.3;
+        }
+    }
+    functions
+    {
+        fieldAverage
+        {
+            type            fieldAverage;
+            libs            ("libfieldFunctionObjects.so");
+            writeControl    writeTime;
+            fields
+            (
+                U
+                {
+                    mean        on;
+                    prime2Mean  off;
+                    base        time;
+                }
+                p
+                {
+                    mean        on;
+                    prime2Mean  off;
+                    base        time;
+                }
+
+            );
+        }
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p T );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state           ( transient ras energy );
+        turbulenceModel laminar;
+        materials       ( air );
+        materialProperties
+        {
+            air
+            {
+                materialType    fluid;
+                equationOfState perfectGas;
+                kappaModel      kappaSutherland;
+                kappaModelCoeffs
+                {
+                    As              1.4792e-06;
+                    Ts              116;
+                }
+                muModel         muSutherland;
+                muModelCoeffs
+                {
+                    As              1.4792e-06;
+                    Ts              116;
+                }
+            }
+            referenceFields
+            {
+                p               [ 1 -1 -2 0 0 0 0 ] 0;
+            }
+        }
+        system
+        {
+            fvSolution
+            {
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p               1;
+                    }
+                    equations
+                    {
+                        U               1;
+                        h               1;
+                    }
+                }
+                PIMPLE
+                {
+                    nOuterCorrectors    7;
+                    nCorrectors         1;
+                    rhoMax              1.5;
+                }
+            }
+            fvOptions
+            {
+                acousticDampingSource
+                {
+                    type            acousticDampingSource;
+                    active          yes;
+                    acousticDampingSourceCoeffs
+                    {
+                        timeStart        0.004;
+                        duration         1000.0;
+                        selectionMode    all;
+                        centre           (-1.25 0 0);
+                        radius1          1.2;
+                        radius2          1.65;
+                        frequency        3000;
+                        URef             UMean;
+                    }
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform (0 0 0);
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 101325;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 300;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type            zeroGradient;
+                }
+                p
+                {
+                    type            uniformFixedValue;
+                    uniformValue    sine;
+                    uniformValueCoeffs
+                    {
+                        amplitude       constant 1;
+                        frequency       constant 3000;
+                        scale           constant 50;
+                        level           constant 101325;
+                    }
+                    value           uniform 101325;
+                }
+                T
+                {
+                    type            fixedValue;
+                    value           uniform 300;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type            pressureInletOutletVelocity;
+                    inletValue      uniform (0 0 0);
+                    value           uniform (0 0 0);
+                }
+                p
+                {
+                    type            waveTransmissive;
+                    gamma           1.4;
+                    fieldInf        101325;
+                    lInf            2.25;
+                    value           uniform 101325;
+                }
+                T
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 300;
+                    value           uniform 300;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

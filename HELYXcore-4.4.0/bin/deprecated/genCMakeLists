@@ -1,0 +1,801 @@
+#!/bin/bash
+#/*---------------------------------------------------------------------------*\
+#|       o        |
+#|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+#|   o   O   o    |  Version : 4.4.0
+#|    o     o     |  ENGYS Ltd. <http://engys.com/>
+#|       o        |
+#\*---------------------------------------------------------------------------
+#License
+#    This file is part of HELYXcore.
+#    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+#
+#    HELYXcore is free software: you can redistribute it and/or modify it
+#    under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+#    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+#    for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+#
+#Copyright
+#    (c) 2015-2020 Engys Ltd.
+#
+# Script
+#     genCMakeLists
+#
+# Description
+#     Recursively generate CMakeLists.txt files based on Make/files and
+#     Make/options. See genCMakeLists -help for details.
+#
+#
+#     Notes on genCMakeLists
+#     The genCMakeLists script is intended as a one-off way to generate CMakeLists.txt
+#     files from the deprecated wmake Make/ directories.  It should not be used to
+#     regularly re-generate CMakeLists.txt files from Make/ directories.  Once the
+#     CMake lists files have been generated, they are yours to look after and should
+#     form a part of your project in the same way that wmake Make/ directories used to.
+#     The genCMakeLists script is not capable of parsing Allwmake files, as Allwmake
+#     files can contain any arbitrary bash code.  Similarly, genCMakeLists may fail to
+#     parse Make/ directories which contain unusual logic.  Such non-standard logic
+#     will need to be implemented by hand in the relevant CMakeLists.txt files.
+#     genCMakeLists will try and be as faithful to your Make/ directory as possible.
+#     Therefore, if your "files" file puts your custom binaries into a custom
+#     location, the generated CMakeList will respect this.
+#
+#     For example, if your "files" file specifies the binary output file like this:
+#     EXE = $(FOAM_USER_APPBIN)/mySimpleFoam
+#
+#     Then the generated CMakeList will append the following line to the bottom of the file:
+#     set_target_properties(${TARGET_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${FOAM_USER_APPBIN}")
+#
+#     However, genCMakeLists does not know the value that "FOAM_USER_APPBIN" should take.
+#     FOAM_USER_APPBIN should therefore be defined in one of your CMakeLists files:
+#     set(FOAM_USER_APPBIN "/your/output/path")
+#
+#     For user-set modules:
+#       CMakeLists.txt files can be generated from Make/ directories by running the
+#       "genCMakeLists" script in the top level directory of your code
+#
+#     For external projects:
+#       CMakeLists.txt files can be generated from Make/ directories by running the
+#       following command in the top level directory of the external project:
+#       genCMakeLists -externalProject .
+#
+#------------------------------------------------------------------------------
+
+Script=${0##*/}
+CMLNAME="CMakeLists.txt"
+
+
+echo "============================= WARNING ============================="
+echo "The genCMakeLists is now in a deprecated state."
+echo "The genCMakeLists is no longer compliant with the new HELYX standard of"
+echo "target includes and link libraries."
+echo "For details on how to switch to cmake please contact support@engys.com"
+echo "or login to www.engys.com for examples in the HELYX Compilation Guide."
+echo "==================================================================="
+
+sleep 10
+
+
+# ============================================================================ #
+# ---------------------- Command-line argument parsing ----------------------- #
+# ============================================================================ #
+
+usage() {
+    exec 1>&2
+    while [ "$#" -ge 1 ]; do echo "$1"; shift; done
+    cat <<USAGE
+
+Usage: $Script [OPTIONS]
+  -externalProject  Write a special top-level CMakeList.txt file in the current
+                    directory
+  -hereOnly         no recursion; only create a CMakeLists.txt in the current
+                    directory
+  -singleFile       create all targets in a single CMakeLists.txt file
+  -help             print the usage
+
+$Script - generate CMakeLists.txt files for compilation with cmake
+
+USAGE
+    exit 1
+}
+
+#------------------------------------------------------------------------------
+
+printHelp() {
+cat <<HELP
+-----------------------------------------------------------------------------
+
+Outputs a CMakeLists.txt file in the current directory
+
+If -externalProject is specified, the path to the top-level directory of the
+external build must also be specified.  A special top-level CMakeLists.txt file
+will then be generated.
+
+If -hereOnly is specified, does not enter any subdirectories.
+
+If -overwritable is specified, generates a CMakeLists.txt file with the
+following first line: "##genCMakeLists-generated"
+
+Otherwise, recursively generates CMakeLists.txt files in all subdirectories
+and includes those.
+
+Does not enter any directory containing a file called 'genCMakeLists-stopHere'.
+
+Only overwrites CMakeLists.txt files which begin with the following first line:
+##genCMakeLists-generated
+
+-----------------------------------------------------------------------------
+HELP
+
+usage
+}
+
+#------------------------------------------------------------------------------
+
+
+unset singleFileOpt
+
+# parse options
+while [ "$#" -gt 0 ]
+do
+    case "$1" in
+    -externalProject)
+        externalProject=true
+        externalProjectDir=$2
+        shift
+        ;;
+    -h | -help)
+        printHelp
+        exit 0
+        ;;
+    -hereOnly)
+        hereOnlyOpt=true
+        shift
+        ;;
+    -singleFile)
+        singleFileOpt=true
+        shift
+        ;;
+    -overwritable)
+        overwritable=true
+        shift
+        ;;
+    -*)
+        usage "unknown option: '$*'"
+        ;;
+    *)
+        break
+        ;;
+    esac
+done
+
+
+if [ -z "$HELYX_SRC" ]; then
+    echo
+    echo "Error: \$HELYX_SRC is not set - please source enviroment before running."
+    echo
+    exit 1
+fi
+
+
+if [[ $externalProject = "true" ]] && [[ ! -d "$externalProjectDir" ]]; then
+    echo
+    echo "Error:  The externalProject argument requires exactly one path argument "
+    echo "(poiting to the top-level directory of the external project).  The "
+    echo "following argument was received, which is not a directory:"
+    echo "    \"$externalProjectDir\""
+    echo
+    exit 1
+fi
+
+RUNDIR=`pwd`
+
+
+
+# ============================================================================ #
+# -------------------------------- Functions --------------------------------- #
+# ============================================================================ #
+
+# For paths in wmake files, perform substitutions of env variables.
+# Argument is the current (escaped) path. Input from stdin, output to stdout
+pathSubstitutions()
+{
+    sed -n ':libsrc;
+            s/\$(LIB_SRC)/${HELYX_SRC}/; t libsrc;
+            :libsrc2;
+            s/\${LIB_SRC}/${HELYX_SRC}/; t libsrc2;
+            :libplat;
+            s/\${LIB_PLATFORMS}/${HELYX_LIBRARY_OUTPUT_DIRECTORY}/; t libplat
+            :objectsdir;
+            s/\${OBJECTS_DIR}/'"$1"'${HELYX_OPTIONS}/; t objectsdir
+            :env;
+            s/\$(\([^)]*\))/${\1}/; t env;
+            :env2;
+            s/\$(\([^)]*\))/${\1}/; t env2;
+            : print; p'
+}
+
+#------------------------------------------------------------------------------
+
+# Make path relative to project root if not absolute already.
+# Argument is the current (escaped) path. Input from stdin, output to stdout
+pathRelative()
+{
+    sed -n 's/^\$.*/&/; t print;
+            s/^\/.*/&/; t print;
+            s:\(.*\):'"$1"'/\1:
+            : print;
+            p'
+}
+
+#------------------------------------------------------------------------------
+
+# Scan recursively for header files but don't go into nested directories with
+# their own Make directory (no longer used)
+scanHeaders()
+{
+    for f in * ; do
+        if [ -f $f ] && [ "${f:(-2)}" == ".H" ] ; then
+            echo $1/$f
+        fi
+    done
+    for f in * ; do
+        if [ -d $f ] && [ "$f" != "Make" ] && [ ! -d "$f"/Make ] ; then
+            cd "./$f" &&
+            (
+                scanHeaders $1/$f
+            ) &&
+            cd ..
+        fi
+    done
+}
+
+#------------------------------------------------------------------------------
+
+# Escape argument for embedding in a sed command (output - stdout)
+escapeForSed()
+{
+    echo "$1" | sed 's:[]\[\^\$\.\*\/]:\\&:g'
+}
+
+#------------------------------------------------------------------------------
+
+# Preprocessing (stripping comments and preproc directives, making variable
+# substitutions) of Make/files or Make/options
+preprocess()
+{
+    # Remove comments
+    contents=$(sed -r ':a; s%(.*)/\*.*\*/%\1%; ta; /\/\*/ !b; N; ba' |
+    # Remove line continuations
+    sed ':x; /\\$/ { N; s/\\\n//; tx }' |
+    # Just ignore anything between #if and #endif (complicated to deal with
+    # automatically as we want to evaluate at build time, not
+    # when this script is run)
+    sed -n ':a; s%^\#if.*$%%; t b; p; b; :b; n; s%^\#endif.*$%%; t c; b b; :c; b;' |
+    sed -n ':a; s%^\if.*$%%; t b; p; b; :b; n; s%^\endif.*$%%; t c; b b; :c; b;')
+
+    # Make all variable substitutions
+    while true ; do
+        s=$(echo "$contents" | grep "=" | ( read s; echo "$s" ) ) # Read first one
+        key=$(echo $s | sed -n 's/^EXE.*//; s/^LIB.*//; t; s/\([^[:space:]]*\)[[:space:]]*=.*/\1/; p')
+        if [ "$key" == "" ] ; then break; fi
+        escapedKey=$(escapeForSed "$key")
+        value=$(echo $s | sed -n 's/^EXE.*//; s/^LIB.*//; t; s/.*=[[:space:]]*\(.*[^[:space:]]\)[[:space:]]*$/\1/; p')
+        escapedValue=$(escapeForSed "$value")
+        # Make the substitution everywhere
+        contents=$(echo "$contents" | sed ':again; s/\(\$('"$escapedKey"')\)/'"$escapedValue"'/; t again')
+        # Remove the substitution - beware, read stripped any leading and trailing spaces of s
+        contents=$(echo "$contents" | grep -v "^[[:space:]]*$s[[:space:]]*$")
+    done
+
+    echo "$contents"
+}
+
+#------------------------------------------------------------------------------
+
+# Extract name of lib or exe and hence target from Make/files in the given path (argument)
+getTargetName()
+{
+    escapedPath=$(escapeForSed "$1")
+    # Extract and strip off just the executable or library name
+    EXEPATH=`sed -n 's/[[:space:]]*EXE[[:space:]]*=[[:space:]]*\([^[:space:]]*\)[[:space:]]*/\1/; T; p; q' "$1"/Make/files |
+    pathSubstitutions $escapedPath`
+    EXE=`basename "$EXEPATH"`
+    EXEDIR=`dirname "$EXEPATH"`
+    LIBPATH=`sed -n 's/[[:space:]]*LIB[[:space:]]*=[[:space:]]*\([^[:space:]]*\)[[:space:]]*/\1/; T; p; q' "$1"/Make/files |
+    pathSubstitutions $escapedPath`
+    LIB=`basename "$LIBPATH"`
+    LIB=`echo $LIB | sed 's/lib\(.*\)/\1/'`
+    LIBDIR=`dirname "$LIBPATH"`
+    if [ "$EXE" == "" ] ; then
+        TARGET="$LIB"
+    else
+        TARGET="$EXE"-exe
+    fi
+}
+
+#------------------------------------------------------------------------------
+
+scanDir()
+{
+    empty=1
+    if [ "$1" == "makeTargets" ] && [ -f "Make/files" ] && [ -f "Make/options" ]; then
+        empty=0
+
+        getTargetName "$2"
+
+        echo 'set(TARGET_NAME "'"$TARGET"'")'
+        echo
+
+        escapedPath=$(escapeForSed "$2")
+
+        # Process Make/files
+        strippedFiles=$(cat Make/files |
+        preprocess |
+        grep -v "LIB[[:space:]]*=" | # Remove lib line
+        grep -v "EXE[[:space:]]*=" | # Remove exe line
+        grep -v "^[[:space:]]*$")   # Remove pure whitespace lines
+
+        # Only files should remain - process one by one
+        strippedFiles=$(echo "$strippedFiles" | while read l ; do
+                echo "$l" | pathSubstitutions "$escapedPath" | pathRelative "$escapedPath"
+        done)
+
+        # Perform custom processing of non-source files
+        IFS="
+"
+        for l in $strippedFiles ; do
+            if [ ${l:(-2)} == ".L" ] || ( ! [ -f "$l" ]  && [ -f "${l%.C}.L" ] ) ; then
+                # If .L file listed or if nonexistant .C file listed but corresponding .L
+                # file does exist, make a flex rule to generate it
+                ext=${l:(-2)}
+                basefn=$(basename $l $ext)
+                # echo 'find_package(FLEX REQUIRED)'
+                echo "helyx_flex_target($basefn ${l%$ext}.L \${CMAKE_CURRENT_BINARY_DIR}/$basefn.C COMPILE_FLAGS -+)"
+                echo
+                # Replace name of file in list
+                escapedfn=$(escapeForSed $l)
+                escapedbasefn=$(escapeForSed $basefn)
+                strippedFiles=$(echo "$strippedFiles" | sed 's/^'$escapedfn'$/${FLEX_'$escapedbasefn'_OUTPUTS}/')
+            elif [ ${l:(-5)} == ".Cver" ] ; then
+                # If .Cver file found, make rule to process it to a .C file
+                ext=${l:(-5)}
+                basefn=$(basename $l $ext)
+                echo "execute_process(COMMAND wmakePrintBuild -major"
+                echo "WORKING_DIRECTORY \${CMAKE_CURRENT_SOURCE_DIR}"
+                echo "OUTPUT_VARIABLE VERSION_STRING"
+                echo "OUTPUT_STRIP_TRAILING_WHITESPACE"
+                echo ")"
+                echo "execute_process(COMMAND wmakePrintBuild -update"
+                echo "WORKING_DIRECTORY \${CMAKE_CURRENT_SOURCE_DIR}"
+                echo "OUTPUT_VARIABLE BUILD_STRING"
+                echo "OUTPUT_STRIP_TRAILING_WHITESPACE"
+                echo ")"
+                echo
+                echo "add_custom_command(OUTPUT \${CMAKE_CURRENT_BINARY_DIR}/$basefn.C"
+                echo "                   COMMAND sh -c \"sed -e 's!VERSION_STRING!\${VERSION_STRING}!' -e 's!BUILD_STRING!\${BUILD_STRING}!' $l > \${CMAKE_CURRENT_BINARY_DIR}/$basefn.C\""
+                echo "                   MAIN_DEPENDENCY \${CMAKE_CURRENT_SOURCE_DIR}/$l"
+                echo "                   WORKING_DIRECTORY \${CMAKE_CURRENT_SOURCE_DIR}"
+                echo "                   VERBATIM"
+                echo ")"
+                echo
+                # Replace name of file in list
+                escapedfn=$(escapeForSed $l)
+                escapedbasefn=$(escapeForSed $basefn)
+                strippedFiles=$(echo "$strippedFiles" | sed 's/^'$escapedfn'$/${CMAKE_CURRENT_BINARY_DIR}\/'$escapedbasefn'.C/')
+            elif [ ${l:(-2)} == ".H" ] && [ -f "${l%.H}.C" ] ; then
+                # If .H file listed, make the corresponding .C file instead
+                # Replace name of file in list
+                newfn=${l%.H}.C
+                escapedfn=$(escapeForSed $l)
+                escapednewfn=$(escapeForSed $newfn)
+                strippedFiles=$(echo "$strippedFiles" | sed 's/^'$escapedfn'$/'$escapednewfn'/')
+            elif [ ${l:(-3)} == ".yy" ] ; then
+                # If .yy file listed, make a Bison rule to generate it
+                ext=${l:(-3)}
+                basefn=$(basename $l $ext)
+                escapedfn=$(escapeForSed $l)
+                escapedbasefn=$(escapeForSed $basefn)
+                echo 'find_package(BISON REQUIRED 3.0.0)'
+                # Put the output in its own directory so that .hh files produced by different bison rules do not collide
+                #echo "bison_target($basefn ${l%$ext}.yy \${CMAKE_CURRENT_BINARY_DIR}/$basefn/$basefn.tab.cc COMPILE_FLAGS "'"-ra -d" VERBOSE)'
+                # bison_target doesn't actually create a target; only a custom command
+                # Manipulate the .hh files produced
+                #echo "add_custom_command(OUTPUT \${CMAKE_CURRENT_BINARY_DIR}/$basefn/$basefn\_location.hh \${CMAKE_CURRENT_BINARY_DIR}/$basefn/$basefn\_stack.hh \${CMAKE_CURRENT_BINARY_DIR}/$basefn/$basefn\_position.hh"
+                #echo "                   DEPENDS \${BISON_$basefn\_OUTPUT_SOURCE}"
+                echo "add_custom_command(OUTPUT \${CMAKE_CURRENT_BINARY_DIR}/$basefn/dir-created"
+                echo "                   COMMAND cmake -E make_directory \${CMAKE_CURRENT_BINARY_DIR}/$basefn"
+                echo "                   COMMAND cmake -E touch \${CMAKE_CURRENT_BINARY_DIR}/$basefn/dir-created"
+                echo "                   VERBATIM"
+                echo ")"
+                echo "add_custom_command(OUTPUT \${CMAKE_CURRENT_BINARY_DIR}/$basefn/$basefn.tab.cc \${CMAKE_CURRENT_SOURCE_DIR}/lnInclude/$basefn.tab.hh \${CMAKE_CURRENT_SOURCE_DIR}/lnInclude/$basefn\_location.hh \${CMAKE_CURRENT_SOURCE_DIR}/lnInclude/$basefn\_stack.hh \${CMAKE_CURRENT_SOURCE_DIR}/lnInclude/$basefn\_position.hh"
+                echo "                   DEPENDS ${l%$ext}.yy \${CMAKE_CURRENT_BINARY_DIR}/$basefn/dir-created"
+                echo '                   COMMAND ${BISON_EXECUTABLE} -ra -v -d ${CMAKE_CURRENT_SOURCE_DIR}/'"${l%$ext}"'.yy'
+                echo '                   COMMAND sed ARGS -i "s/position.hh/'"$escapedbasefn"'_position.hh/" location.hh'
+                echo '                   COMMAND cmake -E rename location.hh '"$basefn"'_location.hh'
+                echo '                   COMMAND cmake -E rename stack.hh '"$basefn"'_stack.hh'
+                echo '                   COMMAND cmake -E rename position.hh '"$basefn"'_position.hh'
+                echo '                   COMMAND sed ARGS -i "s/stack.hh/'"$escapedbasefn"'_stack.hh/;s/location.hh/'"$escapedbasefn"'_location.hh/" '"$basefn"'.tab.hh'
+                echo '                   COMMAND cmake -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/lnInclude/'
+                echo '                   COMMAND cmake -E copy '"$basefn"'.tab.hh '"$basefn"'_location.hh '"$basefn"'_stack.hh '"$basefn"'_position.hh ${CMAKE_CURRENT_SOURCE_DIR}/lnInclude/'
+                echo '                   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/'"$basefn"
+                echo '                   VERBATIM'
+                echo ')'
+                #echo "add_custom_target($basefn DEPENDS \${BISON_""$basefn""_OUTPUT_SOURCE} \${CMAKE_CURRENT_BINARY_DIR}/$basefn/$basefn\_location.hh \${CMAKE_CURRENT_BINARY_DIR}/$basefn/$basefn\_stack.hh \${CMAKE_CURRENT_BINARY_DIR}/$basefn/$basefn\_position.hh)"
+                # Re-create the variables that would have been created by the bison_target command
+                echo 'set(BISON_'"$basefn"'_OUTPUT_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/'"$basefn/$basefn"'.tab.cc)'
+                echo 'set(BISON_'"$basefn"'_OUTPUT_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/lnInclude/'"$basefn"'.tab.hh)'
+                echo 'set(BISON_'"$basefn"'_OUTPUTS ${CMAKE_CURRENT_BINARY_DIR}/'"$basefn/$basefn"'.tab.cc)'
+                echo "add_custom_target($basefn DEPENDS \${BISON_""$basefn""_OUTPUT_SOURCE} \${BISON_""$basefn""_OUTPUT_HEADER})"
+                echo
+                # Replace name of file in list
+                strippedFiles=$(echo "$strippedFiles" | sed 's/^'$escapedfn'$/${BISON_'$escapedbasefn'_OUTPUT_SOURCE}/')
+                # Make target level dependency (below) to ensure headers are created before current target is compiled
+                bisonTargets="$bisonTargets $basefn"
+            elif [ ${l:(-3)} == ".ll" ] ; then
+                # If .ll file listed, make a flex rule to generate it
+                ext=${l:(-3)}
+                basefn=$(basename $l $ext)
+                # echo 'find_package(FLEX REQUIRED 2.5.35)'
+                echo "helyx_flex_target($basefn ${l%$ext}.ll \${CMAKE_CURRENT_BINARY_DIR}/$basefn.C)"
+                echo
+                # Replace name of file in list
+                escapedfn=$(escapeForSed $l)
+                escapedbasefn=$(escapeForSed $basefn)
+                strippedFiles=$(echo "$strippedFiles" | sed 's/^'$escapedfn'$/${FLEX_'$escapedbasefn'_OUTPUTS}/')
+            fi
+        done
+        unset IFS
+
+        strippedOptions=$(cat Make/options | preprocess)
+
+        # Process any link directories from Make/options
+        # - except for dummy dirs
+        link_dirs=$(echo "$strippedOptions" |
+        sed 's/\s/\n/g' |
+        sed -n 's/.*-L\([^\\]*\).*/\1/; T; p' |
+        sed -n 's/\/dummy/&/; t; p' |
+        pathSubstitutions "$link_dirs")
+        if [[ -n "$link_dirs" ]]; then
+            echo "# N.B. Use of link_directories should be avoided where possible"
+            echo "# Consider using target_link_directories(), or possibly find_library() instead"
+            echo "link_directories("
+            echo "$link_dirs"
+            echo ')'
+            echo
+        fi
+
+        # Detect MPI and OMP special-cases
+        echo "$strippedOptions" | grep -q 'include $(GENERAL_RULES)/mplib'
+        if [ $? == 0 ] ; then
+            SPECIAL_MPI="1"
+        else
+            unset SPECIAL_MPI
+        fi
+        echo "$strippedOptions" | grep -q '\-fopenmp'
+        if [ $? == 0 ] ; then
+            echo "find_package(OpenMP REQUIRED)"
+            echo
+            SPECIAL_OMP="1"
+        else
+            unset SPECIAL_OMP
+        fi
+        echo "$strippedOptions" | grep -q '../rules/versionOptions'
+        if [ $? == 0 ] ; then
+            SPECIAL_SWAK="1"
+            # Re-process with some swak-specific substitutions
+            strippedOptions=$(echo 'FILEFORMATS_INC=-I$(LIB_SRC)/fileFormats/lnInclude
+FLUIDTHERMO_LIB=-lfluidThermophysicalModels
+SOLIDTHERMO_LIB=-lsolidThermo
+FVOPTIONS_LIB=-lfvOptions
+FVOPTIONS_INC=-I$(LIB_SRC)/fvOptions/lnInclude
+COMPRESSIBLE_TRANSPORT_INC=-I$(LIB_SRC)/transportModels/compressible/lnInclude
+INCOMPRESSIBLE_TURB_INC=-I$(LIB_SRC)/TurbulenceModels/incompressible/lnInclude -I$(LIB_SRC)/TurbulenceModels/turbulenceModels/lnInclude
+COMPRESSIBLE_TURB_INC=-I$(LIB_SRC)/TurbulenceModels/compressible/lnInclude -I$(LIB_SRC)/TurbulenceModels/turbulenceModels/lnInclude
+INCOMPRESSIBLE_TURB_LIB=-lincompressibleTurbulenceModels -lturbulenceModels
+COMPRESSIBLE_TURB_LIB=-lcompressibleTurbulenceModels -lturbulenceModels
+INCOMPRESSIBLE_TURB_ALL_LIBS=
+COMPRESSIBLE_TURB_ALL_LIBS=
+RADIATION_INC=-I$(LIB_SRC)/thermophysicalModels/radiation/lnInclude
+ADDITIONALFILES_INC=-I../filesThatAreOnlyInSomeDistributions/OutputFilerDropin/
+LAGRANGIAN_ADDITIONAL_INCLUDES = \
+    -I$(LIB_SRC)/regionModels/regionModel/lnInclude \
+    -I$(LIB_SRC)/thermophysicalModels/SLGThermo/lnInclude \
+    -I$(LIB_SRC)/thermophysicalModels/properties/solidMixtureProperties/lnInclude \
+    -I$(LIB_SRC)/thermophysicalModels/properties/liquidMixtureProperties/lnInclude \
+    -I$(LIB_SRC)/thermophysicalModels/properties/solidProperties/lnInclude \
+    -I$(LIB_SRC)/thermophysicalModels/properties/liquidProperties/lnInclude \
+    -I$(LIB_SRC)/thermophysicalModels/thermophysicalProperties/lnInclude \
+    -I$(LIB_SRC)/regionModels/surfaceFilmModels/lnInclude
+'"$strippedOptions" | preprocess)
+        else
+            unset SPECIAL_SWAK
+        fi
+
+        # Create target
+        if [ "$EXE" == "" ] ; then
+            echo 'add_helyx_library(${TARGET_NAME} SHARED'
+        else
+            echo 'add_helyx_executable(${TARGET_NAME}'
+        fi
+        echo "$strippedFiles"
+
+        # Process include directories from Make/options
+        escapedPath=`echo "$2" | sed 's:[]\[\^\$\.\*\/]:\\\\&:g'` # Escape for sed
+        INCLUDEPATHS=$(echo "$strippedOptions" | sed 's/\s/\n/g' | sed -n 's/.*-I\([^\\]*\).*/\1/; T; p' |
+        pathSubstitutions "$escapedPath" |
+        pathRelative "$escapedPath")
+        echo ')'
+        echo
+
+        # Add dependency on any bison targets created, to ensure headers are created
+        if [ ! -z "$bisonTargets" ]
+        then
+            echo "add_dependencies(\${TARGET_NAME} $bisonTargets)"
+            echo
+        fi
+
+#         echo "# Add relevant lnInclude directories as dependencies of this target, to ensure they're built first"
+        echo 'helyx_include_directories(${TARGET_NAME}'
+        for p in $INCLUDEPATHS ; do
+            echo "$p"
+        done
+        echo ')'
+        echo
+
+        if [ $SPECIAL_OMP ] ; then
+            # Works for versions of cmake < 3.9 instead of including imported target below
+            echo 'target_compile_options(${TARGET_NAME} PRIVATE ${OpenMP_CXX_FLAGS})'
+            echo
+        fi
+
+        # Process link libraries (and objs) from Make/options
+        echo 'target_link_libraries(${TARGET_NAME}'
+        echo "$strippedOptions" |
+        sed 's/\s/\n/g' |
+        sed -n 's/.*-l\([^\\]*\).*/\1/; s/.*\/\(lib\)\?\([^\/]*\)\.o[[:space:]\\]*$/\2/; T; p' |
+        pathSubstitutions "$escapedPath" |
+        sed 's/.*/    PRIVATE &/' |
+        sed 's/^    PRIVATE scotchDecomp$/    PRIVATE ${SCOTCHDECOMP}/' |
+        sed 's/^    PRIVATE ptscotchDecomp$/    PRIVATE ${PTSCOTCHDECOMP}/' |
+        sed 's/^    PRIVATE scotch$/    PRIVATE ${THIRDPARTY_SCOTCH}/' |
+        sed 's/^    PRIVATE ptscotch$/    PRIVATE ${THIRDPARTY_PTSCOTCH}/' |
+        sed 's/^    PRIVATE kahipDecomp$/    PRIVATE ${KAHIPDECOMP}/' |
+        sed 's/^    PRIVATE parhipDecomp$/    PRIVATE ${PARHIPDECOMP}/' |
+        sed 's/^    PRIVATE kahip$/    PRIVATE ${THIRDPARTY_KAHIP}/' |
+        sed 's/^    PRIVATE parhip$/    PRIVATE ${THIRDPARTY_PARHIP}/'
+        if [ $SPECIAL_MPI ] ; then
+            echo '    PRIVATE ${MPICC_LIB}'
+        fi
+        #if [ $SPECIAL_OMP ] ; then
+        #    # This only works for cmake >= 3.9; rather done by adding flags above
+        #    echo '    PRIVATE OpenMP::OpenMP_CXX'
+        #fi
+        if [ ! "$EXE" == "" ] ; then
+            echo '    PRIVATE OpenFOAM'
+        fi
+        echo ')'
+        echo
+
+        if [ "$EXE" == "" ] ; then
+            if [ "$LIBDIR" != '${FOAM_LIBBIN}' ]
+            then
+                echo "# Set output directory"
+                echo 'if(${HELYX_SYSTEM_NAME} STREQUAL "MSwindows")'
+                echo "    # CMake treats Windows .dll files as runtime targets"
+                echo "    set_target_properties(\${TARGET_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY \"$LIBDIR\")"
+                echo "else()"
+                echo "    set_target_properties(\${TARGET_NAME} PROPERTIES LIBRARY_OUTPUT_DIRECTORY \"$LIBDIR\")"
+                echo 'endif()'
+            fi
+        else
+            if [ "$EXEDIR" != '${FOAM_APPBIN}' ]
+            then
+                echo "# Set output directory"
+                echo "set_target_properties(\${TARGET_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY \"$EXEDIR\")"
+            fi
+        fi
+        echo
+
+    elif [ "$1" == "singleMakefileCommand" ] && [ -f "Make/files" ] && [ -f "Make/options" ]; then
+            echo "                   \${CMAKE_SOURCE_DIR}/$2/Make/files \${CMAKE_SOURCE_DIR}/$2/Make/options"
+    fi
+
+    # Recurse into subdirectories
+    for f in $(ls) ; do
+        if [ -d "$f" ] && [ ! -f "$f/genCMakeLists-stopHere" ] && [ "$f" != "Make" ] && [ "$f" != "lnInclude" ]; then
+            if [ $singleFileOpt ] || [ "$1" == "makefileTarget" ] ; then
+                cd "./$f"
+                (
+                    scanDir $1 $2/$f
+                )
+                cd ..
+            else
+                if [ ! $hereOnlyOpt ]; then
+                    cd "./$f"
+                    (
+                        if [ ! -f $CMLNAME ] || ( read line < $CMLNAME && [ "$line" == "##genCMakeLists-generated" ] ) ; then
+                            generateFile > $CMLNAME.new
+                            if [ $? -eq 1 ] ; then
+                                rm $CMLNAME.new #No targets were found
+                            else
+                                diff -q -N $CMLNAME.new $CMLNAME > /dev/null
+                                if [ $? == 0 ]
+                                then
+                                    # New file is identical to old one - don't touch
+                                    rm $CMLNAME.new
+                                else
+                                    mv $CMLNAME.new $CMLNAME
+                                    >&2 echo Wrote $PWD/$CMLNAME
+                                fi
+                            fi
+                        else
+                            generateFile > /dev/null
+                            >&2 echo Not overwriting $PWD/$CMLNAME
+                        fi
+#                         if [ -d "Make" ] ; then
+#                             touch Make/CMakeLists-uptodate
+#                         fi
+                    )
+                    cd ..
+                fi
+                if [ -f "./$f/$CMLNAME" ]; then
+                    empty=0
+                    echo "add_subdirectory($f)"
+                    echo
+                fi
+            fi
+        fi
+    done
+    return $empty
+}
+
+#------------------------------------------------------------------------------
+
+generateFile()
+{
+if [ $overwritable ]; then
+cat <<HEADER
+##genCMakeLists-generated
+#
+# This file was auto-generated using ${0##*/}
+# and may be re-generated during the build process. Please do not edit this
+# file but rather make changes to the Make/files and Make/options files from
+# which it has been generated. If you do need to customise, remove the
+# ##genCMakeLists-generated line at the top of the file to prevent overwriting.
+#
+HEADER
+fi
+
+cat <<HEADER
+#[[---------------------------------------------------------------------------]
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : $HELYX_PROJECT_VERSION
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+[-----------------------------------------------------------------------------]
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) $(date +"%Y") Engys Ltd
+
+[----------------------------------------------------------------------------]]
+
+HEADER
+
+if [ "generateProjectHeader" = "$1" ]; then
+cat <<PROJECT_HEADER
+
+cmake_minimum_required(VERSION 3.13)
+
+get_filename_component(DIR_NAME "\${CMAKE_CURRENT_LIST_DIR}" NAME)
+project("\${DIR_NAME}")
+
+# HELYX exports its CMake targets and supplies a configuration file.  The CMake
+# find_package command can therefore be used as normal to find HELYX.  Note
+# that this command only imports the HELYX libraries, which can then be used in
+# a stand-alone CMake project.
+# Imported HELYX targets exist in the HELYX:: namespace, e.g. to link against
+# libhelyxSolve.so, users should link again HELYX::helyxSolve
+set(CMAKE_PREFIX_PATH "${HELYX_PROJECT_DIR}/platforms/${HELYX_OPTIONS}")
+find_package(HELYX REQUIRED
+    OPTIONAL_COMPONENTS
+        HELYX-adjoint
+        HELYX-coupled
+        HELYX-hydro
+        HELYX-marine
+    # QUIET
+    CONFIG
+)
+
+# The following line supplies the HELYX CMake configuration.
+include(\${HELYX_PROJECT_DIR}/etc/cmake/projectHeader.cmake)
+
+PROJECT_HEADER
+fi
+
+if [ $singleFileOpt ]; then
+    echo '    set(SINGLE_FILE_OPT -singleFile)'
+fi
+
+    # Pull in all targets and sources recursively under the run directory
+    scanDir makeTargets .
+    empty=$?
+    echo
+
+if [ "generateProjectHeader" = "$1" ]; then
+cat <<PROJECT_HEADER
+
+include(\${HELYX_PROJECT_DIR}/etc/cmake/projectFooter.cmake)
+
+PROJECT_HEADER
+fi
+
+    return $empty
+}
+
+
+
+# ============================================================================ #
+# ----------------------------------- Main ----------------------------------- #
+# ============================================================================ #
+
+current_dir=`readlink -e ${PWD}`
+real_HELYX_PROJECT_DIR=`readlink -e $HELYX_PROJECT_DIR`
+if [[ ! $current_dir =~ "$real_HELYX_PROJECT_DIR" ]]; then
+    if [ ! $externalProject ]; then
+        echo "Warning:  This looks like an external project.  Consider using "
+        echo "the \"externalProject\" flag to generate a special top-level "
+        echo "CMakeLists.txt file."
+        echo
+    fi
+fi
+
+if [ ! -f $CMLNAME ] || ( read line < $CMLNAME && [ "$line" == "##genCMakeLists-generated" ] ) ; then
+
+    if [ $externalProject ]; then
+        generateFile generateProjectHeader > $CMLNAME.new
+    else
+        generateFile > $CMLNAME.new
+    fi
+    diff -q -N $CMLNAME.new $CMLNAME > /dev/null
+    if [ $? == 0 ]
+    then
+        rm $CMLNAME.new
+    else
+        mv $CMLNAME.new $CMLNAME
+        >&2 echo Wrote $PWD/$CMLNAME
+    fi
+else
+    generateFile > /dev/null
+    >&2 echo Not overwriting $PWD/$CMLNAME
+fi
+# if [ $singleFileOpt ] ; then
+#     touch CMakeLists-uptodate
+# elif [ -f "Make/files" ] && [ -f "Make/options" ] ; then
+#     touch Make/CMakeLists-uptodate
+# fi

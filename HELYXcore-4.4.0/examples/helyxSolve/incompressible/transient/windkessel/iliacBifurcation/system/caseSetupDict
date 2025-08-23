@@ -1,0 +1,375 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields     true;
+        resetBoundaryFields     true;
+        resetSystemDicts        true;
+        resetConstDicts         true;
+        resetBoundaryMesh       true;
+        deleteUnusedFields      true;
+        reuseExistingDicts      false;
+        strictPatchNameChecking true;
+    }
+    system
+    {
+        controlDict
+        {
+            application    helyxSolve;
+            startFrom      startTime;
+            startTime      0;
+            stopAt         endTime;
+            endTime        4.5;
+            deltaT         1e-3;
+            writeControl   adjustableRunTime;
+            writeInterval  0.09;
+            writePrecision 10;
+            maxCo          10.0;
+            maxDeltaT      0.001;
+            maxAlphaCo     0;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+        SR_aorta
+        {
+            type surfaceReport;
+            regions ( region0 );
+            fields ( U p );
+            writeControl timeStep;
+            writeInterval 1;
+            weighting area;
+            fluxName phi;
+            homogeneity false;
+            surfaces
+            (
+                {
+                    type patch;
+                    name aorta;
+                }
+            );
+            constraints
+            (
+                {
+                    type boundBox;
+                    min ( -1000.0 -1000.0 -1000.0 );
+                    max ( 1000.0 1000.0 1000.0 );
+                    keepInside true;
+                }
+            );
+            functionObjectLibs ( "libreport.so" );
+        }
+        SR_leftIliac
+        {
+            type surfaceReport;
+            regions ( region0 );
+            fields ( U p );
+            writeControl timeStep;
+            writeInterval 1;
+            weighting area;
+            fluxName phi;
+            homogeneity false;
+            surfaces
+            (
+                {
+                    type patch;
+                    name leftIliac;
+                }
+            );
+            constraints
+            (
+                {
+                    type boundBox;
+                    min ( -1000.0 -1000.0 -1000.0 );
+                    max ( 1000.0 1000.0 1000.0 );
+                    keepInside true;
+                }
+            );
+            functionObjectLibs ( "libreport.so" );
+        }
+        SR_rightIliac
+        {
+            type surfaceReport;
+            regions ( region0 );
+            fields ( U p );
+            writeControl timeStep;
+            writeInterval 1;
+            weighting area;
+            fluxName phi;
+            homogeneity false;
+            surfaces
+            (
+                {
+                    type patch;
+                    name rightIliac;
+                }
+            );
+            constraints
+            (
+                {
+                    type boundBox;
+                    min ( -1000.0 -1000.0 -1000.0 );
+                    max ( 1000.0 1000.0 1000.0 );
+                    keepInside true;
+                }
+            );
+            functionObjectLibs ( "libreport.so" );
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( transient ras );
+        boundaryMesh
+        {
+            aorta
+            {
+                type inlet;
+            }
+            leftIliac
+            {
+                type outlet;
+            }
+            rightIliac
+            {
+                type outlet;
+            }
+            walls
+            {
+                type wall;
+            }
+        }
+        turbulenceModel laminar;
+        materials (blood);
+        materialProperties
+        {
+            blood
+            {
+                materialName    blood;
+                materialType    fluid;
+                thermodynamics  hConst;
+                energy          sensibleEnthalpy;
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho 1060;
+                }
+                molWeight       18;
+                thermodynamicsCoeffs
+                {
+                    Cp 3750;
+                    Hf 0;
+                }
+                muModel         scalarFunction1;
+                muModelCoeffs
+                {
+                    mu 0.003500014;
+                }
+                kappaModel      kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr 21;
+                }
+            }
+        }
+        system
+        {
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default Euler;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    p
+                    {
+                        solver GAMG;
+                        agglomerator faceAreaPair;
+                        mergeLevels 1;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 200;
+                        smoother GaussSeidel;
+                        minIter 1;
+                        scaleCorrection true;
+                        tolerance 1e-10;
+                        relTol 0.01;
+                        vTol 1e-10;
+                        vRelTol 0.01;
+                    }
+                    pFinal
+                    {
+                        $p;
+                        tolerance 1e-6;
+                        relTol 0;
+                    }
+                    U
+                    {
+                        solver smoothSolver;
+                        smoother GaussSeidel;
+                        minIter 1;
+                        tolerance 1e-6;
+                        relTol 0.1;
+                        vTol 1e-6;
+                        vRelTol 0.1;
+                    }
+                    UFinal
+                    {
+                        $U
+                        relTol 0;
+                    }
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p 0.3;
+                        pFinal 1;
+                    }
+                    equations
+                    {
+                        U 0.7;
+                        UFinal 0.7;
+                    }
+                }
+                PIMPLE
+                {
+                    ddtPhiCorr false;
+                    nOuterCorrectors 100;
+                    nCorrectors 2;
+                    residualControl
+                    {
+                        U
+                        {
+                            tolerance 1e-5;
+                            relTol 0;
+                        }
+                        p
+                        {
+                            tolerance 1e-5;
+                            relTol 0;
+                        }
+                    }
+                }
+            }
+        }
+        fields
+        {
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0 0 0 );
+                }
+            }
+        }
+        boundaryConditions
+        {
+            aorta
+            {
+                p
+                {
+                    type fixedFluxExtrapolatedPressure;
+                }
+                U
+                {
+                    type flowRateTubeVelocityProfile;
+                    value uniform ( 0.0 0.0 0.0 );
+                    outOfBounds repeat;
+                    volumetricFlowRate table ( ( 0.0 3.54571E-5 ) ( 0.024921 3.69E-5 ) ( 0.0412961 3.824E-5 ) ( 0.0649944 4.11585E-5 ) ( 0.0808103 4.50878E-5 ) ( 0.092684 4.89015E-5 ) ( 0.104562 5.29964E-5 ) ( 0.116443 5.7382E-5 ) ( 0.127002 6.12834E-5 ) ( 0.138882 6.54034E-5 ) ( 0.153396 7.01885E-5 ) ( 0.170538 7.50516E-5 ) ( 0.194241 7.93913E-5 ) ( 0.223165 8.12774E-5 ) ( 0.249407 7.91484E-5 ) ( 0.269048 7.46018E-5 ) ( 0.282128 7.04733E-5 ) ( 0.291263 6.7E-5 ) ( 0.300404 6.3E-5 ) ( 0.310853 5.83E-5 ) ( 0.321295 5.25E-5 ) ( 0.331745 4.85218E-5 ) ( 0.343508 4.42436E-5 ) ( 0.356577 3.985E-5 ) ( 0.370969 3.50738E-5 ) ( 0.390607 3.03189E-5 ) ( 0.417126 2.70418E-5 ) ( 0.444742 2.66973E-5 ) ( 0.477281 2.88E-5 ) ( 0.504919 3.27509E-5 ) ( 0.532565 3.73121E-5 ) ( 0.561509 4.06814E-5 ) ( 0.590696 4.26152E-5 ) ( 0.619342 4.33966E-5 ) ( 0.653479 4.22982E-5 ) ( 0.682354 4.05531E-5 ) ( 0.711222 3.83818E-5 ) ( 0.740087 3.59206E-5 ) ( 0.76502 3.41295E-5 ) ( 0.796536 3.34195E-5 ) ( 0.826473 3.3543E-5 ) ( 0.859156 3.39894E-5 ) ( 0.9 3.54571E-5 ) );
+                }
+            }
+            leftIliac
+            {
+                p
+                {
+                    type windkesselPressure;
+                    value uniform 12190;
+                    Rd 5.4e5;
+                    C 1.6e-6;
+                    Rp 0.6e5;
+                    alpha 5.0;
+                }
+                U
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform ( 0 0 0 );
+                    inletValue uniform ( 0 0 0 );
+                }
+            }
+            rightIliac
+            {
+                p
+                {
+                    type windkesselPressure;
+                    value uniform 12190;
+                    Rp 0.6e5;
+                    Rd 5.4e5;
+                    C 2.2e-6;
+                    Qold 0;
+                    pOld 12190;
+                    alpha 5.0;
+                }
+                U
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform ( 0 0 0 );
+                }
+            }
+            walls
+            {
+                p
+                {
+                    type zeroGradient;
+                }
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0 0 0 );
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

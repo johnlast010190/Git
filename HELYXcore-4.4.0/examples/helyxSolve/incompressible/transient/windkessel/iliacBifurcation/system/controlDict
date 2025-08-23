@@ -1,0 +1,122 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     helyxSolve;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         4.5;
+
+deltaT          0.001;
+
+writeControl    adjustableRunTime;
+
+writeInterval   0.09;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  10;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   6;
+
+graphFormat     raw;
+
+runTimeModifiable yes;
+
+libs            1 ( "" );
+
+adjustTimeStep  no;
+
+maxCo           10;
+
+maxDeltaT       0.001;
+
+maxAlphaCo      0;
+
+functions
+{
+    VR
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U p );
+        executeControl  onEnd;
+        type            volumeReport;
+        writeControl    onEnd;
+        outputFileFormat tsv;
+    }
+    SR_aorta
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        weighting       area;
+        fluxName        phi;
+        fields          ( U p );
+        surfaces        ( { type patch ; name aorta ; } );
+        constraints     ( { type boundBox ; min ( -1000 -1000 -1000 ) ; max ( 1000 1000 1000 ) ; keepInside true ; } );
+        executeControl  timeStep;
+        type            surfaceReport;
+        regions         ( region0 );
+        writeControl    timeStep;
+        writeInterval   1;
+        homogeneity     false;
+    }
+    SR_leftIliac
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        weighting       area;
+        fluxName        phi;
+        fields          ( U p );
+        surfaces        ( { type patch ; name leftIliac ; } );
+        constraints     ( { type boundBox ; min ( -1000 -1000 -1000 ) ; max ( 1000 1000 1000 ) ; keepInside true ; } );
+        executeControl  timeStep;
+        type            surfaceReport;
+        regions         ( region0 );
+        writeControl    timeStep;
+        writeInterval   1;
+        homogeneity     false;
+    }
+    SR_rightIliac
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        weighting       area;
+        fluxName        phi;
+        fields          ( U p );
+        surfaces        ( { type patch ; name rightIliac ; } );
+        constraints     ( { type boundBox ; min ( -1000 -1000 -1000 ) ; max ( 1000 1000 1000 ) ; keepInside true ; } );
+        executeControl  timeStep;
+        type            surfaceReport;
+        regions         ( region0 );
+        writeControl    timeStep;
+        writeInterval   1;
+        homogeneity     false;
+    }
+}
+
+
+// ************************************************************************* //

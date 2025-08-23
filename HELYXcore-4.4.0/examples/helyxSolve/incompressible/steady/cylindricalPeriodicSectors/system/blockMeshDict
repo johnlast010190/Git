@@ -1,0 +1,180 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+convertToMeters 1;
+
+// 0.6-1 radiuses | 90-60 sec
+
+vertices
+(
+    (0.6 0 0)
+    (1 0 0)
+    (0 1 0)
+    (0 0.6 0)
+
+    (0.6 0 3)
+    (1 0 3)
+    (0 1 3)
+    (0 0.6 3)
+
+// 50 deg:  x=0.642  y=0.76  r=1
+//          x=0.3852 y=0.456 r=0.6
+
+// 60 deg:  x=0.5  y=0.866  r=1
+//          x=0.3 y=0.5196 r=0.6
+
+    (0.6 0 3)
+    (1 0 3)
+    (0.5 0.866 3)
+    (0.3 0.5196 3)
+
+    (0.6 0 6)
+    (1 0 6)
+    (0.5 0.866 6)
+    (0.3 0.5196 6)
+);
+
+blocks
+(
+    hex (0 1 2 3 4 5 6 7) (10 10 10) simpleGrading (1 1 1)
+    hex (8 9 10 11 12 13 14 15) (10 10 10) simpleGrading (1 1 1)
+);
+
+edges
+(
+    arc 1 2 (0.5 0.866 0)
+    arc 3 0 (0.5 0.33166 0)
+
+    arc 5 6 (0.5 0.866 3)
+    arc 7 4 (0.5 0.33166 3)
+
+    arc 9 10 (0.6 0.8 3)
+    arc 11 8 (0.5 0.33166 3)
+
+    arc 13 14 (0.6 0.8 6)
+    arc 15 12 (0.5 0.33166 6)
+);
+
+boundary
+(
+    inlet
+    {
+        type inlet;
+        faces
+        (
+            (0 1 2 3)
+        );
+    }
+    sCyclic1
+    {
+        type cyclic;
+        neighbourPatch sCyclic2;
+        faces
+        (
+            (0 1 5 4)
+        );
+        transformType rotational;
+        rotationAxis (0 0 1);
+        rotationCentre (0 0 0);
+        matchTolerance  0.01;
+    }
+    sCyclic2
+    {
+        type cyclic;
+        neighbourPatch sCyclic1;
+        faces
+        (
+            (2 6 7 3)
+        );
+        transformType rotational;
+        rotationAxis (0 0 1);
+        matchTolerance  0.01;
+        rotationCentre (0 0 0);
+    }
+    outlet
+    {
+        type outlet;
+        faces
+        (
+            (12 13 14 15)
+        );
+    }
+    rCyclic1
+    {
+        type cyclic;
+        neighbourPatch rCyclic2;
+        faces
+        (
+            (8 9 13 12)
+        );
+        transformType rotational;
+        rotationAxis (0 0 1);
+        rotationCentre (0 0 0);
+        matchTolerance  0.01;
+    }
+    rCyclic2
+    {
+        type cyclic;
+        neighbourPatch rCyclic1;
+        faces
+        (
+            (10 14 15 11)
+        );
+        transformType rotational;
+        rotationAxis (0 0 1);
+        rotationCentre (0 0 0);
+        matchTolerance  0.01;
+    }
+    sAMI
+    {
+        type cyclicPeriodicAMI;
+        neighbourPatch rAMI;
+        faces
+        (
+            (4 5 6 7)
+        );
+        matchTolerance  0.01;
+        periodicPatch sCyclic1;
+    }
+    rAMI
+    {
+        type cyclicPeriodicAMI;
+        neighbourPatch sAMI;
+        faces
+        (
+            (8 9 10 11)
+        );
+        matchTolerance  0.01;
+        periodicPatch rCyclic1;
+    }
+    rest
+    {
+        type wall;
+        faces
+        (
+            (1 5 6 2)
+            (0 4 3 7)
+
+            (9 13 14 10)
+            (8 12 11 15)
+        );
+    }
+);
+
+mergePatchPairs ();
+
+
+// ************************************************************************* //

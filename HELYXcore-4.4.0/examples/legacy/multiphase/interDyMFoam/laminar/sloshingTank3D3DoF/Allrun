@@ -1,0 +1,19 @@
+#!/bin/bash
+# tags: asan
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Mesh in series
+m4 system/blockMeshDict.m4 > system/blockMeshDict
+helyxRun blockMesh
+
+# Set initial phase fraction field
+cp 0/alpha.water.orig 0/alpha.water
+helyxRun setFields
+
+# Run solver specified in controlDict
+helyxRun
+
+#------------------------------------------------------------------------------

@@ -1,0 +1,391 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | Helyx:                                                   |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | Web:     http://www.engys.com                            |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       latestTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         0.4;
+            deltaT          0.001;
+            writeControl    timeStep;
+            writeInterval   100;
+            purgeWrite      5;
+            writeFormat     ascii;
+            writePrecision  6;
+            writeCompression uncompressed;
+            timeFormat      general;
+            timePrecision   6;
+            graphFormat     raw;
+            runTimeModifiable yes;
+        }
+
+    }
+    functions
+    {
+        vr1
+        {
+            type volumeReport;
+            fields ( U p );
+            regions ( region0 );
+            writeControl onEnd;
+            executeControl onEnd;
+            functionObjectLibs ( "libreport.so" );
+            outputFileFormat tsv;
+        }
+        Curle1
+        {
+            type            DavidsonCurle;
+            functionObjectLibs ( "libutilityFunctionObjects.so" );
+            logToFile       true;
+            patches         ( ovoid );
+            rhoRef          1.225;
+            cRef            343;
+            writeControl    onEnd;
+            executeControl  onEnd;
+            observers
+            {
+                microphone-A
+                {
+                    position        ( -0.2 0 0 );
+                }
+                microphone-B
+                {
+                    position        ( 0.1 0 0.0 );
+                }
+                microphone-C
+                {
+                    position        ( 0.1 0 0.02 );
+                }
+            }
+        }
+        FfowcsWilliamsHawkings1
+        {
+            type            FfowcsWilliamsHawkings;
+            functionObjectLibs ( "libutilityFunctionObjects.so" );
+            logToFile       true;
+            patches         ( ovoid );
+            rhoRef          1.225;
+            cRef            343;
+            writeControl    onEnd;
+            executeControl  timeStep;
+            observers
+            {
+                points1
+                {
+                    type set;
+                    positions
+                    (
+                        ( -0.2 0 0 )
+                        ( 0.1 0 0.0 )
+                        ( 0.1 0 0.02 )
+                    );
+                }
+            }
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( transient les );
+        boundaryMesh
+        {
+            outlet
+            {
+                type            outlet;
+            }
+            inlet
+            {
+                type            inlet;
+            }
+        }
+        turbulenceModel SpalartAllmarasDDES;
+        materials       ( air );
+        constant
+        {
+            turbulenceProperties
+            {
+                simulationType LES;
+                LES
+                {
+                    turbulence      on;
+                    printCoeffs     on;
+                    delta           maxFaceDelta;
+                    LESModel        SpalartAllmarasDDES;
+                    maxFaceDeltaCoeffs
+                    {
+                        deltaCoeff      1;
+                    }
+                }
+            }
+        }
+        system
+        {
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default         backward;
+                }
+                gradSchemes
+                {
+                    turbulence      cellLimited Gauss linear 1;
+                    grad(nuTilda)   cellLimited Gauss linear 1;
+                    default         cellLimited Gauss linear 1;
+                    gradU           cellLimited Gauss linear 1;
+                    grad(p)         Gauss linear;
+                }
+                divSchemes
+                {
+                    div(phi,nuTilda) bounded Gauss limitedLinear 1;
+                    div(phi,U)      bounded Gauss localBlended filteredLinear2V 0.5 0 LUSTV gradU;
+                    default         none;
+                    div(R)          Gauss linear;
+                    div((rho*R))    Gauss linear;
+                    div(nonlinearStress) Gauss linear;
+                    div((muEff*dev2(grad(U).T()))) Gauss linear;
+                    div((nuEff*dev2(T(grad(U))))) Gauss linear;
+                    div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
+                    div((nu*dev2(T(grad(U))))) Gauss linear;
+                    div(((rho*(thermo:mu|rho))*dev2(T(grad(U))))) Gauss linear;
+                }
+                laplacianSchemes
+                {
+                    laplacian(DnuTildaEff,nuTilda) Gauss linear uncorrected;
+                    default         Gauss linear uncorrected;
+                    laplacian((1|A(U)),p) Gauss linear limited 0.2;
+                }
+                interpolationSchemes
+                {
+                    default         linear;
+                    interpolate(HbyA) linear;
+                }
+                snGradSchemes
+                {
+                    default         limited 0.333;
+                }
+                wallDist
+                {
+                    method          meshWave;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    nuTilda
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-06;
+                        relTol          0.1;
+                    }
+                    nuTildaFinal
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-06;
+                        relTol          0;
+                    }
+                    p
+                    {
+                        solver          GAMG;
+                        agglomerator    faceAreaPair;
+                        mergeLevels     1;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 200;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        scaleCorrection true;
+                        tolerance       1e-10;
+                        relTol          0.01;
+                    }
+                    U
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-10;
+                        relTol          0.001;
+                    }
+                    pFinal
+                    {
+                        solver          GAMG;
+                        agglomerator    faceAreaPair;
+                        mergeLevels     1;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 200;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        scaleCorrection true;
+                        tolerance       1e-06;
+                        relTol          0;
+                    }
+                    UFinal
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-06;
+                        relTol          0;
+                    }
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p 1.0;
+                        pFinal 1.0;
+                    }
+                    equations
+                    {
+                        U 1.0;
+                        nuTilda 1.0;
+                        ".*Final" 1.0;
+                    }
+                }
+                cache
+                {
+                    grad(U) ;
+                }
+                PIMPLE
+                {
+                    turbOnFinalIterOnly false;
+                    ddtPhiCorr true;
+                    momentumPredictor true;
+                    nOuterCorrectors 1;
+                    nCorrectors 3;
+                    nNonOrthogonalCorrectors 0;
+                    transonic       false;
+                    consistent      false;
+                    pRefCell 0;
+                    pRefValue 0;
+                    pMin -1.0E10;
+                    pMax 1.0E10;
+                    residualControl
+                    {
+                    }
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type            potentialFlow;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type            potentialFlow;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type            Prandtl;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type            Prandtl;
+                }
+            }
+        }
+        boundaryTypeDefaults
+        {
+            wall
+            {
+                p
+                {
+                    type            zeroGradient;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            outlet
+            {
+                U
+                {
+                    type            inletOutlet;
+                    inletValue      uniform (0 0 0);
+                    value           uniform (0 0 0);
+                }
+                p
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+                nuTilda
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 0;
+                    value           uniform 0;
+                }
+            }
+            inlet
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform ( 20 0 0 );
+                }
+                nuTilda
+                {
+                    type            fixedValue;
+                    value           uniform 2e-05;
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

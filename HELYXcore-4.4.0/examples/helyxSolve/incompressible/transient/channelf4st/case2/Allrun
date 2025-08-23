@@ -1,0 +1,30 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy 'f4st' output from case1
+cp -rf ../case1/f4st .
+
+helyxRun blockMesh
+helyxRun topoSet
+helyxRun subsetMesh -overwrite c0 -patch ffminy
+helyxRun decomposePar
+helyxRun caseSetup -latestTime
+
+# Move time0 to startTime of hdf5 recording
+ex="ls processor*"
+for proc in `echo $ex`
+do
+    if [ -d $proc ]; then
+        mv $proc/0 $proc/10
+    fi
+done
+
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch case2.foam
+
+#------------------------------------------------------------------------------

@@ -1,0 +1,38 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      PDRMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+//- Per faceSet the patch the faces should go into blocked baffles
+blockedFaces ((blockedFacesSet blockedFaces));
+
+//- Per faceSet the patch the faces should go into coupled baffles
+coupledFaces
+{
+
+    coupledFacesSet
+    {
+        wallPatch                   baffleWall;
+        cyclicMasterPatch           baffleCyclic_half0;
+    }
+}
+
+//- Name of cellSet that holds the cells to fully remove
+blockedCells blockedCellsSet;
+
+//- All exposed faces that are not specified in blockedFaces go into
+//  this patch
+defaultPatch outer;
+
+// ************************************************************************* //

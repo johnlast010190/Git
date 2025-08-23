@@ -1,0 +1,9 @@
+solid zone0
+ facet normal 0.352724 -0.076314 0.93261
+  outer loop
+   vertex -0.106156 -0.698885 -0.0170392
+   vertex 0.653088 -0.0929922 -0.254615
+   vertex -0.653088 0.0929922 0.254615
+  endloop
+ endfacet
+endsolid zone0

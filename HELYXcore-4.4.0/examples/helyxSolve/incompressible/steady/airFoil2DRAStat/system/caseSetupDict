@@ -1,0 +1,199 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    functions
+    {
+        LD
+        {
+            type liftDrag;
+            regions ( region0 );
+            patches ( walls );
+            porosity true;
+            nAveragingSteps 1;
+            outputRegionData true;
+            liftDirection ( 0.0 1.0 0.0 );
+            dragDirection ( 1.0 0.0 0.0 );
+            Uinf #include "windVector";
+            Pref 0.0;
+            rhoInf 1.205;
+            referenceArea 0.00142857;
+            referenceLength 1.0;              // approximate cord lenght
+            referencePoint ( 0.0 0.0 0.0 );
+            cOfMass true;                      // "false" by default
+            wheelbase 1.0;
+            writeControl timeStep;
+            writeInterval 1;
+            binData
+            {
+                nBins 100;
+                axis ( 1.0 0.0 0.0 );
+            }
+            functionObjectLibs ( "libforces.so" );
+        }
+        RAStat
+        {
+            timeStart       1;
+            executeControl  timeStep;
+            executeInterval 1;
+            writeControl    writeTime;
+            writeInterval   1;
+            type            runTimeControl;
+            conditions
+            {
+                RASCC
+                {
+                    type                    reverseAnalysisStatistical;
+                    functionObject          LD;
+                    fields                  ( Cl );
+                    minBox                  10;
+                    stdTolerance            1e-02;
+                    solQualTolerance        0.95;
+                    fitTolerance            1e-04;
+                    discardRate             0.5;
+                    vectorComp              true;
+                    vectorMag               false;
+                    vectorSum               false;
+                    resetOnRestart          false;
+                }
+            }
+        }
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom latestTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 15000;
+            deltaT 1;
+            writeControl timeStep;
+            writeInterval 500;
+            purgeWrite 0;
+            writeFormat ascii;
+            writePrecision 6;
+            writeCompression uncompressed;
+            timeFormat general;
+            timePrecision 6;
+            libs ( "libutilityFunctionObjects.so" );
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (steady ras);
+        boundaryMesh
+        {
+            inlet { type inlet; }
+            outlet { type outlet; }
+            walls { type wall; }
+            frontAndBack { type empty; }
+        }
+        turbulenceModel SpalartAllmaras;
+        materials (air);
+        fields
+        {
+            U { initialisation { type fixedValue; value uniform ( 25.75 3.62 0.0 ); } }
+            p { initialisation { type fixedValue; value uniform 0.0; } }
+            nuTilda { initialisation { type fixedValue; value uniform 0.14; } }
+            nut { initialisation { type fixedValue; value uniform 0.14; } }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type            freestreamVelocity;
+                    freestreamValue uniform #include "../system/windVector";
+                }
+                p
+                {
+                    type            freestreamPressure;
+                    freestreamValue uniform 0;
+                }
+                nuTilda
+                {
+                    type freestream;
+                    freestreamValue uniform 0.14;
+                }
+                nut
+                {
+                    type freestream;
+                    freestreamValue uniform 0.14;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type            freestreamVelocity;
+                    freestreamValue uniform #include "../system/windVector";
+                }
+                p
+                {
+                    type            freestreamPressure;
+                    freestreamValue uniform 0;
+                }
+                nuTilda
+                {
+                    type freestream;
+                    freestreamValue uniform 0.14;
+                }
+                nut
+                {
+                    type freestream;
+                    freestreamValue uniform 0.14;
+                }
+            }
+            walls
+            {
+                U { type noSlip; }
+                p { type zeroGradient; }
+                nuTilda
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+                nut
+                {
+                    type nutUSpaldingWallFunction;
+                    value uniform 0.0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

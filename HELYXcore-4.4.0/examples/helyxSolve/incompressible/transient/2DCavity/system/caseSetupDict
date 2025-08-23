@@ -1,0 +1,288 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh false;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    regionGroups    ( fluid ( region0 ) );
+  	system
+  	{
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       latestTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         0.8;
+            deltaT          0.001;
+            writeControl    adjustableRunTime;
+            writeInterval   0.1;
+            purgeWrite      0;
+            writeFormat     ascii;
+            writePrecision  6;
+            writeCompression off;
+            timeFormat      general;
+            timePrecision   6;
+            runTimeModifiable true;
+        }
+    }
+    functions
+    {
+        #includeFunc wallShearStress
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( transient ras );
+        turbulenceModel kEpsilon;
+        materials (air);
+        materialProperties
+        {
+            air
+            {
+                materialType fluid;
+                equationOfState rhoConst;
+                thermodynamics  hConst;
+                energy          sensibleInternalEnergy;
+                equationOfStateCoeffs
+                {
+                    rho 1e-3;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cp          1006;
+                    Hf          0;
+                }
+                muModel         scalarFunction1;
+                muModelCoeffs
+                {
+                    mu 1e-8;
+                }
+                kappaModel      kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr 0.85;
+                }
+                molWeight 29.96;
+                referenceFields
+                {
+                    p [ 1 -1 -2 0 0 0 0 ] 101325;
+                    TConst [0 0 0 1 0 0 0] 300.0;
+                }
+            }
+        }
+        constant
+        {
+            g
+            {
+                dimensions      [ 0 1 -2 0 0 0 0 ];
+                value           ( 0 0 -9.81 );
+            }
+        }
+        system
+        {
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default         Euler;
+                }
+                gradSchemes
+                {
+                    default         Gauss linear;
+                }
+                divSchemes
+                {
+                    default         none;
+                    div(phi,U)      Gauss limitedLinearV 1;
+                    div(phi,k)      Gauss limitedLinear 1;
+                    div(phi,epsilon) Gauss limitedLinear 1;
+                    div(phi,omega)  Gauss limitedLinear 1;
+                    div(phi,R)      Gauss limitedLinear 1;
+                    div(R)          Gauss linear;
+                    div(phi,nuTilda) Gauss limitedLinear 1;
+                    div((nuEff*dev2(T(grad(U))))) Gauss linear;
+                }
+                laplacianSchemes
+                {
+                    default         Gauss linear corrected;
+                }
+                interpolationSchemes
+                {
+                    default         linear;
+                }
+                snGradSchemes
+                {
+                    default         corrected;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    p
+                    {
+                        solver          GAMG;
+                        tolerance       1e-06;
+                        relTol          0.1;
+                        smoother        GaussSeidel;
+                    }
+                    pFinal
+                    {
+                        $p;
+                        tolerance       1e-06;
+                        relTol          0;
+                    }
+                    "(U|k|epsilon|omega|R|nuTilda)"
+                    {
+                        solver          smoothSolver;
+                        smoother        GaussSeidel;
+                        tolerance       1e-05;
+                        relTol          0;
+                    }
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0 0.0 0.0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.0;
+                }
+            }
+            nut
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.00375;
+                }
+            }
+            epsilon
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.00754;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            movingWall
+            {
+                p
+                {
+                    type            zeroGradient;
+                }
+                U
+                {
+                    type            fixedValue;
+                    value           uniform ( 1 0 0 );
+                }
+                nut
+                {
+                    type            nutkWallFunction;
+                    Cmu             0.09;
+                    kappa           0.41;
+                    E               9.8;
+                    value           uniform 0;
+                }
+                k
+                {
+                    type            kqRWallFunction;
+                    value           uniform 0.1;
+                }
+                epsilon
+                {
+                    Cmu             0.09;
+                    kappa           0.41;
+                    E               9.8;
+                    type            epsilonWallFunction;
+                    value           uniform 0.01;
+                }
+            }
+            fixedWalls
+            {
+                p
+                {
+                    type            zeroGradient;
+                }
+                U
+                {
+                    type            noSlip;
+                    value           uniform ( 0 0 0 );
+                }
+                nut
+                {
+                    type            nutkWallFunction;
+                    Cmu             0.09;
+                    kappa           0.41;
+                    E               9.8;
+                    value           uniform 0;
+                }
+                k
+                {
+                    type            kqRWallFunction;
+                    value           uniform 0.1;
+                }
+                epsilon
+                {
+                    Cmu             0.09;
+                    kappa           0.41;
+                    E               9.8;
+                    type            epsilonWallFunction;
+                    value           uniform 0.01;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

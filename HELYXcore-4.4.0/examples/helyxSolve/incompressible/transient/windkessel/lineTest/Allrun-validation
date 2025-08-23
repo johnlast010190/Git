@@ -1,0 +1,43 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Setup function
+setup()
+{
+    helyxRun -log log.caseSetup.$1 caseSetup -dict system/caseSetupDict.$1
+}
+
+# Run function
+run()
+{
+    helyxRun -log log.helyxSolve.$1 helyxSolve
+    mv postProcessing/SR_outlet postProcessing/SR_outlet.$1
+}
+
+# Create mesh common to all initial inputs
+helyxRun blockMesh
+
+# Setup and run for the first set of initial windkessel inputs
+printf "\nRunning case with first set of initial windkessel inputs:\n"
+helyxRun caseSetup
+helyxRun helyxSolve
+mv postProcessing/SR_outlet postProcessing/SR_outlet.input1
+
+# Second set of inputs
+printf "\nRunning case with second set of initial windkessel inputs:\n"
+setup input2
+run input2
+
+# Third set of inputs
+printf "\nRunning case with third set of initial windkessel inputs:\n"
+setup input3
+run input3
+
+# Plot validation graphs for all input sets
+cd validation
+python3 validation.py
+
+#------------------------------------------------------------------------------

@@ -1,0 +1,669 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | HELYX                                                    |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | Web:     http://www.engys.com                            |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    location system;
+    object helyxHexMeshDict;
+}
+    castellatedMesh true;
+    snap true;
+    addLayers true;
+    autoBlockMesh false;
+    blockData ( 0.01 0 );
+    crackDetection false;
+    crackTol 0.05;
+    allowTopoChanges true;
+    finalDecomposition parhip;//ptscotch;
+    geometry
+    {
+        A-44444-testcar-5050-Y0.00-R0.01.stl
+        {
+            type triSurfaceMesh;
+            name A_44444_testcar_5050_Y0.00_R0.01;
+            appendRegionName false;
+        }
+        internal-fluid-l-mrf-fr-wheel.stl
+        {
+            type triSurfaceMesh;
+            name internal_fluid_l_mrf_fr_wheel;
+            appendRegionName false;
+        }
+        internal-fluid-l-mrf-rr-wheel.stl
+        {
+            type triSurfaceMesh;
+            name internal_fluid_l_mrf_rr_wheel;
+            appendRegionName false;
+        }
+        internal-fluid-r-mrf-fr-wheel.stl
+        {
+            type triSurfaceMesh;
+            name internal_fluid_r_mrf_fr_wheel;
+            appendRegionName false;
+        }
+        internal-fluid-r-mrf-rr-wheel.stl
+        {
+            type triSurfaceMesh;
+            name internal_fluid_r_mrf_rr_wheel;
+            appendRegionName false;
+        }
+        ref1
+        {
+            type searchableBox;
+            min ( -10.6496 44.368 -0.375 );
+            max ( 7.227017899320339 55.632 5.065 );
+        }
+        ref2
+        {
+            type searchableBox;
+            min ( -6.297600000000001 46.672 -0.375 );
+            max ( 3.2952445724257924 53.328 3.529 );
+        }
+        rad-A.stl
+        {
+            type triSurfaceMesh;
+            name rad_A;
+            appendRegionName false;
+        }
+        rad-B.stl
+        {
+            type triSurfaceMesh;
+            name rad_B;
+            appendRegionName false;
+        }
+    }
+    castellatedMeshControls
+    {
+        features ( );
+        refinementSurfaces
+        {
+            A_44444_testcar_5050_Y0.00_R0.01
+            {
+                level ( 0 0 );
+                regions
+                {
+                    WALL_L_ROTFR_wheel_4_8
+                    {
+                        level ( 8 8 );
+                    }
+                    WALL_L_body_8_8
+                    {
+                        level ( 6 6 );
+                    }
+                    WALL_L_DY_Suspension_4_4
+                    {
+                        level ( 7 7 );
+                    }
+                    WALL_L_ROTFR_front_wheel_4_8
+                    {
+                        level ( 7 7 );
+                    }
+                    WALL_L_POROUS_Radiator_8_8
+                    {
+                        level ( 6 6 );
+                    }
+                    WALL_L_ROTRR_wheel_4_8
+                    {
+                        level ( 8 8 );
+                    }
+                    WALL_L_ROTRR_wheel_spokes_4_8
+                    {
+                        level ( 7 7 );
+                    }
+                    WALL_L_Barge_Board_fine_4_4
+                    {
+                        level ( 8 8 );
+                    }
+                    WALL_L_Barge_Board_8_8
+                    {
+                        level ( 7 7 );
+                    }
+                    WALL_R_ROTFR_wheel_4_8
+                    {
+                        level ( 8 8 );
+                    }
+                    WALL_R_body_8_8
+                    {
+                        level ( 6 6 );
+                    }
+                    WALL_R_DY_Suspension_4_4
+                    {
+                        level ( 7 7 );
+                    }
+                    WALL_R_ROTFR_front_wheel_4_8
+                    {
+                        level ( 7 7 );
+                    }
+                    WALL_R_POROUS_Radiator_8_8
+                    {
+                        level ( 6 6 );
+                    }
+                    WALL_R_ROTRR_wheel_4_8
+                    {
+                        level ( 8 8 );
+                    }
+                    WALL_R_ROTRR_wheel_spokes_4_8
+                    {
+                        level ( 7 7 );
+                    }
+                    WALL_R_Barge_Board_fine_4_4
+                    {
+                        level ( 8 8 );
+                    }
+                    WALL_R_Barge_Board_8_8
+                    {
+                        level ( 7 7 );
+                    }
+                }
+            }
+            internal_fluid_l_mrf_fr_wheel
+            {
+                level ( 7 7 );
+                faceType internal;
+                faceZone internal_fluid_l_mrf_fr_wheel;
+                cellZoneInside inside;
+                cellZone fluid_l_mrf_fr_wheel;
+                baffleChecks true;
+                allowFreeStandingZoneFaces false;
+            }
+            internal_fluid_l_mrf_rr_wheel
+            {
+                level ( 7 7 );
+                faceType internal;
+                faceZone internal_fluid_l_mrf_rr_wheel;
+                cellZoneInside inside;
+                cellZone fluid_l_mrf_rr_wheel;
+                baffleChecks true;
+                allowFreeStandingZoneFaces false;
+            }
+            internal_fluid_r_mrf_fr_wheel
+            {
+                level ( 7 7 );
+                faceType internal;
+                faceZone internal_fluid_r_mrf_fr_wheel;
+                cellZoneInside inside;
+                cellZone fluid_r_mrf_fr_wheel;
+                baffleChecks true;
+                allowFreeStandingZoneFaces false;
+            }
+            internal_fluid_r_mrf_rr_wheel
+            {
+                level ( 7 7 );
+                faceType internal;
+                faceZone internal_fluid_r_mrf_rr_wheel;
+                cellZoneInside inside;
+                cellZone fluid_r_mrf_rr_wheel;
+                baffleChecks true;
+                allowFreeStandingZoneFaces false;
+            }
+            rad_A
+            {
+                level ( 0 0 );
+                regions
+                {
+                    L_POROUS_radiator_in
+                    {
+                        level ( 6 6 );
+                    }
+                    R_POROUS_radiator_in
+                    {
+                        level ( 6 6 );
+                    }
+                }
+                faceType internal;
+                faceZone fluid_internal_porous_radiator;
+                cellZoneInside inside;
+                cellZone internal_porous_radiator;
+                baffleChecks true;
+                allowFreeStandingZoneFaces false;
+            }
+            rad_B
+            {
+                level ( 0 0 );
+                regions
+                {
+                    L_POROUS_radiator_out
+                    {
+                        level ( 6 6 );
+                    }
+                    R_POROUS_radiator_out
+                    {
+                        level ( 6 6 );
+                    }
+                }
+                faceType internal;
+                faceZone HE_inlet;
+                cellZoneInside inside;
+                baffleChecks true;
+                allowFreeStandingZoneFaces true;
+            }
+        }
+        refinementRegions
+        {
+            ref1
+            {
+                mode inside;
+                levels ( ( 100000.0 2 ) );
+            }
+            ref2
+            {
+                mode inside;
+                levels ( ( 100000.0 3 ) );
+            }
+        }
+        maxLocalCells 250000000;
+        maxGlobalCells 250000000;
+        minRefinementCells 100;
+        maxLoadUnbalance 0.1;
+        nCellsBetweenLevels 2;
+        resolveFeatureAngle -60.0;
+        featureRefineAngle 20.0;
+        refineSurfaceBoundary false;
+        minBaffleAngle -60.0;
+        allowFreeStandingZoneFaces false;
+        balanceThenRefine true;
+        nGapRefinements 0;
+        minZoneRegionSize 1;
+        additionalInsideCheck false;
+        moveCentroidsTol -1.0;
+        wrapper
+        {
+            wrap false;
+            volSources true;
+            volDistance 1.0;
+            meshInMM false;
+            maxIter 200;
+            writeFields false;
+            invert false;
+            sigma 3.0;
+            cutoff 1000.0;
+        }
+        locationsInMesh ( ( ( -1.7112910747528076 50.0 2.3450000286102295 ) none ) );
+    }
+    snapControls
+    {
+        featureEdges
+        {
+        }
+        nOuterIter 1;
+        nPreFeatureIter 0;
+        nSolveIter 10;
+        nFeatureIter 60;
+        globalFeatureEdges true;
+        globalRegionSnap false;
+        nSmoothPatch 2;
+        tolerance 4.0;
+        nRelaxIter 5;
+        zoneFeatureSnapping true;
+        directFeatureSnapping true;
+        geometryFeatureLines true;
+        collapseTol 0.25;
+        enlargeStencil true;
+        smoothSnappedSurface true;
+        featureSnapChecks true;
+        concaveTol 0.3;
+        nSliverSmooths 10;
+        mergeBoundaryFaces true;
+    }
+    addLayersControls
+    {
+        layers
+        {
+            outlet
+            {
+                nSurfaceLayers 0;
+                grownUp true;
+            }
+            inlet
+            {
+                nSurfaceLayers 0;
+                grownUp true;
+            }
+            side1
+            {
+                nSurfaceLayers 0;
+                grownUp true;
+            }
+            side2
+            {
+                nSurfaceLayers 0;
+                grownUp true;
+            }
+            ground
+            {
+                nSurfaceLayers 2;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp automatic;
+            }
+            top
+            {
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                maxLayerThickness 0.0;
+                grownUp automatic;
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_L_ROTFR_wheel_4_8
+            {
+                nSurfaceLayers 3;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp automatic;
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_L_body_8_8
+            {
+                nSurfaceLayers 3;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp automatic;
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_L_DY_Suspension_4_4
+            {
+                nSurfaceLayers 3;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp automatic;
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_L_ROTFR_front_wheel_4_8
+            {
+                nSurfaceLayers 3;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp automatic;
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_L_POROUS_Radiator_8_8
+            {
+                nSurfaceLayers 3;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp automatic;
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_L_ROTRR_wheel_4_8
+            {
+                nSurfaceLayers 3;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp automatic;
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_L_ROTRR_wheel_spokes_4_8
+            {
+                nSurfaceLayers 3;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp automatic;
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_L_Barge_Board_fine_4_4
+            {
+                nSurfaceLayers 3;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp automatic;
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_L_Barge_Board_8_8
+            {
+                nSurfaceLayers 3;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp automatic;
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_R_ROTFR_wheel_4_8
+            {
+                nSurfaceLayers 3;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp automatic;
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_R_body_8_8
+            {
+                nSurfaceLayers 3;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp automatic;
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_R_DY_Suspension_4_4
+            {
+                nSurfaceLayers 3;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp automatic;
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_R_ROTFR_front_wheel_4_8
+            {
+                nSurfaceLayers 3;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp automatic;
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_R_POROUS_Radiator_8_8
+            {
+                nSurfaceLayers 3;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp automatic;
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_R_ROTRR_wheel_4_8
+            {
+                nSurfaceLayers 3;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp automatic;
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_R_ROTRR_wheel_spokes_4_8
+            {
+                nSurfaceLayers 3;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp automatic;
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_R_Barge_Board_fine_4_4
+            {
+                nSurfaceLayers 3;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp automatic;
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_R_Barge_Board_8_8
+            {
+                nSurfaceLayers 3;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp automatic;
+            }
+            internal_fluid_l_mrf_fr_wheel
+            {
+                nSurfaceLayers 0;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp false;
+            }
+            internal_fluid_l_mrf_fr_wheel_slave
+            {
+                nSurfaceLayers 0;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp false;
+            }
+            internal_fluid_l_mrf_rr_wheel
+            {
+                nSurfaceLayers 0;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp false;
+            }
+            internal_fluid_l_mrf_rr_wheel_slave
+            {
+                nSurfaceLayers 0;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp false;
+            }
+            internal_fluid_r_mrf_fr_wheel
+            {
+                nSurfaceLayers 0;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp false;
+            }
+            internal_fluid_r_mrf_fr_wheel_slave
+            {
+                nSurfaceLayers 0;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp false;
+            }
+            internal_fluid_r_mrf_rr_wheel
+            {
+                nSurfaceLayers 0;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp false;
+            }
+            internal_fluid_r_mrf_rr_wheel_slave
+            {
+                nSurfaceLayers 0;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp false;
+            }
+            rad_A_L_POROUS_radiator_in
+            {
+                nSurfaceLayers 0;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp automatic;
+            }
+            rad_A_L_POROUS_radiator_in_slave
+            {
+                nSurfaceLayers 0;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp automatic;
+            }
+            rad_A_R_POROUS_radiator_in
+            {
+                nSurfaceLayers 0;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp automatic;
+            }
+            rad_A_R_POROUS_radiator_in_slave
+            {
+                nSurfaceLayers 0;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp automatic;
+            }
+            rad_B_L_POROUS_radiator_out
+            {
+                nSurfaceLayers 0;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp automatic;
+            }
+            rad_B_L_POROUS_radiator_out_slave
+            {
+                nSurfaceLayers 0;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp automatic;
+            }
+            rad_B_R_POROUS_radiator_out
+            {
+                nSurfaceLayers 0;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp automatic;
+            }
+            rad_B_R_POROUS_radiator_out_slave
+            {
+                nSurfaceLayers 0;
+                finalLayerThickness 0.4;
+                expansionRatio 1.25;
+                grownUp automatic;
+            }
+        }
+        relativeSizes true;
+        expansionRatio 1.25;
+        finalLayerThickness 0.4;
+        minThickness 0.2;
+        featureAngleMerge 45;
+        featureAngleTerminate 80.0;
+        nRelaxIter 5;
+        maxFaceThicknessRatio 2.0;
+        maxThicknessToMedialRatio 0.3;
+        minMedialAxisAngle 90;
+        maxLayerIter 30;
+        growConvexEdge true;
+        growConcaveEdge true;
+        growUpPatches true;
+        rebalance false;
+        layerRecovery 1;
+        nSmoothThickness 10;
+        nSmoothSurfaceNormals 6;
+        nSmoothNormals 3;
+        writeVTK true;
+        maxProjectionDistance 10000.0;
+        maxCellDistortion 50.0;
+        medialRatioExp 1;
+        growZoneLayers false;
+        dualConcaveCollapse 0;
+        dualZoneLayersScaling 1.0;
+        dualLayerInterfaceWeights 0.5;
+        dualMaxOrtho 180;
+    }
+    meshQualityControls
+    {
+        maxNonOrtho 70.0;
+        maxBoundarySkewness 20;
+        maxInternalSkewness 6;
+        maxConcave 80.0;
+        minFlatness 0.5;
+        minVol 1.0E-14;
+        minTetQuality -1.0E30;
+        minArea 1.0E-13;
+        minTwist 0.05;
+        minDeterminant 1.0E-4;
+        minFaceWeight 0.08;
+        minVolRatio 0.02;
+        minTriangleTwist -0.99;
+        errorReduction 0.75;
+        nSmoothScale 10;
+        minVolCollapseRatio -1.0;
+        faceFaceCells false;
+        minSnapRelativeVolume -1;
+        smoothAlignedEdges false;
+        minSnapRelativeTetVolume -1;
+        maxGaussGreenCentroid -1;
+        nVolSmoothIter 8;
+        maxCellAspectRatio -1.0;
+        maxFaceCentreNonOrtho 180.0;
+        minEdgeLength -1.0;
+    }
+    debug 0;
+    mergeTolerance 1.0E-6;
+    dualMesh false;
+    meshOptimization
+    {
+        type cfMeshOptimize;
+        cfMeshOptimizeCoeffs
+        {
+            qualityThreshold 0.0;
+            numLaplaceIterations 0;
+            maxNumGlobalIterations 10;
+            maxNumIterations 50;
+            maxNumSurfaceIterations 2;
+            relaxedCheck false;
+        }
+    }
+    cellRemoval
+    {
+        checks ( );
+        patch oldInternalFaces;
+    }

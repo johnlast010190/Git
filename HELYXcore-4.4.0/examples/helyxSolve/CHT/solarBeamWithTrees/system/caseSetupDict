@@ -1,0 +1,737 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    regionGroups
+    (
+        fluids ( air )
+        solids ( floor solid )
+    );
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom startTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 1000.0;
+            deltaT 1;
+            writeControl timeStep;
+            writeInterval 200.0;
+            purgeWrite 0;
+        }
+    }
+    functions
+    {
+    }
+}
+
+regions
+{
+    solids
+    {
+        materialProperties
+        {
+            floorMaterial
+            {
+                materialName    floorMaterial;
+
+                materialType    solid;
+                thermodynamics  hConst;
+                equationOfState rhoConst;
+                energy          sensibleEnthalpy;
+
+                molWeight       12;
+
+                kappaModel       constSolid;
+                kappaModelCoeffs
+                {
+                    kappa   80;
+                }
+
+                thermodynamicsCoeffs
+                {
+                    Hf      0;
+                    Cp      450;
+                }
+
+                equationOfStateCoeffs
+                {
+                    rho     8000;
+                }
+            }
+
+            solidMaterial
+            {
+                materialName    solidMaterial;
+
+                materialType    solid;
+                thermodynamics  hConst;
+                equationOfState rhoConst;
+                energy          sensibleEnthalpy;
+
+                molWeight       12;
+
+                kappaModel       constSolid;
+                kappaModelCoeffs
+                {
+                    kappa   80;
+                }
+
+                thermodynamicsCoeffs
+                {
+                    Hf      0;
+                    Cp      250;
+                }
+
+                equationOfStateCoeffs
+                {
+                    rho     5000;
+                }
+            }
+        }
+    }
+
+    fluids
+    {
+        materialProperties
+        {
+            air
+            {
+                materialName    air;
+                materialType    fluid;
+                thermodynamics  hConst;
+                equationOfState perfectGas;
+                energy          sensibleEnthalpy;
+                buoyancyModel   rhoModel;
+                molWeight 28.9;
+
+                thermodynamicsCoeffs
+                {
+                    Cp 1000;
+                    Hf 0;
+                }
+                muModel       scalarFunction1;
+                muModelCoeffs
+                {
+                    mu 1.8e-05;
+                }
+                kappaModel       kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr 0.7;
+                }
+            }
+        }
+    }
+
+
+    floor
+    {
+        state (transient solid radiationSolid);
+        boundaryMesh
+        {
+            floor_to_domain0
+            {
+                type            patch;
+            }
+        }
+
+        turbulenceModel laminar;
+
+        materials (floorMaterial);
+
+        constant
+        {
+            radiationProperties
+            {
+                radiation       off;
+                radiationModel  none; //opaqueSolid;
+                absorptionEmissionModel none; //constant;
+                scatterModel    none;
+                sootModel none;
+                //transmissivityModel none;
+            }
+        }
+
+        system
+        {
+            fvOptions
+            {
+                solidHeatConductionSolver
+                {
+                    type            solidHeatConductionSolver;
+                }
+                radiationSolver
+                {
+                    type            radiationSolver;
+                }
+            }
+        }
+
+        fields
+        {
+            T
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 300.0;
+                }
+            }
+        }
+
+        boundaryConditions
+        {
+            floor_to_domain0
+            {
+                T
+                {
+                    type            zeroGradient;
+                }
+            }
+        }
+    }
+
+    solid
+    {
+        state (transient solid radiationSolid);
+        boundaryMesh
+        {
+            solid_to_domain0
+            {
+                type patch;
+            }
+        }
+
+        turbulenceModel laminar;
+
+        materials (solidMaterial);
+
+        constant
+        {
+            radiationProperties
+            {
+                radiation       off; //on;
+                radiationModel  none; //opaqueSolid;
+                absorptionEmissionModel none; //constant;
+                scatterModel    none;
+                sootModel   none;
+                //transmissivityModel none;
+            }
+        }
+
+        system
+        {
+            fvOptions
+            {
+                solidHeatConductionSolver
+                {
+                    type            solidHeatConductionSolver;
+                }
+                radiationSolver
+                {
+                    type            radiationSolver;
+                }
+            }
+        }
+
+        fields
+        {
+            T
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 300.0;
+                }
+            }
+        }
+
+        boundaryConditions
+        {
+            solid_to_domain0
+            {
+                T
+                {
+                    type            zeroGradient;
+                }
+            }
+        }
+    }
+
+    air
+    {
+        state (transient ras energy radiation);
+        boundaryMesh
+        {
+            maxY
+            {
+                type            patch;
+            }
+            minX
+            {
+                type            patch;
+            }
+            maxX
+            {
+                type            patch;
+            }
+            minY
+            {
+                type            patch;
+            }
+            maxZ
+            {
+                type            patch;
+            }
+        }
+
+        turbulenceModel kEpsilon;
+
+        materials (air);
+        constant
+        {
+            g
+            {
+                value ( 0.0 0.0 -9.81 );
+            }
+
+            boundaryRadiationProperties
+            {
+                ".*"
+                {
+                    mode        model;
+                    modelType   transparent;
+                    transmissivityModel none;
+                    absorptionEmissionModel multiBandAbsorptionEmission;
+                    multiBandAbsorptionEmissionCoeffs
+                    {
+                        emissivity      (1 1);
+                        absorptivity    (0 0);
+                    }
+                }
+                air_to_solid
+                {
+                    mode        model;
+                    modelType   opaque;
+                    transmissivityModel none;
+                    absorptionEmissionModel multiBandAbsorptionEmission;
+                    multiBandAbsorptionEmissionCoeffs
+                    {
+                        emissivity      (0.3 0.7);
+                        absorptivity    (0.3 0.7);
+                    }
+                }
+
+                air_to_floor
+                {
+                    mode    model;
+                    modelType       opaque;
+                    transmissivityModel none;
+                    absorptionEmissionModel multiBandAbsorptionEmission;
+                    multiBandAbsorptionEmissionCoeffs
+                    {
+                        emissivity      (0.3 0.7);
+                        absorptivity    (0.3 0.7);
+                    }
+                }
+            }
+
+            radiationProperties
+            {
+                radiation       on;
+                participating   on;
+                radiationModel  fvDOM;
+                transmissivityModel none; //multiBandSolidTransmissivity;
+                //multiBandSolidTransmissivityCoeffs
+                //{
+                //    transmissivity    (1 0.3);
+                //}
+                fvDOMCoeffs
+                {
+                    nPhi        3;      // azimuthal angles in PI/2 on X-Y.(from Y to X)
+                    nTheta      6;      // polar angles in PI (from Z to X-Y plane)
+                    maxIter     25;     // maximum number of iterations
+                    tolerance   2e-2;   // convergence criteria for radiation iteration
+                    useSolarLoad      false;
+                    useExternalBeam   true;
+                    // Energy spectrum for the external beam
+                    spectralDistribution (2 1);
+                }
+                solarCalculatorCoeffs
+                {
+                    sunDirectionModel    sunDirTracking;
+                    sunTrackingUpdateInterval 800; // Time interval to update Sun position
+                    localStandardMeridian     9;       // GMT offset (hours)
+                    startDay                  204;     // day of the year
+                    startTime                 15;      // time of the day (hours decimal)
+                    longitude                 139.74;  // longitude (degrees)
+                    latitude                  35.658;  // latitude (degrees)
+                    gridUp                    (0 0 1); // Grid orientation
+                    gridEast                  (1 0 0);
+                    sunLoadModel    sunLoadFairWeatherConditions;
+                    // Fair weather conditions model constants
+                    // Calculate beta from the Solar calculator or input
+                    groundReflectivity 0.2;
+                    A       500;   // Apparent solar irradiation at air mass m = 0
+                    B       0.142; // Atmospheric extinction coefficient
+                    C       0.058; // Solar diffusivity constant
+                    //beta    45;  // Solar altitude (in degrees) above the horizontal
+                }
+                // Number of flow iterations per radiation iteration
+                solverFreq 10;
+                absorptionEmissionModel multiBandZoneAbsorptionEmission;
+                multiBandZoneAbsorptionEmissionCoeffs
+                {
+                    absorptivity  (0.01 0.01);
+                    emissivity    (0.01 0.01);
+                    zones
+                    {
+                        absorptivity  ("trees" (20 20));
+                        emissivity    ("trees" (20 20));
+                    }
+                }
+                scatterModel    none;
+                sootModel       none;
+            }
+        }
+
+        system
+        {
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default         Euler;
+                }
+            }
+
+            fvSolution
+            {
+                PIMPLE
+                {
+                    consistent yes;
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p 1;
+                    }
+                    equations
+                    {
+                        U 0.8;
+                    }
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type potentialFlow;
+                    initialiseUBCs true;
+                    rhoRef 1.0;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type buoyantPressure;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type turbulentIL;
+                    I 0.05;
+                    L 0.01;
+                    Uref 1.0;
+                }
+            }
+            epsilon
+            {
+                initialisation
+                {
+                    type turbulentIL;
+                    I 0.05;
+                    L 0.01;
+                    Uref 1.0;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 300.0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            maxY
+            {
+                U
+                {
+                    type            pressureInletOutletVelocity;
+                    value           uniform ( 0 0 0 );
+                    phi             phi;
+                }
+                T
+                {
+                    type            inletOutlet;
+                    value           uniform 300;
+                    inletValue      uniform 300;
+                }
+                IDefault
+                {
+                    type            wideBandDiffusiveRadiation;
+                    value           uniform 0;
+                    refValue        uniform 0;
+                    refGradient     uniform 0;
+                    valueFraction   uniform 0;
+                }
+                p
+                {
+                    type            totalPressure;
+                    value           uniform 0;
+                    p0              uniform 0;
+                }
+            }
+            minX
+            {
+                U
+                {
+                    type            pressureInletOutletVelocity;
+                    value           uniform ( 0 0 0 );
+                    phi             phi;
+                }
+                T
+                {
+                    type            inletOutlet;
+                    value           uniform 300;
+                    inletValue      uniform 300;
+                }
+                IDefault
+                {
+                    type            wideBandDiffusiveRadiation;
+                    value           uniform 0;
+                    refValue        uniform 0;
+                    refGradient     uniform 0;
+                    valueFraction   uniform 0;
+                }
+                p
+                {
+                    type            totalPressure;
+                    value           uniform 0;
+                    p0              uniform 0;
+                }
+            }
+            maxX
+            {
+                U
+                {
+                    type            pressureInletOutletVelocity;
+                    value           uniform ( 0 0 0 );
+                    phi             phi;
+                }
+                T
+                {
+                    type            inletOutlet;
+                    value           uniform 300;
+                    inletValue      uniform 300;
+                }
+                IDefault
+                {
+                    type            wideBandDiffusiveRadiation;
+                    value           uniform 0;
+                    refValue        uniform 0;
+                    refGradient     uniform 0;
+                    valueFraction   uniform 0;
+                }
+                p
+                {
+                    type            totalPressure;
+                    value           uniform 0;
+                    p0              uniform 0;
+                }
+            }
+            minY
+            {
+                U
+                {
+                    type            pressureInletOutletVelocity;
+                    value           uniform ( 0 0 0 );
+                    phi             phi;
+                }
+                T
+                {
+                    type            inletOutlet;
+                    value           uniform 300;
+                    inletValue      uniform 300;
+                }
+                IDefault
+                {
+                    type            wideBandDiffusiveRadiation;
+                    value           uniform 0;
+                    refValue        uniform 0;
+                    refGradient     uniform 0;
+                    valueFraction   uniform 0;
+                }
+                p
+                {
+                    type            totalPressure;
+                    value           uniform 0;
+                    p0              uniform 0;
+                }
+            }
+            maxZ
+            {
+                U
+                {
+                    type            pressureInletOutletVelocity;
+                    value           uniform ( 0 0 0 );
+                    phi             phi;
+                }
+                T
+                {
+                    type            inletOutlet;
+                    value           uniform 300;
+                    inletValue      uniform 300;
+                }
+                IDefault
+                {
+                    type            wideBandDiffusiveRadiation;
+                    value           uniform 0;
+                    refValue        uniform 0;
+                    refGradient     uniform 0;
+                    valueFraction   uniform 0;
+                }
+                p
+                {
+                    type            totalPressure;
+                    value           uniform 0;
+                    p0              uniform 0;
+                }
+            }
+            air_to_floor
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform ( 0 0 0 );
+                    phi             phi;
+                }
+                IDefault
+                {
+                    type            wideBandDiffusiveRadiation;
+                    value           uniform 0;
+                    refValue        uniform 0;
+                    refGradient     uniform 0;
+                    valueFraction   uniform 0;
+                }
+                nut
+                {
+                    type            nutkWallFunction;
+                    Cmu             0.09;
+                    kappa           0.41;
+                    E               9.8;
+                    value           uniform 0;
+                }
+                alphat
+                {
+                    type            alphatWallFunction;
+                    Prt             0.85;
+                    value           uniform 0;
+                }
+                k
+                {
+                    type            kqRWallFunction;
+                    value           uniform 0.1;
+                    inletValue      uniform 0.1;
+                }
+                epsilon
+                {
+                    type            epsilonWallFunction;
+                    value           uniform 0.01;
+                    inletValue      uniform 0.01;
+                }
+            }
+            air_to_solid
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform ( 0 0 0 );
+                    phi             phi;
+                }
+                IDefault
+                {
+                    type            wideBandDiffusiveRadiation;
+                    value           uniform 0;
+                    refValue        uniform 0;
+                    refGradient     uniform 0;
+                    valueFraction   uniform 0;
+                }
+                nut
+                {
+                    type            nutkWallFunction;
+                    Cmu             0.09;
+                    kappa           0.41;
+                    E               9.8;
+                    value           uniform 0;
+                }
+                alphat
+                {
+                    type            alphatWallFunction;
+                    Prt             0.85;
+                    value           uniform 0;
+                }
+                k
+                {
+                    type            kqRWallFunction;
+                    value           uniform 0.1;
+                    inletValue      uniform 0.1;
+                }
+                epsilon
+                {
+                    type            epsilonWallFunction;
+                    value           uniform 0.01;
+                    inletValue      uniform 0.01;
+                }
+            }
+            region0_to_floor_floor_zone
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform ( 0 0 0 );
+                    phi             phi;
+                }
+            }
+        }
+    }
+}
+
+// ************************************************************************* //

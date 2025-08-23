@@ -1,0 +1,96 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | HELYX®: Open-source CFD for Enterprise                   |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | ENGYS Ltd. <http://engys.com/>                           |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "../system";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     pimpleFoam;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         1.3;
+
+deltaT          0.0001;
+
+writeControl    baselineTime;
+
+writeInterval   0.1;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  10;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   10;
+
+graphFormat     raw;
+
+runTimeModifiable yes;
+
+libs            ( "" );
+
+adjustTimeStep  yes;
+
+maxCo           4;
+
+maxDeltaT       1;
+
+functions
+{
+    vr1
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U p );
+        type            volumeReport;
+    }
+    LD1
+    {
+        patches         ( "sphere.*" );
+        functionObjectLibs ( "libforces.so" );
+        porosity        false;
+        nAveragingSteps 1;
+        outputRegionData true;
+        binData
+        {
+            nBins           10;
+            axis            ( 1 0 0 );
+        }
+        maxCp           1;
+        minCp           -2;
+        Uinf            ( 1 0 0 );
+        rhoInf          1.227;
+        liftDirection   ( 0 0 1 );
+        dragDirection   ( 0 0 1 );
+        referenceArea   1;
+        referenceLength 1;
+        referencePoint  ( 0 0 0 );
+        wheelbase       1;
+        type            liftDrag;
+        name            sphere;
+        rhoName         rhoInf;
+    }
+}
+
+
+// ************************************************************************* //

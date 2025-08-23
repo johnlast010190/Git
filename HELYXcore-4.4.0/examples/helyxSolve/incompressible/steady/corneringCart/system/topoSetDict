@@ -1,0 +1,80 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      topoSetDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+actions
+(
+    {
+        name internal_l_porous_radiator_inlet;
+        type faceZoneSet;
+        action new;
+        source searchableSurfaceToFaceZone;
+        sourceInfo
+        {
+            zone internal_l_porous_radiator;
+            surface triSurfaceMesh;
+            name faceZoneSurf_porous_radiator_inlet.stl;
+        }
+    }
+    {
+        name internal_l_porous_radiator_outlet;
+        type faceZoneSet;
+        action new;
+        source searchableSurfaceToFaceZone;
+        sourceInfo
+        {
+            zone internal_l_porous_radiator;
+            surface triSurfaceMesh;
+            name faceZoneSurf_porous_radiator_outlet.stl;
+        }
+    }
+    {
+        name internal_l_porous_radiator_inlet;
+        type faceZoneSet;
+        action new;
+        source searchableSurfaceToFaceZone;
+        sourceInfo
+        {
+            zone internal_l_porous_radiator;
+            surface triSurfaceMesh;
+            name faceZoneSurf_porous_radiator_inlet.stl;
+        }
+    }
+    {
+        name internal_l_porous_radiator_outlet;
+        type faceZoneSet;
+        action new;
+        source searchableSurfaceToFaceZone;
+        sourceInfo
+        {
+            zone internal_l_porous_radiator;
+            surface triSurfaceMesh;
+            name faceZoneSurf_porous_radiator_outlet.stl;
+        }
+    }
+    {
+        name    allCells;
+        type    cellZoneSet;
+        action  new;
+        source  boxToCell;
+        sourceInfo
+        {
+            box   (-100 -100 -100)(100 100 100);
+        }
+    }
+);
+
+
+// ************************************************************************* //

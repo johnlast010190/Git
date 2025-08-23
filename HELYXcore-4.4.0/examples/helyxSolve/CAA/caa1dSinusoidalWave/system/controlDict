@@ -1,0 +1,147 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     helyxSolve;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         0.2;
+
+deltaT          4e-06;
+
+writeControl    timeStep;
+
+writeInterval   100;
+
+purgeWrite      1;
+
+writeFormat     ascii;
+
+writePrecision  6;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   6;
+
+graphFormat     raw;
+
+runTimeModifiable true;
+
+adjustTimeStep  no;
+
+maxCo           1;
+
+maxDeltaT       1;
+
+libs            1 ( "" );
+
+functions
+{
+    VR
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       true;
+        fields          ( psiAco pAcoustic );
+        executeControl  onEnd;
+        writeControl    onEnd;
+        type            volumeReport;
+        outputFileFormat tsv;
+    }
+    FMM0
+    {
+        type            fieldMinMax;
+        libs            ( "libfieldFunctionObjects.so" );
+        location        true;
+        mode            magnitude;
+        executeControl  onEnd;
+        writeControl    onEnd;
+        fields          ( psiAco pAcoustic );
+    }
+    line
+    {
+        type            sets;
+        functionObjectLibs ( "libsampling.so" );
+        interpolationScheme cellPoint;
+        setFormat       raw;
+        writeControl    onEnd;
+        writeInterval   1;
+        fields          ( pAcoustic pAcousticPrime2Mean );
+        sets            
+        (
+            line1
+            {
+                type            uniform;
+                axis            x;
+                start           ( 0 0 0 );
+                end             ( 34.3 0 0 );
+                nPoints         300000;
+            }
+
+        )
+;
+    }
+    probes
+    {
+        functionObjectLibs ( "libsampling.so" );
+        enabled         true;
+        probeLocations  ( ( 0 0.5 0.5 ) ( 3.43 0.5 0.5 ) );
+        fields          ( psiAco pAcoustic uAcoustic );
+        executeControl  timeStep;
+        type            probes;
+        libs            ( "libsampling.so" );
+        name            probes;
+        writeControl    outputTime;
+        writeInterval   1;
+        fixedLocations  false;
+        interpolationScheme cellPoint;
+        includeOutOfBounds true;
+        definedInFrame  false;
+        localOnOutput   true;
+    }
+    fieldAverage1
+    {
+        functionObjectLibs ( "libfieldFunctionObjects.so" );
+        fields          
+        (
+            pAcoustic
+            {
+                mean            on;
+                prime2Mean      on;
+                base            time;
+            }
+
+        )
+;
+        executeControl  timeStep;
+        writeControl    writeTime;
+        type            fieldAverage;
+        libs            ( "libfieldFunctionObjects.so" );
+        timeStart       0.1;
+        restartOnRestart false;
+        restartOnOutput false;
+        periodicRestart false;
+        restartPeriod   0.1;
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,20 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+-------------------------------------------------------------------------------
+Description
+    Calculates the shear stress at wall patches, outputting the data as a
+    volVectorField.
+
+\*---------------------------------------------------------------------------*/
+
+type            wallShearStress;
+libs            ("libfieldFunctionObjects.so");
+
+executeControl  writeTime;
+writeControl    writeTime;
+
+// ************************************************************************* //

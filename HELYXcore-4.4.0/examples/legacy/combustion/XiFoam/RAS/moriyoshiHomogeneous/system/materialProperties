@@ -1,0 +1,78 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      materialProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+materialType    premixed;
+mixture         homogeneousThermoMixture;
+energy          absoluteEnthalpy;
+
+stoichiometricAirFuelMassRatio 15.675;
+
+species ( b );
+components ( reactants products );
+
+reactants
+{
+    muModel         scalarFunction1;
+    kappaModel      kappaPrandtl;
+    thermodynamics  janaf;
+    equationOfState perfectGas;
+    molWeight       29.4649;
+    thermodynamicsCoeffs
+    {
+        Tlow            200;
+        Thigh           6000;
+        Tcommon         1000;
+        highCpCoeffs ( 3.24515 0.00202212 -6.98806e-07 1.11477e-10 -6.60444e-15 -1601.58 4.60831 );
+        lowCpCoeffs ( 3.60909 -0.000628822 4.45105e-06 -3.81328e-09 1.0553e-12 -1587.86 3.21309 );
+    }
+    muModelCoeffs
+    {
+        mu              1e-5;
+    }
+    kappaModelCoeffs
+    {
+        Pr              1;
+    }
+}
+
+products
+{
+    muModel         scalarFunction1;
+    kappaModel      kappaPrandtl;
+    thermodynamics  janaf;
+    equationOfState perfectGas;
+    molWeight       28.3233;
+    thermodynamicsCoeffs
+    {
+        Tlow            200;
+        Thigh           6000;
+        Tcommon         1000;
+        highCpCoeffs ( 3.10561 0.00179748 -5.94701e-07 9.05612e-11 -5.08447e-15 -11003.6 5.12109 );
+        lowCpCoeffs ( 3.498 0.000638554 -1.83885e-07 1.20991e-09 -7.68702e-13 -11080.6 3.1819 );
+    }
+    muModelCoeffs
+    {
+        mu              1e-5;
+    }
+    kappaModelCoeffs
+    {
+        Pr              1;
+    }
+}
+
+
+// ************************************************************************* //

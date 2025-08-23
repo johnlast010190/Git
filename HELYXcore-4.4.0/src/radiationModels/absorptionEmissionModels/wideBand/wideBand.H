@@ -1,0 +1,247 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : 4.4.0
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) 2011-2019 OpenFOAM Foundation
+
+Class
+    Foam::radiationModels::absorptionEmissionModels::wideBand
+
+Description
+
+    wideBand radiation absorption and emission coefficients
+    for continuous phase.
+
+    All the bands should have the same number of species and have to be entered
+    in the same order.
+
+    There is no check of continuity of the bands. They should not overlap or
+    have gaps.
+
+    The emission constant proportionality is specified per band (EhrrCoeff).
+
+    The coefficients for the species in the lookup table have to be specified
+    for use in moles x P [atm].i.e. (k[i] = species[i]*p*9.869231e-6).
+
+    The coefficients for CO and soot or any other added are multiplied by the
+    respective mass fraction being solved.
+
+    The look Up table file should be in the constant directory.
+
+    band dictionary:
+    \verbatim
+    wideBandCoeffs
+    {
+        band0
+        {
+            bandLimits (1.0e-6 2.63e-6);
+            EhrrCoeff       0.0;
+            CH4
+            {
+                Tcommon         300.;
+                Tlow            300.;
+                Thigh           2500.;
+                invTemp         false;
+                loTcoeffs (0 0 0 0 0 0);
+                hiTcoeffs (.1 0 0 0 0 0);
+            }
+            CO2
+            {
+                Tcommon         300.;
+                Tlow            300.;
+                Thigh           2500.;
+                invTemp         false;
+                loTcoeffs (0 0 0 0 0 0);
+                hiTcoeffs (.1 0 0 0 0 0);
+            }
+            H2O
+            {
+                Tcommon         300.;
+                Tlow            300.;
+                Thigh           2500.;
+                invTemp         false;
+                loTcoeffs (0 0 0 0 0 0);
+                hiTcoeffs (.1 0 0 0 0 0);
+            }
+            Ysoot
+            {
+                Tcommon         300.;
+                Tlow            300.;
+                Thigh           2500.;
+                invTemp         false;
+                loTcoeffs (0 0 0 0 0 0);
+                hiTcoeffs (.1 0 0 0 0 0);
+            }
+        }
+    }
+    \endverbatim
+
+
+SourceFiles
+    wideBand.C
+
+\*---------------------------------------------------------------------------*/
+
+#ifndef wideBand_H
+#define wideBand_H
+
+#include "interpolations/interpolationLookUpTable/interpolationLookUpTable.H"
+#include "absorptionEmissionModels/absorptionEmissionModel/absorptionEmissionModel.H"
+#include "containers/HashTables/HashTable/HashTable.H"
+#include "radiationModels/fvDOM/absorptionCoeffs/absorptionCoeffs.H"
+#include "fluidThermo/fluidThermo.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+namespace radiationModels
+{
+namespace absorptionEmissionModels
+{
+
+/*---------------------------------------------------------------------------*\
+                          Class wideBand Declaration
+\*---------------------------------------------------------------------------*/
+
+class wideBand
+:
+    public absorptionEmissionModel
+{
+public:
+
+    // Public data
+
+        //- Maximum number of species considered for absorptivity
+        static const int nSpecies_ = 5;
+
+        //- Maximum number of bands
+        static const int maxBands_ = 10;
+
+        //-  Absorption coefficients
+        FixedList<FixedList<absorptionCoeffs, nSpecies_>, maxBands_> coeffs_;
+
+
+protected:
+
+    // Protected data
+
+        //- Absorption model dictionary
+        dictionary coeffsDict_;
+
+        //- Hash table with species names
+        HashTable<label> speciesNames_;
+
+        //- Indices of species in the look-up table
+        FixedList<label, nSpecies_> specieIndex_;
+
+        //- Bands
+        FixedList<Vector2D<scalar>, maxBands_> iBands_;
+
+        //- Lookup table of species related to ft
+        mutable autoPtr<interpolationLookUpTable<scalar>> lookUpTablePtr_;
+
+        //- Thermo package
+        const fluidThermo& thermo_;
+
+        //- Bands
+        label nBands_;
+
+        //- Pointer list of species being solved involved in the absorption
+        UPtrList<volScalarField> Yj_;
+
+        // Total wave length covered by the bands
+        scalar totalWaveLength_;
+
+
+public:
+
+    //- Runtime type information
+    TypeName("wideBand");
+
+
+    // Constructors
+
+        //- Construct from components
+        wideBand
+        (
+            const dictionary& dict,
+            const fvMesh& mesh,
+            const word& typeNameDerived = typeName
+        );
+
+
+    //- Destructor
+    virtual ~wideBand();
+
+
+    // Member Functions
+
+        //- Absorption coefficient for continuous phase
+        tmp<volScalarField> aCont(const label bandi = 0) const;
+
+        //- Emission coefficient for continuous phase
+        tmp<volScalarField> eCont(const label bandi = 0) const;
+
+        //- Emission contribution for continuous phase
+        tmp<volScalarField> ECont(const label bandi = 0) const;
+
+
+        inline bool isGrey() const
+        {
+            return false;
+        }
+
+        //- Number of bands
+        inline label nBands() const
+        {
+            return nBands_;
+        }
+
+        //- Lower and upper limit of band i
+        inline const Vector2D<scalar>& bands(const label bandi) const
+        {
+            return iBands_[bandi];
+        }
+
+        //- Correct rays
+        void correct
+        (
+            volScalarField& a,
+            PtrList<volScalarField>& aLambda
+        ) const;
+};
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace absorptionEmissionModels
+} // End namespace radiationModels
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

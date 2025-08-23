@@ -1,0 +1,530 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            stopAt          endTime;
+            endTime         1000;
+            deltaT          1;
+            writeControl    timeStep;
+            writeInterval   100;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type volumeReport;
+            regions ( region0 );
+            fields ( U p ReThetat gammaInt );
+            writeControl timeStep;
+            writeInterval 1;
+            executeControl timeStep;
+            executeInterval 1;
+            functionObjectLibs ( "libreport.so" );
+            outputFileFormat tsv;
+        }
+        WSS
+        {
+            type            wallShearStress;
+            libs            ("libfieldFunctionObjects.so");
+            executeControl  onEnd;
+            writeControl    onEnd;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (steady ras);
+        boundaryMesh
+        {
+            inclinedProlateSpheroid { type wall; }
+            inlet { type inlet; }
+            side1 { type symmetry; }
+            side2 { type symmetry; }
+            outlet { type outlet; }
+            top { type outlet; }
+            bottom { type inlet; }
+        }
+        turbulenceModel kOmegaSSTLM;
+        materials (air);
+        materialProperties
+        {
+            air
+            {
+                materialName air;
+                materialType fluid;
+                molWeight 28.96;
+                energy sensibleEnthalpy;
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho 1.177;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu constant 1.95563E-5;
+                }
+                thermodynamics hConst;
+                thermodynamicsCoeffs
+                {
+                    Hf 0.0;
+                    Cp 1004.9;
+                }
+                kappaModel scalarFunction1;
+                kappaModelCoeffs
+                {
+                    kappa 0.0262;
+                }
+                buoyancyModelCoeffs
+                {
+                    beta 0.0034;
+                }
+                referenceFields
+                {
+                    p [1 -1 -2 0 0 0 0] 101325.0;
+                    TConst [0 0 0 1 0 0 0] 300.0;
+                }
+            }
+        }
+        constant
+        {
+            g
+            {
+                value ( 0.0 0.0 -9.81 );
+                dimensions [0  1 -2  0 0 0 0];
+            }
+            turbulenceProperties
+            {
+                simulationType RAS;
+                RAS
+                {
+                    RASModel kOmegaSSTLM;
+                    turbulence on;
+                    printCoeffs on;
+                    crossflow on;
+                    roughnessHeight 3.3E-6;
+                }
+            }
+        }
+        system
+        {
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default steadyState;
+                }
+                gradSchemes
+                {
+                    default cellLimited Gauss linear 1.0;
+                    turbulence cellLimited Gauss linear 1.0;
+                    gradU cellLimited Gauss linear 1.0;
+                    grad(p) cellLimited Gauss linear 1.0;
+                    grad(k) cellLimited Gauss linear 1.0;
+                    grad(omega) cellLimited Gauss linear 1.0;
+                    grad(gammaInt) cellLimited Gauss linear 1.0;
+                    grad(ReThetat) cellLimited Gauss linear 1.0;
+                }
+                divSchemes
+                {
+                    div(phi,U) bounded Gauss linearUpwindV gradU;
+                    default none;
+                    div(R) Gauss linear;
+                    div((rho*R)) Gauss linear;
+                    div(nonlinearStress) Gauss linear;
+                    div((muEff*dev2(grad(U).T()))) Gauss linear;
+                    div((nuEff*dev2(T(grad(U))))) Gauss linear;
+                    div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
+                    div((nu*dev2(T(grad(U))))) Gauss linear;
+                    div(((rho*(mu|rho))*dev2(T(grad(U))))) Gauss linear;
+                    div(phi,k) bounded Gauss linearUpwind turbulence;
+                    div(phi,omega) bounded Gauss linearUpwind turbulence;
+                    div(phi,ReThetat) bounded Gauss linearUpwind turbulence;
+                    div(phi,gammaInt) bounded Gauss linearUpwind turbulence;
+                }
+                laplacianSchemes
+                {
+                    default Gauss linear limited 0.333;
+                    laplacian((rho*DkEff),k) Gauss linear corrected;
+                    laplacian((rho*DomegaEff),omega) Gauss linear corrected;
+                    laplacian((rho*DReThetatEff),ReThetat) Gauss linear corrected;
+                    laplacian((rho*DgammaIntEff),gammaInt) Gauss linear corrected;
+                }
+                interpolationSchemes
+                {
+                    default linear;
+                    interpolate(HbyA) linear;
+                }
+                snGradSchemes
+                {
+                    default limited 0.333;
+                }
+                wallDist
+                {
+                    method meshWave;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    p
+                    {
+                        solver GAMG;
+                        agglomerator faceAreaPair;
+                        mergeLevels 1;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 200;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        scaleCorrection true;
+                        tolerance 1e-10;
+                        relTol 0.01;
+                    }
+                    U
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-6;
+                        relTol 0.1;
+                        nSweeps 2;
+                    }
+                    k
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-06;
+                        relTol 0.1;
+                    }
+                    omega
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-06;
+                        relTol 0.1;
+                    }
+                    ReThetat
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-06;
+                        relTol 0.1;
+                    }
+                    gammaInt
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-06;
+                        relTol 0.1;
+                    }
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p 0.3;
+                        rho 0.05;
+                    }
+                    equations
+                    {
+                        U 0.7;
+                        k 0.7;
+                        omega 0.7;
+                        ReThetat 0.7;
+                        gammaInt 0.7;
+                    }
+                }
+                SIMPLE
+                {
+                    residualControl
+                    {
+                        ".*" 1.0E-7;
+                    }
+                    modifiedMomentumInterp true;
+                    consistent true;
+                }
+                cache { grad(U); }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type potentialFlow;
+                    initialiseUBCs true;
+                    rhoRef 1.177;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type potentialFlow;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.0759;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 18.2813;
+                }
+            }
+            gammaInt
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 1.0;
+                }
+            }
+            ReThetat
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 879.6744;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            Inclined_Prolate_Spheroid_6_1
+            {
+                U
+                {
+                    type wallVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                }
+                k
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+                omega
+                {
+                    type omegaWallFunction;
+                    value uniform 18.2813;
+                }
+                nut
+                {
+                    type fixedValue;
+                    value uniform 0.0;
+                }
+            }
+            inlet
+            {
+                U
+                {
+                    type uniformFixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                    uniformValue constant ( 43.4666 11.64 0.0 );
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                }
+                k
+                {
+                    type fixedValue;
+                    value uniform 0.0759;
+                }
+                omega
+                {
+                    type fixedValue;
+                    value uniform 18.2813;
+                }
+                nut
+                {
+                    type calculated;
+                    value uniform 0.0;
+                }
+                ReThetat
+                {
+                    type fixedValue;
+                    value uniform 879.6744;
+                }
+                gammaInt
+                {
+                    type fixedValue;
+                    value uniform 1.0;
+                }
+            }
+            side_wall
+            {
+                U
+                {
+                    type fixedNormalSlip;
+                    fixedValue uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                }
+                k { type zeroGradient; }
+                omega { type zeroGradient; }
+                nut { type zeroGradient; }
+            }
+            outlet
+            {
+                U
+                {
+                    type pressureVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type fixedValue;
+                    value uniform 0.0;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    intensity 0.05;
+                    value uniform 0.1;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    mixingLength 0.01;
+                    k k;
+                    value uniform 0.01;
+                }
+                nut
+                {
+                    type calculated;
+                    value uniform 0.001;
+                }
+            }
+            top
+            {
+                U
+                {
+                    type pressureVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type fixedValue;
+                    value uniform 0.0;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    intensity 0.05;
+                    value uniform 0.1;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    mixingLength 0.01;
+                    k k;
+                    value uniform 0.01;
+                }
+                nut
+                {
+                    type calculated;
+                    value uniform 0.001;
+                }
+            }
+            bottom
+            {
+                U
+                {
+                    type uniformFixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                    uniformValue constant ( 43.4666 11.64 0.0 );
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                }
+                k
+                {
+                    type fixedValue;
+                    value uniform 0.0759;
+                }
+                omega
+                {
+                    type fixedValue;
+                    value uniform 18.2813;
+                }
+                nut
+                {
+                    type calculated;
+                    value uniform 0.0;
+                }
+                ReThetat
+                {
+                    type fixedValue;
+                    value uniform 879.6744;
+                }
+                gammaInt
+                {
+                    type fixedValue;
+                    value uniform 1.0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

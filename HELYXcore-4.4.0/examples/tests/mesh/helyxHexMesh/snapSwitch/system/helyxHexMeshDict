@@ -1,0 +1,111 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+// Which of the steps to run
+castellatedMesh true;
+snap            true;
+addLayers       true;
+
+blockType auto;
+blockData       ( 0.05 0 );
+meshAlgorithm extrude;
+
+geometry
+{
+    innerBox
+    {
+        type searchableBox;
+        min (-0.8 -0.5 -0.5);
+        max ( 0.8  0.5 0.5);
+    }
+    outerBox
+    {
+        type searchableBox;
+        min (-1.0 -1.0 -1.0);
+        max ( 1.0  1.0 1.0);
+    }
+    plane
+    {
+        type searchablePlane;
+        planeType pointAndNormal;
+        pointAndNormalDict
+        {
+            basePoint ( 0.0 0.0 0.0 );
+            normalVector ( 0.707 0.707 0.0 );
+        }
+    }
+}
+
+castellatedMeshControls
+{
+    features ();
+    refinementSurfaces
+    {
+        innerBox
+        {
+            level ( 1 1 );
+        }
+        outerBox
+        {
+            level ( 0 0 );
+        }
+        plane
+        {
+            level ( 0 0 );
+        }
+    }
+    refinementRegions {}
+    locationsInMesh ( ( ( 0.9 0.0 0.0 ) none ) );
+}
+
+snapControls
+{
+    featureEdges {}
+    snapFlipIter 30;
+    snapFlipTol 0.2;
+}
+
+addLayersControls
+{
+    layers
+    {
+        innerBox
+        {
+            nSurfaceLayers 5;
+            expansionRatio 1.25;
+            finalLayerThickness 0.4;
+            grownUp automatic;
+        }
+        outerBox
+        {
+            nSurfaceLayers 0;
+            expansionRatio 1.25;
+            finalLayerThickness 0.4;
+            grownUp automatic;
+        }
+        plane
+        {
+            nSurfaceLayers 0;
+            grownUp true;
+        }
+    }
+    writeVTK false;
+}
+
+
+// ************************************************************************* //

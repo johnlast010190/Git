@@ -1,0 +1,41 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/VR/0/volumeReport.dat";
+                reference "verification/short/VR/0/volumeReport.dat";
+                variables "Tmax" "Umin" "Umax" "pmin" "pmax" "Tmin";
+            }
+            {
+                result "postProcessing/patchInlet_phi/0/surfaceFieldValue.dat";
+                reference "verification/short/patchInlet_phi/0/surfaceFieldValue.dat";
+                variables "sum(phi)";
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/VR/0/volumeReport.dat";
+                reference "verification/long/VR/0/volumeReport.dat";
+                variables "Tmax" "Umin" "Umax" "pmin" "pmax" "Tmin";
+            }
+            {
+                result "postProcessing/patchInlet_phi/0/surfaceFieldValue.dat";
+                reference "verification/long/patchInlet_phi/0/surfaceFieldValue.dat";
+                variables "sum(phi)";
+            }
+        );
+    }
+);
+
+unstable true;
+operatingSystem windows;
+reason "This example uses the `m4` command, which is not available on Windows";

@@ -1,0 +1,113 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+castellatedMesh true;
+snap            true;
+addLayers       false;
+
+geometry
+{
+    v_dualWing
+    {
+        type        searchableCylinder;
+        name        v_dualWing;
+        point1      (-0.43 0 -10);
+        point2      (-0.43 0  10);
+        radius      0.1;
+    }
+    v_rotor
+    {
+        type        searchableCylinder;
+        name        v_rotor;
+        point1      (0 0 -10);
+        point2      (0 0  10);
+        radius      0.75;
+    }
+    wing1
+    {
+        type        searchableBox;
+        name        wing1;
+        min         (-0.5  -0.01  -10);
+        max         (-0.44  0.01  10);
+    }
+    wing2
+    {
+        type        searchableBox;
+        name        wing2;
+        min (-0.42 -0.0025  -10);
+        max (-0.36  0.0025   10);
+    }
+};
+
+castellatedMeshControls
+{
+    nCellsBetweenLevels 6;
+    features ();
+    refinementSurfaces
+    {
+        v_dualWing
+        {
+            level       (0 0);
+            faceType    boundary;
+            cellZone    dualWing;
+            faceZone    dualWing;
+            cellZoneInside  inside;
+        }
+        v_rotor
+        {
+            level       (0 0);
+            faceType    boundary;
+            cellZone    rotor;
+            faceZone    rotor;
+            cellZoneInside  inside;
+        }
+        wing1
+        {
+            level   (3 3);
+        }
+        wing2
+        {
+            level   (3 3);
+        }
+    }
+    refinementRegions {}
+    locationInMesh (-0.99 -0.99 0.05);
+    allowFreeStandingZoneFaces false;
+}
+
+snapControls
+{
+    featureEdges {}
+}
+
+addLayersControls
+{
+    layers {}
+}
+
+meshQualityControls
+{
+    maxNonOrtho 180;
+    minTetQuality -1; // 1e-30;
+    minArea -1;
+}
+
+mergeTolerance 1e-6;
+
+
+// ************************************************************************* //

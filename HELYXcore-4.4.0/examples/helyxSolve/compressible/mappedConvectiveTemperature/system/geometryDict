@@ -1,0 +1,57 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | HELYX(R): Open-source CFD for Enterprise                 |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | Engys Ltd. http://www.engys.com                          |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    location system;
+    object geometryDict;
+}
+    surfaces
+    {
+        pipe
+        {
+            type searchableRing;
+            point1 ( 0.0 0.0 0.0 );
+            point2 ( 1.0 0.0 0.0 );
+            innerRadius 0.1;
+            outerRadius 0.2;
+            resolution 50;
+        }
+        inlet.stl
+        {
+            type triSurfaceMesh;
+            format ascii;
+            solids ( "solid" );
+        }
+        inside.stl
+        {
+            type triSurfaceMesh;
+            format ascii;
+            solids ( "water" );
+        }
+        outlet.stl
+        {
+            type triSurfaceMesh;
+            format ascii;
+            solids ( "solid" );
+        }
+        opening.stl
+        {
+            type triSurfaceMesh;
+            format ascii;
+            solids ( "solid" );
+        }
+        outside.stl
+        {
+            type triSurfaceMesh;
+            format ascii;
+            solids ( "air" );
+        }
+    }

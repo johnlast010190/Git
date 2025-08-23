@@ -1,0 +1,28 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Create mesh
+helyxRun blockMesh
+
+# Create face set for patches
+helyxRun topoSet
+
+# Create patch
+helyxRun createPatch -overwrite
+
+# Decompose mesh
+helyxRun decomposePar -force
+
+# Setup
+helyxRun caseSetup
+
+# Run
+helyxRun helyxSolve
+
+# Post-process
+touch smallPoolFire3D.foam
+
+#------------------------------------------------------------------------------

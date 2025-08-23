@@ -1,0 +1,2310 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    regionGroups   (fluidRegions (d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16) );
+    solutionMesh
+    {
+        d1 region0;
+        d2 region0;
+        d3 region0;
+        d4 region0;
+        d5 region0;
+        d6 region0;
+        d7 region0;
+        d8 region0;
+        d9 region0;
+        d10 region0;
+        d11 region0;
+        d12 region0;
+        d13 region0;
+        d14 region0;
+        d15 region0;
+        d16 region0;
+    }
+    solutionSchedule
+    {
+        d1 ( (d1));
+        d2 ( (d2));
+        d3 ( (d3));
+        d4 ( (d4));
+        d5 ( (d5));
+        d6 ( (d6));
+        d7 ( (d7));
+        d8 ( (d8));
+        d9 ( (d9));
+        d10 ( (d10));
+        d11 ( (d11));
+        d12 ( (d12));
+        d13 ( (d13));
+        d14 ( (d14));
+        d15 ( (d15));
+        d16 ( (d16));
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom latestTime;
+            stopAt endTime;
+            endTime 400.0;
+            deltaT constant 1.0;
+            writeControl timeStep;
+            writeInterval 400.0;
+            purgeWrite 0;
+            writeFormat binary;
+        }
+    }
+    functions
+    {
+        Lawson
+        {
+            type pedestrianComfort;
+            instances (d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16);
+            functionObjectLibs ("libutilityFunctionObjects.so");
+            writeControl writeTime;
+            UName U;
+            gust true;
+            windDirections
+            (
+                d1
+                d2
+                d3
+                d4
+                d5
+                d6
+                d7
+                d8
+                d9
+                d10
+                d11
+                d12
+                d13
+                d14
+                d15
+                d16
+            );
+            WeibullParameters
+            (
+                // p c k
+                (6.13 5.59 3.23)  // d1
+                (15.03 5.41 3.16) // d2
+                (9.28 4.54 2.63)  // d3
+                (0.44 4.47 4.46)  // d4
+                (0.0 5.91 3.87)  // d5
+                (0.0 4.73 2.72)  // d6
+                (6.05 5.91 3.87)  // d7
+                (5.09 4.73 2.72)  // d8
+                (2.55 4.05 4.58)  // d9
+                (2.93 4.24 4.17)  // d10
+                (3.81 5.95 2.54)  // d11
+                (11.03 7.80 3.72)  // d12
+                (14.82 8.34 3.38)  // d13
+                (7.04 7.86 3.15)  // d14
+                (8.40 8.01 3.23)  // d15
+                (6.65 6.81 3.20)  // d16
+            );
+            referenceHeight
+            (
+                120
+                120
+                120
+                120
+                120
+                120
+                120
+                120
+                120
+                120
+                120
+                120
+                120
+                120
+                120
+                120
+            );
+            referenceVelocity
+            (
+                7.8
+                7.8
+                7.8
+                7.8
+                7.8
+                7.8
+                7.8
+                7.8
+                7.8
+                7.8
+                7.8
+                7.8
+                7.8
+                7.8
+                7.8
+                7.8
+            );
+            // City of London
+            scaleFactor table
+            (
+                (100 0.96)
+                (120 1)
+                (160 1.07)
+                (200 1.13)
+                (250 1.19)
+                (300 1.24)
+                (450 1.37)
+                (600 1.48)
+            );
+            criteriaThresholds
+            (
+                2.5
+                4
+                6
+                8
+                    // >8
+            );
+            criteriaExceedance // 5%
+            (
+                5
+                5
+                5
+                5
+            );
+        }
+
+        Safety
+        {
+            type pedestrianComfort;
+            instances (d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16);
+            functionObjectLibs ("libutilityFunctionObjects.so");
+            writeControl writeTime;
+            UName U;
+            gust true;
+            windDirections
+            (
+                d1
+                d2
+                d3
+                d4
+                d5
+                d6
+                d7
+                d8
+                d9
+                d10
+                d11
+                d12
+                d13
+                d14
+                d15
+                d16
+            );
+            WeibullParameters
+            (
+                // p c k
+                (6.13 5.59 3.23)  // d1
+                (15.03 5.41 3.16) // d2
+                (9.28 4.54 2.63)  // d3
+                (0.44 4.47 4.46)  // d4
+                (0.0 5.91 3.87)  // d5
+                (0.0 4.73 2.72)  // d6
+                (6.05 5.91 3.87)  // d7
+                (5.09 4.73 2.72)  // d8
+                (2.55 4.05 4.58)  // d9
+                (2.93 4.24 4.17)  // d10
+                (3.81 5.95 2.54)  // d11
+                (11.03 7.80 3.72)  // d12
+                (14.82 8.34 3.38)  // d13
+                (7.04 7.86 3.15)  // d14
+                (8.40 8.01 3.23)  // d15
+                (6.65 6.81 3.20)  // d16
+            );
+            referenceHeight
+            (
+                120
+                120
+                120
+                120
+                120
+                120
+                120
+                120
+                120
+                120
+                120
+                120
+                120
+                120
+                120
+                120
+            );
+            referenceVelocity
+            (
+                7.8
+                7.8
+                7.8
+                7.8
+                7.8
+                7.8
+                7.8
+                7.8
+                7.8
+                7.8
+                7.8
+                7.8
+                7.8
+                7.8
+                7.8
+                7.8
+            );
+            // City of London
+            scaleFactor table
+            (
+                (100 0.96)
+                (120 1)
+                (160 1.07)
+                (200 1.13)
+                (250 1.19)
+                (300 1.24)
+                (450 1.37)
+                (600 1.48)
+            );
+            criteriaThresholds
+            (
+                15
+            );
+            criteriaExceedance // 5%
+            (
+                0.022
+            );
+        }
+        PCVR
+        {
+            functionObjectLibs ( "libreport.so" );
+            logToFile       yes;
+            fields          ( PC-Lawson PC-Safety );
+            executeControl  onEnd;
+            type            volumeReport;
+            writeControl    onEnd;
+            region region0;
+        }
+        SU
+        {
+            type surfaces;
+            fields ( PC-Lawson PC-Safety );
+            interpolationScheme cell;
+            surfaceFormat vtk;
+            writeFields true;
+            writeStatistics false;
+            region region0;
+            surfaces
+            (
+                surfaces0
+                {
+                    type patchInternalField;
+                    patches ( ffminz );
+                    interpolate true;
+                    offsetMode normal;
+                    distance 1.5;
+                }
+            );
+            writeControl outputTimeAndEnd;
+            writeInterval 1;
+            executeControl outputTimeAndEnd;
+            executeInterval 1;
+            functionObjectLibs ( "libsampling.so" );
+        }
+    }
+}
+
+regions
+{
+    fluidRegions
+    {
+        state           (steady ras);
+        boundaryMesh
+        {
+            ffminz
+            {
+                type wall;
+            }
+
+            ffmaxz
+            {
+                type patch;
+            }
+
+            cylinder
+            {
+                type patch;
+            }
+
+            main
+            {
+                type wall;
+            }
+
+            annex
+            {
+                type wall;
+            }
+
+            t1_wall
+            {
+                type wall;
+            }
+
+            t2_wall
+            {
+                type wall;
+            }
+
+            t1_in
+            {
+                type wall;
+            }
+
+            t2_in
+            {
+                type wall;
+            }
+        }
+
+        turbulenceModel realizableKE;
+        materials (air);
+        materialProperties
+        {
+            materialName    air;
+            materialType    fluid;
+            equationOfState rhoConst;
+            thermodynamics  hConst;
+            energy          sensibleEnthalpy;
+            molWeight       28.9;
+            thermodynamicsCoeffs
+            {
+                Cp              1007;
+                Hf              0;
+            }
+            equationOfStateCoeffs
+            {
+                rho             1.225;
+                R               287;
+            }
+            kappaModel      kappaPrandtl;
+            kappaModelCoeffs
+            {
+                Pr              0.71;
+            }
+            muModel         scalarFunction1;
+            muModelCoeffs
+            {
+                mu              1.8232e-05;
+            }
+            transport       muConst;
+            transportCoeffs
+            {
+                mu              1.84e-05;
+                Pr              0.7;
+            }
+            referenceFields
+            {
+                p               [ 1 -1 -2 0 0 0 0 ] 100000;
+            }
+        }
+
+        fields
+        {
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 -5.0 0.0 );
+                }
+            }
+
+            k
+            {
+                initialisation
+                {
+                    type turbulentIL;
+                    I 0.05;
+                    L 0.01;
+                    Uref 1.0;
+                }
+            }
+
+            epsilon
+            {
+                initialisation
+                {
+                    type turbulentIL;
+                    I 0.05;
+                    L 0.01;
+                    Uref 1.0;
+                }
+
+            }
+
+            nut
+            {
+                initialisation
+                {
+                    type turbulentIL;
+                    I 0.05;
+                    L 0.01;
+                    Uref 1.0;
+                }
+
+            }
+        }
+
+        boundaryConditions
+        {
+            ffmaxz
+            {
+                p
+                {
+                    type fixedMean;
+                    meanValue constant 0;
+                    value uniform 0;
+                }
+                U
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    value uniform 0.1;
+                    intensity 0.05;
+                }
+                epsilon
+                {
+                    type turbulentMixingLengthDissipationRateInlet;
+                    value uniform 0.01;
+                    mixingLength 0.01;
+                }
+            }
+            cylinder
+            {
+                U
+                {
+                    type windProfileDirectionVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    profile AIJWindProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                    windDirection constant 0.0;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindKineticEnergyProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+                epsilon
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindDissipationRateProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+                nut
+                {
+                    type calculated;
+                    value uniform 0.0;
+                }
+            }
+        }
+    }
+
+    d1
+    {
+        functions
+        {
+            VR1
+            {
+                type volumeReport;
+                region d1;
+                instance d1;
+                fields ( U k epsilon p );
+                writeControl timeStep;
+                executeControl onEnd;
+                writeControl onEnd;
+                functionObjectLibs ( "libreport.so" );
+            }
+            FP1
+            {
+                type fieldProcess;
+                region d1;
+                instance d1;
+                executeControl timeStep;
+                executeInterval 1;
+                writeControl outputTimeAndEnd;
+                writeInterval 1;
+                operations
+                (
+                    {
+                        operation mag;
+                        fieldName magU;
+                        write true;
+                        nearCellValue false;
+                        inField U;
+                    }
+                );
+                functionObjectLibs ("libfieldFunctionObjects.so");
+            }
+            probes1
+            {
+                type            probes;
+                name            probes;
+                region          d1;
+                instance        d1;
+                writeControl    writeTime;
+                writeInterval   1;
+                functionObjectLibs ( "libsampling.so" );
+                enabled         true;
+                probeLocations  ( ( 0 -20 4 ) ( 0 -40 2 ) );
+                fields          ( magU p );
+                executeControl  timeStep;
+                libs            ( "libsampling.so" );
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 -5.0 0.0 );
+                }
+            }
+        }
+        boundaryConditions
+        {
+            cylinder
+            {
+                U
+                {
+                    type windProfileDirectionVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    profile AIJWindProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                    windDirection constant 0.0;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindKineticEnergyProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+                epsilon
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindDissipationRateProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+                nut
+                {
+                    type calculated;
+                    value uniform 0.0;
+                }
+            }
+        }
+    }
+
+    d2
+    {
+        functions
+        {
+            VR2
+            {
+                type volumeReport;
+                region d2;
+                instance d2;
+                fields ( U k epsilon p );
+                writeControl timeStep;
+                functionObjectLibs ( "libreport.so" );
+            }
+            FP2
+            {
+                type fieldProcess;
+                region d2;
+                instance d2;
+                executeControl timeStep;
+                executeInterval 1;
+                writeControl outputTimeAndEnd;
+                writeInterval 1;
+                operations
+                (
+                    {
+                        operation mag;
+                        fieldName magU;
+                        write true;
+                        nearCellValue false;
+                        inField U;
+                    }
+                );
+                functionObjectLibs ("libfieldFunctionObjects.so");
+            }
+            probes2
+            {
+                type            probes;
+                name            probes;
+                region          d2;
+                instance        d2;
+                writeControl    writeTime;
+                writeInterval   1;
+                functionObjectLibs ( "libsampling.so" );
+                enabled         true;
+                probeLocations  ( ( -10 -20 4 ) ( -15 -30 2 ) );
+                fields          ( magU p );
+                executeControl  timeStep;
+                libs            ( "libsampling.so" );
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( -1.91 -4.62 0 );
+                }
+
+            }
+        }
+        boundaryConditions
+        {
+            cylinder
+            {
+                U
+                {
+                    type windProfileDirectionVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    profile AIJWindProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                    windDirection constant 22.5;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindKineticEnergyProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+                epsilon
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindDissipationRateProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+            }
+        }
+    }
+
+    d3
+    {
+        functions
+        {
+            VR3
+            {
+                type volumeReport;
+                region d3;
+                instance d3;
+                fields ( U k epsilon p );
+                writeControl timeStep;
+                functionObjectLibs ( "libreport.so" );
+            }
+            probes3
+            {
+                type            probes;
+                name            probes;
+                region          d3;
+                instance        d3;
+                writeControl    writeTime;
+                writeInterval   1;
+                functionObjectLibs ( "libsampling.so" );
+                enabled         true;
+                probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+                fields          ( U p );
+                executeControl  timeStep;
+                libs            ( "libsampling.so" );
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( -3.53 -3.53 0 );
+                }
+
+            }
+        }
+        boundaryConditions
+        {
+            cylinder
+            {
+                U
+                {
+                    type windProfileDirectionVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    profile AIJWindProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                    windDirection constant 45.0;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindKineticEnergyProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+                epsilon
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindDissipationRateProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+            }
+        }
+    }
+
+    d4
+    {
+        functions
+        {
+            VR4
+            {
+                type volumeReport;
+                region d4;
+                instance d4;
+                fields ( U k epsilon p );
+                writeControl timeStep;
+                functionObjectLibs ( "libreport.so" );
+            }
+            probes4
+            {
+                type            probes;
+                name            probes;
+                region          d4;
+                instance        d4;
+                writeControl    writeTime;
+                writeInterval   1;
+                functionObjectLibs ( "libsampling.so" );
+                enabled         true;
+                probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+                fields          ( U p );
+                executeControl  timeStep;
+                libs            ( "libsampling.so" );
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( -4.61 -1.91 0 );
+                }
+
+            }
+        }
+        boundaryConditions
+        {
+            cylinder
+            {
+                U
+                {
+                    type windProfileDirectionVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    profile AIJWindProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                    windDirection constant 67.5;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindKineticEnergyProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+                epsilon
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindDissipationRateProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+            }
+        }
+    }
+
+    d5
+    {
+        functions
+        {
+            VR5
+            {
+                type volumeReport;
+                region d5;
+                instance d5;
+                fields ( U k epsilon p );
+                writeControl timeStep;
+                functionObjectLibs ( "libreport.so" );
+            }
+            probes5
+            {
+                type            probes;
+                name            probes;
+                region          d5;
+                instance        d5;
+                writeControl    writeTime;
+                writeInterval   1;
+                functionObjectLibs ( "libsampling.so" );
+                enabled         true;
+                probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+                fields          ( U p );
+                executeControl  timeStep;
+                libs            ( "libsampling.so" );
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( -5 0 0 );
+                }
+
+            }
+        }
+        boundaryConditions
+        {
+            cylinder
+            {
+                U
+                {
+                    type windProfileDirectionVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    profile AIJWindProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                    windDirection constant 90.0;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindKineticEnergyProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+                epsilon
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindDissipationRateProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+            }
+        }
+    }
+
+    d6
+    {
+        functions
+        {
+            VR6
+            {
+                type volumeReport;
+                region d6;
+                instance d6;
+                fields ( U k epsilon p );
+                writeControl timeStep;
+                functionObjectLibs ( "libreport.so" );
+            }
+            probes6
+            {
+                type            probes;
+                name            probes;
+                region          d6;
+                instance        d6;
+                writeControl    writeTime;
+                writeInterval   1;
+                functionObjectLibs ( "libsampling.so" );
+                enabled         true;
+                probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+                fields          ( U p );
+                executeControl  timeStep;
+                libs            ( "libsampling.so" );
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( -4.61 1.91 0 );
+                }
+
+            }
+        }
+        boundaryConditions
+        {
+            cylinder
+            {
+                U
+                {
+                    type windProfileDirectionVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    profile AIJWindProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                    windDirection constant 112.5;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindKineticEnergyProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+                epsilon
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindDissipationRateProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+            }
+        }
+    }
+
+    d7
+    {
+        functions
+        {
+            VR7
+            {
+                type volumeReport;
+                region d7;
+                instance d7;
+                fields ( U k epsilon p );
+                writeControl timeStep;
+                functionObjectLibs ( "libreport.so" );
+            }
+            probes7
+            {
+                type            probes;
+                name            probes;
+                region          d7;
+                instance        d7;
+                writeControl    writeTime;
+                writeInterval   1;
+                functionObjectLibs ( "libsampling.so" );
+                enabled         true;
+                probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+                fields          ( U p );
+                executeControl  timeStep;
+                libs            ( "libsampling.so" );
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( -3.53 3.53 0 );
+                }
+
+            }
+        }
+        boundaryConditions
+        {
+            cylinder
+            {
+                U
+                {
+                    type windProfileDirectionVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    profile AIJWindProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                    windDirection constant 135.0;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindKineticEnergyProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+                epsilon
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindDissipationRateProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+            }
+        }
+    }
+
+    d8
+    {
+        functions
+        {
+            VR8
+            {
+                type volumeReport;
+                region d8;
+                instance d8;
+                fields ( U k epsilon p );
+                writeControl timeStep;
+                functionObjectLibs ( "libreport.so" );
+            }
+            probes8
+            {
+                type            probes;
+                name            probes;
+                region          d8;
+                instance        d8;
+                writeControl    writeTime;
+                writeInterval   1;
+                functionObjectLibs ( "libsampling.so" );
+                enabled         true;
+                probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+                fields          ( U p );
+                executeControl  timeStep;
+                libs            ( "libsampling.so" );
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( -1.92 4.61 0 );
+                }
+
+            }
+        }
+        boundaryConditions
+        {
+            cylinder
+            {
+                U
+                {
+                    type windProfileDirectionVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                    windDirection constant 157.5;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindKineticEnergyProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+                epsilon
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindDissipationRateProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+            }
+        }
+    }
+
+    d9
+    {
+        functions
+        {
+            VR9
+            {
+                type volumeReport;
+                region d9;
+                instance d9;
+                fields ( U k epsilon p );
+                writeControl timeStep;
+                functionObjectLibs ( "libreport.so" );
+            }
+            probes9
+            {
+                type            probes;
+                name            probes;
+                region          d9;
+                instance        d9;
+                writeControl    writeTime;
+                writeInterval   1;
+                functionObjectLibs ( "libsampling.so" );
+                enabled         true;
+                probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+                fields          ( U p );
+                executeControl  timeStep;
+                libs            ( "libsampling.so" );
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0 5 0 );
+                }
+
+            }
+        }
+        boundaryConditions
+        {
+            cylinder
+            {
+                U
+                {
+                    type windProfileDirectionVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    profile AIJWindProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                    windDirection constant 180.0;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindKineticEnergyProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+                epsilon
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindDissipationRateProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+            }
+        }
+    }
+
+    d10
+    {
+        functions
+        {
+            VR10
+            {
+                type volumeReport;
+                region d10;
+                instance d10;
+                fields ( U k epsilon p );
+                writeControl timeStep;
+                functionObjectLibs ( "libreport.so" );
+            }
+            probes10
+            {
+                type            probes;
+                name            probes;
+                region          d10;
+                instance        d10;
+                writeControl    writeTime;
+                writeInterval   1;
+                functionObjectLibs ( "libsampling.so" );
+                enabled         true;
+                probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+                fields          ( U p );
+                executeControl  timeStep;
+                libs            ( "libsampling.so" );
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 1.91 4.61 0 );
+                }
+
+            }
+        }
+        boundaryConditions
+        {
+            cylinder
+            {
+                U
+                {
+                    type windProfileDirectionVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    profile AIJWindProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                    windDirection constant 202.5;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindKineticEnergyProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+                epsilon
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindDissipationRateProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+            }
+        }
+    }
+
+    d11
+    {
+        functions
+        {
+            VR11
+            {
+                type volumeReport;
+                region d11;
+                instance d11;
+                fields ( U k epsilon p );
+                writeControl timeStep;
+                functionObjectLibs ( "libreport.so" );
+            }
+            probes11
+            {
+                type            probes;
+                name            probes;
+                region          d11;
+                instance        d11;
+                writeControl    writeTime;
+                writeInterval   1;
+                functionObjectLibs ( "libsampling.so" );
+                enabled         true;
+                probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+                fields          ( U p );
+                executeControl  timeStep;
+                libs            ( "libsampling.so" );
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 3.53 3.53 0 );
+                }
+
+            }
+        }
+        boundaryConditions
+        {
+            cylinder
+            {
+                U
+                {
+                    type windProfileDirectionVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    profile AIJWindProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                    windDirection constant 225.0;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindKineticEnergyProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+                epsilon
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindDissipationRateProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+            }
+        }
+    }
+
+    d12
+    {
+        functions
+        {
+            VR12
+            {
+                type volumeReport;
+                region d12;
+                instance d12;
+                fields ( U k epsilon p );
+                writeControl timeStep;
+                functionObjectLibs ( "libreport.so" );
+            }
+            probes12
+            {
+                type            probes;
+                name            probes;
+                region          d12;
+                instance        d12;
+                writeControl    writeTime;
+                writeInterval   1;
+                functionObjectLibs ( "libsampling.so" );
+                enabled         true;
+                probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+                fields          ( U p );
+                executeControl  timeStep;
+                libs            ( "libsampling.so" );
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 4.61 1.91 0 );
+                }
+
+            }
+        }
+        boundaryConditions
+        {
+            cylinder
+            {
+                U
+                {
+                    type windProfileDirectionVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    profile AIJWindProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.80;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                    windDirection constant 247.5;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindKineticEnergyProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.80;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+                epsilon
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindDissipationRateProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.80;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+            }
+        }
+    }
+
+    d13
+    {
+        functions
+        {
+            VR13
+            {
+                type volumeReport;
+                region d13;
+                instance d13;
+                fields ( U k epsilon p );
+                writeControl timeStep;
+                functionObjectLibs ( "libreport.so" );
+            }
+            probes13
+            {
+                type            probes;
+                name            probes;
+                region          d13;
+                instance        d13;
+                writeControl    writeTime;
+                writeInterval   1;
+                functionObjectLibs ( "libsampling.so" );
+                enabled         true;
+                probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+                fields          ( U p );
+                executeControl  timeStep;
+                libs            ( "libsampling.so" );
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 5 0 0 );
+                }
+
+            }
+        }
+        boundaryConditions
+        {
+            cylinder
+            {
+                U
+                {
+                    type windProfileDirectionVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    profile AIJWindProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                    windDirection constant 270.0;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindKineticEnergyProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+                epsilon
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindDissipationRateProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+            }
+        }
+    }
+
+    d14
+    {
+        functions
+        {
+            VR14
+            {
+                type volumeReport;
+                region d14;
+                instance d14;
+                fields ( U k epsilon p );
+                writeControl timeStep;
+                functionObjectLibs ( "libreport.so" );
+            }
+            probes14
+            {
+                type            probes;
+                name            probes;
+                region          d14;
+                instance        d14;
+                writeControl    writeTime;
+                writeInterval   1;
+                functionObjectLibs ( "libsampling.so" );
+                enabled         true;
+                probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+                fields          ( U p );
+                executeControl  timeStep;
+                libs            ( "libsampling.so" );
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 4.61 -1.91 0 );
+                }
+
+            }
+        }
+        boundaryConditions
+        {
+            cylinder
+            {
+                U
+                {
+                    type windProfileDirectionVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    profile AIJWindProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                    windDirection constant 292.5;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindKineticEnergyProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.80;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+                epsilon
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindDissipationRateProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+            }
+        }
+    }
+
+    d15
+    {
+        functions
+        {
+            VR15
+            {
+                type volumeReport;
+                region d15;
+                instance d15;
+                fields ( U k epsilon p );
+                writeControl timeStep;
+                functionObjectLibs ( "libreport.so" );
+            }
+            probes15
+            {
+                type            probes;
+                name            probes;
+                region          d15;
+                instance        d15;
+                writeControl    writeTime;
+                writeInterval   1;
+                functionObjectLibs ( "libsampling.so" );
+                enabled         true;
+                probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+                fields          ( U p );
+                executeControl  timeStep;
+                libs            ( "libsampling.so" );
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 3.53 -3.53 0 );
+                }
+
+            }
+        }
+        boundaryConditions
+        {
+            cylinder
+            {
+                U
+                {
+                    type windProfileDirectionVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    profile AIJWindProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                    windDirection constant 315.0;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindKineticEnergyProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+                epsilon
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindDissipationRateProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+            }
+        }
+    }
+
+    d16
+    {
+        functions
+        {
+            VR16
+            {
+                type volumeReport;
+                region d16;
+                instance d16;
+                fields ( U k epsilon p );
+                writeControl timeStep;
+                executeControl onEnd;
+                writeControl onEnd;
+                functionObjectLibs ( "libreport.so" );
+            }
+            probes16
+            {
+                type            probes;
+                name            probes;
+                region          d16;
+                instance        d16;
+                writeControl    writeTime;
+                writeInterval   1;
+                functionObjectLibs ( "libsampling.so" );
+                enabled         true;
+                probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+                fields          ( U p );
+                executeControl  timeStep;
+                libs            ( "libsampling.so" );
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 1.91 -4.62 0 );
+                }
+
+            }
+        }
+        boundaryConditions
+        {
+            cylinder
+            {
+                U
+                {
+                    type windProfileDirectionVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    profile AIJWindProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                    windDirection constant 337.5;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindKineticEnergyProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+                epsilon
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindDissipationRateProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

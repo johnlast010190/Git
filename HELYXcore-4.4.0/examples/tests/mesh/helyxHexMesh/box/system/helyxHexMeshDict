@@ -1,0 +1,249 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+castellatedMesh true;
+snap            true;
+addLayers       false;
+dualMesh        false;
+VDBrefinement   false;
+
+VDBdomain
+{
+    min             ( -5 -4 0 );
+    max             ( 15 4 8 );
+    patches
+    {
+        ymin
+        {
+            type            symmetry;
+            name            symmetry;
+        }
+        zmin
+        {
+            type            wall;
+            name            ground;
+        }
+    }
+    writeGrids      false;
+}
+
+meshMode        quality;
+autoBlockMesh   false;
+blockData       ( 0.01 0 );
+blockIso        false;
+cacheShellLevel true;
+crackDetection  false;
+crackTol        0.05;
+allowTopoChanges true;
+maxRegionSize   100000;
+finalDecomposition ptscotch;
+
+geometry
+{
+    v_dualWing
+    {
+        type            searchableCylinder;
+        name            v_dualWing;
+        point1          ( -0.43 0 -10 );
+        point2          ( -0.43 0 10 );
+        radius          0.1;
+    }
+    v_rotor
+    {
+        type            searchableCylinder;
+        name            v_rotor;
+        point1          ( 0 0 -10 );
+        point2          ( 0 0 10 );
+        radius          0.75;
+    }
+    wing1
+    {
+        type            searchableBox;
+        name            wing1;
+        min             ( -0.5 -0.01 -10 );
+        max             ( -0.44 0.01 10 );
+    }
+    wing2
+    {
+        type            searchableBox;
+        name            wing2;
+        min             ( -0.42 -0.0025 -10 );
+        max             ( -0.36 0.0025 10 );
+    }
+}
+
+castellatedMeshControls
+{
+    features        ();
+    refinementSurfaces
+    {
+        v_dualWing
+        {
+            level           ( 0 0 );
+            faceType        boundary;
+            cellZone        dualWing;
+            faceZone        dualWing;
+            cellZoneInside  inside;
+        }
+        v_rotor
+        {
+            level           ( 0 0 );
+            faceType        boundary;
+            cellZone        rotor;
+            faceZone        rotor;
+            cellZoneInside  inside;
+        }
+        wing1
+        {
+            level           ( 3 3 );
+        }
+        wing2
+        {
+            level           ( 3 3 );
+        }
+    }
+    refinementRegions {}
+    maxLocalCells   250000000;
+    maxGlobalCells  1000000000;
+    minRefinementCells 100;
+    maxLoadUnbalance 0.1;
+    nCellsBetweenLevels 6;
+    singleCellGapClosure false;
+    wrapLevel       -1;
+    resolveFeatureAngle -60;
+    featureRefineAngle 20;
+    refineSurfaceBoundary false;
+    curvature       -1;
+    minBaffleAngle  -60;
+    allowFreeStandingZoneFaces false;
+    balanceThenRefine true;
+    nGapRefinements 0;
+    minZoneRegionSize 1;
+    additionalInsideCheck false;
+    moveCentroidsTol -1;
+    wrapper
+    {
+        wrap            false;
+        outlets         ( inlet outlet ffmaxy ffminy ffmaxz ffminz );
+        cutoff          1000;
+        sigma           3;
+        volSources      true;
+        volDistance     1;
+        meshInMM        false;
+        maxIter         200;
+        writeFields     false;
+        invert          false;
+    }
+    locationInMesh  ( -0.99 -0.99 0.05 );
+}
+
+snapControls
+{
+    featureEdges {}
+    nOuterIter      1;
+    nPreFeatureIter 0;
+    nSolveIter      10;
+    nFeatureIter    60;
+    globalFeatureEdges true;
+    globalRegionSnap false;
+    nSmoothPatch    2;
+    tolerance       4;
+    nRelaxIter      5;
+    zoneFeatureSnapping true;
+    directFeatureSnapping true;
+    geometryFeatureLines true;
+    collapseTol     0.25;
+    smoothSnappedSurface true;
+    averageSurfaceNormal true;
+    enlargeStencil  false;
+    featureSnapChecks true;
+    concaveTol      0.3;
+    nSliverSmooths  10;
+    mergeBoundaryFaces true;
+    mergeAcrossPatches false;
+    repatchOverlapping false;
+    writeSnapVTK    false;
+    preSmoothAtBaffleEdges false;
+}
+
+addLayersControls
+{
+    layers {}
+    relativeSizes   true;
+    expansionRatio  1.25;
+    finalLayerThickness 0.4;
+    minThickness    0.2;
+    featureAngleTerminate 80;
+    nRelaxIter      5;
+    maxFaceThicknessRatio 2;
+    maxThicknessToMedialRatio 0.3;
+    minMedialAxisAngle 90;
+    maxLayerIter    30;
+    growConvexEdge  true;
+    growConcaveEdge true;
+    growUpPatches   true;
+    rebalance       false;
+    layerRecovery   1;
+    nSmoothThickness 10;
+    nSmoothSurfaceNormals 6;
+    nSmoothNormals  3;
+    maxProjectionDistance 10000;
+    maxCellDistortion 50;
+    medialRatioExp  1;
+    growZoneLayers  false;
+    writeVTK        true;
+    fixedFCH        false;
+    projectGrownUp  0;
+    dualConcaveCollapse 0;
+    dualLayerInterfaceWeights 0.5;
+    dualZoneLayersScaling 1;
+    dualMaxOrtho    180;
+    dualReSnapZones false;
+}
+
+meshQualityControls
+{
+    maxNonOrtho     180;
+    maxFaceCentreNonOrtho 180;
+    maxBoundarySkewness 20;
+    maxInternalSkewness 6;
+    maxConcave      80;
+    minFlatness     0.5;
+    minVol          1e-14;
+    minTetQuality   -1;
+    minArea         -1;
+    minEdgeLength   -1;
+    minTwist        0.05;
+    minDeterminant  0.0001;
+    minFaceWeight   0.08;
+    minVolRatio     0.02;
+    minTriangleTwist -0.99;
+    nSmoothScale    10;
+    errorReduction  0.75;
+    minVolCollapseRatio -1;
+    faceFaceCells   false;
+    minSnapRelativeVolume -1;
+    minSnapRelativeTetVolume -1;
+    maxGaussGreenCentroid -1;
+    maxCellAspectRatio -1;
+    smoothAlignedEdges false;
+}
+
+debug           0;
+mergeTolerance  1e-06;
+
+
+// ************************************************************************* //

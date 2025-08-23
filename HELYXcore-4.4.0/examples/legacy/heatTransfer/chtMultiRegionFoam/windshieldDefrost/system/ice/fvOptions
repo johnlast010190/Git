@@ -1,0 +1,36 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvOptions;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+iceZone
+{
+    type            solidificationMeltingSource;
+    active          on;
+
+    solidificationMeltingSourceCoeffs
+    {
+        selectionMode   all;
+
+        Tmelt           273;
+        L               334000; // enthalpy of fusion for water [J/kg]
+        thermoMode      thermo; // retrieve thermo properties from themo model
+        beta            50e-6;  // thermal expansion coeff [1/K]
+
+        rhoRef          1000;
+    }
+}
+
+// ************************************************************************* //

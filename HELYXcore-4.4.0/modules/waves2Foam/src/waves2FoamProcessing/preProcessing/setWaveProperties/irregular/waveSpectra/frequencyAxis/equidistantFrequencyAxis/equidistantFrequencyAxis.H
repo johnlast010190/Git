@@ -1,0 +1,87 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : 4.4.0
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) held by original author
+
+Class
+    Foam::equidistantFrequencyAxis
+
+Description
+    Set random frequencyAxis for the irregular wave train.
+
+SourceFiles
+    equidistantFrequencyAxis.C
+
+Author
+    Niels Gjøl Jacobsen, Deltares.  All rights reserved.
+
+
+\*---------------------------------------------------------------------------*/
+
+#ifndef equidistantFrequencyAxis_H
+#define equidistantFrequencyAxis_H
+
+#include "preProcessing/setWaveProperties/irregular/waveSpectra/frequencyAxis/frequencyAxis.H"
+#include <time.h>
+
+namespace Foam
+{
+
+class equidistantFrequencyAxis
+:
+    public frequencyAxis
+{
+private:
+
+public:
+
+        //- Runtime type information
+        TypeName("equidistantFrequencyAxis");
+
+        equidistantFrequencyAxis
+        (
+            const Time&,
+            dictionary&
+        );
+
+        virtual scalarField freqAxis
+        (
+            const scalarField&,
+            const scalarField&,
+            const label&
+        ) const;
+
+        scalarField freqAxis
+        (
+            const label&
+        ) const;
+
+};
+
+}
+
+#endif
+
+// ************************************************************************* //

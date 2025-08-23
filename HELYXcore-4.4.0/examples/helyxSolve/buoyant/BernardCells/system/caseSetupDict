@@ -1,0 +1,241 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    system
+    {
+        controlDict
+        {
+            startFrom latestTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 1000.0;
+            deltaT constant 1.0;
+            writeControl runTime;
+            writeInterval 50.0;
+            adjustTimeStep false;
+        }
+    }
+    functions
+    {
+        VP
+        {
+            type probes;
+            regions ( region0 );
+            probeLocations ( ( 2.5 0.1 0.0 ) ( 5.7 0.6 0.0 ) );
+            fields ( T U p_rgh );
+            writeControl timeStep;
+            writeInterval 1;
+            executeControl timeStep;
+            executeInterval 1;
+            functionObjectLibs ("libsampling.so" );
+            outputFileFormat tsv;
+        }
+        residuals
+        {
+            type            residuals;
+            libs            ("libutilityFunctionObjects.so");
+            writeControl    timeStep;
+            writeInterval   1;
+            fields (p_rgh);
+        }
+        streamlines
+        {
+            nLines  24;
+            start   (0 0.5 0);
+            end     (9 0.5 0);
+            fields  (U);
+            type            streamLine;
+            libs            ("libfieldFunctionObjects.so");
+            executeControl  writeTime;
+            writeControl    writeTime;
+            setFormat       vtk;
+            trackForward    true;
+            lifeTime        10000;
+            nSubCycle       5;
+            cloudName       particleTracks;
+            seedSampleSet
+            {
+                type            uniform;
+                axis            x;
+                start           $start;
+                end             $end;
+                nPoints         $nLines;
+            }
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( transient ras energy );
+        boundaryMesh
+        {
+            floor
+            {
+                type wall;
+            }
+            ceiling
+            {
+                type wall;
+            }
+            sideWalls
+            {
+                type wall;
+            }
+            frontAndBack
+            {
+                type empty;
+            }
+        }
+        turbulenceModel laminar;
+
+        materials (material);
+        materialProperties
+        {
+            material
+            {
+                materialType    fluid;
+                materialName    material;
+                //energy          sensibleEnthalpy;
+                energy          sensibleInternalEnergy;
+                molWeight   1;
+
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho         1;
+                }
+
+                buoyancyModel   Boussinesq;
+                buoyancyModelCoeffs
+                {
+                    rho0        1;
+                    T0          300;
+                    beta        0.001;
+
+                }
+
+                thermodynamics  hConst;
+                thermodynamicsCoeffs
+                {
+                    Cp          1;
+                    Hf          0;
+                }
+
+                muModel     scalarFunction1;
+                muModelCoeffs
+                {
+                    mu      1E-3;
+                }
+
+                kappaModel  kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr      1;
+                }
+
+                referenceFields
+                {
+                    p [1 -1 -2 0 0 0 0] 0;
+                }
+            }
+        }
+        constant
+        {
+            g
+            {
+                dimensions [0  1 -2  0 0 0 0];
+                value ( 0.0 -9.81 0.0 );
+            }
+            turbulenceProperties
+            {
+                simulationType laminar;
+            }
+        }
+        system
+        {
+            fvOptions
+            {
+                fluidEnergySolver
+                {
+                    type fluidEnergySolver;
+                    //formulation boussinesqTemperature;
+                }
+            }
+            fvSolution
+            {
+                PIMPLE
+                {
+                    nOuterCorrectors 1;
+                    nCorrectors 2;
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type buoyantPressure;
+                    initialValue uniform 0.0;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 300.0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            floor
+            {
+                T
+                {
+                    type fixedValue;
+                    value uniform 301.0;
+                }
+            }
+            ceiling
+            {
+                T
+                {
+                    type fixedValue;
+                    value uniform 300.0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

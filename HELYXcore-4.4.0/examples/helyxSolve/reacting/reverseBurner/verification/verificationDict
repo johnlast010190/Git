@@ -1,0 +1,27 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/gas/VR/0/volumeReport.dat";
+                reference "verification/short/gas/VR/0/volumeReport.dat";
+                variables "Tmin" "Tmax" "Tmean" "TstDev" "Umin" "Umax" "Umean" "UstDev" "pmin" "pmax" "pmean" "pstDev";
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/gas/VR/0/volumeReport.dat";
+                reference "verification/long/gas/VR/0/volumeReport.dat";
+                variables "Tmin" "Tmax" "Tmean" "TstDev" "Umin" "Umax" "Umean" "UstDev" "pmin" "pmax" "pmean" "pstDev";
+            }
+        );
+    }
+);

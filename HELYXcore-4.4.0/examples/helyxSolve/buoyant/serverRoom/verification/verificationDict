@@ -1,0 +1,53 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/VR/0/volumeReport.dat";
+                reference "verification/short/VR/0/volumeReport.dat";
+                variables "Tmean" "Umean" "pmean";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/SR-server_in/0/surfaceReport.dat";
+                reference "verification/short/SR-server_in/0/surfaceReport.dat";
+                variables "massFlux" "Tmean" "Umean";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/SR-server_out/0/surfaceReport.dat";
+                reference "verification/short/SR-server_out/0/surfaceReport.dat";
+                variables "massFlux" "Tmean" "Umean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/VR/0/volumeReport.dat";
+                reference "verification/long/VR/0/volumeReport.dat";
+                variables "Tmean" "Umean" "pmean";
+            }
+            {
+                result "postProcessing/SR-server_in/0/surfaceReport.dat";
+                reference "verification/long/SR-server_in/0/surfaceReport.dat";
+                variables "massFlux" "Tmean" "Umean";
+            }
+            {
+                result "postProcessing/SR-server_out/0/surfaceReport.dat";
+                reference "verification/long/SR-server_out/0/surfaceReport.dat";
+                variables "massFlux" "Tmean" "Umean";
+            }
+        );
+    }
+);

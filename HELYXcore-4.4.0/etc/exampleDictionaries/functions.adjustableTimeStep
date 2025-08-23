@@ -1,0 +1,30 @@
+/*---------------------------------------------------------------------------*\ 
+| Modified 2010-2012 Copyright (C) Engys Ltd                                  |
+\*---------------------------------------------------------------------------*/
+deltaT
+{
+    type adjustableTimeStep;
+
+    functionObjectLibs ("libaffunctions.so");
+
+    region region0;
+
+    targetCFL 0.5;
+    
+    phi phi;
+    
+    maxDeltaT 1e-1;
+    minDeltaT 1e-5;
+
+    type constant; //linear
+    history 20; //1 -> inf
+    
+    side max;//min
+    //fraction of cells to use for calculating mean cfl
+    //0 means only min/max cell, 1 all cells
+    //0.5 means 50% total cells with smallest/largest cfl 
+
+    fraction 0.01;
+    
+    debug 1;
+}

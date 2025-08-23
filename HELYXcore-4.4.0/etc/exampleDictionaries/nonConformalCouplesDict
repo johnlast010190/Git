@@ -1,0 +1,63 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      nonConformalCouplesDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Each couple has its own entry in this file. Entries take the following form:
+
+/*
+// Unique name used to generate the name of the coupled patches
+<name>
+{
+    // Name of the two patches between which to create the coupling
+    patches         (<patch1> <patch2>);
+
+    // Type of the transformation: "none", "rotational" or "translational"
+    transformType   <transformType>;
+
+    // Additional transformation settings (if any)
+    ...
+}
+*/
+
+
+// Examples:
+
+// Create a non-conformal couple with no transformation
+nonConformalCouple_none
+{
+    patches             (nonCouple1 nonCouple2);
+    transformType       none;
+}
+
+// Create a non-conformal couple with a 30 degree rotational transformation
+nonConformalCouple_30deg
+{
+    patches             (nonCoupleBehind nonCoupleAhead);
+    transformType       rotational;
+    rotationAxis        (-1 0 0);
+    rotationCentre      (0 0 0);
+    rotationAngle       30;
+}
+
+// Create a non-conformal couple with a 2 metre translational transformation
+nonConformalCouple_2m
+{
+    patches             (nonCoupleBack nonCoupleFront);
+    transformType       translational;
+    separation          (0 2 0);
+}
+
+
+// ************************************************************************* //

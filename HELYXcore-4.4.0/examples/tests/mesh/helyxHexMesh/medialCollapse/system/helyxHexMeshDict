@@ -1,0 +1,127 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+// Which of the steps to run
+castellatedMesh true;
+snap            true;
+addLayers       true;
+
+blockType block;
+meshAlgorithm extrude;
+
+geometry
+{
+    cylinder
+    {
+        type searchableCylinder;
+        radius 1.0;
+        point1 (0.0 0.0 0.0);
+        point2 (1.0 0.0 0.0);
+    }
+    ring
+    {
+        type searchableRing;
+        innerRadius 0.1;
+        outerRadius 1.0;
+        point1 (-1.0 0.0 0.0);
+        point2 (0.0 0.0 0.0);
+    }
+};
+
+castellatedMeshControls
+{
+    features ();
+    refinementSurfaces
+    {
+        cylinder
+        {
+            level ( 2 2 );
+        }
+        ring
+        {
+            level ( 2 2 );
+        }
+    }
+    refinementRegions {}
+    locationInMesh (-1.5 0 0); // Inside point
+}
+
+snapControls
+{
+    featureEdges {}
+}
+
+addLayersControls
+{
+    layers
+    {
+        ffminx
+        {
+            nSurfaceLayers -1;
+            grownUp true;
+        }
+        ffmaxx
+        {
+            nSurfaceLayers -1;
+            grownUp true;
+        }
+        ffminy
+        {
+            nSurfaceLayers -1;
+            grownUp true;
+        }
+        ffmaxy
+        {
+            nSurfaceLayers -1;
+            grownUp true;
+        }
+        ffminz
+        {
+            nSurfaceLayers -1;
+            grownUp true;
+        }
+        ffmaxz
+        {
+            nSurfaceLayers -1;
+            grownUp true;
+        }
+        cylinder
+        {
+            nSurfaceLayers 10;
+            expansionRatio 1.25;
+            grownUp false;
+            medialCollapse true; // medial collpase patch
+        }
+        ring
+        {
+            nSurfaceLayers 10;
+            expansionRatio 1.25;
+            grownUp false;
+            medialCollapse true; // medial collpase patch
+        }
+    }
+    writeVTK false;
+
+    // Medial axis collapse keywords used for extrude method
+    medialCollapseCos -0.866; // medial cosine angle
+    medialCollapseRatio 2.0; // ratio of cell spacing to medial distance
+    globalMedialCollapse false; // patch global collapse setting
+}
+
+
+// ************************************************************************* //

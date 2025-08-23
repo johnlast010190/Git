@@ -1,0 +1,317 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    regionGroups    ( fluid ( region0 ) );
+
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startAt         startTime;
+            startTime       0;
+            deltaT          1;
+            stopAt          endTime;
+            writeControl    timeStep;
+            writeInterval   50;
+            endTime         100;
+        }
+    }
+
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p T );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( steady ras energy );
+
+        boundaryMesh
+        {
+            inlet
+            {
+                type inlet;
+            }
+            plumeInlet
+            {
+                type inlet;
+            }
+            outlet
+            {
+                type outlet;
+            }
+            sides
+            {
+                type wall;
+            }
+            roof
+            {
+                type wall;
+            }
+        }
+
+        turbulenceModel kOmegaSST;
+        materials       ( airphase pollutant );
+        materialProperties
+        {
+            materialType fluid;
+            mixture      standardMixture;
+            energy       sensibleEnthalpy;
+            buoyancyModel rhoModel;
+            airphase
+            {
+                materialName    airphase;
+                thermodynamics  hConst;
+                equationOfState perfectGas;
+
+                molWeight 28.9;
+
+                thermodynamicsCoeffs
+                {
+                    Cp 1007.0;
+                    Hf 0.0;
+                }
+                muModel       scalarFunction1;
+                muModelCoeffs
+                {
+                    mu 1.84E-5;
+                }
+                kappaModel   kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr 0.7;
+                }
+            }
+            pollutant
+            {
+                materialName    pollutant;
+                thermodynamics  hConst;
+                equationOfState perfectGas;
+
+                molWeight 60;
+
+                thermodynamicsCoeffs
+                {
+                    Cp 1007.0;
+                    Hf 0.0;
+                }
+                muModel       scalarFunction1;
+                muModelCoeffs
+                {
+                    mu 1.84E-5;
+                }
+                kappaModel   kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr 0.7;
+                }
+            }
+            referenceFields
+            {
+                p [ 1 -1 -2 0 0 0 0 ] 100000;
+            }
+        }
+        constant
+        {
+            g
+            {
+                dimensions      [0 1 -2 0 0 0 0];
+                value           ( 0 0 -9.81 );
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type            potentialFlow;
+                    initialiseUBCs  true;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type            turbulentIL;
+                    I               0.05;
+                    L               1;
+                    Uref            4;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type            turbulentIL;
+                    I               0.05;
+                    L               1;
+                    Uref            4;
+                }
+            }
+            airphase
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 1;
+                }
+            }
+
+            pollutant
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+        }
+
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type            interpolatedFixedValue;
+                    profile         table
+                    (
+                        (0 (3 0 0))
+                        (8 (7 0 0))
+                        (100 (7 0 0))
+                    );
+                    distanceType    z;
+                    direction       (1 0 0);
+                    point           (0 0 0);
+                    value           uniform (7 0 0);
+                }
+                omega
+                {
+                    type            turbulentMixingLengthFrequencyInlet;
+                    mixingLength    1;
+                    phi             phi;
+                    k               k;
+                    value           uniform 1;
+                }
+                k
+                {
+                    type            turbulentIntensityKineticEnergyInlet;
+                    intensity       0.05;
+                    value           uniform 0.1;
+                }
+
+                airphase
+                {
+                    type            fixedValue;
+                    value           uniform 1;
+                }
+
+                pollutant
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+            }
+            plumeInlet
+            {
+                U {type surfaceNormalFixedValue; refValue uniform -1; value uniform (0 0 -1);}
+                omega
+                {
+                    type            turbulentMixingLengthFrequencyInlet;
+                    mixingLength    1;
+                    phi             phi;
+                    k               k;
+                    value           uniform 1;
+                }
+                k
+                {
+                    type            turbulentIntensityKineticEnergyInlet;
+                    intensity       0.05;
+                    value           uniform 0.1;
+                }
+                airphase
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+
+                pollutant
+                {
+                    type            fixedValue;
+                    value           uniform 1;
+                }
+            }
+
+            outlet
+            {
+                p
+                {
+                    type totalPressure;
+                    p0 uniform 0;
+                    addStaticHead yes;
+                    value uniform 0;
+                }
+
+                airphase
+                {
+                    type inletOutlet;
+                    value uniform 1;
+                    inletValue uniform 1;
+                }
+
+                pollutant
+                {
+                    type inletOutlet;
+                    value uniform 0;
+                    inletValue uniform 0;
+                }
+            }
+            sides
+            {
+                U{type slip; value uniform (0 0 0);}
+            }
+            roof
+            {
+                U{type slip; value uniform (0 0 0);}
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

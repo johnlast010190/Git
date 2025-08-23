@@ -1,0 +1,26 @@
+near
+{
+    // Where to load it from
+    functionObjectLibs ("libfieldFunctionObjects.so");
+
+    type nearWallFields;
+
+    // Output every
+    outputControl outputTime; //timeStep;
+    //outputInterval 5;
+
+    // Fields to be sampled. Per field original name and mapped field to
+    // create.
+    // Note: fields only get updated when writing!
+    fields
+    (
+        (p pNear)
+        (U UNear)
+    );
+
+    // Patches to sample (regular expressions)
+    patches ("movingWall");
+
+    // Distance to sample
+    distance 0.009;
+}

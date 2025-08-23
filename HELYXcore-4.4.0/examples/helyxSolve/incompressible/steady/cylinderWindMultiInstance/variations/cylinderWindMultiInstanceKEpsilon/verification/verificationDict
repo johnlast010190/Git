@@ -1,0 +1,55 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/dir1/VR1/0/volumeReport.tsv";
+                reference "verification/short/dir1/VR1/0/volumeReport.tsv";
+                variables "Umean" "kmean" "epsilonmean" "pmean";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/dir2/VR2/0/volumeReport.tsv";
+                reference "verification/short/dir2/VR2/0/volumeReport.tsv";
+                variables "Umean" "kmean" "epsilonmean" "pmean";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/dir3/VR3/0/volumeReport.tsv";
+                reference "verification/short/dir3/VR3/0/volumeReport.tsv";
+                variables "Umean" "kmean" "epsilonmean" "pmean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/dir1/VR1/0/volumeReport.tsv";
+                reference "verification/long/dir1/VR1/0/volumeReport.tsv";
+                variables "Umean" "kmean" "epsilonmean" "pmean";
+            }
+            {
+                result "postProcessing/dir2/VR2/0/volumeReport.tsv";
+                reference "verification/long/dir2/VR2/0/volumeReport.tsv";
+                variables "Umean" "kmean" "epsilonmean" "pmean";
+            }
+            {
+                result "postProcessing/dir3/VR3/0/volumeReport.tsv";
+                reference "verification/long/dir3/VR3/0/volumeReport.tsv";
+                variables "Umean" "kmean" "epsilonmean" "pmean";
+            }
+        );
+    }
+);
+
+tags asan;

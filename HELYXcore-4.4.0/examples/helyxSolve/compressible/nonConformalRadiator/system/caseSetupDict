@@ -1,0 +1,444 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields    true;
+        resetBoundaryFields    true;
+        resetSystemDicts       true;
+        resetConstDicts        true;
+        resetBoundaryMesh      true;
+        deleteUnusedFields     true;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom startTime;
+            stopAt endTime;
+            endTime 500;
+            deltaT constant 1.0;
+            writeControl timeStep;
+            writeInterval 100;
+            purgeWrite 0;
+            writeFormat ascii;
+            writeCompression uncompressed;
+            writePrecision 8;
+            timeFormat general;
+            timePrecision 6;
+            graphFormat raw;
+            runTimeModifiable true;
+            adjustTimeStep false;
+            maxCo 0;
+            maxAlphaCo 0;
+            minDeltaT 0;
+            maxDeltaT 0;
+        }
+        meshObjects
+        {
+            radFrame
+            {
+                type coordinateFrame;
+                coordinateSystem
+                {
+                    type cartesian;
+                    origin ( -0.87834697962 0.10000000149 0.22101199627 );
+                    e1 ( 0.0 1.0 0.0 );
+                    e2 ( 0.97814344136 0.0 -0.20793125816 );
+                }
+            }
+        }
+        nonConformalCouplesDict
+        {
+            nonConformalCyclic
+            {
+                patches          (INTERFACE_RAD_IN INTERFACE_RAD_OUT);
+                transformType    none;
+            }
+        }
+    }
+    functions
+    {
+        FP
+        {
+            type fieldProcess;
+            regions ( region0 );
+            executeControl timeStep;
+            executeInterval 1;
+            writeControl outputTimeAndEnd;
+            writeInterval 1;
+            operations
+            (
+                {
+                    operation ptot;
+                    fieldName ptot;
+                    write true;
+                    nearCellValue false;
+                    U U;
+                    p p;
+                }
+            );
+            functionObjectLibs ( "libfieldFunctionObjects.so" );
+        }
+        VR_cooler
+        {
+            type volumeReport;
+            sets
+            (
+                zoneToCell
+                {
+                    name coolerRad;
+                }
+            );
+            regions ( region0 );
+            fields ( T U p ptot );
+            executeControl onEnd;
+            writeControl onEnd;
+            functionObjectLibs ( "libreport.so" );
+            outputFileFormat tsv;
+        }
+        VR_heater
+        {
+            type volumeReport;
+            sets
+            (
+                zoneToCell
+                {
+                    name heaterRad;
+                }
+            );
+            regions ( region0 );
+            fields ( T U p ptot );
+            executeControl onEnd;
+            writeControl onEnd;
+            functionObjectLibs ( "libreport.so" );
+            outputFileFormat tsv;
+        }
+        SR_in
+        {
+            type surfaceReport;
+            regions ( region0 );
+            fields ( T U p ptot );
+            weighting area;
+            fluxName phi;
+            homogeneity false;
+            backFlowReport false;
+            directionAware true;
+            surfaces
+            (
+                {
+                    type patch;
+                    name WATER_CIRCUIT_Inlet;
+                }
+            );
+            constraints
+            (
+                {
+                    type boundBox;
+                    min ( -1000 -1000 -1000 );
+                    max ( 1000 1000 1000 );
+                    keepInside true;
+                }
+            );
+            executeControl onEnd;
+            writeControl onEnd;
+            functionObjectLibs ( "libreport.so" );
+            outputFileFormat tsv;
+        }
+        SR_out
+        {
+            type surfaceReport;
+            regions ( region0 );
+            fields ( T U p ptot );
+            weighting area;
+            fluxName phi;
+            homogeneity false;
+            backFlowReport false;
+            directionAware true;
+            surfaces
+            (
+                {
+                    type patch;
+                    name WATER_CIRCUIT_Outlet;
+                }
+            );
+            constraints
+            (
+                {
+                    type boundBox;
+                    min ( -1000 -1000 -1000 );
+                    max ( 1000 1000 1000 );
+                    keepInside true;
+                }
+            );
+            executeControl onEnd;
+            writeControl onEnd;
+            functionObjectLibs ( "libreport.so" );
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( steady ras energy );
+        boundaryMesh
+        {
+            WATER_CIRCUIT_Inlet
+            {
+                type inlet;
+            }
+            WATER_CIRCUIT_Outlet
+            {
+                type outlet;
+            }
+            INTERFACE_RAD_IN
+            {
+                type     nonConformal;
+                inGroups (nonCouple);
+            }
+            INTERFACE_RAD_OUT
+            {
+                type     nonConformal;
+                inGroups (nonCouple);
+            }
+        }
+        turbulenceModel kOmegaSST;
+        materials (water);
+        materialProperties
+        {
+            water
+            {
+                materialName water;
+                materialType fluid;
+                molWeight 18.0;
+                energy sensibleEnthalpy;
+                equationOfState icoPolynomial;
+                equationOfStateCoeffs
+                {
+                    rhoCoeffs ( 880.0 1.01 -0.002 0.0 0.0 0.0 0.0 0.0 );
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu select (323.15)
+                    (
+                        {
+                            mu polynomial
+                            (
+                                ( 0.1011 0.0 )
+                                ( -8.98e-4 1.0 )
+                                ( 2.7e-6 2.0 )
+                                ( -2.735e-9 3.0 )
+                            ) ( 293.15 323.15 );
+                        }
+                        {
+                            mu polynomial
+                            (
+                                ( 0.02085 0.0 )
+                                ( -1.5e-4 1.0 )
+                                ( 3.7e-7 2.0 )
+                                ( -3.1e-10 3.0 )
+                            ) ( 323.15 443.15 );
+                        }
+                    );
+                }
+                thermodynamics hConst;
+                thermodynamicsCoeffs
+                {
+                    Hf 0;
+                    Cp 4180;
+                }
+                kappaModel scalarFunction1;
+                kappaModelCoeffs
+                {
+                    kappa 0.63;
+                }
+            }
+        }
+        constant
+        {
+            g
+            {
+                value ( 0 0 0 );
+                dimensions [0 1 -2 0 0 0 0];
+            }
+        }
+        system
+        {
+            fvOptions
+            {
+                coolerRad_TSI
+                {
+                    type scalarTimeDependentSemiImplicitSource;
+                    active true;
+                    scalarTimeDependentSemiImplicitSourceCoeffs
+                    {
+                        selectionMode cellZone;
+                        cellZone coolerRad;
+                        volumeMode absolute;
+                        injectionRateSu
+                        {
+                            h constant -5000;
+                        }
+                        injectionRateSp
+                        {
+                            h constant 0;
+                        }
+                    }
+                }
+                heaterRad_PO
+                {
+                    type explicitPorositySource;
+                    explicitPorositySourceCoeffs
+                    {
+                        selectionMode cellZone;
+                        cellZone heaterRad;
+                        type DarcyForchheimer;
+                        DarcyForchheimerCoeffs
+                        {
+                            pureCoeffsDefinition userDefined;
+                            coeffsMode pure;
+                            alpha ( 360000 3.6e7 3.6e7 );
+                            beta ( 250000 2.5e7 2.5e7 );
+                            pureCoeffsRhoMultiplier false;
+                            temperatureDependence false;
+                            spatialDependance false;
+                            referenceFrame radFrame;
+                        }
+                    }
+                }
+                heaterRad_TSI
+                {
+                    type scalarTimeDependentSemiImplicitSource;
+                    active true;
+                    scalarTimeDependentSemiImplicitSourceCoeffs
+                    {
+                        selectionMode cellZone;
+                        cellZone heaterRad;
+                        volumeMode absolute;
+                        injectionRateSu
+                        {
+                            h constant 5000;
+                        }
+                        injectionRateSp
+                        {
+                            h constant 0;
+                        }
+                    }
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type potentialFlow;
+                    initialiseUBCs true;
+                    rhoRef 998.2;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type potentialFlow;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type Prandtl;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type Prandtl;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 350;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            WATER_CIRCUIT_Inlet
+            {
+                U
+                {
+                    type flowRateInletVelocity;
+                    value uniform ( 0 0 0 );
+                    volumetricFlowRate constant 1.66667e-4;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                T
+                {
+                    type fixedValue;
+                    value uniform 350;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    value uniform 0.1;
+                    intensity 0.01;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    value uniform 0.01;
+                    mixingLength 0.001;
+                }
+            }
+            WATER_CIRCUIT_Outlet
+            {
+                T
+                {
+                    type inletOutlet;
+                    value uniform 350;
+                    inletValue uniform 350;
+                }
+            }
+            nonCouple
+            {
+                U
+                {
+                    type slip;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

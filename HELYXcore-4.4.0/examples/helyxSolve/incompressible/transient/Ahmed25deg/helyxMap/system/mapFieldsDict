@@ -1,0 +1,28 @@
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+
+    root            "";
+    case            "";
+    instance        "";
+    local           "";
+
+    class           dictionary;
+    object          mapFieldsParDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// List of pairs of target/source patches for mapping
+patchMap        
+(
+);
+
+// List of target patches cutting the source domain (these need to be
+// handled specially e.g. interpolated from internal values)
+cuttingPatches  
+(
+);
+
+// ************************************************************************* //

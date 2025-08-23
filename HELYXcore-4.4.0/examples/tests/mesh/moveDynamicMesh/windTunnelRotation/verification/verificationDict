@@ -1,0 +1,16 @@
+runs
+(
+    full
+    {
+        checks
+        (
+            {
+                result "postProcessing/VR/0.5/volumeReport.tsv";
+                reference "verification/full/VR/0.5/volumeReport.tsv";
+                variables "nonOrthogonalitymean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+);

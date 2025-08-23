@@ -1,0 +1,367 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom startTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 400;
+            deltaT 1;
+            writeControl timeStep;
+            writeInterval 50;
+            purgeWrite 0;
+            writeFormat ascii;
+            writePrecision 6;
+            timeFormat general;
+            timePrecision 6;
+            runTimeModifiable yes;
+            adjustTimeStep false;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+        vtkWrite
+        {
+            type    vtkWrite;
+            libs    ("libutilityFunctionObjects.so");
+            log     true;
+
+            // Fields to output (words or regex)
+            fields  (U p "(k|epsilon|omega)");
+
+            // Write cell ids as field: default = true
+            writeIds        false;
+
+            // Write more frequent than fields
+            writeControl    timeStep;
+            writeInterval   25;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (steady ras);
+        boundaryMesh
+        {
+            inlet
+            {
+                type patch;
+            }
+            outlet
+            {
+                type patch;
+            }
+            wall
+            {
+                type wall;
+            }
+        }
+        turbulenceModel kEpsilon;
+        materials (air);
+        materialProperties
+        {
+            air
+            {
+                equationOfStateCoeffs
+                {
+                    rho 1.225;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cp 1004.4;
+                }
+                muModelCoeffs
+                {
+                    mu 6.125e-06;
+                }
+                kappaModelCoeffs
+                {
+                    Pr 1.0;
+                }
+                referenceFields
+                {
+                    p [ 1 -1 -2 0 0 0 0 ] 0;
+                }
+            }
+        }
+        system
+        {
+            fvSolution
+            {
+                solvers
+                {
+                    p
+                    {
+                        solver          GAMG;
+                        smoother        GaussSeidel;
+                        tolerance       1e-6;
+                        relTol          0.1;
+                    }
+                    U
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        tolerance       1e-6;
+                        relTol          0.1;
+                    }
+                    k
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        tolerance       1e-6;
+                        relTol          0.1;
+                    }
+                    epsilon
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        tolerance       1e-6;
+                        relTol          0.1;
+                    }
+                }
+                SIMPLE
+                {
+                    nNonOrthogonalCorrectors 0;
+                    pRefCell        0;
+                    pRefValue       0;
+
+                    residualControl
+                    {
+                        p               1e-4;
+                        U               1e-4;
+                        // possibly check turbulence fields
+                        "(k|epsilon)" 1e-4;
+                    }
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p               0.3;
+                    }
+                    equations
+                    {
+                        U               0.7;
+                        k               0.7;
+                        epsilon         0.7;
+                    }
+                }
+            }
+            fvSchemes
+            {
+                gradSchemes
+                {
+                    default         Gauss linear;
+
+                    limited         cellLimited Gauss linear 1;
+                    grad(U)         $limited;
+                    grad(k)         $limited;
+                    grad(epsilon)     $limited;
+                }
+                divSchemes
+                {
+                    default         none;
+
+                    div(phi,U)      bounded Gauss linearUpwind limited;
+                    turbulence      bounded Gauss limitedLinear 1;
+                    div(phi,k)      $turbulence;
+                    div(phi,epsilon) $turbulence;
+                    div((nuEff*dev2(T(grad(U))))) Gauss linear;
+                }
+                laplacianSchemes
+                {
+                    default         Gauss linear corrected;
+                }
+                interpolationSchemes
+                {
+                    default         linear;
+                }
+                snGradSchemes
+                {
+                    default         corrected;
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform (10 0 0);
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 1.5; // approx k = 1.5*(I*U)^2 ; I = 0.1
+                }
+            }
+            epsilon
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.03; // Cmu^0.75 * k^1.5 / L ; L =10
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            nut
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform (10 0 0);
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                k
+                {
+                    type            fixedValue;
+                    value           uniform 1.5;
+                }
+                epsilon
+                {
+                    type            fixedValue;
+                    value           uniform 0.03;
+                }
+                nut
+                {
+                    type            calculated;
+                    value           uniform 0;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type            pressureInletOutletVelocity;
+                    value           uniform (10 0 0);
+                }
+                p
+                {
+                    type            totalPressure;
+                    p0              uniform 0;
+                }
+                k
+                {
+                    type            inletOutlet;
+                    value           uniform 1.5;
+                    inletValue      uniform 1.5;
+                }
+                epsilon
+                {
+                    type            inletOutlet;
+                    value           uniform 0.03;
+                    inletValue      uniform 0.03;
+                }
+                nut
+                {
+                    type            calculated;
+                    value           uniform 0;
+                }
+            }
+            wall
+            {
+                U
+                {
+                    type            noSlip;
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                k
+                {
+                    type            kqRWallFunction;
+                    value           uniform 1.5;
+                }
+                epsilon
+                {
+                    type            epsilonWallFunction;
+                    value           uniform 0.03;
+                }
+                nut
+                {
+                    type            nutkWallFunction;
+                    value           uniform 0;
+                }
+                nut
+                {
+                    type            nutkWallFunction;
+                    Cmu             0.09;
+                    kappa           0.41;
+                    E               9.8;
+                    value           uniform 0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

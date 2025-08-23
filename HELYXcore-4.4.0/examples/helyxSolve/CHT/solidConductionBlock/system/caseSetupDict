@@ -1,0 +1,152 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields yes;
+        resetBoundaryFields yes;
+        resetSystemDicts yes;
+        resetConstDicts yes;
+        resetBoundaryMesh yes;
+        deleteUnusedFields yes;
+    }
+
+    regionGroups   ( solids ( solid ) );
+
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            stopAt          endTime;
+            endTime         100;
+            deltaT          1;
+            writeControl    timeStep;
+            writeInterval   10;
+        }
+
+        meshObjects
+        {
+            discFrame
+            {
+                type coordinateFrame;
+                coordinateSystem
+                {
+                    type    cartesian;
+                    origin  (0 0 0);
+                    rotation
+                    {
+                        type    axesRotation;
+                        e1      (0.7 -0.35 0);
+                        e3      (0 0 1);
+                    }
+                }
+            }
+        }
+    }
+
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( T );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    solids {}
+
+    solid
+    {
+        state ( steady solid );
+
+        materials       ( smat );
+        materialProperties
+        {
+            smat
+            {
+                materialName    eggMaterial;
+                materialType    solid;
+                thermodynamics  hConst;
+                equationOfState rhoConst;
+                energy          sensibleEnthalpy;
+                kappaModel      constSolid;
+                molWeight       50;
+
+                kappaModelCoeffs
+                {
+                    anisotropic     true;
+                    kappa           ( 0.5 1e-05 1e-05 );
+                    referenceFrame  discFrame;
+                }
+
+                thermodynamicsCoeffs
+                {
+                    Hf      0;
+                    Cp      2569.613;
+                }
+
+                equationOfStateCoeffs
+                {
+                    rho     1037;
+                }
+            }
+        }
+        constant
+        {
+            radiationProperties
+            {
+                radiationModel  none;
+            }
+        }
+
+        fields
+        {
+            T {initialisation{type fixedValue; value uniform 300;} }
+        }
+
+        boundaryConditions
+        {
+            ffminx
+            {
+                T {type fixedValue; value uniform 500;}
+            }
+            ffmaxx
+            {
+                T {type zeroGradient;}
+            }
+            ffmaxy
+            {
+                T {type fixedValue; value uniform 300;}
+            }
+            ffminy
+            {
+                T {type zeroGradient;}
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,21 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy input surface from resources directory
+mkdir -p constant/triSurface
+cp "$HELYX_TUTORIALS"/resources/geometry/singleChannelPump/* constant/triSurface/
+
+# Mesh
+helyxRun -parallel helyxHexMesh
+
+# Mesh report
+helyxRun checkMesh -writeAllMetrics -sourceTargetBoundaryMatching '( ((S27kW_ami1) (S27kW_ami1_slave)) ((S27kW_ami2) (S27kW_ami2_slave)) )' -writeBoundaryError -latestTime
+helyxRun postProcess -constant -fields '( aspectRatio determinant nonOrthogonality skewness volumeRatio )'
+
+# Create dummy file for ParaView visualisation
+touch pump.foam
+
+#------------------------------------------------------------------------------

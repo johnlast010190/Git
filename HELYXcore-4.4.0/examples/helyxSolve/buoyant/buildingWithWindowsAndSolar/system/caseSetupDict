@@ -1,0 +1,472 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields yes;
+        resetBoundaryFields yes;
+        resetSystemDicts yes;
+        resetConstDicts yes;
+        resetBoundaryMesh yes;
+    }
+    regionGroups    1 ( fluid 1 ( region0 ) );
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         500;
+            deltaT          1;
+            writeControl    timeStep;
+            writeInterval   100;
+            purgeWrite      0;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type            volumeReport;
+            region          region0;
+            enabled         true;
+            logToFile       true;
+            fields          ( U p T omega nut );
+            outputFileFormat tsv;
+        }
+        SR
+        {
+            type            surfaceReport;
+            fields          ( T );
+            surfaces        ( { type patch ; name wall_flap ; } );
+            constraints     ( );
+            executeControl  onEnd;
+            writeControl    onEnd;
+            outputFileFormat tsv;
+        }
+        SR_window
+        {
+            type            surfaceReport;
+            fields          ( T );
+            surfaces        ( { type patch ; name wall_window ; } );
+            constraints     ( );
+            executeControl  onEnd;
+            writeControl    onEnd;
+            outputFileFormat tsv;
+        }
+        SR_window_slave
+        {
+            type            surfaceReport;
+            fields          ( T );
+            surfaces        ( { type patch ; name wall_window_slave ; } );
+            constraints     ( );
+            outputFileFormat tsv;
+        }
+        comfort
+        {
+            type            thermalComfort;
+            clo             0.3;
+            met             1.2;
+            work            0;
+            RH              50;
+            Tu              10;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        boundaryMesh
+        {
+            inlet { type inlet; }
+            outlet { type outlet; }
+            wall_window { type mappedWall; samplePatch wall_window_slave; }
+            wall_window_slave { type mappedWall; samplePatch wall_window; }
+            wall_dummies { type wall; }
+            wall_flap { type wall; }
+            wall_ground { type wall; }
+            wall_house { type wall; }
+            wall_roof { type wall; }
+            ff_miny { type wall; }
+            ff_maxy { type wall; }
+            sky { type wall; }
+        }
+        state           ( steady ras energy radiation );
+        turbulenceModel kOmegaSST;
+        materials       ( air );
+        materialProperties
+        {
+            air
+            {
+                materialType    fluid;
+                thermodynamics  hConst;
+                equationOfState rhoConst;
+                energy          sensibleEnthalpy;
+                muModel         scalarFunction1;
+                buoyancyModel   Boussinesq;
+                kappaModel      kappaPrandtl;
+                molWeight       28.9;
+
+                equationOfStateCoeffs { rho 1.205; }
+
+                buoyancyModelCoeffs
+                {
+                    rho0 1.205;
+                    T0   300;
+                    beta 0.00333;
+                }
+
+                thermodynamicsCoeffs
+                {
+                    Cp 1006;
+                    Hf 0;
+                }
+                muModelCoeffs { mu 1.9137e-05; }
+                kappaModelCoeffs { Pr 0.7; }
+
+                solidBoundaryKappaModel scalarFunction1;
+                solidBoundaryKappaModelCoeffs
+                {
+                    solidBoundaryKappa 1;
+                    dimensions kappa;
+                }
+                referenceFields
+                {
+                    p [ 1 -1 -2 0 0 0 0 ] 101325;
+                }
+            }
+        }
+        constant
+        {
+            g
+            {
+                dimensions      [ 0 1 -2 0 0 0 0 ];
+                value           ( 0 0 -9.81 );
+            }
+            radiationProperties
+            {
+                participating   no;
+                fvDOMCoeffs
+                {
+                    cacheDiv        false;
+                    initialMaxIter  100;
+                }
+                solarLoadMode   DOM;
+                domSolarCoeffs
+                {
+                    sources
+                    (
+                        solar
+                        {
+                            radiantInputType userDefined;
+                            intensity       constant 545;
+                            direction       constant ( -1 0.5 -1 );
+                            solve           true;
+                            nSolutions      500;
+                        }
+                     );
+
+                    sourcePatches   ( sky "wall_window.*" ff_maxy ff_miny inlet outlet );
+                }
+            }
+            boundaryRadiationProperties
+            {
+                ".*"
+                {
+                    mode            lookup;
+                    emissivity      0;
+                    absorptivity    0;
+                    transmissivity  1;
+                    Tinf            constant 300;  // Diffuse environmental radiation
+                }
+                "wall_.*"
+                {
+                    mode            lookup;
+                    emissivity      0.7;
+                    absorptivity    1;
+                    transmissivity  0;
+                }
+                "wall_window.*"
+                {
+                    mode            lookup;
+                    emissivity      0.2;
+                    absorptivity    0.3;
+                    transmissivity  0.7;
+                }
+            }
+        }
+        system
+        {
+            meshObjects
+            {
+                porousFrame
+                {
+                    type            coordinateFrame;
+                    coordinateSystem
+                    {
+                        type            cartesian;
+                        origin          ( 0 0 0 );
+                        rotation
+                        {
+                            type            axesRotation;
+                            e1              ( 0.70710678 0.70710678 0 );
+                            e3              ( 0 0 1 );
+                        }
+                    }
+                }
+            }
+            fvOptions
+            {
+                porosity1
+                {
+                    type            explicitPorositySource;
+                    active          yes;
+
+                    explicitPorositySourceCoeffs
+                    {
+                        type            powerLaw;
+                        selectionMode   cellZone;
+                        cellZone        porous_zone1;
+
+                        powerLawCoeffs
+                        {
+                            C0              5;
+                            C1              1;
+                            referenceFrame  porousFrame;
+                        }
+                    }
+                }
+            }
+        }
+        global
+        {
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type            potentialFlow;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type            buoyantPressure;
+                    initialValue    uniform 0;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type            Prandtl;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type            Prandtl;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 300;
+                }
+            }
+        }
+        boundaryTypeDefaults
+        {
+            wall
+            {
+                T
+                {
+                    type            turbulentHeatFluxTemperature;
+                    kappaMethod     fluidThermo;
+                    value           uniform 300;
+                    q               uniform 0;
+                    heatSource      flux;
+                }
+                IDefault
+                {
+                    type            greyDiffusiveRadiation;
+                    T               T;
+                    emissivity      uniform 0.7;
+                    transmissivity  0;
+                    value           uniform 0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            ff_maxy
+            {
+                U { type slip; }
+                k { type slip; }
+                omega { type slip; }
+                nut { type calculated; value uniform 0; }
+                IDefault
+                {
+                    type            greyDiffusiveRadiation;
+                    T               T;
+                    emissivity      uniform 0;
+                    transmissivity  1;
+                    value           uniform 0;
+                }
+            }
+            ff_miny
+            {
+                U { type slip; }
+                k { type slip; }
+                omega { type slip; }
+                nut
+                {
+                    type calculated;
+                    value uniform 0;
+                }
+                IDefault
+                {
+                    type            greyDiffusiveRadiation;
+                    T               T;
+                    emissivity      uniform 0;
+                    transmissivity  1;
+                    value           uniform 0;
+                }
+            }
+            sky
+            {
+                U { type slip; }
+                k { type slip; }
+                omega { type slip; }
+                nut { type calculated; value uniform 0; }
+                IDefault
+                {
+                    type            greyDiffusiveRadiation;
+                    T               T;
+                    emissivity      uniform 0;
+                    transmissivity  1;
+                    value           uniform 0;
+                }
+            }
+            inlet
+            {
+                U
+                {
+                    type            interpolatedFixedValue;
+                    value           uniform ( -2 0 0 );
+                    profile         tableFile;
+                    file            "constant/inletProfile/inletProfile.dat";
+                    distanceType    z;
+                    point           ( 0 0 0 );
+                    direction       ( 0 0 1 );
+                    outOfBounds     clamp;
+                }
+                T
+                {
+                    type            fixedValue;
+                    value           uniform 300;
+                }
+                IDefault
+                {
+                    type            greyDiffusiveRadiation;
+                    T               T;
+                    emissivity      uniform 0;
+                    transmissivity  1;
+                    value           uniform 0;
+                }
+            }
+            wall_window
+            {
+                T
+                {
+                    type            thermalBaffle1D;
+                    baffleActivated true;
+                    sampleMode      nearestPatchFace;
+                    samplePatch     wall_window_slave;
+                    sampleRegion    region0;
+                    thickness       uniform 0.01;
+                    Qs              uniform 0;
+                    Qr              Qr;
+                    value           uniform 300;
+                    kappa           solidBoundaryKappa;
+                }
+                IDefault
+                {
+                    type            greyDiffusiveRadiation;
+                    T               T;
+                    emissivity      uniform 0.2;
+                    transmissivity  0.7;
+                    value           uniform 0;
+                }
+            }
+            wall_window_slave
+            {
+                T
+                {
+                    type            thermalBaffle1D;
+                    baffleActivated true;
+                    sampleMode      nearestPatchFace;
+                    samplePatch     wall_window;
+                    sampleRegion    region0;
+                    Qs              uniform 0;
+                    Qr              Qr;
+                    value           uniform 300;
+                }
+                IDefault
+                {
+                    type            greyDiffusiveRadiation;
+                    T               T;
+                    emissivity      uniform 0.2;
+                    transmissivity  0.7;
+                    value           uniform 0;
+                }
+            }
+            outlet
+            {
+                p
+                {
+                    type            totalPressure;
+                    addStaticHead   true;
+                    p0              uniform 0;
+                    value           uniform 0;
+                }
+                IDefault
+                {
+                    type            greyDiffusiveRadiation;
+                    T               T;
+                    emissivity      uniform 0;
+                    transmissivity  1;
+                    value           uniform 0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

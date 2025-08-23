@@ -1,0 +1,432 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom startTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 10.0;
+            deltaT constant 0.2;
+            writeControl timeStep;
+            writeInterval 10.0;
+            purgeWrite 0;
+            writeFormat ascii;
+            writePrecision 6;
+            writeCompression uncompressed;
+            timeFormat general;
+            timePrecision 6;
+            graphFormat raw;
+            runTimeModifiable true;
+            adjustTimeStep false;
+            maxCo 0;
+            maxDeltaT 0;
+            maxAlphaCo 0;
+        }
+    }
+    functions
+    {
+        fieldAverage1
+        {
+            type fieldAverage;
+            regions ( region0 );
+            timeStart 5.0;
+            writeControl onEnd;
+            executeControl onEnd;
+            fields
+            (
+                U
+                {
+                    mean on;
+                    prime2Mean on;
+                    base time;
+                }
+                p
+                {
+                    mean on;
+                    prime2Mean on;
+                    base time;
+                }
+            );
+            functionObjectLibs ("libfieldFunctionObjects.so");
+            outputFileFormat tsv;
+        }
+        VR
+        {
+            type volumeReport;
+            regions ( region0 );
+            fields ( U p );
+            writeControl onEnd;
+            executeControl onEnd;
+            functionObjectLibs ("libreport.so");
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (transient les);
+        boundaryMesh
+        {
+            bottomWall
+            {
+                type wall;
+            }
+            topWall
+            {
+                type wall;
+            }
+            sides1_half0
+            {
+                type cyclic;
+                matchTolerance 1.0E-4;
+                neighbourPatch sides1_half1;
+            }
+            sides1_half1
+            {
+                type cyclic;
+                matchTolerance 1.0E-4;
+                neighbourPatch sides1_half0;
+            }
+            sides2_half0
+            {
+                type cyclic;
+                matchTolerance 1.0E-4;
+                neighbourPatch sides2_half1;
+            }
+            sides2_half1
+            {
+                type cyclic;
+                matchTolerance 1.0E-4;
+                neighbourPatch sides2_half0;
+            }
+            inout1_half0
+            {
+                type cyclic;
+                matchTolerance 1.0E-4;
+                neighbourPatch inout1_half1;
+            }
+            inout1_half1
+            {
+                type cyclic;
+                matchTolerance 1.0E-4;
+                neighbourPatch inout1_half0;
+            }
+            inout2_half0
+            {
+                type cyclic;
+                matchTolerance 1.0E-4;
+                neighbourPatch inout2_half1;
+            }
+            inout2_half1
+            {
+                type cyclic;
+                matchTolerance 1.0E-4;
+                neighbourPatch inout2_half0;
+            }
+        }
+        turbulenceModel WALE;
+        materials (air);
+        constant
+        {
+            turbulenceProperties
+            {
+                simulationType LES;
+                LES
+                {
+                    LESModel        WALE;
+                    turbulence      on;
+                    printCoeffs     on;
+                    delta           cubeRootVol;
+                    cubeRootVolCoeffs
+                    {
+                        deltaCoeff      1;
+                    }
+                }
+            }
+        }
+        system
+        {
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default backward;
+                }
+                gradSchemes
+                {
+                    default Gauss linear;
+		            gradU cellLimited Gauss linear 1;
+                }
+                divSchemes
+                {
+                    default         none;
+                    div(phi,U)      Gauss linear;
+                    div(phi,k)      Gauss limitedLinear 1;
+                    div(phi,B)      Gauss limitedLinear 1;
+                    div(B)          Gauss linear;
+                    div(phi,nuTilda) Gauss limitedLinear 1;
+                    div((nuEff*dev2(T(grad(U))))) Gauss linear;
+                }
+                laplacianSchemes
+                {
+                    default Gauss linear corrected;
+                }
+                interpolationSchemes
+                {
+                    default linear;
+                }
+                snGradSchemes
+                {
+                    default corrected;
+                }
+                wallDist
+                {
+                    method meshWave;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    p
+                    {
+                        solver GAMG;
+                        tolerance 0;
+                        relTol 0.1;
+                        smoother GaussSeidel;
+                    }
+                    U
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-6;
+                        relTol 0.1;
+                    }
+                    pFinal
+                    {
+                        solver GAMG;
+                        tolerance 1e-06;
+                        relTol 0;
+                        smoother DICGaussSeidel;
+                    }
+                    UFinal
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-5;
+                        relTol 0.0;
+                    }
+                    nuTilda
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-06;
+                        relTol 0.1;
+                    }
+                    nuTildaFinal
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-05;
+                        relTol 0.0;
+                    }
+                    "(U|k|nuTilda)"
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        tolerance 1e-05;
+                        relTol 0.1;
+                    }
+                    "(U|k|nuTilda)Final"
+                    {
+                        tolerance 1e-05;
+                        relTol 0;
+                    }
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p 0.3;
+                        pFinal 1;
+                    }
+                    equations
+                    {
+                        U 0.7;
+                        UFinal 1.0;
+                        nuTilda 1;
+                        nuTildaFinal 1;
+                    }
+                }
+                PIMPLE
+                {
+                    turbOnFinalIterOnly false;
+                    ddtPhiCorr true;
+                    momentumPredictor true;
+                    nOuterCorrectors 1;
+                    nCorrectors 2;
+                    nNonOrthogonalCorrectors 0;
+                    pRefCell 1001;
+                    pRefValue 0;
+                    pMin -1.0E10;
+                    pMax 1.0E10;
+                    consistent false;
+                    transonic false;
+                }
+                cache
+                {
+                    grad(U) ;
+                }
+            }
+            fvOptions
+            {
+                momentumSource
+                {
+                    type            meanVelocityForce;
+                    selectionMode   all;
+                    fields          (U);
+                    Ubar            (0.1335 0 0);
+                }
+            }
+
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.0;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.0;
+                }
+            }
+            nuTilda
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.0;
+                }
+            }
+            nut
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            bottomWall
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+                nuTilda
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+                nut
+                {
+                    type zeroGradient;
+                }
+            }
+            topWall
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+                nuTilda
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+                nut
+                {
+                    type zeroGradient;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

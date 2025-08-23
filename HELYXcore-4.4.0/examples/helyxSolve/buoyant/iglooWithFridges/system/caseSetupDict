@@ -1,0 +1,266 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields yes;
+        resetBoundaryFields yes;
+        resetSystemDicts yes;
+        resetConstDicts yes;
+        resetBoundaryMesh yes;
+    }
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         2000;
+            deltaT          1;
+            writeControl    timeStep;
+            writeInterval   100;
+            purgeWrite      1;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            functionObjectLibs  ( "libreport.so" );
+            type                volumeReport;
+            logToFile           yes;
+            fields              ( p U T );
+            executeControl      timeStep;
+            writeControl        onEnd;
+            region              region0;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        boundaryMesh
+        {
+            ground
+            {
+                type            wall;
+            }
+            igloo
+            {
+                type            wall;
+            }
+            twoFridgeFreezers_seal_0
+            {
+                type            wall;
+            }
+            twoFridgeFreezers_herring_1
+            {
+                type            wall;
+            }
+        }
+        state           ( steady ras energy );
+        turbulenceModel kEpsilon;
+        materials       ( air );
+        materialProperties
+        {
+            air
+            {
+                materialType    fluid;
+                thermodynamics  hConst;
+                equationOfState rhoConst;
+                energy          sensibleEnthalpy;
+                muModel         scalarFunction1;
+                buoyancyModel   Boussinesq;
+                kappaModel      kappaPrandtl;
+                molWeight       28.9;
+
+                equationOfStateCoeffs
+                {
+                     rho            1.2;
+                }
+
+                buoyancyModelCoeffs
+                {
+                    rho0 1.2;
+                    T0   300;
+                    beta 0.003;
+                }
+
+                thermodynamicsCoeffs
+                {
+                     Cp 1006;
+                     Hf 0;
+                }
+                muModelCoeffs
+                {
+                     mu 1.2e-05;
+                }
+                kappaModelCoeffs
+                {
+                     Pr 0.7;
+                }
+                referenceFields
+                {
+                    p [ 1 -1 -2 0 0 0 0 ] 101325;
+                }
+            }
+        }
+        fieldMaps
+        {
+        }
+        constant
+        {
+            g
+            {
+                dimensions      [ 0 1 -2 0 0 0 0 ];
+                value           ( 0 0 -9.81 );
+            }
+        }
+        system
+        {
+        }
+        global
+        {
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform (0 0 0);
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type            buoyantPressure;
+                    initialValue    uniform 0;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 0.1;
+                }
+            }
+            epsilon
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 0.01;
+                }
+            }
+            nut
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 265;
+                }
+            }
+            alphat
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+            }
+        }
+        boundaryTypeDefaults
+        {
+            wall
+            {
+                p
+                {
+                    type            fixedFluxPressure;
+                    value           uniform 0;
+                }
+                U
+                {
+                    type            noSlip;
+                }
+                T
+                {
+                    type            fixedValue;
+                    value           uniform 265;
+                }
+                alphat
+                {
+                    type            alphatJayatillekeWallFunction;
+                    Prt             0.85;
+                    value           uniform 0;
+                }
+                nut
+                {
+                    type            nutkWallFunction; 
+                    value           uniform 0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            ground
+            {
+            }
+            igloo
+            {
+            }
+            twoFridgeFreezers_seal_0
+            {
+                T
+                {
+                    type            fixedValue;
+                    value           uniform 303;
+                }
+            }
+            twoFridgeFreezers_herring_1
+            {
+                T
+                {
+                    type            fixedValue;
+                    value           uniform 303;
+                }
+            }
+        }
+        functions
+        {
+        }
+    }
+}
+
+
+// ************************************************************************* //

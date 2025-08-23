@@ -1,0 +1,270 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+// Which of the steps to run
+castellatedMesh true;
+snap            true;
+addLayers       false;
+
+geometry
+{
+    vessel.stl
+    {
+        name vessel;
+        type triSurfaceMesh;
+        regions
+        {
+            vessel
+            {
+                name vessel;
+            }
+        }
+    }
+    gasInlet.stl
+    {
+        name gasInlet;
+        type triSurfaceMesh;
+        regions
+        {
+            gasInlet
+            {
+                name gasInlet;
+            }
+        }
+    }
+    outlet.stl
+    {
+        name outlet;
+        type triSurfaceMesh;
+        regions
+        {
+            outlet
+            {
+                name outlet;
+            }
+        }
+    }
+    shaftRotating.stl
+    {
+        name shaftRotating;
+        type triSurfaceMesh;
+        regions
+        {
+            shaftRotating
+            {
+                name shaftRotating;
+            }
+        }
+    }
+    shaft.stl
+    {
+        name shaft;
+        type triSurfaceMesh;
+        regions
+        {
+            shaft
+            {
+                name shaft;
+            }
+        }
+    }
+    sparger.stl
+    {
+        name sparger;
+        type triSurfaceMesh;
+        regions
+        {
+            sparger
+            {
+                name sparger;
+            }
+        }
+    }
+    stirrer.stl
+    {
+        name stirrer;
+        type triSurfaceMesh;
+        regions
+        {
+            stirrer
+            {
+                name stirrer;
+            }
+        }
+    }
+    baffles.stl
+    {
+        name baffles;
+        type triSurfaceMesh;
+        regions
+        {
+            baffles
+            {
+                name baffles;
+            }
+        }
+    }
+    rotating.stl
+    {
+        name rotating;
+        type triSurfaceMesh;
+    }
+};
+
+// Settings for the castellatedMesh generation
+castellatedMeshControls
+{
+    features
+    (
+        {
+           file "gasInlet.eMesh";
+           levels ((1 1));
+        }
+        {
+           file "vessel.eMesh";
+           levels ((1 1));
+        }
+        {
+           file "outlet.eMesh";
+           levels ((1 1));
+        }
+
+    );
+
+    refinementSurfaces
+    {
+        vessel
+        {
+            level (1 2);
+            patchInfo
+            {
+                type wall;
+                inGroups (meshedWalls);
+            }
+        }
+        gasInlet
+        {
+            level (0 1);
+            patchInfo
+            {
+                type patch;
+            }
+        }
+        outlet
+        {
+            level (0 1);
+            patchInfo
+            {
+                type patch;
+            }
+        }
+        shaftRotating
+        {
+            level (1 1);
+            patchInfo
+            {
+                ${...vessel.patchInfo}
+            }
+        }
+        shaft
+        {
+            level (1 1);
+            patchInfo
+            {
+                ${...vessel.patchInfo}
+            }
+        }
+        sparger
+        {
+            level (1 1);
+            patchInfo
+            {
+                ${...vessel.patchInfo}
+            }
+        }
+        stirrer
+        {
+            level (1 1);
+            patchInfo
+            {
+                ${...vessel.patchInfo}
+            }
+        }
+        baffles
+        {
+            level (1 1);
+            patchInfo
+            {
+                ${...vessel.patchInfo}
+            }
+        }
+        rotating
+        {
+            level (1 2);
+            cellZone rotating;
+            faceZone rotating;
+            cellZoneInside insidePoint;
+            insidePoint (0 0.1 0.5);
+        }
+    }
+
+    refinementRegions
+    {}
+
+    locationInMesh (0 0.1 1.0);
+
+    allowFreeStandingZoneFaces true;
+}
+
+// Settings for the snapping
+snapControls
+{
+    featureEdges
+    {}
+}
+
+// Settings for the layer addition
+addLayersControls
+{
+    layers
+    {
+        vessel
+        {
+            nSurfaceLayers      1;
+            expansionRatio      1.3;
+            finalLayerThickness 0.5;
+            minThickness        0.1;
+        }
+    }
+}
+
+// Generic mesh quality settings. At any undoable phase these determine
+// where to undo.
+meshQualityControls
+{
+    maxNonOrtho 65;
+    minTetQuality 1e-9;
+    minArea -1;
+}
+
+// Merge tolerance. Is fraction of overall bounding box of initial mesh.
+// Note: the write tolerance needs to be higher than this.
+mergeTolerance 1e-6;
+
+
+// ************************************************************************* //

@@ -1,0 +1,67 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      sampling;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+fieldAverage1
+{
+    type                fieldAverage;
+    libs                ("libfieldFunctionObjects.so");
+    writeControl        writeTime;
+    timeStart           8.5;    
+
+    fields
+    (
+        U
+        {
+            mean        on;
+            prime2Mean  on;
+            base        time;
+        }
+    );
+}
+
+
+inletSampling
+{
+    type                sets;
+    libs                ("libsampling.so");
+    writeControl        writeTime;
+    timeStart           8.5;    
+
+    interpolationScheme cellPoint;
+    setFormat           raw;
+    fields              (UPrime2Mean);
+
+    sets
+    (
+        inletPatch
+        {
+            type        face;
+            axis        y;
+            start       (0.0 0 1.57);
+            end         (0.0 2 1.57);
+        }
+        inletCell
+        {
+            type        face;
+            axis        y;
+            start       (0.062832 0 1.57);
+            end         (0.062832 2 1.57);
+        }
+    );
+}
+
+// ************************************************************************* //

@@ -1,0 +1,327 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            startFrom latestTime;
+            stopAt endTime;
+            endTime 5.0; // run up to 20.0 to valve closure
+            deltaT 0.001;
+            writeControl adjustableRunTime;
+            writeInterval 0.1;
+            purgeWrite 0;
+            runTimeModifiable yes;
+            adjustTimeStep true;
+            maxCo 10.0;
+            maxDeltaT 0.1;
+            maxAlphaCo 0.0;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+        SR_inlet
+        {
+            type surfaceReport;
+            regions ( region0 );
+            fields ( U );
+            weighting flux;
+            fluxName phi;
+            homogeneity false;
+            surfaces
+            (
+                {
+                    type patch;
+                    name inlet;
+                }
+            );
+            constraints
+            (
+                {
+                    type boundBox;
+                    min ( -1000.0 -1000.0 -1000.0 );
+                    max ( 1000.0 1000.0 1000.0 );
+                    keepInside true;
+                }
+            );
+            writeControl timeStep;
+            writeInterval 1;
+            executeControl timeStep;
+            executeInterval 1;
+            functionObjectLibs ( "libreport.so" );
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( transient ras dynamic );
+        boundaryMesh
+        {
+            inlet { type inlet; }
+            outlet { type outlet; }
+            wallDuct { type wall; }
+        }
+        turbulenceModel kOmegaSST;
+        materials (air);
+        materialProperties
+        {
+            muModelCoeffs
+            {
+                mu 1.9137E-5;
+            }
+            referenceFields
+            {
+                p              [ 1 -1 -2 0 0 0 0 ] 101325;
+                TConst         [ 0 0 0 1 0 0 0 ] 300;
+            }
+        }
+        constant
+        {
+            dynamicMeshDict
+            {
+                GIBChanger
+                {
+                    type            solidBody;
+                    libs            ("libfvMeshGIBChangers.so");
+
+                    solidBodyCoeffs
+                    {
+                        triSurfaceName  valve.stl;
+                        region0Patch    ( inlet outlet );
+                        debug           false;
+                        motionFunctions
+                        {
+                            referenceFrame rotatingFrame;
+                        }
+                    }
+                }
+            }
+        }
+        system
+        {
+            meshObjects
+            {
+                rotatingFrame
+                {
+                    type dynamicMotionCoordinateFrame;
+                    motionFunction
+                    {
+                        type axisRotationMotion;
+                        radialVelocity ( -5 0 0 );
+                    }
+                    coordinateSystem
+                    {
+                        type cartesian;
+                        origin ( 0 0 0 );
+                        e1 (1 0 0);
+                        e3 (0 0 1);
+                    }
+                }
+            }
+            fvSolution
+            {
+                PIMPLE
+                {
+                    nOuterCorrectors 1;
+                    nCorrectors 2;
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.0;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type turbulentIL;
+                    I 0.05;
+                    L 0.01;
+                    Uref 1.5;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type turbulentIL;
+                    I 0.05;
+                    L 0.01;
+                    Uref 1.5;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform (0 0.1 0);
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    value uniform 0.1;
+                    intensity 0.05;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    value uniform 0.01;
+                    mixingLength 0.01;
+                }
+                nut
+                {
+                    type calculated;
+                    value uniform 0.001;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type inletOutlet;
+                    value uniform ( 0.0 0.0 0.0 );
+                    inletValue uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type fixedValue;
+                    value uniform 0.0;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    intensity 0.05;
+                    value uniform 0.1;
+                }
+                omega
+                {
+                    type inletOutlet;
+                    inletValue uniform 0.01;
+                    k k;
+                    value uniform 0.01;
+                }
+                nut
+                {
+                    type calculated;
+                    value uniform 0.001;
+                }
+            }
+            wallDuct
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 1e-20;
+                }
+                omega
+                {
+                    type omegaWallFunction;
+                    value uniform 1;
+                }
+                nut
+                {
+                    type nutUSpaldingWallFunction;
+                    value uniform 0.001;
+                }
+            }
+            ib1
+            {
+                U
+                {
+                    type            movingWallVelocity;
+                    value           uniform ( 0 0 0 );
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+            }
+            ib2
+            {
+                U
+                {
+                    type            fixedValueZone;
+                    value           uniform ( 0 0 0 );
+                }
+                p
+                {
+                    type            fixedValueZone;
+                    value           uniform 0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

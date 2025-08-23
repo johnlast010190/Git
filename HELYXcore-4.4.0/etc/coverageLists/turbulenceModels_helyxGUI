@@ -1,0 +1,27 @@
+# Turbulence models in HELYX-GUI
+
+buoyantKEpsilon	
+buoyantKOmegaSST	
+dynamicKEqn	
+ellipticBlendingLagKE	
+kEpsilon	
+kEqn	
+kkLOmega	
+kOmega	
+kOmegaSST	Curvature: TRUE / FALSE
+kOmegaSSTDDES	Curvature: TRUE / FALSE
+kOmegaSSTDES	Curvature: TRUE / FALSE
+kOmegaSSTIDDES	Curvature: TRUE / FALSE
+kOmegaSSTLM	
+kOmegaSSTSAS	
+kOmegaSSTSASDES	
+laminar		
+realizableKE	
+RNGkEpsilon	
+Smagorinsky	
+SpalartAllmaras	
+SpalartAllmarasDDES	
+SpalartAllmarasDES	
+SpalartAllmarasIDDES	
+v2f	
+WALE	

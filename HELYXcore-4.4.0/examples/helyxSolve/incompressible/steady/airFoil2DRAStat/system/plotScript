@@ -1,0 +1,53 @@
+#!/usr/bin/gnuplot -persist
+# set terminal postscript eps enhanced color font "Helvetica,24"
+set terminal png size 1200,600
+reset
+set grid
+
+####################################################################
+set output "LiftvsIterationAoASweep.png"
+
+set xrange [0:500]
+set xtics 100
+set xlabel "Iterations"
+set yrange [0:1.8]
+set ytics 0.2
+set ylabel "Lift"
+set key outside right
+
+plot "aoa0/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 0",\
+     "aoa1/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 1",\
+     "aoa2/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 2",\
+     "aoa3/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 3",\
+     "aoa4/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 4",\
+     "aoa5/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 5",\
+     "aoa6/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 6",\
+     "aoa7/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 7",\
+     "aoa8/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 8",\
+     "aoa9/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 9",\
+     "aoa10/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 10",\
+     "aoa11/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 11",\
+     "aoa12/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 12",\
+     "aoa13/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 13",\
+     "aoa14/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 14",\
+     "aoa15/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 15",\
+     "aoa16/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 16",\
+     "aoa17/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 17",\
+     "aoa18/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 18",\
+     "aoa19/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 19",\
+     "aoa20/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 20",\
+     "aoa21/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 21",\
+     "aoa22/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 22",\
+     "aoa23/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 23",\
+     "aoa24/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 24",\
+     "aoa25/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 25",\
+     "aoa26/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 26",\
+     "aoa27/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 27",\
+     "aoa28/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 28",\
+     "aoa29/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 29",\
+     "aoa30/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 30",\
+     "aoa31/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 31",\
+     "aoa32/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 32",\
+     "aoa33/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 33",\
+     "aoa34/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 34",\
+     "aoa35/postProcessing/LD/0/liftDrag.dat" u 0:2 w l title "aoa 35"

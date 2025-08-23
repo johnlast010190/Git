@@ -1,0 +1,25 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+helyxRun blockMesh
+helyxRun transformPoints -scale '(1.6666 1 1)'
+
+helyxRun -log log.changeDictionary.X changeDictionary -instance system -dict system/changeDictionaryDict.X
+helyxRun -log log.mirrorMesh.1 mirrorMesh -overwrite
+
+helyxRun changeDictionary -instance system -dict system/changeDictionaryDict.Y
+helyxRun mirrorMesh -overwrite
+
+helyxRun topoSet
+helyxRun createPatch -overwrite
+helyxRun caseSetup
+helyxRun helyxSolve
+helyxRun helyxSample
+
+# Create dummy file for ParaView visualisation
+touch elipsekkLOmega.foam
+
+#------------------------------------------------------------------------------

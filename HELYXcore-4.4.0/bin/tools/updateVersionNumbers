@@ -1,0 +1,224 @@
+#!/usr/bin/python3
+# ---------------------------------------------------------------------------
+# |       o        |
+# |    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+# |   o   O   o    |  Version : 4.4.0
+# |    o     o     |  ENGYS Ltd. <http://engys.com/>
+# |       o        |
+# ---------------------------------------------------------------------------
+# License
+#    This file is part of HELYXcore.
+#    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+#
+#    HELYXcore is free software: you can redistribute it and/or modify it
+#    under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+#    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+#    for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright
+#    (c) 2021-2022 Engys Ltd.
+
+# Script
+#     updateVersionNumbers <version>
+#
+# Description
+#     This script updates the version numbers in header files.
+#
+# ------------------------------------------------------------------------------
+
+# We don't have to rely on environment variables anymore!
+#from ast import pattern
+import pathlib
+import re
+import glob
+
+import SourceTreeTools
+
+import argparse
+import sys
+
+class headersVersionNumberReplacer:
+    def __init__(self, file_paths):
+        self.file_paths = file_paths
+
+        self.pattern = re.compile(
+            r"(.*?\|(?:\s*?[oO0]\s*?)+\|\s*?[Vv]ersion\s*?:\s?)([^\s]*)(.*)"
+        )
+
+    def replace_all_version_numbers(self):
+        for input_file in self.file_paths:
+            with open(input_file, "r") as f:
+                # We're probably only worried about the first five-ish lines
+                for _ in range(5):
+                    try:
+                        current_line = f.readline()
+                        new_string = re.sub(
+                            self.pattern, rf"\g<1>{VERSION_NUMBER}\g<3>", current_line
+                        )
+                        # Don't replace CMake template files
+                        if "@HELYX_PROJECT_VERSION@" in current_line:
+                            print(f'Not replacing string in "{input_file}"')
+                            continue
+                        # new_string = re.sub(pattern, '\\1dev', current_line)
+                        if not current_line == new_string:
+                            # Last char is newline and zero-indexed, so pipe expected at
+                            # 78
+                            if len(current_line) == 80 and current_line[78] == "|":
+                                # Add pipe at column 78 for new_string
+                                new_string = new_string.replace("|\n", "")
+                                new_string = new_string.strip().ljust(78, " ") + "|\n"
+
+                            # Now replace string in file
+                            SourceTreeTools.replace_string_in_file(
+                                input_file, current_line, new_string
+                            )
+                            continue
+                    except (UnicodeDecodeError):
+                        continue
+
+
+class inCMakeVersionNumberReplacer:
+    def __init__(self, input_file, pattern, version):
+        self.input_file = input_file
+        self.pattern = re.compile(pattern)
+        self.version = version
+
+    def replace_version_number(self):
+        with open(self.input_file, "r") as f:
+            for line in f:
+                try:
+                    current_line = line
+                    new_string = re.sub(
+                        self.pattern, rf"\g<1>{self.version}\g<3>", current_line
+                    )
+                    # new_string = re.sub(pattern, '\\1dev', current_line)
+                    if not current_line == new_string:
+                        # Last char is newline and zero-indexed, so pipe expected at
+                        # 78
+                        if len(current_line) == 80 and current_line[78] == "|":
+                            # Add pipe at column 78 for new_string
+                            new_string = new_string.replace("|\n", "")
+                            new_string = new_string.strip().ljust(78, " ") + "|\n"
+                        # Now replace string in file
+                        SourceTreeTools.replace_string_in_file(
+                            self.input_file, current_line, new_string
+                        )
+                        continue
+                except (UnicodeDecodeError):
+                    continue
+
+
+class settingsFileVersionNumberReplacer:
+    def __init__(self, settingsFile_paths, new_version):
+        self.settingsFile_paths = str(settingsFile_paths) + "/**/*.cmake"
+        self.new_version = new_version
+        self.settingsFiles = glob.glob(self.settingsFile_paths, recursive=True)
+
+    def inplace_change(self):
+        for file in self.settingsFiles:
+            if 'jenkins' in file:
+                continue
+            # Replace "dev"
+            patterns = ['"dev"', '"d.e.v"']
+            for pattern in patterns:
+                with open(file) as f:
+                    content=f.read()
+                new_content = content.replace(pattern, self.new_version)
+                with open(file, "w") as f:
+                    f.write(new_content)
+
+            # Replace offical release versions ([1-9].[1-9].[1-9])
+            pattern = r"(\"\d{1,2}\.\d{1,2}\.\d{1,2}\")"
+            with open(file, "r") as f:
+                content = f.read()
+            new_content = re.sub(pattern, f"{self.new_version}", content)
+            with open(file, "w") as f:
+                f.write(new_content)
+
+
+def check_release_type(version):
+
+    if (re.match(r"^Dev$", version) or
+        re.match(r"^dev$", version) or
+        re.match(r"^d\.e\.v$", version)):
+        return "develop"
+    elif (re.match(r"^(\d{1,2}\.)?(\d{1,2}\.)?(\*|\d{1,2})$", version)):
+        return "official"
+    else:
+        print(f"Error: The provided version '{VERSION_NUMBER}' is not a valid format ('xx.xx.xx').")
+        sys.exit(1)
+
+
+def main(argv):
+    parser: argparse.ArgumentParser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--version", "-v",
+        type=str,
+        help="Helyx core version in the format: xx.xx.xx",
+        required=True
+    )
+    parser.add_argument(
+        "--userSettingsOnly",
+        action="store_true",
+        help="Replace version on settings files",
+    )
+
+    args = parser.parse_args(argv[1:])
+
+    global VERSION_NUMBER
+    global VERSION_INTEGER
+
+    VERSION_NUMBER = args.version
+
+    dir_info = SourceTreeTools.HelyxDirectoryInfo()
+
+    release_type = check_release_type(VERSION_NUMBER)
+
+    # To replace HELYX_VERSION and THIRDPARTY_VERSION on settingsFiles
+    # or something like: grep -rl '4.0.0' ./etc/cmakeSettingsFiles/ | xargs sed -i 's/4.0.0/4.0.1/g'
+    cmakeSettingsFiles_path = pathlib.Path(dir_info.helyx_project_dir / 'etc/cmakeSettingsFiles')
+    settingsFileReplacer = settingsFileVersionNumberReplacer(cmakeSettingsFiles_path, f'"{VERSION_NUMBER}"')
+    settingsFileReplacer.inplace_change()
+
+    if "official" in release_type:
+
+        # To replace HELYX_API integer version
+        VERSION_INTEGER = int(''.join(f"{space:>02}" for space in VERSION_NUMBER.split(".")))
+        pattern_helyxAPI = r"(.*?\s*?HELYX_API_INTEGER_VERSION\s?\")([^\s]*)(\"\))(.*)"
+        buildConfiguration_file_path = pathlib.Path(dir_info.helyx_project_dir / 'etc/cmake/buildConfiguration.cmake')
+        helyxAPIReplacer = inCMakeVersionNumberReplacer(
+            buildConfiguration_file_path, pattern_helyxAPI, VERSION_INTEGER
+        )
+        helyxAPIReplacer.replace_version_number()
+
+        # To replace VERSION of write_basic_package_version_file() on packingConfiguraton.cmake
+        packingConfiguraton_file_path = pathlib.Path(dir_info.helyx_project_dir / 'etc/cmake/packingConfiguration.cmake')
+        pattern_helyxConf = r"(\s*?VERSION\s*)(\d{1,2}\.\d{1,2}\.\d{1,2})(.*)"
+        helyxConfReplacer = inCMakeVersionNumberReplacer(
+            packingConfiguraton_file_path, pattern_helyxConf, VERSION_NUMBER
+        )
+        helyxConfReplacer.replace_version_number()
+
+    # Replace only versions used in then cmake files then exit
+    if args.userSettingsOnly:
+        sys.exit(0)
+
+    # To replace version on files header
+    for parent_dir in dir_info.directories_dict:
+        file_path_getter = SourceTreeTools.FilePathGetter(
+            parent_dir, dir_info.directories_dict[parent_dir]
+        )
+        replacer = headersVersionNumberReplacer(file_path_getter.all_file_paths)
+        replacer.replace_all_version_numbers()
+
+
+if __name__ == "__main__":
+    main(sys.argv)

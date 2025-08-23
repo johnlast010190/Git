@@ -1,0 +1,12 @@
+#!/bin/bash
+. $HELYX_PROJECT_DIR/bin/tools/RunFunctions
+
+# create aeroFoil mesh using helyxHexMesh
+(cd aeroFoil_helyxHexMesh && ./Allrun.pre)
+
+# Extrude mesh
+(cd aeroFoil_overset && ./Allrun.pre)
+
+(cd background_helyxHexMesh && ./Allrun.pre)
+
+(cd background_overset &&  ./Allrun.pre)

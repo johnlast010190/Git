@@ -1,0 +1,293 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         2000;
+            deltaT          1;
+            writeControl    timeStep;
+            writeInterval   100;
+            purgeWrite      0;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type volumeReport;
+            regions ( region0 );
+            fields ( U k nut p T);
+            writeControl timeStep;
+            writeInterval 1;
+            executeControl timeStep;
+            executeInterval 1;
+            functionObjectLibs ("libreport.so");
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (steady ras energy);
+        boundaryMesh
+        {
+            inlet
+            {
+                type inlet;
+            }
+            ground
+            {
+                type wall;
+            }
+            top
+            {
+                type wall;
+            }
+            sides
+            {
+                type wall;
+            }
+            outlet
+            {
+                type patch;
+            }
+        }
+        turbulenceModel realizableKE;
+        materials (air);
+        materialProperties
+        {
+            air
+            {
+                materialName    air;
+                materialType    fluid;
+                thermodynamics  hConst;
+                equationOfState perfectGas;
+                energy          sensibleEnthalpy;
+                buoyancyModel   rhoModel;
+                molWeight 28.9;
+                thermodynamicsCoeffs
+                {
+                    Cp 1000;
+                    Hf 0.0;
+                }
+                muModel    scalarFunction1;
+                muModelCoeffs
+                {
+                    mu 1.8E-5;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr 0.7;
+                }
+                referenceFields
+                {
+                    p [ 1 -1 -2 0 0 0 0 ] 101325;
+                }
+            }
+        }
+        system
+        {
+            fvSolution
+            {
+                SIMPLE
+                {
+                    consistent true;
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p 1;
+                        rho 1;
+                    }
+                    equations
+                    {
+                        U 0.9;
+                    }
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type potentialFlow;
+                    initialiseUBCs true;
+                    value uniform ( -0.5 0 0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type buoyantPressure;
+                    initialValue uniform 0;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 283.15;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type turbulentIL;
+                    I 0.05;
+                    L 0.01;
+                    Uref 0.05;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type turbulentIL;
+                    I 0.05;
+                    L 0.01;
+                    Uref 0.05;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type windProfileDirectionVelocity;
+                    value uniform ( -0.5 0.0 0.0 );
+                    profile RHWindProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Kappa 0.41;
+                        Uref 0.5;
+                        Href 10.0;
+                        z0 0.3;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                    windDirection constant 90.0;
+                }
+                k
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile RHWindKineticEnergyProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Kappa 0.41;
+                        Uref 0.5;
+                        Href 10.0;
+                        z0 0.3;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+                epsilon
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile RHWindDissipationRateProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Kappa 0.41;
+                        Uref 0.5;
+                        Href 10.0;
+                        z0 0.3;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+                T
+                {
+                    type fixedValue;
+                    value uniform 283.15;
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                }
+            }
+            outlet
+            {
+                p
+                {
+                    type totalPressure;
+                    p0 uniform 0;
+                    addStaticHead true;
+                    hRefPoint ( 0 0 600);
+                    integrateStaticHead true;
+                    value uniform 0;
+                }
+                T
+                {
+                    type inletOutlet;
+                    value uniform 283.15;
+                    inletValue uniform 283.15;
+                }
+            }
+            "(top|sides)"
+            {
+                U {type slip; value uniform (-0.5 0 0);}
+                p {type fixedFluxPressure;}
+                k {type zeroGradient;}
+                epsilon {type zeroGradient;}
+                omega {type zeroGradient;}
+                nut {type zeroGradient;}
+                alphat {type zeroGradient;}
+                T {type zeroGradient;}
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,29 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Background mesh
+helyxRun blockMesh
+
+# Create cell zone for pipe region
+helyxRun topoSet
+
+# Overwrite existing mesh/results files
+helyxRun subsetMesh subsetCells -overwrite -patch walls
+
+helyxRun -l log.orientFaceZone1 orientFaceZone gibZone1 "(-1 0 0)"
+helyxRun -l log.orientFaceZone2 orientFaceZone gibZone2 "(1 0 0)"
+
+# Create GIB interface
+helyxRun modifyGIBBoundary -addGIB
+
+# Setup and run
+helyxRun caseSetup
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualization
+touch fuelSloshing.foam
+
+#------------------------------------------------------------------------------

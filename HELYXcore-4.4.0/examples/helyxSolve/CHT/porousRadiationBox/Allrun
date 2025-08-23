@@ -1,0 +1,31 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+mkdir -p constant/triSurface
+cp "$HELYX_TUTORIALS"/resources/geometry/porousRadiationBox/*.stl constant/triSurface/
+
+helyxRun blockMesh
+
+helyxRun decomposePar
+
+helyxRun helyxHexMesh
+
+helyxRun splitMeshRegions -overwrite -zoneToRegionMap '( (default (default)) (solid (solid)) )'
+
+# Setup
+helyxRun caseSetup
+
+cp system/topoSetDict.air system/default/topoSetDict
+
+helyxRun topoSet -region default
+
+# Run
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch porousRadiation.foam
+
+#------------------------------------------------------------------------------

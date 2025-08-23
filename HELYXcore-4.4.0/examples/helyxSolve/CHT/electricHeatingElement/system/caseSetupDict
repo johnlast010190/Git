@@ -1,0 +1,401 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    regionGroups ( fluids ( default ) solids ( element clip1 clip2 ) );
+
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         1000;
+            deltaT          1;
+            writeControl    timeStep;
+            writeInterval   100;
+        }
+
+        meshObjects
+        {
+            elementFrame
+            {
+                type coordinateFrame;
+                coordinateSystem
+                {
+                    type    cartesian;
+                    origin  (0 0 0);
+                    e1      (1 0 0);
+                    e2      (0 1 0);
+                }
+            }
+        }
+    }
+
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( T );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+        elementHeatFlux
+        {
+            type wallHeatFlux;
+            kappaMethod solidThermo;
+            region element;
+            libs ( "libfieldFunctionObjects.so" );
+        }
+    }
+}
+
+regions
+{
+
+    default
+    {
+        state ( steady ras energy radiation );
+
+        materials (air);
+
+        materialProperties
+        {
+            air
+            {
+                equationOfState perfectGas;
+                buoyancyModel   rhoModel;
+            }
+        }
+
+        turbulenceModel kOmegaSST;
+
+        constant
+        {
+            g
+            {
+                value           ( 0 -9.81 0);
+            }
+            boundaryRadiationProperties
+            {
+                ".*"
+                {
+                    mode            lookup;
+                    emissivity      0.8;
+                    absorbtivity    0.8;
+                    transmissivity  0;
+                }
+                top
+                {
+                    mode            lookup;
+                    emissivity      0;
+                    absorptivity    0;
+                    transmissivity  1;
+                }
+            }
+        }
+
+        boundaryMesh
+        {
+            left {type wall;}
+            right {type wall;}
+            front {type wall;}
+            back {type wall;}
+            bottom {type wall;}
+            top {type patch;}
+        }
+
+        fields
+        {
+            T { initialisation{type fixedValue; value uniform 300;} }
+            p { initialisation{type buoyantPressure;} }
+            U { initialisation{type fixedValue; value uniform (0.0 0.0 0.0);} }
+        }
+
+        boundaryConditions
+        {
+            top
+            {
+                p
+                {
+                    type        fixedMean;
+                    meanValue   0;
+                    value       uniform 0;
+                }
+                T
+                {
+                    type        inletOutlet;
+                    inletValue  uniform 300;
+                    value       uniform 300;
+                }
+                U
+                {
+                    type        pressureInletOutletVelocity;
+                    value       uniform ( 0 0 0 );
+                }
+            }
+        }
+    }
+
+    solids
+    {
+        materialProperties
+        {
+            elementMaterial
+            {
+                materialName    elementMaterial;
+                materialType    solid;
+                thermodynamics  hConst;
+                equationOfState rhoConst;
+                energy          sensibleEnthalpy;
+                molWeight       50;
+
+                kappaModel       constSolid;
+                kappaModelCoeffs
+                {
+                    kappa   100;
+                }
+
+                thermodynamicsCoeffs
+                {
+                    Hf      0;
+                    Cp      700;
+                }
+
+                equationOfStateCoeffs
+                {
+                    rho     1500;
+                }
+            }
+            clipMaterial
+            {
+                materialName    clipMaterial;
+                materialType    solid;
+                thermodynamics  hConst;
+                equationOfState rhoConst;
+                energy          sensibleEnthalpy;
+                molWeight       50;
+
+                kappaModel       constSolid;
+                kappaModelCoeffs
+                {
+                    kappa   300;
+                }
+
+                thermodynamicsCoeffs
+                {
+                    Hf      0;
+                    Cp      400;
+                }
+
+                equationOfStateCoeffs
+                {
+                    rho     7000;
+                }
+            }
+        }
+        constant
+        {
+            radiationProperties
+            {
+                radiationModel  opaqueSolid;
+                absorptionEmissionModel constant;
+                constantCoeffs
+                {
+                    absorptivity 0.8;
+                    emissivity 0.8;
+                    E 0;
+                }
+            }
+        }
+        system
+        {
+            fvOptions
+            {
+                heatSource
+                {
+                    type jouleHeatingSource;
+                }
+
+            }
+        }
+    }
+
+    element
+    {
+        state ( steady solid radiationSolid electricalConduction );
+
+        materials ( elementMaterial );
+
+        fields
+        {
+            T { initialisation{type fixedValue; value uniform 300;} }
+        }
+
+        boundaryConditions
+        {
+            element_to_clip1
+            {
+                T
+                {
+                    type            regionCoupledEnergyFlux;
+                    value           uniform 300;
+                    conductivityLayers (0.5);
+                    thicknessLayers (1e-3);
+                }
+                electrical_V
+                {
+                    type                regionCoupledFlux;
+                    value               uniform 0;
+                    contactResistance   5e-3; // Ohms
+                }
+            }
+            element_to_clip2
+            {
+                T
+                {
+                    type            regionCoupledEnergyFlux;
+                    value           uniform 300;
+                    kappaMethod     solidThermo;
+                    conductivityLayers (0.5);
+                    thicknessLayers (1e-3);
+                }
+                electrical_V
+                {
+                    type                regionCoupledFlux;
+                    value               uniform 0;
+                    conductivityLayers  (5e4); // S/m
+                    thicknessLayers     (1e-3); // m
+                }
+            }
+        }
+        system
+        {
+            fvOptions
+            {
+                electricPotential
+                {
+                    type    electrostaticPotentialSolver;
+                    anisotropicConductivity yes;
+                    sigma   table
+                    (
+                        ( 300 (1.5e5 1e7 1e7) )
+                        ( 5000 (5e4 1e7 1e7) )
+                    );
+                    referenceFrame elementFrame;
+                }
+            }
+        }
+    }
+
+    clip1
+    {
+        state ( steady solid radiationSolid electricalConduction );
+
+        materials ( elementMaterial );
+
+        fields
+        {
+            T { initialisation{type fixedValue; value uniform 300;} }
+        }
+
+        boundaryConditions
+        {
+            clip1_to_element
+            {
+                electrical_V
+                {
+                    type    regionCoupledFlux;
+                    value   uniform 0;
+                }
+            }
+            bottom
+            {
+                electrical_V
+                {
+                    type    fixedElectricCurrent;
+                    value   uniform 0;
+                    I       10;
+                }
+            }
+        }
+        system
+        {
+            fvOptions
+            {
+                electricPotential
+                {
+                    type    electrostaticPotentialSolver;
+                    anisotropicConductivity no;
+                    sigma   1e7;
+                }
+            }
+        }
+    }
+
+    clip2
+    {
+        state ( steady solid radiationSolid electricalConduction );
+
+        materials ( elementMaterial );
+
+        fields
+        {
+            T { initialisation{type fixedValue; value uniform 300;} }
+        }
+
+        boundaryConditions
+        {
+            clip2_to_element
+            {
+                electrical_V
+                {
+                    type    regionCoupledFlux;
+                    value   uniform 0;
+                }
+            }
+            bottom
+            {
+                electrical_V
+                {
+                    type    fixedValue;
+                    value   uniform 0;
+                }
+            }
+        }
+
+        system
+        {
+            fvOptions
+            {
+                electricPotential
+                {
+                    type    electrostaticPotentialSolver;
+                    anisotropicConductivity no;
+                    sigma   1e7;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

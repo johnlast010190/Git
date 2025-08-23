@@ -1,0 +1,369 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    system
+    {
+        controlDict
+        {
+            startTime       0;
+            stopAt          endTime;
+            endTime         60;
+            deltaT          constant 0.1;
+            writeControl    timeStep;
+            writeInterval   100;
+            adjustTimeStep  no;
+        }
+    }
+    functions
+    {
+        SR_top
+        {
+            functionObjectLibs ( "libreport.so" );
+            logToFile       yes;
+            weighting       area;
+            fluxName        phi;
+            fields          ( T );
+            surfaces        ( { type patch ; name top ; } );
+            executeControl  timeStep;
+            type            surfaceReport;
+            regions         ( region0 );
+            homogeneity     false;
+            writeControl    timeStep;
+            writeInterval   1;
+            executeInterval 1;
+        }
+        SR_bottom
+        {
+            functionObjectLibs ( "libreport.so" );
+            logToFile       yes;
+            weighting       area;
+            fluxName        phi;
+            fields          ( T );
+            surfaces        ( { type patch ; name bottom ; } );
+            executeControl  timeStep;
+            type            surfaceReport;
+            regions         ( region0 );
+            homogeneity     false;
+            writeControl    timeStep;
+            writeInterval   1;
+            executeInterval 1;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( transient ras energy);
+        turbulenceModel kOmegaSST;
+        materials (air);
+        materialProperties
+        {
+            air
+            {
+                materialType    fluid;
+                energy          sensibleInternalEnergy;
+                molWeight 32.9;
+
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho 1.205;
+                }
+
+                thermodynamics  hConst;
+                thermodynamicsCoeffs
+                {
+                    Cp          1006.8;
+                    Hf          0;
+                    Sf          0;
+                }
+
+                muModel         scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          0.0000182320000043;
+                }
+                kappaModel      kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr          0.7142403737;
+                }
+
+                referenceFields
+                {
+                    p [ 1 -1 -2 0 0 0 0 ] 1e5;
+                }
+            }
+        }
+        boundaryMesh
+        {
+            s1
+            {
+                type wall;
+            }
+            s2
+            {
+                type wall;
+            }
+            bottom
+            {
+                type wall;
+            }
+            top
+            {
+                type wall;
+            }
+            in
+            {
+                type inlet;
+            }
+            out
+            {
+                type outlet;
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type potentialFlow;
+                    initialiseUBCs true;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type potentialFlow;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type Prandtl;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type Prandtl;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 300.0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            s1
+            {
+                omega
+                {
+                    Cmu             0.09;
+                    kappa           0.41;
+                    E               9.8;
+                    beta1           0.075;
+                    blended         true;
+                    legacy          false;
+                    type            omegaWallFunction;
+                    value           uniform 1.0;
+                }
+                nut
+                {
+                    type            nutUSpaldingWallFunction;
+                    Cmu             0.09;
+                    kappa           0.41;
+                    E               9.8;
+                    lastUpdated     -0.1;
+                    value           uniform 0.001;
+                }
+            }
+            s2
+            {
+                omega
+                {
+                    Cmu             0.09;
+                    kappa           0.41;
+                    E               9.8;
+                    beta1           0.075;
+                    blended         true;
+                    legacy          false;
+                    type            omegaWallFunction;
+                    value           uniform 1.0;
+                }
+                nut
+                {
+                    type            nutUSpaldingWallFunction;
+                    Cmu             0.09;
+                    kappa           0.41;
+                    E               9.8;
+                    lastUpdated     -0.1;
+                    value           uniform 0.001;
+                }
+            }
+            top
+            {
+                T
+                {
+                    type            lumpedMassWallTemperature;
+                    kappaMethod     fluidThermo;
+                    kappa           none;
+                    mass            1;
+                    Cp              1000;
+                    value           uniform 330;
+                }
+                omega
+                {
+                    Cmu             0.09;
+                    kappa           0.41;
+                    E               9.8;
+                    beta1           0.075;
+                    blended         true;
+                    legacy          false;
+                    type            omegaWallFunction;
+                    value           uniform 1.0;
+                }
+                nut
+                {
+                    type            nutUSpaldingWallFunction;
+                    Cmu             0.09;
+                    kappa           0.41;
+                    E               9.8;
+                    lastUpdated     -0.1;
+                    value           uniform 0.001;
+                }
+            }
+            bottom
+            {
+                T
+                {
+                    type            solidNodeHeatFluxTemperature;
+                    q               constant 1500;
+                    value           uniform 300;
+                    layers
+                    {
+                        layer1
+                        {
+                            thickness       0.1;
+                            kappa           10;
+                            rcontact        0;
+                        }
+                    }
+                }
+                omega
+                {
+                    Cmu             0.09;
+                    kappa           0.41;
+                    E               9.8;
+                    beta1           0.075;
+                    blended         true;
+                    legacy          false;
+                    type            omegaWallFunction;
+                    value           uniform 1.0;
+                }
+                nut
+                {
+                    type            nutUSpaldingWallFunction;
+                    Cmu             0.09;
+                    kappa           0.41;
+                    E               9.8;
+                    lastUpdated     -0.1;
+                    value           uniform 0.001;
+                }
+            }
+            in
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 1.0 );
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                    rho rhok;
+                }
+                T
+                {
+                    type fixedValue;
+                    value uniform 300.0;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    value uniform 0.1;
+                    intensity 0.05;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    value uniform 0.01;
+                    mixingLength 0.01;
+                }
+            }
+            out
+            {
+                U
+                {
+                    type inletOutlet;
+                    value uniform ( 0.0 0.0 0.0 );
+                    inletValue uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+                T
+                {
+                    type inletOutlet;
+                    value uniform 300.0;
+                    inletValue uniform 300.0;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    intensity 0.05;
+                    value uniform 0.1;
+                }
+                omega
+                {
+                    type inletOutlet;
+                    inletValue uniform 0.01;
+                    k k;
+                    value uniform 0.01;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

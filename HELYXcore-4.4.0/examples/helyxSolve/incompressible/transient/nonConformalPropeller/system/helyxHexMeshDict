@@ -1,0 +1,175 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+// Which of the steps to run
+castellatedMesh true;
+snap            true;
+addLayers       false;
+
+blockType       block;
+
+// Geometry. Definition of all surfaces.
+geometry
+{
+    innerCylinder.obj
+    {
+        type        triSurfaceMesh;
+        name        innerCylinder;
+        regions
+        {
+            ascii
+            {
+                 name       innerCylinder;
+            }
+        }
+    }
+    outerCylinder.obj
+    {
+        type        triSurfaceMesh;
+        name        outerCylinder;
+        regions
+        {
+            ascii
+            {
+                 name       outerCylinder;
+            }
+        }
+    }
+    propellerTip.obj.gz
+    {
+        type        triSurfaceMesh;
+        name        propellerTip;
+        regions
+        {
+            ascii
+            {
+                 name       propellerTip;
+            }
+        }
+    }
+    propellerStem1.obj
+    {
+        type        triSurfaceMesh;
+        name        propellerStem1;
+        regions
+        {
+            ascii
+            {
+                 name       propellerStem1;
+            }
+        }
+    }
+    propellerStem2.obj
+    {
+        type        triSurfaceMesh;
+        name        propellerStem2;
+        regions
+        {
+            ascii
+            {
+                 name       propellerStem2;
+            }
+        }
+    }
+    propellerStem3.obj
+    {
+        type        triSurfaceMesh;
+        name        propellerStem3;
+        regions
+        {
+            ascii
+            {
+                 name       propellerStem3;
+            }
+        }
+    }
+};
+
+// Settings for the castellatedMesh generation
+castellatedMeshControls
+{
+    features
+    ();
+
+    refinementSurfaces
+    {
+        innerCylinder
+        {
+            level           (4 4);
+            cellZone        innerCylinder;
+            faceZone        innerCylinder;
+            faceType        boundary;
+            cellZoneInside  inside;
+        }
+        outerCylinder
+        {
+            level       (0 0);
+        }
+        propellerTip
+        {
+            level       (4 5);
+        }
+        propellerStem1
+        {
+            level       (4 4);
+        }
+        propellerStem2
+        {
+            level       (4 4);
+        }
+        propellerStem3
+        {
+            level       (4 4);
+        }
+    }
+
+    refinementRegions
+    {
+        innerCylinder
+        {
+            mode        inside;
+            levels      ((1E15 4));
+        }
+    }
+
+    locationInMesh (0.01 -0.5 0.01);
+
+    allowFreeStandingZoneFaces false;
+}
+
+// Settings for the snapping
+snapControls
+{
+    featureEdges
+    {}
+}
+
+// Settings for the layer addition
+addLayersControls
+{
+    layers
+    {}
+
+    relaxed
+    {
+        maxNonOrtho 75;
+    }
+}
+
+
+// ************************************************************************* //

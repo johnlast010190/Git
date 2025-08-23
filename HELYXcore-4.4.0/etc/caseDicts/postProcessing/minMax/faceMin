@@ -1,0 +1,17 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+-------------------------------------------------------------------------------
+Description
+    Writes out the minimum face value for one or more fields.
+
+\*---------------------------------------------------------------------------*/
+
+#includeEtc "caseDicts/postProcessing/minMax/faceMin.cfg"
+
+fields (U p);
+
+// ************************************************************************* //

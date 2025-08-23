@@ -1,0 +1,23 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy mixer surface from resources directory
+mkdir -p constant/triSurface
+cp $HELYX_TUTORIALS/resources/geometry/annularThermalMixer/*.obj constant/triSurface/
+
+# Mesh in parallel
+helyxRun -parallel helyxHexMesh
+
+# Setup
+helyxRun caseSetup
+
+# Run
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch nonConformalMixer.foam
+
+#------------------------------------------------------------------------------

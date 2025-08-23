@@ -1,0 +1,34 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      moveReferenceFrameDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Frame name defined in meshObjects
+vehicleFrame
+{
+    writeGeometry true;
+    geometries ( "A_44444_testcar_5050_Y0.00_R0.01.stl" );
+    outputFormat stl;
+    integerNumbering true;
+}
+wheelFrame
+{
+    writeGeometry true;
+    geometries ( "internal_fluid_r_mrf_rr_wheel.stl" );
+    outputFormat stl;
+    integerNumbering true;
+}
+
+
+// ************************************************************************* //

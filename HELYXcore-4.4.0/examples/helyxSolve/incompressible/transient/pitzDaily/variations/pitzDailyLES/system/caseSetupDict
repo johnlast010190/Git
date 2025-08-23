@@ -1,0 +1,203 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom latestTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 0.1;
+            deltaT 1e-5;
+            writeControl timeStep;
+            writeInterval 1000;
+            purgeWrite 0;
+            writeFormat ascii;
+            writePrecision 10;
+            writeCompression uncompressed;
+            timeFormat general;
+            timePrecision 6;
+            runTimeModifiable yes;
+            adjustTimeStep no;
+            maxCo 0.5;
+        }
+    }
+    functions
+    {
+        fieldAverage1
+        {
+            type             fieldAverage;
+            libs             ("libfieldFunctionObjects.so");
+            writeControl     writeTime;
+            fields
+            (
+                U
+                {
+                    mean        on;
+                    prime2Mean  on;
+                    base        time;
+                }
+                p
+                {
+                    mean        on;
+                    prime2Mean  on;
+                    base        time;
+                }
+            );
+        }
+        VR
+        {
+            type             volumeReport;
+            fields           ( UMean pMean );
+            timeStart        0.05;
+            executeControl   timeStep;
+            executeInterval  1;
+            writeControl     timeStep;
+            writeInterval    1;
+            outputFileFormat tsv;
+        }
+        WSS
+        {
+            type             wallShearStress;
+            libs             ("libfieldFunctionObjects.so");
+            executeControl   onEnd;
+            writeControl     onEnd;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (transient les);
+        boundaryMesh
+        {
+            inlet
+            {
+                type inlet;
+            }
+            outlet
+            {
+                type outlet;
+            }
+            "(upperWall|lowerWall)"
+            {
+                type wall;
+            }
+            frontAndBack
+            {
+                type empty;
+            }
+        }
+        turbulenceModel kEqn;
+        materials (air);
+        materialProperties
+        {
+        }
+        system
+        {
+            fvSolution
+            {
+                PIMPLE
+                {
+                    nOuterCorrectors 3;
+                    nCorrectors 1;
+                    nNonOrthogonalCorrectors 0;
+                    pMinFactor 0.5;
+                    pMaxFactor 2.0;
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type            turbulentInlet;
+                    referenceField  uniform (10 0 0);
+                    fluctuationScale (0.02 0.01 0.01);
+                    value           uniform (10 0 0);
+                }
+                k
+                {
+                    type            fixedValue;
+                    value           uniform 2e-5;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type            pressureInletOutletVelocity;
+                    inletValue      uniform (0 0 0);
+                    value           uniform (0 0 0);
+                }
+                p
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

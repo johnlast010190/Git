@@ -1,0 +1,161 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : 4.4.0
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) 2016-2024 Engys Ltd.
+
+Class
+    Foam::globalState
+
+Description
+    Null state for global stateFunction
+
+SourceFiles
+    globalState.C
+
+\*---------------------------------------------------------------------------*/
+
+#ifndef globalState_H
+#define globalState_H
+
+#include "stateFunction/stateFunction.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+namespace stateFunctions
+{
+
+/*---------------------------------------------------------------------------*\
+                          Class globalState Declaration
+\*---------------------------------------------------------------------------*/
+
+class globalState
+:
+    public stateFunction
+{
+    // Private Data
+
+        //- Pointer to Time
+        const Time* time_;
+
+
+public:
+
+    //- Runtime type information
+    TypeName("global");
+
+    // Constructors
+
+        //- Construct from components
+        globalState
+        (
+            const Time& time,
+            const dictionary& input,
+            const dictionary& defaults,
+            const bool distributed,
+            const bool collated,
+            const stateIndex& index
+        );
+
+        //- Construct meshed region from components
+        globalState
+        (
+            word region,
+            const dictionary& input,
+            const dictionary& defaults,
+            const stateFunction& master,
+            const stateIndex& index,
+            word meshName = word::null
+        );
+
+        //- Disallow default bitwise copy construction
+        globalState(const globalState&) = delete;
+
+
+    //- Destructor
+    virtual ~globalState()
+    {}
+
+
+    // Member Functions
+
+        //- Region (fluid/solid/surface/none)
+        inline virtual regionType region() const
+        {
+            return rtNone;
+        }
+
+        //- Time (transient/steady)
+        inline virtual timeType time() const
+        {
+            return ttNone;
+        }
+
+        //- Turbulence (RANS/LES/none)
+        inline virtual turbulenceType turbulence() const
+        {
+            return tuNone;
+        }
+
+        //- Compressibility (compressible/incompressible/none)
+        inline virtual compressibilityType compressibility() const
+        {
+            return ctNone;
+        }
+
+        const Time& runTime() const;
+
+
+        // Mesh and field construction
+
+            //- Generate meshes and store old fields
+            virtual void createObjects(const Time& time){}
+
+            //- Modify mesh
+            virtual void modifyMesh(scalar writePause){}
+
+            //- Create fields
+            virtual void createFields(){}
+
+
+    // Member Operators
+
+        //- Disallow default bitwise assignment
+        void operator=(const globalState&) = delete;
+};
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace stateFunction
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

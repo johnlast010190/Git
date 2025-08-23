@@ -1,0 +1,54 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      materialProperties;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+materialType           fluid;
+muModel                scalarFunction1;
+kappaModel             kappaPrandtl;
+thermodynamics         hConst;
+equationOfState        incompressiblePerfectGas;
+energy                 sensibleEnthalpy;
+molWeight              28.9;
+
+dpdt    no;
+
+equationOfStateCoeffs
+{
+    pRef        1e5;
+}
+thermodynamicsCoeffs
+{
+    Cp              1007;
+    Hf              0;
+}
+muModelCoeffs
+{
+    mu          1.84e-05;
+}
+kappaModelCoeffs
+{
+    Pr          0.7;
+}
+
+// dummy value: uses Sc*mu instead since ScH2O is defined
+H2OconcentrationTransport
+{
+    D [1 -1 -1 0 0 0 0] 1.84e-05;
+    Sct 1;
+    Sc 1;
+}
+
+// ************************************************************************* //

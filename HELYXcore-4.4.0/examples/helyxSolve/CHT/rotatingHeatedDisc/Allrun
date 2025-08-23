@@ -1,0 +1,22 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Mesh creation
+helyxRun -parallel helyxHexMesh
+
+# Mesh split
+helyxRun splitMeshRegions -zoneToRegionMap '( (disc (disc heatedRegion)) )' -overwrite
+
+# Setup
+helyxRun caseSetup
+
+# Run
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch rotatingHeatedDisc.foam
+
+#------------------------------------------------------------------------------

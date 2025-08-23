@@ -1,0 +1,472 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       latestTime;
+            startTime	    0;
+            stopAt          endTime;
+            endTime         0.2;
+            deltaT          4e-06;
+            writeControl    timeStep;
+            writeInterval   100;
+            purgeWrite      1;
+            writeFormat     ascii;
+            writePrecision  6;
+            writeCompression off;
+            timeFormat      general;
+            timePrecision   6;
+            runTimeModifiable true;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            functionObjectLibs ( "libreport.so" );
+            logToFile       true;
+            fields          ( psiAco pAcoustic );
+            writeControl    onEnd;
+            executeControl  onEnd;
+            type            volumeReport;
+            outputFileFormat tsv;
+        }
+        FMM0
+        {
+            type            fieldMinMax;
+            libs            ("libfieldFunctionObjects.so");
+            location        true;
+            writeControl    onEnd;
+            executeControl  onEnd;
+            mode            magnitude;
+            fields          (psiAco pAcoustic);
+        }
+        line
+        {
+            type                sets;
+            functionObjectLibs  ("libsampling.so");
+            interpolationScheme cellPoint;
+            setFormat           raw; // or another format like raw, foamFile, etc.
+            writeControl    onEnd;
+            writeInterval   1;
+            fields
+            (
+                pAcoustic
+                pAcousticPrime2Mean
+            );
+
+            sets
+            (
+                line1
+                {
+                    type        uniform;
+                    axis        x;
+                    start       (0 0 0);
+                    end         (34.3 0 0);
+                    nPoints     300000;
+                }
+            );
+        }
+
+
+        probes
+        {
+            type            probes;
+            libs            ("libsampling.so");
+
+            // Name of the directory for probe data
+            name            probes;
+
+            // Write at same frequency as fields
+            writeControl    outputTime;
+            writeInterval   1;
+
+            // Fields to be probed
+            fields          (psiAco pAcoustic uAcoustic);
+
+            // Optional: do not recalculate cells if mesh moves
+            fixedLocations  false;
+
+            // Optional: interpolation scheme to use (default is cell)
+            interpolationScheme cellPoint;
+
+            probeLocations
+            (
+                (0 0.5 0.5 )
+                (3.43 0.5 0.5 )          
+            );
+
+            // Optional: filter out points that haven't been found. Default
+            //           is to include them (with value -VGREAT)
+            includeOutOfBounds  true;
+
+            // Optional: Putting probes to reference frame
+            // Reference frame name
+            //referenceFrame rotatingFrame;
+
+            // Are the points defined in the frame?
+            definedInFrame false;
+
+            // Local coordinate system for output
+            localOnOutput true;
+        }   
+    
+
+        fieldAverage1
+        {
+            type                fieldAverage;
+            libs                ("libfieldFunctionObjects.so");
+
+            writeControl        writeTime;
+
+            timeStart           0.1;
+            restartOnRestart    false;
+            restartOnOutput     false;
+            periodicRestart     false;
+            restartPeriod       0.09999999999999999;
+
+            fields
+            (
+                pAcoustic
+                {
+                    mean            on;
+                    prime2Mean      on;
+                    base            time;
+                }
+
+            );
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (transient acoustics);
+        boundaryMesh
+        {
+            inlet
+            {
+                type inlet;
+            }
+            outlet
+            {
+                type outlet;
+            }
+            topWall
+            {
+                type wall;
+            }
+            bottomWall
+            {
+                type patch;
+            }
+            defaultFaces
+            {
+                type empty;
+            }
+        }
+        turbulenceModel laminar; //kOmegaSST;
+        materials (solidMaterial);
+        materialProperties
+        {
+            solidMaterial
+            {
+                materialType    solid;
+                equationOfState rhoConst;
+                thermodynamics  hConst;
+                energy          sensibleEnthalpy;
+                molWeight       28.9;
+                thermodynamicsCoeffs
+                {
+                    Cp              1007;
+                    Hf              0;
+                }
+                equationOfStateCoeffs
+                {
+                    rho             1.225;
+                    R               287;
+                }
+                    kappaModel      constSolid;
+                    kappaModelCoeffs
+                    {
+                        kappa   200;
+                    }
+                muModel         scalarFunction1;
+                muModelCoeffs
+                {
+                    mu              1.8232e-05;
+                }
+                transport       muConst;
+                transportCoeffs
+                {
+                    mu              1.84e-05;
+                    Pr              0.7;
+                }
+                referenceFields
+                {
+                    p [1 -1 -2 0 0 0 0] 101325.0;
+                    T [0 0 0 1 0 0 0] 0.0;
+                    TConst [0 0 0 1 0 0 0] 300.0;
+                }
+                c0Model  scalarFunction1;
+                c0ModelCoeffs
+                {
+                    c0              343;
+                }
+            }
+        }
+        system
+        {
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default smartBounded backward;
+                }
+                d2dt2Schemes
+                {
+                    default backwardThird 0.55;
+                }
+                gradSchemes
+                {
+                    default Gauss linear;
+                }
+                divSchemes
+                {
+                    div(phi,U)      Gauss limitedLinearV 1;
+                    div(phi,symm(grad(U))) Gauss linear;
+                    div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
+                }
+                laplacianSchemes
+                {
+                    default Gauss linear uncorrected;
+                }
+                interpolationSchemes
+                {
+                    default linear;
+                    interpolate(HbyA) linear;
+                }
+                snGradSchemes
+                {
+                    default uncorrected;
+                }
+                wallDist
+                {
+                    method meshWave;
+                }
+                fluxRequired
+                {
+                    pcorr;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    "p.*"
+                    {
+                        solver          GAMG;
+                        agglomerator    faceAreaPair;
+                        mergeLevels     1;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 10;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        scaleCorrection true;
+                        tolerance       1e-10;
+                        relTol          0.01;
+                    }
+                    "phiAco.*"
+                    {
+                        solver          GAMG;
+                        agglomerator    faceAreaPair;
+                        mergeLevels     1;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 10;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        scaleCorrection true;
+                        tolerance       1e-10;
+                        relTol          0.01;
+                    }
+                    "U.*"
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        tolerance       1e-06;
+                        relTol          0.1;
+                    }
+                    "(k|epsilon|omega).*"
+                    {
+                        $p;
+                        tolerance       1e-08;
+                    }
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p 0.95;
+                        pFinal 1;
+                    }
+                    equations
+                    {
+                        U 0.95;
+                        ".*Final" 1.0;
+                    }
+                }
+                cache
+                {
+                    grad(U) ;
+                }
+                PIMPLE
+                {
+                    turbOnFinalIterOnly false;
+                    ddtPhiCorr true;
+                    momentumPredictor true;
+                    nOuterCorrectors 1;
+                    nCorrectors 3;
+                    nNonOrthogonalCorrectors 0;
+                    transonic       false;
+                    consistent      false;
+                    pRefCell 0;
+                    pRefValue 0;
+                    pMin -1.0E-10;
+                    pMax 1.0E10;
+                    residualControl
+                    {
+                    }
+                }
+            }
+            fvOptions
+            {
+                acousticSolver
+                {
+                    type            pcweAcousticSolver;
+                    convectiveTerms no;
+                    flowSolverSource no;
+                    startTime 0;
+                    c0 343;
+                    dtAco 4e-6;
+                }
+                acousticSource
+                {
+                    type               acousticSource;
+                    active             yes;
+                    selectionMode      cellZone;
+                    cellZone           acousticSource;
+                    volumeMode         absolute;  // specific
+                    acousticSourceMode sinusoidal; // table
+                    fieldName          psiAco;
+                    amplitude          5e4;
+                    frequency          5000;
+                }
+            }
+        }
+        fields
+        {
+            psiAco
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.0;
+                }
+            }
+            pAco
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                psiAco
+                {
+                    type            zeroGradient;
+                }
+                pAco
+                {
+                    type            calculated;
+                    value           uniform 0;    
+                }
+            }
+            outlet
+            {
+                psiAco
+                {
+                    type            acousticWaveTransmissive;
+                    advectiveSpeed  343;
+                    value           uniform 0;
+                }
+                pAco
+                {
+                    type            calculated;
+                    value           uniform 0;    
+                }
+            }
+            topWall
+            {
+                psiAco
+                {
+                    type            zeroGradient;
+                }
+                pAco
+                {
+                    type            calculated;
+                    value           uniform 0;    
+                }
+            }
+            bottomWall
+            {
+                psiAco
+                {
+                    type            zeroGradient;
+                }
+                pAco
+                {
+                    type            calculated;
+                    value           uniform 0;    
+                }
+            }
+        }
+    }
+}
+
+// ************************************************************************* //

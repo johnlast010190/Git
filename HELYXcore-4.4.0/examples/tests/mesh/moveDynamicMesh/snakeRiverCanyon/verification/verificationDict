@@ -1,0 +1,31 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/VR_mesh/0/volumeReport.tsv";
+                reference "verification/short/VR_mesh/0/volumeReport.tsv";
+                variables "aspectRatiomean" "determinantmean" "nonOrthogonalitymean" "skewnessmean" "volumeRatiomean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/VR_mesh/0/volumeReport.tsv";
+                reference "verification/long/VR_mesh/0/volumeReport.tsv";
+                variables "aspectRatiomean" "determinantmean" "nonOrthogonalitymean" "skewnessmean" "volumeRatiomean";
+            }
+        );
+    }
+);
+
+tags asan;

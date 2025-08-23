@@ -1,0 +1,81 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : 4.4.0
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) 2012 OpenFOAM Foundation
+
+\*---------------------------------------------------------------------------*/
+
+#include "vtk/read/vtkUnstructuredReader.H"
+#include "fields/Fields/labelField/labelIOField.H"
+#include "fields/Fields/scalarField/scalarIOField.H"
+#include "primitives/strings/string/stringIOList.H"
+#include "meshes/meshShapes/cellModel/cellModel.H"
+#include "fields/Fields/vectorField/vectorIOField.H"
+
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+template<class T>
+void Foam::vtkUnstructuredReader::readBlock
+(
+    Istream& inFile,
+    const label n,
+    List<T>& list
+) const
+{
+    list.setSize(n);
+    for (T& val : list)
+    {
+        inFile >> val;
+    }
+}
+
+
+template<class Type>
+void Foam::vtkUnstructuredReader::printFieldStats
+(
+    const objectRegistry& obj
+) const
+{
+    wordList fieldNames(obj.names(Type::typeName));
+
+    if (fieldNames.size())
+    {
+        Info<< "Read " << fieldNames.size() << " " << Type::typeName
+            << " fields:" << nl
+            << "Size\tName" << nl
+            << "----\t----" << endl;
+
+        for (const word& fieldName : fieldNames)
+        {
+            Info<< obj.lookupObject<Type>(fieldName).size()
+                << "\t" << fieldName
+                << endl;
+        }
+        Info<< endl;
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,111 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      binary;
+    class       dictionary;
+    arch        "LSB;label=32;scalar=64";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     helyxSolve;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         100;
+
+deltaT          constant 0.5;
+
+writeControl    runTime;
+
+writeInterval   10;
+
+purgeWrite      0;
+
+writeFormat     binary;
+
+writePrecision  10;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   6;
+
+graphFormat     raw;
+
+runTimeModifiable yes;
+
+libs            1 ( "" );
+
+adjustTimeStep  false;
+
+maxCo           0;
+
+maxDeltaT       0;
+
+maxAlphaCo      0;
+
+minDeltaT       0;
+
+functions
+{
+    FE
+    {
+        type            fractionalEffectiveDose;
+        field           fed;
+        regionType      all;
+        activityLevel   lightWork;
+        periodicReset   false;
+        executeControl  timeStep;
+        executeInterval 1;
+        writeControl    outputTimeAndEnd;
+        writeInterval   1;
+        functionObjectLibs ( "libfieldFunctionObjects.so" );
+    }
+    VR
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( T U k omega p );
+        executeControl  timeStep;
+        type            volumeReport;
+        regions         ( region0 );
+        writeControl    timeStep;
+        writeInterval   1;
+        executeInterval 1;
+    }
+    SR_out
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        weighting       flux;
+        fluxName        phi;
+        fields          ( CO CO2 N2 O2 T U p soot );
+        surfaces        ( { type patch ; name fan ; } );
+        constraints     ( { type boundBox ; min ( -1000 -1000 -1000 ) ; max ( 1000 1000 1000 ) ; keepInside true ; } );
+        executeControl  timeStep;
+        type            surfaceReport;
+        regions         ( region0 );
+        homogeneity     false;
+        backFlowReport  false;
+        directionAware  true;
+        writeControl    timeStep;
+        writeInterval   1;
+        executeInterval 1;
+    }
+}
+
+
+// ************************************************************************* //

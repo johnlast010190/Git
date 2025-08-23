@@ -1,0 +1,30 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy input surface from resources directory
+mkdir -p constant/triSurface
+cp "$HELYX_TUTORIALS"/resources/geometry/fan.stl constant/triSurface/
+cp "$HELYX_TUTORIALS"/resources/geometry/frame.stl constant/triSurface/
+
+# Background mesh in series
+helyxRun blockMesh
+
+# Decompose case
+helyxRun decomposePar
+
+# Mesh in parallel
+helyxRun helyxHexMesh -overwrite
+
+# Setup
+helyxRun caseSetup
+
+# Run
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch fanAMI.foam
+
+#------------------------------------------------------------------------------

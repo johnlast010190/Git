@@ -1,0 +1,121 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+castellatedMesh true;
+snap            true;
+addLayers       true;
+blockType       block;
+meshAlgorithm   extrude;
+
+geometry
+{
+    motorBike.obj
+    {
+        type triSurfaceMesh;
+        name motorBike;
+    }
+    refinementBox
+    {
+        type searchableBox;
+        min (-1.0 -0.7 0.0);
+        max ( 8.0  0.7 2.5);
+    }
+};
+
+addLayerRefinements
+{
+   smoothSurface true;
+   patches
+   {
+      "motorBike.*"
+      {
+         convexAngle 340;
+         level 5;
+      }
+   }
+}
+
+castellatedMeshControls
+{
+    features ();
+
+    refinementSurfaces
+    {
+        motorBike
+        {
+            level (3 4);
+            patchInfo
+            {
+                type wall;
+                inGroups (motorBikeGroup);
+            }
+        }
+    }
+
+    refinementRegions
+    {
+        refinementBox
+        {
+            mode inside;
+            levels ((1E15 4));
+        }
+    }
+
+    locationInMesh (3.0001 3.0001 0.43);
+    allowFreeStandingZoneFaces true;
+}
+
+snapControls
+{
+    featureEdges {}
+}
+
+addLayersControls
+{
+    layers
+    {
+        "(lowerWall|motorBike).*"
+        {
+            nSurfaceLayers 1;
+        }
+        inlet
+        {
+            nSurfaceLayers -1;
+        }
+        outlet
+        {
+            nSurfaceLayers -1;
+        }
+        frontAndBack
+        {
+            nSurfaceLayers -1;
+        }
+        upperWall
+        {
+            nSurfaceLayers -1;
+        }
+    }
+}
+
+meshQualityControls
+{
+    minTetQuality 1e-30;
+}
+
+
+// ************************************************************************* //

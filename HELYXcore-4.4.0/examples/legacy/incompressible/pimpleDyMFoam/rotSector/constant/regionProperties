@@ -1,0 +1,22 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | HELYX(R) Core: Open-source CFD for Enterprise            |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | ENGYS Ltd. <http://engys.com/>                           |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      binary;
+    class       dictionary;
+    arch        "LSB;label=32;scalar=64";
+    location    "constant";
+    object      regionProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+regions         1 ( fluid 1 ( region0 ) );
+
+
+// ************************************************************************* //

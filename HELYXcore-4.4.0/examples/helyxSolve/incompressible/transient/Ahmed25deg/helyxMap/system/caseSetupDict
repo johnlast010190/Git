@@ -1,0 +1,405 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | Helyx:                                                   |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | Web:     http://www.engys.com                            |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields yes;
+        resetBoundaryFields yes;
+        resetSystemDicts yes;
+        resetConstDicts yes;
+        resetBoundaryMesh yes;
+    }
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         0.5;
+            deltaT          0.0001;
+            writeControl    timeStep;
+            writeInterval   100;
+            purgeWrite      2;
+            writeFormat     ascii;
+            writePrecision  16;
+            writeCompression uncompressed;
+            timeFormat      general;
+            timePrecision   6;
+            graphFormat     raw;
+            runTimeModifiable yes;
+        }
+    }
+    functions
+    {
+        LD1
+        {
+            type            liftDrag;
+            name            ahmed;
+            regions         1 ( region0 );
+            patches ( "ahmed.*" );
+            porosity        true;
+            nAveragingSteps 1;
+            outputRegionData true;
+            binData
+            {
+                nBins           100;
+                axis            ( 1 0 0 );
+            }
+            maxCp           1;
+            minCp           -2;
+            Uinf            ( 40 0 0 );
+            rhoInf          1.225;
+            liftDirection   ( 0 0 1 );
+            dragDirection   ( 1 0 0 );
+            referenceArea   0.112032;
+            referenceLength 1.044;
+            referencePoint  ( 0 0 0 );
+            wheelbase       1.044;
+        }
+        runTimeTermination
+        {
+            functionObjectLibs ( "libutilityFunctionObjects.so" );
+            type runTimeControl;
+            log true;
+            timeStart       0.001;
+            conditions
+            {
+                confIntv
+                {
+                    type confidenceInterval;
+                    functionObject LD1;
+                    field Cd;
+                    confidence 0.99;
+                    targetInterval 0.001;
+                    intervalType absolute;
+                    minSamples 100;
+                }
+            }
+        }
+        volStats
+        {
+            type            volumeReport;
+            regions         1 ( region0 );
+            name            VR1;
+            executeControl  onEnd;
+            writeControl    onEnd;
+            logToFile       yes;
+            fields          ( nuTilda p U );
+            sets        
+            (
+                boxToCell
+                {
+                    box             ( -1000 -1000 -1000 ) ( 1000 1000 1000 );
+                }
+
+            )
+;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( transient les );
+        modificationSwitches
+        {
+        }
+        boundaryMesh
+        {
+            outlet
+            {
+                type            outlet;
+            }
+            inlet
+            {
+                type            inlet;
+            }
+            ffmaxy
+            {
+                type            wall;
+            }
+            ffminy
+            {
+                type            wall;
+            }
+            ffmaxz
+            {
+                type            wall;
+            }
+            ffminz
+            {
+                type            wall;
+            }
+            ahmed_body
+            {
+                type            wall;
+            }
+            ahmed_body_front_h
+            {
+                type            wall;
+            }
+            ahmed_body_front_v
+            {
+                type            wall;
+            }
+            ahmed_stilts
+            {
+                type            wall;
+            }
+        }
+        turbulenceModel SpalartAllmarasDDES;
+        materials       ( air );
+        system
+        {
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default         backward;
+                }
+                gradSchemes
+                {
+                    turbulence      cellLimited Gauss linear 1;
+                    grad(nuTilda)   cellLimited Gauss linear 1;
+                    default         cellLimited Gauss linear 1;
+                    gradU           cellLimited Gauss linear 1;
+                    grad(p)         Gauss linear;
+                }
+                divSchemes
+                {
+                    div(phi,nuTilda) bounded Gauss limitedLinear 1;
+                    div(phi,U)      bounded Gauss localBlended filteredLinear2V 0.5 0 LUSTV gradU;
+                    default         none;
+                    div(R)          Gauss linear;
+                    div((rho*R))    Gauss linear;
+                    div(nonlinearStress) Gauss linear;
+                    div((muEff*dev2(grad(U).T()))) Gauss linear;
+                    div((nuEff*dev2(T(grad(U))))) Gauss linear;
+                    div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
+                    div((nu*dev2(T(grad(U))))) Gauss linear;
+                    div(((rho*(thermo:mu|rho))*dev2(T(grad(U))))) Gauss linear;
+                }
+                laplacianSchemes
+                {
+                    laplacian(DnuTildaEff,nuTilda) Gauss linear uncorrected;
+                    default         Gauss linear uncorrected;
+                    laplacian((1|A(U)),p) Gauss linear limited 0.2;
+                }
+                interpolationSchemes
+                {
+                    default         linear;
+                    interpolate(HbyA) linear;
+                }
+                snGradSchemes
+                {
+                    default         limited 0.333;
+                }
+                wallDist
+                {
+                    method          meshWave;
+                }                
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    nuTilda
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-06;
+                        relTol          0.1;
+                    }
+                    nuTildaFinal
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-06;
+                        relTol          0;
+                    }
+                    p
+                    {
+                        solver          GAMG;
+                        agglomerator    faceAreaPair;
+                        mergeLevels     1;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 200;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        scaleCorrection true;
+                        tolerance       1e-10;
+                        relTol          0.01;
+                    }
+                    U
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-10;
+                        relTol          0.001;
+                    }
+                    pFinal
+                    {
+                        solver          GAMG;
+                        agglomerator    faceAreaPair;
+                        mergeLevels     1;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 200;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        scaleCorrection true;
+                        tolerance       1e-06;
+                        relTol          0;
+                    }
+                    UFinal
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-06;
+                        relTol          0;
+                    }
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p               1;
+                    }
+                    equations
+                    {
+                        nuTilda         1;
+                        nuTildaFinal    1;
+                        U               1;
+                        UFinal          1;
+                    }
+                }
+                cache
+                {
+                    grad(U);
+                }
+
+                PIMPLE
+                {
+                    nOuterCorrectors 1;
+                    nCorrectors     3;
+                    nNonOrthogonalCorrectors 0;
+                    pRefCell        0;
+                    pRefValue       0;
+                    pMin            -1e+10;
+                    pMax            1e+10;
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type            potentialFlow;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type            potentialFlow;
+                }
+            }
+            nuTilda
+            {
+                initialisation
+                {
+                    type            Prandtl;
+                }
+            }
+        }
+        boundaryTypeDefaults
+        {
+            wall
+            {
+                p
+                {
+                    type wallPressure;
+                    startDampingAngle 20;
+                    zeroGradientAngle 50;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            ffmaxy
+            {
+                U
+                {
+                    type            slip;
+                }
+            }
+            ffminy
+            {
+                U
+                {
+                    type            slip;
+                }
+            }
+            ffmaxz
+            {
+                U
+                {
+                    type            slip;
+                }
+            }
+            ffminz
+            {
+                U
+                {
+                    type tangentialVelocity;
+                    direction ( 1 0 0);
+                    magnitude 35.7632;
+                    value uniform ( 35.7632 0.0 0.0 );
+                }
+            }
+            inlet
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform ( 35.7632 0.0 0.0 );
+                }
+                nuTilda
+                {
+                    type nutTurbulentIntensityLengthScaleInlet;
+                    length 0.01;
+                    intensity 0.01;
+                    value uniform 0.001;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

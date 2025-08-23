@@ -1,0 +1,35 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy input surface from resources directory
+mkdir -p constant/triSurface
+cp "$HELYX_TUTORIALS"/resources/geometry/room2FansOutlet/*.stl constant/triSurface/
+
+# Create mesh
+helyxRun helyxHexMesh
+
+# Setup
+helyxRun caseSetup
+
+# Run
+helyxRun -log log.helyxSolveInit helyxSolve
+
+rm -rf 0
+mv 200 0
+cp system/p system/boundaryConditions/p
+cp system/U system/boundaryConditions/U
+cp system/controlDict2 system/controlDict
+
+# Decompose
+helyxRun decomposePar
+
+# Run with new BC
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch room2FansOutlet.foam
+
+#------------------------------------------------------------------------------

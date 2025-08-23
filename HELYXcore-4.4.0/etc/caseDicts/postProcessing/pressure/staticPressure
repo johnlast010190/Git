@@ -1,0 +1,18 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+-------------------------------------------------------------------------------
+Description
+    Calculates the pressure field in units M/(LT^2) (e.g. Pa) from kinematic
+    pressure by scaling by a specified density.
+
+\*---------------------------------------------------------------------------*/
+
+#includeEtc "caseDicts/postProcessing/pressure/staticPressure.cfg"
+
+rhoInf 1.2; // Density to scale
+
+// ************************************************************************* //

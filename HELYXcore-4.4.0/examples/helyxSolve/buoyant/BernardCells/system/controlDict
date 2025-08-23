@@ -1,0 +1,108 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     helyxSolve;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         1000;
+
+deltaT          constant 1;
+
+writeControl    runTime;
+
+writeInterval   50;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  10;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   6;
+
+graphFormat     raw;
+
+runTimeModifiable yes;
+
+libs            1 ( "" );
+
+adjustTimeStep  false;
+
+maxCo           1;
+
+maxDeltaT       1;
+
+functions
+{
+    VP
+    {
+        functionObjectLibs ( "libsampling.so" );
+        enabled         true;
+        probeLocations  ( ( 2.5 0.1 0 ) ( 5.7 0.6 0 ) );
+        fields          ( T U p_rgh );
+        executeControl  timeStep;
+        type            probes;
+        regions         ( region0 );
+        writeControl    timeStep;
+        writeInterval   1;
+        executeInterval 1;
+        outputFileFormat tsv;
+    }
+    residuals
+    {
+        type            residuals;
+        libs            ( "libutilityFunctionObjects.so" );
+        writeControl    timeStep;
+        writeInterval   1;
+        fields          ( p_rgh );
+    }
+    streamlines
+    {
+        nLines          24;
+        start           ( 0 0.5 0 );
+        end             ( 9 0.5 0 );
+        fields          ( U );
+        type            streamLine;
+        libs            ( "libfieldFunctionObjects.so" );
+        executeControl  writeTime;
+        writeControl    writeTime;
+        setFormat       vtk;
+        trackForward    true;
+        lifeTime        10000;
+        nSubCycle       5;
+        cloudName       particleTracks;
+        seedSampleSet
+        {
+            type            uniform;
+            axis            x;
+            start           ( 0 0.5 0 );
+            end             ( 9 0.5 0 );
+            nPoints         24;
+        }
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,59 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      p;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [1 -1 -2 0 0 0 0];
+
+internalField   uniform 101325;
+
+boundaryField
+{
+    inlet
+    {
+        type            fixedValue;
+        value           uniform 271724;
+    }
+
+    outlet
+    {
+        type            waveTransmissive;
+        field           p;
+        psi             psi;
+        fieldInf        101325;
+        gamma           1.4;
+        lInf            0.025;
+        value           uniform 101325;
+    }
+
+    freestream
+    {
+        type            totalPressure;
+        value           uniform 101325;
+        p0              uniform 101325;
+        rho             none;
+        psi             psi;
+        gamma           1.4;
+    }
+
+    freestreamInlet
+    {
+        type            zeroGradient;
+    }
+
+    wedge1 {type wedge;}
+    wedge2 {type wedge;}
+}
+
+// ************************************************************************* //

@@ -1,0 +1,43 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/FR/0/force.tsv";
+                reference "verification/short/FR/0/force.tsv";
+                variables "(total_x total_y total_z)";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/short/VR/0/volumeReport.tsv";
+                variables "Umax" "Umean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/FR/0/force.tsv";
+                reference "verification/long/FR/0/force.tsv";
+                variables "(total_x total_y total_z)";
+            }
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/long/VR/0/volumeReport.tsv";
+                variables "Umax" "Umean";
+            }
+        );
+    }
+);
+
+tags asan;

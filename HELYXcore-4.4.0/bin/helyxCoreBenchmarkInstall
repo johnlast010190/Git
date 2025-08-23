@@ -1,0 +1,23 @@
+#!/bin/bash
+#------------------------------------------------------------------------------
+# Copyright 2018 Engys Ltd
+#-------------------------------------------------------------------------------
+#
+# Script
+#     helyxCoreBenchmarkInstall
+#
+# Description
+#     Install HELYXcore Benchmark
+#
+#------------------------------------------------------------------------------
+
+mkdir -p "$HELYX_CBT_DIR"
+
+cd $HELYX_CBT_DIR
+
+git clone git@codebasehq.com:engys/engys-cfd-toolbox/cbt.git .
+
+git clone git@codebasehq.com:engys/engys-cfd-toolbox/cbr.git results
+
+
+#------------------------------------------------------------------------------

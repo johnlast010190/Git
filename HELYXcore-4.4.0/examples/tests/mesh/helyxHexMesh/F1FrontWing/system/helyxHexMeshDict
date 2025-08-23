@@ -1,0 +1,146 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+castellatedMesh 1;
+
+snap            1;
+
+addLayers       1;
+
+allowTopoChanges true;
+
+finalDecomposition hierarchical;
+
+meshAlgorithm extrude;
+
+geometry
+{
+    F1_front_wing.obj
+    {
+        type triSurfaceMesh;
+        name front_wing;
+        appendRegionName false;
+        regions
+        {
+            front_wing { name front_wing;}
+            nose       { name nose;}
+        }
+    }
+}
+
+castellatedMeshControls
+{
+    features ();
+    refinementSurfaces
+    {
+        front_wing
+        {
+            level ( 7 7 );
+            regions
+            {
+                front_wing { level ( 7 8 ); }
+                nose       { level ( 8 9 ); }
+            }
+        }
+    }
+    refinementRegions {}
+    nCellsBetweenLevels 4;
+    resolveFeatureAngle 15.0;
+    nGapRefinements 1;
+    locationsInMesh ( ( ( -1.0 -1.0 0.5 ) none ) );
+}
+
+snapControls
+{
+    featureEdges {}
+}
+
+addLayersControls
+{
+    layers
+    {
+        front_wing
+        {
+            nSurfaceLayers 12;
+            fch 0.005;
+        }
+        nose
+        {
+            nSurfaceLayers 12;
+            fch 0.005;
+        }
+        WT_ground
+        {
+            nSurfaceLayers 12;
+            fch 0.005;
+        }
+        WT_symmetry
+        {
+            nSurfaceLayers 0;
+            grownUp true;
+        }
+        WT_inlet
+        {
+            nSurfaceLayers 0;
+            grownUp true;
+        }
+        WT_outlet
+        {
+            nSurfaceLayers 0;
+            grownUp true;
+        }
+        WT_side
+        {
+            nSurfaceLayers 0;
+            grownUp true;
+        }
+        WT_top
+        {
+            nSurfaceLayers 0;
+            grownUp true;
+        }
+    }
+    fchWarpedSplit 0.5;
+    relativeSizes false;
+}
+
+
+meshQualityControls
+{
+    nVolSmoothIter 0;
+    relativeVol 0.02;
+    relativeFaceArea 0.02;
+    relativeEdgeLength 0.02;
+}
+
+meshOptimization
+{
+    type cfMeshOptimize;
+    cfMeshOptimizeCoeffs
+    {
+        qualityThreshold 0.0;
+        numLaplaceIterations 0;
+        maxNumGlobalIterations 10;
+        maxNumIterations 50;
+        maxNumSurfaceIterations 2;
+        relaxedCheck false;
+    }
+}
+
+
+// ************************************************************************* //

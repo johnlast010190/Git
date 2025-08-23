@@ -1,0 +1,267 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields  true;
+        resetBoundaryFields  true;
+        resetSystemDicts     true;
+        resetConstDicts      true;
+        resetBoundaryMesh    false;
+        deleteUnusedFields   true;
+    }
+    system
+    {
+        controlDict
+        {
+            application    helyxSolve;
+            startFrom      startTime;
+            startTime      0;
+            stopAt         endTime;
+            endTime        0.05;
+            deltaT         1e-4;
+            writeControl   adjustableRunTime;
+            writeInterval  1e-2;
+            writePrecision 10;
+            maxCo          0.5;
+        }
+    }
+    functions
+    {
+        probes
+        {
+            type            probes;
+            name            probes;
+            libs            ("libsampling.so");
+            writeControl    timeStep;
+            writeInterval   1;
+            fields          (p);
+            probeLocations
+            (
+                ( -0.045  0     0 )
+                ( -0.045  0.020 0 )
+                ( -0.010  0     0 )
+                (  0.0125 0     0 )
+                (  0.0125 0.020 0 )
+            );
+        }
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p T );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state           ( transient ras energy );
+        turbulenceModel laminar;
+        materials       ( air );
+        materialProperties
+        {
+            air
+            {
+                materialType    fluid;
+                thermodynamics  eConst;
+                equationOfState perfectGas;
+                energy          sensibleInternalEnergy;
+                thermodynamicsCoeffs
+                {
+                    Cv 712;
+                    Hf 0;
+                }
+            }
+            referenceFields
+            {
+                p               [ 1 -1 -2 0 0 0 0 ] 0;
+            }
+        }
+        system
+        {
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default         Euler;
+                }
+                gradSchemes
+                {
+                    default         Gauss linear;
+                    gradU           Gauss linear;
+                    grad(h)         Gauss linear;
+                    grad(e)         Gauss linear;
+                    grad(K)         Gauss linear;
+                    grad(T)         Gauss linear;
+                }
+                divSchemes
+                {
+                    default         none;
+                    div(phi,U)      Gauss limitedLinearV 1;
+                    div(phi,e)      Gauss limitedLinear 1;
+                    div(phi,K)      Gauss limitedLinear 1;
+                    div(phiv,p)     Gauss limitedLinear 1;
+                    div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
+                }
+                laplacianSchemes
+                {
+                    default         Gauss linear corrected;
+                    laplacian((rho*nuEff),U) Gauss linear corrected;
+                    laplacian(rhorAUf,p) Gauss linear corrected;
+                    laplacian(kappa,T) Gauss linear corrected;
+                }
+            }
+            fvSolution
+            {
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p               1;
+                    }
+                    equations
+                    {
+                        U               1;
+                        e               1;
+                    }
+                }
+                PIMPLE
+                {
+                    nOuterCorrectors    3;
+                    nCorrectors         1;
+                    pMinFactor          0.5;
+                    pMaxFactor          2.0;
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform (0 0 0);
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 1e5;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 300;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type            flowRateInletVelocity;
+                    massFlowRate    0.0001;
+                    value           uniform (0 0 0);
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                T
+                {
+                    type            fixedValue;
+                    value           uniform 300;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type            pressureInletOutletVelocity;
+                    inletValue      uniform (0 0 0);
+                    value           uniform (0 0 0);
+                }
+                p
+                {
+                    type            fixedMean;
+                    meanValue       constant 1e5;
+                    value           uniform 1e5;
+                }
+                T
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 300;
+                    value           uniform 300;
+                }
+            }
+            wall
+            {
+                T
+                {
+                    type            fixedValue;
+                    inputValue      uniform 0;
+                    value           uniform 300;
+                }
+            }
+            plenum
+            {
+                U
+                {
+                    type            pressureInletVelocity;
+                    value           uniform (0 0 0);
+                }
+                p
+                {
+                    type            plenumPressure;
+                    gamma           1.4;
+                    R               287.04;
+                    supplyMassFlowRate 0.0001;
+                    supplyTotalTemperature 300;
+                    plenumVolume    0.000125;
+                    plenumDensity   1.1613;
+                    plenumTemperature 300;
+                    inletAreaRatio  1.0;
+                    inletDischargeCoefficient 0.8;
+                    timeScale       1e-4;
+                    value           uniform 1e5;
+                }
+                T
+                {
+                    type            fixedValue;
+                    value           uniform 300;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,104 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     helyxSolve;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         0.04;
+
+deltaT          0.0001;
+
+writeControl    adjustableRunTime;
+
+writeInterval   0.001;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  10;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   6;
+
+graphFormat     raw;
+
+runTimeModifiable yes;
+
+libs            1 ( "" );
+
+adjustTimeStep  no;
+
+maxCo           1;
+
+maxDeltaT       1;
+
+functions
+{
+    VR
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U p );
+        executeControl  onEnd;
+        type            volumeReport;
+        writeControl    onEnd;
+        outputFileFormat tsv;
+    }
+    SR_inlet
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        weighting       flux;
+        fluxName        phi;
+        fields          ( U p );
+        surfaces        ( { type patch ; name inlet ; } );
+        constraints     ( { type boundBox ; min ( -1000 -1000 -1000 ) ; max ( 1000 1000 1000 ) ; keepInside true ; } );
+        executeControl  timeStep;
+        type            surfaceReport;
+        regions         ( region0 );
+        writeControl    timeStep;
+        writeInterval   1;
+        homogeneity     false;
+    }
+    SR_outlet
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        weighting       flux;
+        fluxName        phi;
+        fields          ( U p );
+        surfaces        ( { type patch ; name outlet ; } );
+        constraints     ( { type boundBox ; min ( -1000 -1000 -1000 ) ; max ( 1000 1000 1000 ) ; keepInside true ; } );
+        executeControl  timeStep;
+        type            surfaceReport;
+        regions         ( region0 );
+        writeControl    timeStep;
+        writeInterval   1;
+        homogeneity     false;
+    }
+}
+
+
+// ************************************************************************* //

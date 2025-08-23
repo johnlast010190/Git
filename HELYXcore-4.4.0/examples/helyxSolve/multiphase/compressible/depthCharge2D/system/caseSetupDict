@@ -1,0 +1,215 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            stopAt          endTime;
+            endTime         0.5;
+            deltaT          0.0001;
+            writeInterval   0.01;
+            adjustTimeStep  yes;
+            maxCo           0.5;
+            maxAlphaCo      0.5;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p T );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( transient ras vof energy );
+
+        materials ( water air );
+
+        materialProperties
+        {
+            materialType    multiphase;
+
+            passivePhase air;
+
+            air
+            {
+                materialType fluid;
+                thermodynamics hConst;
+                equationOfState perfectGas;
+                muModel scalarFunction1;
+                kappaModel kappaPrandtl;
+
+                molWeight   28.9;
+                thermodynamicsCoeffs
+                {
+                    Cp          1007;
+                    Hf          0;
+                }
+                muModelCoeffs
+                {
+                    mu          1.84e-05;
+                }
+                kappaModelCoeffs
+                {
+                    Pr          0.7;
+                }
+            }
+
+            water
+            {
+                materialType    fluid;
+                molWeight   18.0;
+
+                //equationOfState perfectGas;
+                equationOfState rhoFunction1;
+                equationOfStateCoeffs
+                {
+                    rho NSRDS5 ( 98.343885 0.30542 647.13 0.081 );
+                }
+
+                thermodynamics hFunctionT;
+                thermodynamicsCoeffs
+                {
+                    Cp NSRDS0 ( 15341.1046350264 -116.019983347211 0.451013044684985 -0.000783569247849015 5.20127671384957e-07 0 );
+                    Hf          0;
+                    Sf          0;
+                }
+
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu NSRDS1 ( -51.964 3670.6 5.7331 -5.3495e-29 10 );
+                }
+
+                kappaModel scalarFunction1;
+                kappaModelCoeffs
+                {
+                    kappa NSRDS0 ( -0.4267 0.0056903 -8.0065e-06 1.815e-09 0 0 );
+                }
+            }
+
+            oil_mercury
+            {
+                surfaceTensionModel sigmaFunctionT;
+                surfaceTensionModelCoeffs
+                {
+                    sigma NSRDS6 647.13 ( 0.18548 2.717 -3.554 2.047 0 );
+                }
+            }
+
+            referenceFields
+            {
+                p [1 -1 -2 0 0 0 0] 1e5;
+            }
+        }
+
+        turbulenceModel laminar;
+
+        constant
+        {
+            g
+            {
+                value           (0 -9.81 0);
+            }
+        }
+
+        boundaryMesh
+        {
+            walls
+            {
+                type wall;
+            }
+        }
+
+        fields
+        {
+            U {initialisation{type fixedValue; value uniform ( 0 0 0 );} }
+            p
+            {
+                initialisation
+                {
+                    type cellSet;
+                    defaultValue uniform 0;
+                    setSources
+                    (
+                        sphereToCell
+                        {
+                            centre (0.5 0.5 0);
+                            radius 0.1;
+                            value 9e5;
+                        }
+                    );
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type cellSet;
+                    defaultValue uniform 300;
+                    setSources
+                    (
+                        sphereToCell
+                        {
+                            centre (0.5 0.5 0);
+                            radius 0.1;
+                            value 578;
+                        }
+                    );
+                }
+            }
+            alpha.water
+            {
+                initialisation
+                {
+                    type cellSet;
+                    defaultValue uniform 1;
+                    setSources
+                    (
+                        sphereToCell
+                        {
+                            centre (0.5 0.5 0);
+                            radius 0.1;
+                            value 0;
+                        }
+                        boxToCell
+                        {
+                            box (-10 1 -1) (10 10 1);
+                            value 0;
+                        }
+                    );
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //
+

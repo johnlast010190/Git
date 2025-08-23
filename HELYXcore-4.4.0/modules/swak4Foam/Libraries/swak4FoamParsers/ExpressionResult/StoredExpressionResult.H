@@ -1,0 +1,129 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : dev
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) ICE Stroemungsfoschungs GmbH
+    (c) 1991-2008 OpenCFD Ltd.
+
+Class
+    Foam::StoredExpressionResult
+
+Description
+
+SourceFiles
+    StoredExpressionResultI.H
+    StoredExpressionResult.C
+    StoredExpressionResultIO.C
+
+Contributors/Copyright:
+    2012-2014, 2016-2017 Bernhard F.W. Gschaider <bgschaid@hfd-research.com>
+
+ SWAK Revision: $Id$
+\*---------------------------------------------------------------------------*/
+
+#ifndef StoredExpressionResult_H
+#define StoredExpressionResult_H
+
+#include "ExpressionResult.H"
+#include "helpers/exprString.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+/*---------------------------------------------------------------------------*\
+                           Class StoredExpressionResult Declaration
+\*---------------------------------------------------------------------------*/
+
+class StoredExpressionResult
+:
+    public ExpressionResult
+{
+    // Private data
+
+    word name_;
+
+    exprString initialValueExpression_;
+
+public:
+
+     //- Runtime type information
+    TypeName("StoredExpressionResult");
+
+    // Constructors
+
+    //- Construct null
+    StoredExpressionResult();
+
+    //- Construct as copy
+    StoredExpressionResult(const StoredExpressionResult&);
+
+    //- Construct from a dictionary
+    StoredExpressionResult(const dictionary&);
+
+    // Destructor
+
+    virtual ~StoredExpressionResult();
+
+    void operator=(const StoredExpressionResult&);
+
+    void operator=(const ExpressionResult&);
+
+    virtual autoPtr<ExpressionResult> clone() const {
+        return autoPtr<ExpressionResult>(
+            new StoredExpressionResult(*this)
+        );
+    }
+
+    const word name() const { return name_; }
+
+    const exprString &initialValueExpression() const
+        {
+            return initialValueExpression_;
+        }
+
+    friend Ostream & operator<<(Ostream &,const StoredExpressionResult &);
+
+    friend Istream & operator>>(Istream &,StoredExpressionResult &);
+
+    friend bool operator!=(
+        const StoredExpressionResult &,const StoredExpressionResult &
+    );
+};
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "StoredExpressionResultI.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

@@ -1,0 +1,74 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      materialProperties;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+materialType    fluid;
+mixture         standardMixture;
+energy          sensibleEnthalpy;
+defaultSpecie   air;
+
+liquids { H2O; }
+
+solids {}
+
+
+species ( air H2O );
+
+air
+{
+    muModel         muSutherland;
+    kappaModel      kappaSutherland;
+    thermodynamics  janaf;
+    equationOfState perfectGas;
+    molWeight       28.9596;
+    thermodynamicsCoeffs
+    {
+        Tlow            200;
+        Thigh           3500;
+        Tcommon         1000;
+        highCpCoeffs    ( 3.57304 -7.24383e-04 1.67022e-06 -1.26501e-10 -4.20580e-13 -1047.41 3.12431 );
+        lowCpCoeffs     ( 3.09589 1.22835e-03 -4.14267e-07 6.56910e-11 -3.87021e-15 -983.191 5.34161 );
+    }
+    muModelCoeffs
+    {
+        As              1.67212e-06;
+        Ts              170.672;
+    }
+}
+
+H2O
+{
+    muModel         muSutherland;
+    kappaModel      kappaSutherland;
+    thermodynamics  janaf;
+    equationOfState perfectGas;
+    molWeight       18.0153;
+    thermodynamicsCoeffs
+    {
+        Tlow            200;
+        Thigh           5000;
+        Tcommon         1000;
+        highCpCoeffs    ( 2.67215 0.00305629 -8.73026e-07 1.201e-10 -6.39162e-15 -29899.2 6.86282 );
+        lowCpCoeffs     ( 3.38684 0.00347498 -6.3547e-06 6.96858e-09 -2.50659e-12 -30208.1 2.59023 );
+    }
+    muModelCoeffs
+    {
+        As              1.67212e-06;
+        Ts              170.672;
+    }
+}
+
+// ************************************************************************* //

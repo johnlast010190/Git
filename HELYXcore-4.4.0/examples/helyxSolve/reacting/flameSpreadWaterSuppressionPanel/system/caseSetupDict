@@ -1,0 +1,933 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        // Don't change boundary mesh (has offsets)
+        resetBoundaryMesh false;
+    }
+    regionGroups
+    (
+        fluids ( region0 filmRegion )
+        solids ( pyrolysisRegion )
+    );
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         10;
+            deltaT          0.005;
+            writeControl    adjustableRunTime;
+            writeInterval   1;
+            purgeWrite      0;
+            writeFormat     ascii;
+            writePrecision  6;
+            writeCompression off;
+            timeFormat      general;
+            timePrecision   6;
+            graphFormat     raw;
+            runTimeModifiable yes;
+            adjustTimeStep  yes;
+            maxCo           1.0;
+            maxDi           0.25;
+            maxDeltaT       0.01;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            regions          ( region0 );
+            fields           ( T U p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+        }
+    }
+}
+
+regions
+{
+    pyrolysisRegion
+    {
+        state ( );
+        turbulenceModel laminar;
+        materials ( solid gas );
+        system
+        {
+            materialProperties
+            {
+                phases          ( solid gas );
+                mixture         volumeMixture;
+                energy          sensibleEnthalpy;
+                materialType    multiphase;
+                muModel scalarFunction1;
+                muModelCoeffs { mu 0.0; }
+                solid
+                {
+                    materialType    solid;
+                    mixture         standardMixture;
+                    species ( wood char );
+                    wood
+                    {
+                        thermodynamics        hConst;
+                        equationOfState       rhoConst;
+                        molWeight             100;
+                        kappaModel            constSolid;
+                        kappaModelCoeffs      { kappa 0.135; }
+                        thermodynamicsCoeffs  { Cp 696; Hf -1.41e6; Tref 298.15; }
+                        equationOfStateCoeffs { rho 114.7; }
+                    }
+                    char
+                    {
+                        thermodynamics        hConst;
+                        equationOfState       rhoConst;
+                        molWeight             50;
+                        kappaModel            constSolid;
+                        kappaModelCoeffs      { kappa 0.4; }
+                        thermodynamicsCoeffs  { Cp 611; Hf 0; Tref 298.15; }
+                        equationOfStateCoeffs { rho 11.5; }
+                    }
+                }
+                gas
+                {
+                    materialType    fluid;
+                    mixture         standardMixture;
+                    molWeight       18.0153;
+                    equationOfState perfectGas;
+                    thermodynamics  janaf;
+                    thermodynamicsCoeffs
+                    {
+                        Tlow            200;
+                        Thigh           5000;
+                        Tcommon         1000;
+                        highCpCoeffs    ( 2.67215 0.00305629 -8.73026e-07 1.20100e-10 -6.39162e-15 -29899.2 6.86282 );
+                        lowCpCoeffs     ( 3.38684 0.00347498 -6.35470e-06 6.96858e-09 -2.50659e-12 -30208.1 2.59023 );
+                    }
+                    muModel         muSutherland;
+                    muModelCoeffs { As 1.67212e-06; Ts 170.672;}
+                    kappaModel      kappaSutherland;
+                    kappaModelCoeffs { As 1.67212e-06; Ts 170.672;}
+                }
+                referenceFields { p [ 1 -1 -2 0 0 0 0 ] 0; }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    "h.solid|h.solidFinal" { solver PCG; preconditioner DIC; tolerance 1e-6; relTol 0; }
+                    Yi { solver PBiCGStab; preconditioner DILU; tolerance 1e-06; relTol 0; }
+                    "rho.solid|rho.solidFinal" { solver PCG; preconditioner DIC; tolerance 0; relTol 0; };
+                }
+                PIMPLE { nNonOrthCorr 0; }
+                relaxationFactors { equations { h.solid 1; } }
+            }
+            fvSchemes
+            {
+                ddtSchemes { default Euler; }
+                gradSchemes { default Gauss linear; }
+                divSchemes { default none; }
+                laplacianSchemes
+                {
+                    default         none;
+                    laplacian(alpha.solid,h.solid) Gauss linear corrected;
+                    laplacian(kappa.solid,T.solid) Gauss harmonic corrected;
+                }
+                interpolationSchemes { default linear; }
+                snGradSchemes { default uncorrected; }
+            }
+            fvOptions { turbulenceSolver { type none; } }
+        }
+        constant
+        {
+            radiationProperties
+            {
+                radiationModel  opaqueSolid;
+                absorptionEmissionModel greyMeanSolid;
+                greyMeanSolidCoeffs
+                {
+                    wood { absorptivity 0.17; emissivity 0.17; }
+                    char { absorptivity 0.85; emissivity 0.85; }
+                }
+                scatterModel    none;
+                transmissivityModel none;
+            }
+            chemistryProperties
+            {
+                chemistryType { solver ode; chemistryThermo pyrolysis; }
+                chemistry on;
+                initialChemicalTimeStep 1e-07;
+                odeCoeffs { solver seulex; eps 0.05; }
+                gaseousSpecies (gas);
+                reactions
+                {
+                    charReaction
+                    {
+                        type        irreversibleSolidArrheniusReaction;
+                        reaction    "wood^4.86 = char + gas";
+                        A           7.83e10;
+                        Ta          15274.57;
+                        Tcrit       400;
+                    }
+                }
+            }
+        }
+
+        fieldMaps
+        {
+            char.solid phase;
+            p p;
+            Qr Intensity;
+            T.solid T;
+            wood.solid phase;
+            Y0Default phase;
+        }
+        fields
+        {
+            char.solid { initialisation { type fixedValue; value uniform 0.0; } }
+            p { initialisation { type fixedValue; value uniform 1e5; } }
+            Qr { initialisation { type fixedValue; value uniform 0.0; } }
+            T.solid { initialisation { type fixedValue; value uniform 298.0; } }
+            wood.solid { initialisation { type fixedValue; value uniform 1.0; } }
+            Y0Default { initialisation { type fixedValue; value uniform 0.0; } }
+        }
+        boundaryConditions
+        {
+            coupledWall_top
+            {
+                char.solid { type zeroGradient; }
+                p { type zeroGradient; }
+                Qr { type zeroGradient; }
+                T.solid { type zeroGradient; }
+                wood.solid { type zeroGradient; }
+                Y0default { type zeroGradient; }
+            }
+            coupledWall_side
+            {
+                Qr { type empty; }
+                T.solid { type empty; }
+            }
+            region0_to_pyrolysisRegion_coupledWall
+            {
+                char.solid { type zeroGradient; }
+                p { type zeroGradient; }
+                Qr
+                {
+                    type            mappedField;
+                    sampleRegion    region0;
+                    sampleMode      nearestPatchFace;
+                    samplePatch     region0_to_pyrolysisRegion_coupledWall;
+                    offset          (0 0 0);
+                    // This is the name of Qr field in region0
+                    field           Qr;
+                    setAverage      no;
+                    average         0;
+                    value           uniform 0;
+                }
+                T.solid
+                {
+                    type            filmPyrolysisRadiativeCoupledMixed;
+                    pyrolysisRegion pyrolysisRegion;
+                    filmRegion      filmRegion;
+                    Tnbr            T;
+                    kappaMethod     solidThermo;
+                    QrNbr           Qr;
+                    Qr              none;
+                    filmDeltaDry    0.0;
+                    filmDeltaWet    2e-4;
+                    value           uniform 298;
+                }
+                wood.solid { type zeroGradient; }
+                Y0default { type zeroGradient; }
+            }
+            oneDEmptyPatch
+            {
+                char.solid { type empty; }
+                p { type empty; }
+                T.solid {  type empty; }
+                wood.solid { type empty; }
+                Y0default { type empty; }
+            }
+        }
+    }
+
+    filmRegion
+    {
+        state ( );
+        turbulenceModel laminar;
+        materials ( liquid );
+        system
+        {
+            materialProperties
+            {
+                materialType fluid;
+                energy sensibleInternalEnergy;
+                evaporationSpecies H2O;
+
+                molWeight    18.015;
+                equationOfState rhoFunction1;
+                equationOfStateCoeffs
+                {
+                    rho NSRDS5 ( 98.343885 0.30542 647.13 0.081 );
+                }
+
+                thermodynamics hFunctionT;
+                thermodynamicsCoeffs
+                {
+                    Cp NSRDS0 ( 15341.1046350264 -116.019983347211 0.451013044684985 -0.000783569247849015 5.20127671384957e-07 0 );
+                    h NSRDS0 ( -17957283.7993676 15341.1046350264 -58.0099916736053 0.150337681561662 -0.000195892311962254 1.04025534276991e-07 );
+                    Sf 0;
+                }
+
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu NSRDS1 ( -51.964 3670.6 5.7331 -5.3495e-29 10 );
+                }
+                kappaModel scalarFunction1;
+                kappaModelCoeffs
+                {
+                    kappa NSRDS0 ( -0.4267 0.0056903 -8.0065e-06 1.815e-09 0 0 );
+                }
+                referenceFields
+                {
+                    p [ 1 -1 -2 0 0 0 0 ] 101325;
+                    TRef [0 0 0 1 0 0 0] 0;
+                }
+
+                // Additional water properties
+                Tc           647.13;
+                Pc           2.2055e+7;
+                Vc           0.05595;
+                Zc           0.229;
+                Tt           273.16;
+                Pt           6.113e+2;
+                Tb           373.15;
+                dipm         6.1709e-30;
+                omega        0.3449;
+                delta        4.7813e+4;
+
+                pvModel scalarFunction1;
+                pvModelCoeffs
+                {
+                    pv NSRDS1 ( 73.649 -7258.2 -7.3037 4.1653e-06 2 );
+                }
+                hlModel scalarFunction1;
+                hlModelCoeffs
+                {
+                    hl NSRDS6 647.13 ( 2889425.47876769 0.3199 -0.212 0.25795 0.0 );
+                }
+                CpgModel scalarFunction1;
+                CpgModelCoeffs
+                {
+                    Cpg NSRDS7 ( 1851.73466555648 1487.53816264224 2609.3 493.366638912018 1167.6 );
+                }
+                BModel scalarFunction1;
+                BModelCoeffs
+                {
+                    B NSRDS4 ( -0.0012789342214821 1.4909797391063 -1563696.91923397 1.85445462114904e+19 -7.68082153760755e+21 );
+                }
+                mugModel scalarFunction1;
+                mugModelCoeffs
+                {
+                    mug NSRDS2 ( 2.6986e-06 0.498 1257.7 -19570 );
+                }
+                kappagModel scalarFunction1;
+                kappagModelCoeffs
+                {
+                    kappag NSRDS2 ( 6.977e-05 1.1243 844.9 -148850 );
+                }
+                sigmaModel scalarFunction1;
+                sigmaModelCoeffs
+                {
+                    sigma NSRDS6 647.13 ( 0.18548 2.717 -3.554 2.047 0 );
+                }
+                DModel vapourDiffusivity;
+                DModelCoeffs
+                {
+                    D ( 15.0 15.0 18.015 28 );
+                }
+                pvInvertModel pvInvert;
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    "alpha.*"
+                    {
+                        solver          PBiCGStab;
+                        preconditioner  DILU;
+                        tolerance       1e-10;
+                        relTol          0;
+                    }
+                    "e.*"
+                    {
+                        solver          PBiCGStab;
+                        preconditioner  DILU;
+                        tolerance       0;
+                        relTol          1e-3;
+                        maxIter         100;
+                    }
+                    "(U).*"
+                    {
+                        solver          PBiCGStab;
+                        preconditioner  DILU;
+                        tolerance       1e-10;
+                        relTol          0;
+                    }
+                }
+
+                PIMPLE
+                {
+                    momentumPredictor yes;
+                    nOuterCorrectors  1;
+                    nCorrectors       1;
+                    nNonOrthogonalCorrectors 0;
+                }
+
+                relaxationFactors
+                {
+                    equations
+                    {
+                        ".*"        1;
+                    }
+                }
+            }
+            fvSchemes
+            {
+                ddtSchemes { default Euler; }
+                gradSchemes { default Gauss linear; }
+                divSchemes
+                {
+                    default         none;
+                    div(phid,alpha) Gauss upwind;
+                    div(phi,U)      Gauss upwind;
+                    div(phi,e)      Gauss upwind;
+                    div(nHat)       Gauss linear;
+                }
+                laplacianSchemes { default Gauss linear orthogonal; }
+                snGradSchemes { default orthogonal; }
+                interpolationSchemes { default linear; }
+            }
+            fvOptions { turbulenceSolver { type none; } }
+        }
+        constant
+        {
+            g { value ( 0.0 0.0 -9.8 ); }
+        }
+
+        fieldMaps { delta distance; T T; U U; }
+
+        fields
+        {
+            delta { initialisation { type fixedValue; value uniform 1e-6; } }
+            T { initialisation { type fixedValue; value uniform 298.0; } }
+            U { initialisation { type fixedValue; value uniform (0 0 0); } }
+        }
+        boundaryConditions
+        {
+            // Patch to Region0
+            coupledWall_top
+            {
+                delta { type zeroGradient; }
+                T { type zeroGradient; }
+                U { type slip; }
+            }
+            // Patch to pyrolysis
+            region0_to_filmRegion_coupledWall
+            {
+                delta { type zeroGradient; }
+                T
+                {
+                    type            mappedField;
+                    sampleRegion    pyrolysisRegion;
+                    sampleMode      nearestPatchFace;
+                    samplePatch     region0_to_pyrolysisRegion_coupledWall;
+                    offset          (0 0 0);
+                    field       T;
+                    setAverage      no;
+                    average         0;
+                    value           uniform 298;
+                }
+                U { type noSlip; }
+            }
+            "side.*"
+            {
+                delta { type zeroGradient; }
+                T { type inletOutlet; inletValue uniform 298; value uniform 298; }
+                U { type noSlip; }
+            }
+            inlet
+            {
+                delta { type fixedValue; value uniform 6e-4; }
+                T { type fixedValue; value uniform 298.0; }
+                U { type fixedValue; rho rhof; value uniform (0 0 -0.01); }
+            }
+            outlet
+            {
+                delta { type zeroGradient; }
+                T { type zeroGradient; }
+                U { type zeroGradient; }
+            }
+        }
+    }
+
+
+    region0
+    {
+        state ( transient les energy );
+        turbulenceModel kEqn;
+        materials ( O2 H2O C3H8 CO2 N2 );
+
+        materialProperties
+        {
+            materialType    fluid;
+            mixture         standardMixture;
+            energy          sensibleEnthalpy;
+            defaultSpecie   N2;
+            fuel    C3H8;
+            liquids { H2O {} }
+            solids {}
+
+            species (O2 H2O C3H8 CO2 N2);
+
+            buoyancyModel rhoModel;
+            O2
+            {
+                molWeight       31.9988;
+                muModel         muSutherland;
+                kappaModel      kappaSutherland;
+                thermodynamics  janaf;
+                equationOfState perfectGas;
+                thermodynamicsCoeffs
+                {
+                    Tlow            200;
+                    Thigh           5000;
+                    Tcommon         1000;
+                    highCpCoeffs    ( 3.69758 0.00061352 -1.25884e-07 1.77528e-11 -1.13644e-15 -1233.93 3.18917 );
+                    lowCpCoeffs     ( 3.21294 0.00112749 -5.75615e-07 1.31388e-09 -8.76855e-13 -1005.25 6.03474 );
+                }
+                muModelCoeffs
+                {
+                    As              1.67212e-06;
+                    Ts              170.672;
+                }
+            }
+            H2O
+            {
+                molWeight       18.0153;
+                muModel         muSutherland;
+                kappaModel      kappaSutherland;
+                thermodynamics  janaf;
+                equationOfState perfectGas;
+                thermodynamicsCoeffs
+                {
+                    Tlow            200;
+                    Thigh           5000;
+                    Tcommon         1000;
+                    highCpCoeffs    ( 2.67215 0.00305629 -8.73026e-07 1.201e-10 -6.39162e-15 -29899.2 6.86282 );
+                    lowCpCoeffs     ( 3.38684 0.00347498 -6.3547e-06 6.96858e-09 -2.50659e-12 -30208.1 2.59023 );
+                }
+                muModelCoeffs
+                {
+                    As              1.67212e-06;
+                    Ts              170.672;
+                }
+            }
+            CO2
+            {
+                molWeight       44.01;
+                muModel         muSutherland;
+                kappaModel      kappaSutherland;
+                thermodynamics  janaf;
+                equationOfState perfectGas;
+                thermodynamicsCoeffs
+                {
+                    Tlow            200;
+                    Thigh           5000;
+                    Tcommon         1000;
+                    highCpCoeffs    ( 4.45362 0.00314017 -1.27841e-06 2.394e-10 -1.66903e-14 -48967 -0.955396 );
+                    lowCpCoeffs     ( 2.27572 0.00992207 -1.04091e-05 6.86669e-09 -2.11728e-12 -48373.1 10.1885 );
+                }
+                muModelCoeffs
+                {
+                    As              1.67212e-06;
+                    Ts              170.672;
+                }
+            }
+            N2
+            {
+                molWeight       28.0134;
+                muModel         muSutherland;
+                kappaModel      kappaSutherland;
+                thermodynamics  janaf;
+                equationOfState perfectGas;
+                thermodynamicsCoeffs
+                {
+                    Tlow            200;
+                    Thigh           5000;
+                    Tcommon         1000;
+                    highCpCoeffs    ( 2.92664 0.00148798 -5.68476e-07 1.0097e-10 -6.75335e-15 -922.798 5.98053 );
+                    lowCpCoeffs     ( 3.29868 0.00140824 -3.96322e-06 5.64152e-09 -2.44486e-12 -1020.9 3.95037 );
+                }
+                muModelCoeffs
+                {
+                    As              1.67212e-06;
+                    Ts              170.672;
+                }
+            }
+            C3H8
+            {
+                molWeight       44.0962;
+                muModel         muSutherland;
+                kappaModel      kappaSutherland;
+                thermodynamics  janaf;
+                equationOfState perfectGas;
+                thermodynamicsCoeffs
+                {
+                    Tlow            200;
+                    Thigh           5000;
+                    Tcommon         1000;
+                    highCpCoeffs    ( 7.5341368 0.018872239 -6.2718491e-06 9.1475649e-10 -4.7838069e-14 -16467.516 -17.892349 );
+                    lowCpCoeffs     ( 0.93355381 0.026424579 6.1059727e-06 -2.1977499e-08 9.5149253e-12 -13958.52 19.201691 );
+                }
+                muModelCoeffs
+                {
+                    As              1.67212e-06;
+                    Ts              170.672;
+                }
+            }
+            referenceFields { p [ 1 -1 -2 0 0 0 0 ] 101325; }
+        }
+        system
+        {
+            fvOptions
+            {
+                reactionsSource { type reactionsSource; }
+                pyrolysis { type pyrolysisSource; }
+                surfaceFilmSolver { type surfaceFilmSolver; }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    rho { solver PCG; preconditioner DIC; tolerance 0; relTol 0.1; };
+                    rhoFinal { $rho; tolerance 1e-6; relTol 0; };
+                    p { solver GAMG; tolerance 1e-5; relTol 0.01; smoother GaussSeidel; };
+                    pFinal { solver GAMG; tolerance 1e-6; relTol 0; smoother GaussSeidel; };
+                    ph_rgh { $p_rgh; }
+                    "(U|Yi|h|k)" { solver PBiCGStab; preconditioner DILU; tolerance 1e-8; relTol 0.1; };
+                    "(U|Yi|h|k)Final" { $U; tolerance 1e-8; relTol 0; };
+                    Ii { solver GAMG; tolerance 1e-4; relTol 0; smoother DILU; maxIter 20; }
+                }
+
+                PIMPLE
+                {
+                    momentumPredictor yes;
+                    nOuterCorrectors  1;
+                    nCorrectors       2;
+                    nNonOrthogonalCorrectors 0;
+                }
+                relaxationFactors
+                {
+                    equations
+                    {
+                        "(U|k).*"                   1;
+                        "(C3H8|O2|H2O|CO2|h).*"     1;
+                    }
+                }
+            }
+            fvSchemes
+            {
+                ddtSchemes { default Euler; }
+                gradSchemes { default Gauss linear; }
+                divSchemes
+                {
+                    default         none;
+                    div(phi,U)      Gauss LUST grad(U);
+                    div(phi,k)      Gauss limitedLinear 1;
+                    div(phi,K)      Gauss limitedLinear 1;
+                    div(Ji,hi)      Gauss limitedLinear 1;
+                    div(phi,Yi) Gauss multivariateSelection
+                    {
+                        O2              limitedLinear01 1;
+                        N2              limitedLinear01 1;
+                        CH4             limitedLinear01 1;
+                        C3H8            limitedLinear01 1;
+                        CORRUGATED      limitedLinear01 1;
+                        CH2O            limitedLinear01 1;
+                        H2O             limitedLinear01 1;
+                        CO2             limitedLinear01 1;
+                        h               limitedLinear 1;
+                    };
+                    div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
+                    div(phiU,p)     Gauss linear;
+                    div(Ji,Ii_h)    Gauss upwind;
+                }
+                laplacianSchemes { default Gauss linear corrected; }
+                interpolationSchemes { default linear; }
+                snGradSchemes { default corrected; }
+            }
+        }
+        constant
+        {
+            pyrolysisZones
+            {
+                pyrolysis
+                {
+                    active          true;
+                    pyrolysisModel  reactingOneDim;
+                    region          pyrolysisRegion;
+                    reactingOneDimCoeffs
+                    {
+                        filmCoupled     true;
+                        gasHSource      true;
+                        qrHSource       false;
+                        radFluxName     Qr;
+                        moveMesh        false;
+                        minimumDelta    1e-6;
+                        useChemistrySolvers    true;
+                    }
+                }
+            }
+            surfaceFilmProperties
+            {
+                active           true;
+                surfaceFilmModel thermoSingleLayer;
+                region           filmRegion;
+                viscosity { model Newtonian; }
+                sigma       0.07;
+                hydrophilic     no;
+                deltaWet        1e-4;
+                turbulenceModel { model laminar; Cf 0.005; }
+                radiationModel  none;
+                upperSurfaceModels { heatTransfer { model constant; c0 10; } }
+                lowerSurfaceModels { heatTransfer { model constant; c0 100; } }
+                forces { thermocapillary; }
+                phaseChange { model standardPhaseChange; Tb 373; deltaMin 1e-8; L 1.0; }
+            }
+
+            turbulenceProperties
+            {
+                LES
+                {
+                    LESModel        kEqn;
+                    delta           cubeRootVol;
+                    turbulence      on;
+                    printCoeffs     on;
+                    kEqnCoeffs { Prt 1; }
+                    cubeRootVolCoeffs { deltaCoeff 1; }
+                    PrandtlCoeffs
+                    {
+                        delta           cubeRootVol;
+                        cubeRootVolCoeffs { deltaCoeff 1; }
+                        smoothCoeffs
+                        {
+                            delta           cubeRootVol;
+                            cubeRootVolCoeffs { deltaCoeff 1; }
+                            maxDeltaRatio   1.1;
+                        }
+                        Cdelta          0.158;
+                    }
+                    vanDriestCoeffs
+                    {
+                        delta           cubeRootVol;
+                        cubeRootVolCoeffs { deltaCoeff 1; }
+                        smoothCoeffs
+                        {
+                            delta           cubeRootVol;
+                            cubeRootVolCoeffs { deltaCoeff 1; }
+                            maxDeltaRatio   1.1;
+                        }
+                        Aplus           26;
+                        Cdelta          0.158;
+                    }
+                    smoothCoeffs
+                    {
+                        delta           cubeRootVol;
+                        cubeRootVolCoeffs { deltaCoeff 1; }
+                        maxDeltaRatio   1.1;
+                    }
+                }
+            }
+            combustionProperties
+            {
+                combustionModel    infinitelyFastChemistry;
+                infinitelyFastChemistryCoeffs { semiImplicit no; C 10; }
+                reaction
+                {
+                    reaction     "C3H8 + 5O2 + 18.8N2 = 3CO2 + 4H2O + 18.8N2";
+                }
+            }
+
+            g { value ( 0.0 0.0 -9.8 ); }
+
+            radiationProperties
+            {
+                radiation       on;
+                radiationModel  fvDOM;
+                fvDOMCoeffs { nPhi 2; nTheta 2; convergence 1e-2; maxIter 3; }
+
+                // Number of flow iterations per radiation iteration
+                solverFreq 10;
+                absorptionEmissionModel constant;
+                constantCoeffs { absorptivity 0.1; emissivity 0.1; E 0; }
+                scatterModel    none;
+                sootModel       none;
+                transmissivityModel none;
+            }
+
+            boundaryRadiationProperties
+            {
+                region0_to_pyrolysisRegion_coupledWall
+                {
+                    mode solidRadiation;
+                }
+                ".*"
+                {
+                    mode            lookup;
+                    emissivity      1.0;
+                    absorptivity    1.0;
+                    transmissivity  0.0;
+                }
+            }
+        }
+
+        fieldMaps { IDefault Intensity; }
+
+        fields
+        {
+            alphat { initialisation { type fixedValue; value uniform 0; } }
+            T { initialisation { type fixedValue; value uniform 298.0; } }
+            k { initialisation { type fixedValue; value uniform 1e-5; } }
+            nut { initialisation { type fixedValue; value uniform 0; } }
+            p { initialisation { type buoyantPressure; initialValue uniform 0; } }
+            U { initialisation { type fixedValue; value uniform (0 0 0); } }
+            C3H8 { initialisation { type fixedValue; value uniform 0; } }
+            N2 { initialisation { type fixedValue; value uniform 0.76699; } }
+            O2 { initialisation { type fixedValue; value uniform 0.23301; } }
+            IDefault { initialisation { type fixedValue; value uniform 0.0; } }
+        }
+        boundaryConditions
+        {
+            outlet
+            {
+                alphat { type calculated; value uniform 0; }
+                k { type inletOutlet; inletValue uniform 1e-5; value uniform 1e-5; }
+                nut { type calculated; value uniform 0; }
+                p { type totalPressure; p0 uniform 0; value uniform 0; addStaticHead true; }
+                T { type inletOutlet; inletValue uniform 298; value uniform 298; }
+                U { type inletOutlet; value uniform (0 0 0); inletValue uniform (0 0 0); }
+                N2 { type inletOutlet; inletValue uniform 0.76699; inputValue uniform 0.76699; value uniform 0.76699; }
+                C3H8 { type inletOutlet; inletValue uniform 0; value uniform 0; }
+                O2 { type inletOutlet; inletValue uniform 0.23301; value uniform 0.23301; }
+                H2O { type inletOutlet; inletValue uniform 0; value uniform 0; }
+                CO2 { type inletOutlet; inletValue uniform 0; value uniform 0; }
+                Ydefault { type inletOutlet; inletValue uniform 0.0; value uniform 0.0; }
+                IDefault { type greyDiffusiveRadiation; value uniform 0; }
+            }
+            inlet
+            {
+                alphat { type calculated; value uniform 0; }
+                k { type fixedValue; value uniform 1e-5; }
+                nut { type calculated; value uniform 0; }
+                p { type fixedFluxPressure; value uniform 0; }
+                T { type fixedValue; value uniform 298.0; }
+                U { type flowRateInletVelocity; massFlowRate constant 0.01; value uniform (0 0 0); }
+                O2 { type fixedValue; value uniform 0; }
+                N2 { type fixedValue; value uniform 0; }
+                C3H8 { type totalFlowRateAdvectiveDiffusive; value uniform 1; }
+                H2O { type fixedValue; value uniform 0; }
+                CO2 { type fixedValue; value uniform 0; }
+                Ydefault { type fixedValue; value uniform 0; }
+                IDefault { type greyDiffusiveRadiation; value uniform 0; }
+            }
+            ground
+            {
+                alphat { type alphatWallFunction; value uniform 0; }
+                k { type zeroGradient; }
+                nut { type nutUSpaldingWallFunction; value uniform 0; }
+                p { type fixedFluxPressure; value uniform 0; }
+                T { type zeroGradient; }
+                U { type fixedValue; value uniform (0 0 0); }
+                C3H8 { type zeroGradient; }
+                N2 { type zeroGradient; }
+                O2 { type zeroGradient; }
+                H2O { type zeroGradient; }
+                CO2 { type zeroGradient; }
+                Ydefault { type zeroGradient; }
+                IDefault { type greyDiffusiveRadiation; value uniform 0; }
+            }
+            side
+            {
+                alphat { type calculated; value uniform 0; }
+                k { type inletOutlet; inletValue uniform 1e-5; value uniform 1e-5; }
+                nut { type calculated; value uniform 0; }
+                p { type totalPressure; p0 uniform 0; value uniform 0; addStaticHead true; }
+                T { type inletOutlet; inletValue uniform 298; value uniform 298; }
+                U { type pressureInletOutletVelocity; value uniform (0 0 0); }
+                C3H8 { type inletOutlet; inletValue uniform 0; value uniform 0; }
+                N2 { type inletOutlet; inletValue uniform 0.76699; inputValue uniform 0.76699; value uniform 0.76699; }
+                O2 { type inletOutlet; inletValue uniform 0.23301; value uniform 0.23301; }
+                H2O { type inletOutlet; inletValue uniform 0.0; value uniform 0.0; }
+                CO2 { type inletOutlet; inletValue uniform 0.0; value uniform 0.0; }
+                Ydefault { type inletOutlet; inletValue uniform 0.0; value uniform 0.0; }
+                IDefault { type greyDiffusiveRadiation; value uniform 0; }
+            }
+            region0_to_pyrolysisRegion_coupledWall
+            {
+                alphat { type alphatWallFunction; value uniform 0; }
+                k { type zeroGradient; }
+                nut { type nutUSpaldingWallFunction; value uniform 0; }
+                p { type fixedFluxPressure; value uniform 0; }
+                T
+                {
+                    type            filmPyrolysisRadiativeCoupledMixed;
+                    pyrolysisRegion pyrolysisRegion;
+                    filmRegion      filmRegion;
+                    Tnbr            T.solid;
+                    kappaMethod     fluidThermo;
+                    QrNbr           none;
+                    Qr              Qr;
+                    filmDeltaDry    0.0;
+                    filmDeltaWet    2e-4;
+                    value           uniform 298;
+                }
+                U { type mappedFlowRate; nbrPhi phiGas; value uniform (0 0 0); }
+                C3H8 { type totalFlowRateAdvectiveDiffusive; massFluxFraction 1.0; value uniform 0; }
+                O2 { type totalFlowRateAdvectiveDiffusive; massFluxFraction 0.0; value uniform 0.23301; }
+                N2 { type totalFlowRateAdvectiveDiffusive; massFluxFraction 0.0; value uniform 0.76699; }
+                H2O { type totalFlowRateAdvectiveDiffusive; massFluxFraction 0.0; value uniform 0.0; }
+                CO2 { type totalFlowRateAdvectiveDiffusive; massFluxFraction 0.0; value uniform 0.0; }
+                Ydefault { type totalFlowRateAdvectiveDiffusive; massFluxFraction 0.0; value uniform 0; }
+                IDefault { type greyDiffusiveRadiation; value uniform 0; }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

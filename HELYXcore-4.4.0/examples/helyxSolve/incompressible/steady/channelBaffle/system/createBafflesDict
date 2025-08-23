@@ -1,0 +1,84 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      createBafflesDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Whether to convert internal faces only (so leave boundary faces intact).
+// This is only relevant if your face selection type can pick up boundary
+// faces.
+internalFacesOnly true;
+
+
+// Baffles to create.
+baffles
+{
+    cyclicFaces
+    {
+        //- Select faces and orientation through a searchableSurface
+        type        searchableSurface;
+        surface     searchablePlate;
+        origin      (0 -0.15 -100); //(-1 -0.15 -100);
+        span        (0 0.3 200);
+
+        patches
+        {
+            master
+            {
+                //- Master side patch
+
+                name            porous_half0;
+                type            cyclic;
+                neighbourPatch  porous_half1;
+
+                //- Optional override of added patchfields. If not specified
+                //  any added patchfields are of type calculated.
+                patchFields
+                {
+                    p
+                    {
+                        type            porousBafflePressure;
+                        patchType       cyclic;
+                        referenceFrame  rotFrame;
+                        porousMode      darcyForchheimer;
+                        d               20;
+                        f               10;
+                        //Ct1             0.1;
+                        //Ct2             0.5;
+                        length          0.15;
+                        uniformJump     false;
+                        alternativeModel false;
+                        jump            uniform 0;
+                        value           uniform 0;
+                    }
+                }
+            }
+            slave
+            {
+                //- Slave side patch
+
+                name            porous_half1;
+                type            cyclic;
+                neighbourPatch  porous_half0;
+
+                patchFields
+                {
+                    ${...master.patchFields}
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

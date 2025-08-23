@@ -1,0 +1,398 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    system
+    {
+        controlDict
+        {
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         0.1;
+            deltaT          1e-5;
+            writeControl    adjustableRunTime;
+            writeInterval   0.001;
+            adjustTimeStep  yes;
+            maxCo           2;
+            maxAlphaCo      2;
+        }
+        meshObjects
+        {
+            rotatingFrame
+            {
+                type            dynamicMotionCoordinateFrame;
+                motionFunction
+                {
+                    type  rotatingMotion;
+                    omega table
+                    (
+                        (0    0)
+                        (0.01  628)
+                        (0.022  628)
+                        (0.03  419)
+                        (100   419)
+                    );
+                }
+                coordinateSystem
+                {
+                    type            cartesian;
+                    origin          ( 0 0 0 );
+                    e1              ( 1 0 0 );
+                    e3              ( 0 1 0 );
+                }
+            }
+        }
+        nonConformalCouplesDict
+        {
+            nonConformalCyclic
+            {
+                patches          (nonCouple1 nonCouple2);
+                transformType    none;
+            }
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p alpha.water );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (transient ras vof dynamic);
+        turbulenceModel kEpsilon;
+        materials (water vapour);
+        materialProperties
+        {
+            water
+            {
+                materialType    fluid;
+                equationOfState rhoConst;
+                thermodynamics  hConst;
+                molWeight       18.0;
+
+                equationOfStateCoeffs
+                {
+                    rho         1000;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cp          4195;
+                    Hf          0;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          9e-4;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr          2.289;
+                }
+            }
+            vapour
+            {
+                materialType    fluid;
+                equationOfState rhoConst;
+                thermodynamics  hConst;
+                molWeight       18.0;
+
+                equationOfStateCoeffs
+                {
+                    rho         0.02308;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cp          4195;
+                    Hf          0;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          9.862e-6;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr          2.289;
+                }
+            }
+            water_vapour
+            {
+                surfaceTensionModel constant;
+                surfaceTensionModelCoeffs
+                {
+                    sigma 0.07;
+                }
+
+                phaseChangeModel SchnerrSauer;
+                phaseChangeModelCoeffs
+                {
+                    pSat            -97700; //2300;
+                    n               1.6e+13;
+                    dNuc            2e-06;
+                    Cc              1;
+                    Cv              1;
+                }
+            }
+        }
+
+        constant
+        {
+            dynamicMeshDict
+            {
+                mover
+                {
+                    type            motionSolver;
+                    libs            ("libfvMeshMovers.so" "libfvMotionSolvers.so");
+                    motionSolver    solidBody;
+                    cellZone        innerCylinder;
+                    referenceFrame  rotatingFrame;
+                }
+            }
+        }
+        system
+        {
+            fvOptions
+            {
+                volumeFractionSolver
+                {
+                    type            MULESVolumeFractionSolver;
+                    cAlpha          0;
+                    MULESCorr       yes;
+                    nAlphaCorr      2;
+                    nLimiterIter    10;
+                }
+                turbulenceSolver
+                {
+                    type turbulenceSolver;
+                    solveFinal true;
+                }
+            }
+            fvSchemes
+            {
+                gradSchemes
+                {
+                    grad(alpha.water)   Gauss linear;
+                }
+                divSchemes
+                {
+                    div(phi,k)          Gauss upwind;
+                    div(phi,epsilon)    Gauss upwind;
+                }
+                laplacianSchemes
+                {
+                    default             Gauss linear limited corrected 0.33;
+                }
+                snGradSchemes
+                {
+                    default             limited corrected 0.33;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                   MeshPhi
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        tolerance       1e-2;
+                        relTol          0;
+                    }
+                }
+                relaxationFactors
+                {
+                    equations
+                    {
+                        U               1;
+                    }
+                }
+                PIMPLE
+                {
+                    nOuterCorrectors    3;
+                    nCorrectors         1;
+                    correctMeshPhi      true;
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0 0 0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            alpha.water
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 1;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.06;
+                }
+            }
+            epsilon
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.0495;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type            uniformFixedValue;
+                    uniformValue    table
+                    (
+                        (0     (0 0 0))
+                        (0.01  (0 -15 0))
+                        (100   (0 -15 0))
+                    );
+                    value           uniform ( 0 0 0 );
+                }
+                p
+                {
+                    type            fixedFluxPressure;
+                }
+                alpha.water
+                {
+                    type            fixedValue;
+                    value           uniform 1;
+                }
+                k
+                {
+                    type            fixedValue;
+                    value           uniform 0.06;
+                }
+                epsilon
+                {
+                    type            fixedValue;
+                    value           uniform 0.0495;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type            pressureInletOutletVelocity;
+                    value           uniform ( 0 0 0 );
+                }
+                p
+                {
+                    type            totalPressure;
+                    p0              uniform 0;
+                    addStaticHead   true;
+                }
+                alpha.water
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 1;
+                    value           uniform 1;
+                }
+                k
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 0.06;
+                    value           uniform 0.06;
+                }
+                epsilon
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 0.0495;
+                    value           uniform 0.0495;
+                }
+            }
+            outerCylinder
+            {
+                U
+                {
+                    type            noSlip;
+                }
+            }
+            "propeller.*"
+            {
+                U
+                {
+                    type            movingWallVelocity;
+                    value           uniform ( 0 0 0 );
+                }
+            }
+            nonCouple
+            {
+                U
+                {
+                    type            movingWallSlipVelocity;
+                    value           uniform ( 0 0 0 );
+                }
+                p
+                {
+                    type            fixedFluxPressure;
+                }
+                alpha.water
+                {
+                    type            zeroGradient;
+                }
+                k
+                {
+                    type            zeroGradient;
+                }
+                epsilon
+                {
+                    type            zeroGradient;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,80 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : 4.4.0
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) 2017 OpenFOAM Foundation
+
+\*---------------------------------------------------------------------------*/
+
+#include "surfaceTensionModels/surfaceTensionModel/surfaceTensionModel.H"
+#include "fvMesh/fvMesh.H"
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+namespace Foam
+{
+namespace surfaceTensionModels
+{
+    defineTypeNameAndDebug(surfaceTensionModel, 0);
+    defineRunTimeSelectionTable(surfaceTensionModel, dictionary);
+}
+}
+
+const Foam::dimensionSet Foam::surfaceTensionModels::surfaceTensionModel::dimSigma(1, 0, -2, 0, 0);
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+Foam::surfaceTensionModels::surfaceTensionModel::surfaceTensionModel(const fvMesh& mesh)
+:
+    regIOobject
+    (
+        IOobject
+        (
+            typeName, mesh.name(),
+            mesh.time().timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        )
+    ),
+    mesh_(mesh)
+{}
+
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+Foam::surfaceTensionModels::surfaceTensionModel::~surfaceTensionModel()
+{}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+bool Foam::surfaceTensionModels::surfaceTensionModel::writeData(Ostream& os) const
+{
+    return os.good();
+}
+
+
+// ************************************************************************* //

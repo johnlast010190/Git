@@ -1,0 +1,19 @@
+runs
+(
+    short
+    {
+        steps 1;
+        checks
+        (
+            {
+                result "postProcessing/RASCC/0/confidenceInterval.dat";
+                reference "verification/short/confidenceInterval.dat";
+                variables "nSamples" "Transient_Time" "Mean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+);
+
+ tags asan;

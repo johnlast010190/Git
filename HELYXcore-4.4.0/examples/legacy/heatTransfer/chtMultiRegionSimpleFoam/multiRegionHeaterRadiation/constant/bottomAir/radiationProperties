@@ -1,0 +1,48 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      radiationProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+radiation       on;
+
+radiationModel  viewFactor;
+
+viewFactorCoeffs
+{
+    smoothing true; //Smooth view factor matrix (use when in a close surface
+                    //to force Sum(Fij = 1)
+    constantEmissivity true; //constant emissivity on surfaces.
+}
+
+// Number of flow iterations per radiation iteration
+solverFreq 3;
+
+absorptionEmissionModel constant;
+
+constantCoeffs
+{
+    absorptivity 0.01;
+    emissivity 0.01;
+    E 0;
+}
+
+scatterModel    none;
+
+sootModel       none;
+
+transmissivityModel none;
+
+
+// ************************************************************************* //

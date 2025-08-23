@@ -1,0 +1,19 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Mesh
+helyxRun helyxHexMesh
+
+# Check
+helyxRun checkMesh -allRegions -writeAllMetrics -constant
+
+# Run post-processing
+helyxRun postProcess -fields '( aspectRatio determinant nonOrthogonality skewness volumeRatio )' -constant
+
+# Create dummy file for ParaView visualisation
+touch boxFCHSmooth.foam
+
+#------------------------------------------------------------------------------

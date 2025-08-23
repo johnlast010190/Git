@@ -1,0 +1,27 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+-------------------------------------------------------------------------------
+Description
+    Calculate intensive fields:
+    - UMean
+    - translationalT
+    - internalT
+    - overallT
+    from averaged extensive fields from a DSMC calculation.
+
+\*---------------------------------------------------------------------------*/
+
+type            dsmcFields;
+libs            ("liblagrangianFunctionObjects.so");
+
+fields          (rhoNMean rhoMMean momentumMean linearKEMean internalEMean
+                 iDofMean fDMean);
+
+executeControl  writeTime;
+writeControl    writeTime;
+
+// ************************************************************************* //

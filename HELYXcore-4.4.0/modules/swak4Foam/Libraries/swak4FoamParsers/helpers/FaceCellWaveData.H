@@ -1,0 +1,116 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : dev
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) ICE Stroemungsfoschungs GmbH
+    (c) 1991-2008 OpenCFD Ltd.
+
+Class
+    Foam::FaceCellWaveData
+
+Description
+    Helper class to make working with FaceCellWave easier
+
+SourceFiles
+    FaceCellWaveData.C
+
+Contributors/Copyright:
+    2014, 2016-2017 Bernhard F.W. Gschaider <bgschaid@hfd-research.com>
+
+ SWAK Revision: $Id$
+\*---------------------------------------------------------------------------*/
+
+#ifndef FaceCellWaveData_H
+#define FaceCellWaveData_H
+
+#include "db/IOstreams/IOstreams/Ostream.H"
+
+#include "include/swak.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+/*---------------------------------------------------------------------------*\
+                           Class FaceCellWave Declaration
+\*---------------------------------------------------------------------------*/
+
+class FaceCellWaveData {
+
+public:
+
+#ifdef FOAM_FACECELLWAVE_HAS_TRACKINGDATA
+    template<class TrackingData>
+#endif
+    inline void transform
+    (
+        const polyPatch& patch,
+        const label patchFacei,
+        const transformer& transform
+#ifdef FOAM_FACECELLWAVE_HAS_TRACKINGDATA
+        ,TrackingData &
+#endif
+    );
+
+#ifdef FOAM_FACECELLWAVE_HAS_TRACKINGDATA
+    template<class TrackingData>
+#endif
+    inline void translate
+    (
+        const polyMesh&,
+        const vector& transVec
+#ifdef FOAM_FACECELLWAVE_HAS_TRACKINGDATA
+        ,TrackingData &
+#endif
+    );
+
+#ifdef FOAM_FACECELLWAVE_HAS_TRACKINGDATA
+    template<class TrackingData>
+#endif
+    inline bool sameGeometry
+    (
+        const polyMesh&,
+        const FaceCellWaveData&,
+        const scalar
+#ifdef FOAM_FACECELLWAVE_HAS_TRACKINGDATA
+        ,TrackingData &
+#endif
+    ) const;
+
+};
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "FaceCellWaveData.C"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

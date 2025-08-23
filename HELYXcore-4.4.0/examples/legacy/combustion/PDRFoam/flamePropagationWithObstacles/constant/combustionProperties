@@ -1,0 +1,46 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      combustionProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+laminarFlameSpeedCorrelation SCOPE;
+
+fuel        Propane;
+
+fuelFile    "fuels/propane.dat";
+
+ignite      yes;
+
+ignitionSites
+(
+
+    {
+        location        (1.5 1.5 0.5);
+        diameter        0.1;
+        start           1E-05;
+        duration        0.05;
+        strength        60.0;
+    }
+);
+
+ignitionSphereFraction  1;
+
+ignitionThickness   ignitionThickness [0 1 0 0 0 0 0] 0;
+
+ignitionCircleFraction  0;
+
+ignitionKernelArea ignitionKernelArea [0 2 0 0 0 0 0] 0;
+
+// ************************************************************************* //

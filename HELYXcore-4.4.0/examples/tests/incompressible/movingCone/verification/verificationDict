@@ -1,0 +1,19 @@
+runs
+(
+    full
+    {
+        checks
+        (
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/full/VR/0/volumeReport.tsv";
+                variables "Umax" "Umean" "pmax" "pmean" "totalVolume";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+);
+
+// Removed from Asan due to a bug in the 'meshToMesh' feature (CO-9097)
+// tags asan;

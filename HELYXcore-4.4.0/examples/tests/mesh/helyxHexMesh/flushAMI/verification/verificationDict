@@ -1,0 +1,17 @@
+runs
+(
+    full
+    {
+        restart false;
+        checks
+        (
+            {
+                result "postProcessing/VR_mesh/0/volumeReport.tsv";
+                reference "verification/full/VR_mesh/0/volumeReport.tsv";
+                variables "aspectRatiomax" "nonOrthogonalitymax" "skewnessmax" "volumeRatiomax";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+);

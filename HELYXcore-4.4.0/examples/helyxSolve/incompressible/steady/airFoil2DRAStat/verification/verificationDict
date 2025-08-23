@@ -1,0 +1,37 @@
+runs
+(
+    full
+    {
+        restart false;
+        checks
+        (
+            {
+                result "aoa0/postProcessing/RASCC/0/reverseAnalysisStatistical.dat";
+                reference "verification/full/aoa0/RASCC/0/reverseAnalysisStatistical.dat";
+                variables "AverageValue" "BestFitGradient" "MaxSolQuality";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "aoa17/postProcessing/RASCC/0/reverseAnalysisStatistical.dat";
+                reference "verification/full/aoa17/RASCC/0/reverseAnalysisStatistical.dat";
+                variables "AverageValue" "BestFitGradient" "MaxSolQuality";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "aoa35/postProcessing/RASCC/0/reverseAnalysisStatistical.dat";
+                reference "verification/full/aoa35/RASCC/0/reverseAnalysisStatistical.dat";
+                variables "AverageValue" "BestFitGradient" "MaxSolQuality";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+);
+
+tags asan;
+
+unstable true;
+operatingSystem windows;
+reason "This example has a Bash script, which is not available on Windows";

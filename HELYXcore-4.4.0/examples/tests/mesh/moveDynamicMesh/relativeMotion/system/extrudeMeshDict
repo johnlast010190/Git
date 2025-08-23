@@ -1,0 +1,48 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      extrudeMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+constructFrom patch;
+sourceCase "$FOAM_CASE";
+sourcePatches (ZMin);
+
+// If construct from patch: patch to use for back (can be same as sourcePatch)
+exposedPatchName ZMax;
+
+// Flip surface normals before usage. Valid only for extrude from surface or
+// patch.
+flipNormals true;
+
+//- Linear extrusion in point-normal direction
+extrudeModel        linearNormal;
+
+nLayers             1;
+
+expansionRatio      1.0;
+
+linearNormalCoeffs
+{
+    thickness       0.1;
+}
+
+// Do front and back need to be merged? Usually only makes sense for 360
+// degree wedges.
+mergeFaces false;
+
+// Merge small edges. Fraction of bounding box.
+mergeTol 0;
+
+
+// ************************************************************************* //

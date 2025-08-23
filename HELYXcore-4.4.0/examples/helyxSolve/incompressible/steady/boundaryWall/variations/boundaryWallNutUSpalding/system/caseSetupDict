@@ -1,0 +1,362 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom startTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 3000.0;
+            deltaT constant 1.0;
+            writeControl timeStep;
+            writeInterval 500.0;
+            purgeWrite 0;
+            writeFormat ascii;
+            writePrecision 6;
+            writeCompression uncompressed;
+            timeFormat general;
+            timePrecision 6;
+            graphFormat raw;
+            runTimeModifiable true;
+            adjustTimeStep false;
+            maxCo 0;
+            maxAlphaCo 0;
+            maxDeltaT 0;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type volumeReport;
+            regions ( region0 );
+            fields ( U epsilon k );
+            writeControl onEnd;
+            executeControl onEnd;
+            functionObjectLibs ( "libreport.so" );
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (steady ras);
+        boundaryMesh
+        {
+            lowerWall
+            {
+                type wall;
+            }
+            upperWall
+            {
+                type wall;
+            }
+            front
+            {
+                type cyclic;
+                matchTolerance 1.0E-4;
+                neighbourPatch back;
+            }
+            back
+            {
+                type cyclic;
+                matchTolerance 1.0E-4;
+                neighbourPatch front;
+            }
+            defaultFaces
+            {
+                type empty;
+            }
+        }
+        turbulenceModel kEpsilon;
+        materials (air);
+        materialProperties
+        {
+            air
+            {
+                materialName air;
+                transportModel Newtonian;
+                nu [0 2 -1 0 0 0 0] 1E-5;
+            }
+        }
+        system
+        {
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default         steadyState;
+                }
+                gradSchemes
+                {
+                    default         Gauss linear;
+                }
+                divSchemes
+                {
+                    default         none;
+                    div(phi,k)      bounded Gauss linear;
+                    div(phi,epsilon) bounded Gauss linear;
+                    div(phi,R)      bounded Gauss linear;
+                    div(phi,nuTilda) bounded Gauss linear;
+                    div((nuEff*dev2(T(grad(U))))) Gauss linear;
+                    div(nonlinearStress) Gauss linear;
+                }
+                laplacianSchemes
+                {
+                    default         Gauss linear corrected;
+                }
+                interpolationSchemes
+                {
+                    default         linear;
+                }
+                snGradSchemes
+                {
+                    default         corrected;
+                }
+                wallDist
+                {
+                    method          meshWave;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    p
+                    {
+                        solver GAMG;
+                        agglomerator faceAreaPair;
+                        mergeLevels 1;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 10;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        scaleCorrection true;
+                        tolerance 1e-10;
+                        relTol 0.01;
+                    }
+                    U
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        tolerance       1e-06;
+                        relTol          0.1;
+                    }
+                    k
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-06;
+                        relTol 0.1;
+                    }
+                    epsilon
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-06;
+                        relTol 0.1;
+                    }
+                    "(k|epsilon|R|nuTilda)"
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        tolerance 1e-06;
+                        relTol 0;
+                    }
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p 0.3;
+                    }
+                    equations
+                    {
+                        U 0.5;
+                        k 0.7;
+                        epsilon 0.7;
+                        R 0.7;
+                        nuTilda 0.7;
+                    }
+                }
+                SIMPLE
+                {
+                    nNonOrthogonalCorrectors 0;
+                    momentumPredictor true;
+                    pRefCell 0;
+                    pRefValue 0;
+                    pMin -1e10;
+                    pMax 1e10;
+                    modifiedMomentumInterp true;
+                    consistent false;
+                    transonic false;
+                }
+                cache
+                {
+                    grad(U) ;
+                }
+            }
+            fvOptions
+            {
+                momentumSource
+                {
+                    type            meanVelocityForce;
+                    selectionMode   all;
+                    fields          (U);
+                    Ubar            (10 0 0);
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 1.0 0.0 0.0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.0;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 1.0E-10;
+                }
+            }
+            epsilon
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 1.0E-8;
+                }
+            }
+            nut
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            nuTilda
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            lowerWall
+            {
+                U
+                {
+                    type noSlip;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 1e-10;
+                }
+                epsilon
+                {
+                    type epsilonWallFunction;
+                    value uniform 1.0e-8;
+                }
+                nut
+                {
+                    type nutUSpaldingWallFunction;
+                    value uniform 0.0;
+                }
+                nuTilda
+                {
+                    type zeroGradient;
+                }
+            }
+            upperWall
+            {
+                U
+                {
+                    type noSlip;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 1e-10;
+                }
+                epsilon
+                {
+                    type epsilonWallFunction;
+                    value uniform 1.0e-8;
+                }
+                nut
+                {
+                    type nutUSpaldingWallFunction;
+                    value uniform 0.0;
+                }
+                nuTilda
+                {
+                    type zeroGradient;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,38 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/LD1/0/liftDrag.dat";
+                reference "verification/short/LD1/0/liftDrag.dat";
+                variables "totalLift" "drag";
+                absolute 0.000001;
+                relative 0.000001;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/LD1/0/liftDrag.dat";
+                reference "verification/long/LD1/0/liftDrag.dat";
+                variables "totalLift" "drag";
+            }
+            {
+                result "postProcessing/volStats/0/volumeReport.dat";
+                reference "verification/long/volStats/0/volumeReport.dat";
+                variables "nuTildamax" "nuTildamean" "pmax" "pmean" "Umax" "Umean";
+            }
+        );
+    }
+);
+
+unstable true;
+operatingSystem windows;
+reason "This example has a Bash script, which is not available on Windows";

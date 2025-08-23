@@ -1,0 +1,413 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+convertToMeters 0.01;
+
+rCore 6;
+rPipe 10;
+rBall 18;
+lPipe 50;
+
+nCore 10;
+nPipe 7;
+nLength 20;
+
+rBend #calc "sqrt(scalar($rBall*$rBall - $rPipe*$rPipe))";
+
+rCoreNeg #calc "-1*$rCore";
+rPipeNeg #calc "-1*$rPipe";
+lPipeNeg #calc "-1*$lPipe";
+rBendNeg #calc "-1*$rBend";
+
+geometry
+{
+    sphere
+    {
+        type searchableSphere;
+        centre (0 0 0);
+        radius $rBall;
+    }
+    torus
+    {
+        type    triSurfaceMesh;
+        file    "ballValve-torus.obj";
+    }
+}
+
+vertices
+(
+    // X-pipe
+    ($lPipeNeg $rCoreNeg 0)
+    ($lPipeNeg 0 $rCoreNeg)
+    ($lPipeNeg $rCore 0)
+    ($lPipeNeg 0 $rCore)
+
+    ($lPipeNeg $rPipeNeg 0)
+    ($lPipeNeg 0 $rPipeNeg)
+    ($lPipeNeg $rPipe 0)
+    ($lPipeNeg 0 $rPipe)
+
+    project ($rBendNeg $rCoreNeg 0) (sphere)
+    project ($rBendNeg 0 $rCoreNeg) (sphere)
+    project ($rBendNeg $rCore 0) (sphere)
+    project ($rBendNeg 0 $rCore) (sphere)
+
+    ($rBendNeg $rPipeNeg 0)
+    ($rBendNeg 0 $rPipeNeg)
+    ($rBendNeg $rPipe 0)
+    ($rBendNeg 0 $rPipe)
+
+    // Y-lower-pipe
+    ($rCore $lPipeNeg 0)
+    (0 $lPipeNeg $rCoreNeg)
+    ($rCoreNeg $lPipeNeg 0)
+    (0 $lPipeNeg $rCore)
+
+    ($rPipe $lPipeNeg 0)
+    (0 $lPipeNeg $rPipeNeg)
+    ($rPipeNeg $lPipeNeg 0)
+    (0 $lPipeNeg $rPipe)
+
+    project ($rCore $rBendNeg 0) (sphere)
+    project (0 $rBendNeg $rCoreNeg) (sphere)
+    project ($rCoreNeg $rBendNeg 0) (sphere)
+    project (0 $rBendNeg $rCore) (sphere)
+
+    ($rPipe $rBendNeg 0)
+    (0 $rBendNeg $rPipeNeg)
+    ($rPipeNeg $rBendNeg 0)
+    (0 $rBendNeg $rPipe)
+
+    // Y-upper-pipe
+    ($rCoreNeg $lPipe 0)
+    (0 $lPipe $rCoreNeg)
+    ($rCore $lPipe 0)
+    (0 $lPipe $rCore)
+
+    ($rPipeNeg $lPipe 0)
+    (0 $lPipe $rPipeNeg)
+    ($rPipe $lPipe 0)
+    (0 $lPipe $rPipe)
+
+    project ($rCoreNeg $rBend 0) (sphere)
+    project (0 $rBend $rCoreNeg) (sphere)
+    project ($rCore $rBend 0) (sphere)
+    project (0 $rBend $rCore) (sphere)
+
+    ($rPipeNeg $rBend 0)
+    (0 $rBend $rPipeNeg)
+    ($rPipe $rBend 0)
+    (0 $rBend $rPipe)
+
+    // Ball
+    project ($rBendNeg $rCoreNeg 0) (sphere)
+    project ($rBendNeg 0 $rCoreNeg) (sphere)
+    project ($rBendNeg $rCore 0) (sphere)
+    project ($rBendNeg 0 $rCore) (sphere)
+
+    ($rBendNeg $rPipeNeg 0)
+    ($rBendNeg 0 $rPipeNeg)
+    ($rBendNeg $rPipe 0)
+    ($rBendNeg 0 $rPipe)
+
+    project ($rCoreNeg $rBendNeg 0) (sphere)
+    project (0 $rBendNeg $rCoreNeg) (sphere)
+    project ($rCore $rBendNeg 0) (sphere)
+    project (0 $rBendNeg $rCore) (sphere)
+
+    ($rPipeNeg $rBendNeg 0)
+    (0 $rBendNeg $rPipeNeg)
+    ($rPipe $rBendNeg 0)
+    (0 $rBendNeg $rPipe)
+);
+
+blocks
+(
+    // X-pipe
+    hex (0 1 2 3 8 9 10 11) pipes ($nCore $nCore $nLength) simpleGrading (1 1 1)
+    hex (1 0 4 5 9 8 12 13) pipes ($nCore $nPipe $nLength) simpleGrading (1 1 1)
+    hex (2 1 5 6 10 9 13 14) pipes ($nCore $nPipe $nLength) simpleGrading (1 1 1)
+    hex (3 2 6 7 11 10 14 15) pipes ($nCore $nPipe $nLength) simpleGrading (1 1 1)
+    hex (0 3 7 4 8 11 15 12) pipes ($nCore $nPipe $nLength) simpleGrading (1 1 1)
+
+    // Y-lower-pipe
+    hex (16 17 18 19 24 25 26 27) pipes ($nCore $nCore $nLength) simpleGrading (1 1 1)
+    hex (17 16 20 21 25 24 28 29) pipes ($nCore $nPipe $nLength) simpleGrading (1 1 1)
+    hex (18 17 21 22 26 25 29 30) pipes ($nCore $nPipe $nLength) simpleGrading (1 1 1)
+    hex (19 18 22 23 27 26 30 31) pipes ($nCore $nPipe $nLength) simpleGrading (1 1 1)
+    hex (16 19 23 20 24 27 31 28) pipes ($nCore $nPipe $nLength) simpleGrading (1 1 1)
+
+    // Y-upper-pipe
+    hex (32 33 34 35 40 41 42 43) pipes ($nCore $nCore $nLength) simpleGrading (1 1 1)
+    hex (33 32 36 37 41 40 44 45) pipes ($nCore $nPipe $nLength) simpleGrading (1 1 1)
+    hex (34 33 37 38 42 41 45 46) pipes ($nCore $nPipe $nLength) simpleGrading (1 1 1)
+    hex (35 34 38 39 43 42 46 47) pipes ($nCore $nPipe $nLength) simpleGrading (1 1 1)
+    hex (32 35 39 36 40 43 47 44) pipes ($nCore $nPipe $nLength) simpleGrading (1 1 1)
+
+    // Ball
+    hex (48 49 50 51 56 57 58 59) ball ($nCore $nCore $nLength) simpleGrading (1 1 1)
+    hex (49 48 52 53 57 56 60 61) ball ($nCore $nPipe $nLength) simpleGrading (1 1 1)
+    hex (50 49 53 54 58 57 61 62) ball ($nCore $nPipe $nLength) simpleGrading (1 1 1)
+    hex (51 50 54 55 59 58 62 63) ball ($nCore $nPipe $nLength) simpleGrading (1 1 1)
+    hex (48 51 55 52 56 59 63 60) ball ($nCore $nPipe $nLength) simpleGrading (1 1 1)
+);
+
+edges
+(
+    // X-pipe
+    arc 4 5 origin ($lPipeNeg 0 0)
+    arc 5 6 origin ($lPipeNeg 0 0)
+    arc 6 7 origin ($lPipeNeg 0 0)
+    arc 7 4 origin ($lPipeNeg 0 0)
+    arc 12 13 origin ($rBendNeg 0 0)
+    arc 13 14 origin ($rBendNeg 0 0)
+    arc 14 15 origin ($rBendNeg 0 0)
+    arc 15 12 origin ($rBendNeg 0 0)
+
+    project 8 9 (sphere)
+    project 9 10 (sphere)
+    project 10 11 (sphere)
+    project 11 8 (sphere)
+    project 8 12 (sphere)
+    project 9 13 (sphere)
+    project 10 14 (sphere)
+    project 11 15 (sphere)
+
+    // Y-lower-pipe
+    arc 20 21 origin (0 $lPipeNeg 0)
+    arc 21 22 origin (0 $lPipeNeg 0)
+    arc 22 23 origin (0 $lPipeNeg 0)
+    arc 23 20 origin (0 $lPipeNeg 0)
+    arc 28 29 origin (0 $rBendNeg 0)
+    arc 29 30 origin (0 $rBendNeg 0)
+    arc 30 31 origin (0 $rBendNeg 0)
+    arc 31 28 origin (0 $rBendNeg 0)
+
+    project 24 25 (sphere)
+    project 25 26 (sphere)
+    project 26 27 (sphere)
+    project 27 24 (sphere)
+    project 24 28 (sphere)
+    project 25 29 (sphere)
+    project 26 30 (sphere)
+    project 27 31 (sphere)
+
+    // Y-upper-pipe
+    arc 36 37 origin (0 $lPipe 0)
+    arc 37 38 origin (0 $lPipe 0)
+    arc 38 39 origin (0 $lPipe 0)
+    arc 39 36 origin (0 $lPipe 0)
+    arc 44 45 origin (0 $rBend 0)
+    arc 45 46 origin (0 $rBend 0)
+    arc 46 47 origin (0 $rBend 0)
+    arc 47 44 origin (0 $rBend 0)
+
+    project 40 41 (sphere)
+    project 41 42 (sphere)
+    project 42 43 (sphere)
+    project 43 40 (sphere)
+    project 40 44 (sphere)
+    project 41 45 (sphere)
+    project 42 46 (sphere)
+    project 43 47 (sphere)
+
+    // Ball
+    arc 52 53 origin ($rBendNeg 0 0)
+    arc 53 54 origin ($rBendNeg 0 0)
+    arc 54 55 origin ($rBendNeg 0 0)
+    arc 55 52 origin ($rBendNeg 0 0)
+    arc 60 61 origin (0 $rBendNeg 0)
+    arc 61 62 origin (0 $rBendNeg 0)
+    arc 62 63 origin (0 $rBendNeg 0)
+    arc 63 60 origin (0 $rBendNeg 0)
+
+    arc 48 56 origin ($rBendNeg $rBendNeg 0)
+    arc 49 57 origin ($rBendNeg $rBendNeg $rCoreNeg)
+    arc 50 58 origin ($rBendNeg $rBendNeg 0)
+    arc 51 59 origin ($rBendNeg $rBendNeg $rCore)
+    arc 52 60 origin ($rBendNeg $rBendNeg 0)
+    arc 53 61 origin ($rBendNeg $rBendNeg $rPipeNeg)
+    arc 54 62 origin ($rBendNeg $rBendNeg 0)
+    arc 55 63 origin ($rBendNeg $rBendNeg $rPipe)
+
+    project 48 49 (sphere)
+    project 49 50 (sphere)
+    project 50 51 (sphere)
+    project 51 48 (sphere)
+    project 48 52 (sphere)
+    project 49 53 (sphere)
+    project 50 54 (sphere)
+    project 51 55 (sphere)
+
+    project 56 57 (sphere)
+    project 57 58 (sphere)
+    project 58 59 (sphere)
+    project 59 56 (sphere)
+    project 56 60 (sphere)
+    project 57 61 (sphere)
+    project 58 62 (sphere)
+    project 59 63 (sphere)
+);
+
+faces
+(
+    // X-pipe
+    project (8 9 10 11) sphere
+    project (9 8 12 13) sphere
+    project (10 9 13 14) sphere
+    project (11 10 14 15) sphere
+    project (8 11 15 12) sphere
+
+    // Y-lower-pipe
+    project (24 25 26 27) sphere
+    project (25 24 28 29) sphere
+    project (26 25 29 30) sphere
+    project (27 26 30 31) sphere
+    project (24 27 31 28) sphere
+
+    // Y-upper-pipe
+    project (40 41 42 43) sphere
+    project (41 40 44 45) sphere
+    project (42 41 45 46) sphere
+    project (43 42 46 47) sphere
+    project (40 43 47 44) sphere
+
+    // Ball
+    project (48 49 50 51) sphere
+    project (49 48 52 53) sphere
+    project (50 49 53 54) sphere
+    project (51 50 54 55) sphere
+    project (48 51 55 52) sphere
+
+    project (56 57 58 59) sphere
+    project (57 56 60 61) sphere
+    project (58 57 61 62) sphere
+    project (59 58 62 63) sphere
+    project (56 59 63 60) sphere
+
+    project (52 53 61 60) torus
+    project (53 54 62 61) torus
+    project (54 55 63 62) torus
+    project (55 52 60 63) torus
+);
+
+defaultPatch
+{
+    name pipeWalls;
+    type wall;
+}
+
+boundary
+(
+    inlet
+    {
+        type patch;
+        physicalType inlet;
+        faces
+        (
+            (0 1 2 3)
+            (1 0 4 5)
+            (2 1 5 6)
+            (3 2 6 7)
+            (0 3 7 4)
+        );
+    }
+    lowerOutlet
+    {
+        type patch;
+        physicalType outlet;
+        faces
+        (
+            (16 17 18 19)
+            (17 16 20 21)
+            (18 17 21 22)
+            (19 18 22 23)
+            (16 19 23 20)
+        );
+    }
+    upperOutlet
+    {
+        type patch;
+        physicalType outlet;
+        faces
+        (
+            (32 33 34 35)
+            (33 32 36 37)
+            (34 33 37 38)
+            (35 34 38 39)
+            (32 35 39 36)
+        );
+    }
+    pipeNonCouple
+    {
+        type wall;
+        faces
+        (
+            (8 9 10 11)
+            (9 8 12 13)
+            (10 9 13 14)
+            (11 10 14 15)
+            (8 11 15 12)
+
+            (24 25 26 27)
+            (25 24 28 29)
+            (26 25 29 30)
+            (27 26 30 31)
+            (24 27 31 28)
+
+            (40 41 42 43)
+            (41 40 44 45)
+            (42 41 45 46)
+            (43 42 46 47)
+            (40 43 47 44)
+        );
+    }
+    ballWalls
+    {
+        type wall;
+        faces
+        (
+            (52 53 61 60)
+            (53 54 62 61)
+            (54 55 63 62)
+            (55 52 60 63)
+        );
+    }
+    ballNonCouple
+    {
+        type wall;
+        faces
+        (
+            (48 49 50 51)
+            (49 48 52 53)
+            (50 49 53 54)
+            (51 50 54 55)
+            (48 51 55 52)
+
+            (56 57 58 59)
+            (57 56 60 61)
+            (58 57 61 62)
+            (59 58 62 63)
+            (56 59 63 60)
+        );
+    }
+);
+
+mergePatchPairs
+();
+
+
+// ************************************************************************* //

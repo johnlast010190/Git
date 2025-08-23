@@ -1,0 +1,31 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/vr1/0/volumeReport.dat";
+                reference "verification/short/vr1/0/volumeReport.dat";
+                variables "rhomin" "rhomax" "rhomean" "rhostDev" "Umin" "Umax" "Umean" "UstDev" "pmin" "pmax" "pmean" "pstDev";
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/vr1/0/volumeReport.dat";
+                reference "verification/long/vr1/0/volumeReport.dat";
+                variables "rhomin" "rhomax" "rhomean" "rhostDev" "Umin" "Umax" "Umean" "UstDev" "pmin" "pmax" "pmean" "pstDev";
+            }
+        );
+    }
+);
+
+unstable true;
+operatingSystem windows;
+reason "This example uses dynamic code, which is not available on Windows";

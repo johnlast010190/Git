@@ -1,0 +1,341 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts    true;
+        resetConstDicts     true;
+        resetBoundaryMesh   true;
+        deleteUnusedFields  true;
+    }
+    system
+    {
+        controlDict
+        {
+            startFrom startTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 0.1;
+            deltaT 1e-5;
+            writeControl adjustableRunTime;
+            writeInterval 0.005;
+            writePrecision 6;
+            adjustTimeStep true;
+            maxCo 2;
+        }
+        meshObjects
+        {
+            rotatingFrame
+            {
+                type            dynamicMotionCoordinateFrame;
+                motionFunction
+                {
+                    type  rotatingMotion;
+                    omega 158;    // rad/s
+                }
+                coordinateSystem
+                {
+                    type            cartesian;
+                    origin          ( 0 0 0 );
+                    e1              ( 1 0 0 );
+                    e3              ( 0 1 0 );
+                }
+            }
+        }
+        nonConformalCouplesDict
+        {
+            nonConformalCyclic
+            {
+                patches          (nonCouple1 nonCouple2);
+                transformType    none;
+            }
+        }
+    }
+    functions
+    {
+        #includeFunc Q
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+        forces
+        {
+            type          forces;
+            libs          ("libforces.so");
+            writeControl  timeStep;
+            timeInterval  1;
+            log           yes;
+            patches       ("propeller.*");
+            rhoName       rhoInf;   // indicates incompressible
+            log           true;
+            rhoInf        1;        // redundant for incompressible
+            CofR          (0 0 0);  // rotation around centre line of propeller
+            pitchAxis     (0 1 0);
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( transient ras dynamic );
+        turbulenceModel kEpsilon;
+        materials (water);
+        materialProperties
+        {
+            water
+            {
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho 1000;
+                }
+            }
+        }
+        boundaryMesh
+        {
+            inlet
+            {
+                physicalType inlet;
+            }
+            outlet
+            {
+                physicalType outlet;
+            }
+            innerCylinder
+            {
+                name     nonCouple1;
+                type     nonConformal;
+                inGroups (nonCouple);
+            }
+            innerCylinder_slave
+            {
+                name     nonCouple2;
+                type     nonConformal;
+                inGroups (nonCouple);
+            }
+        }
+        constant
+        {
+            dynamicMeshDict
+            {
+                mover
+                {
+                    type            motionSolver;
+                    libs            ("libfvMeshMovers.so" "libfvMotionSolvers.so");
+                    motionSolver    solidBody;
+                    cellZone        innerCylinder;
+                    referenceFrame  rotatingFrame;
+                }
+            }
+        }
+        system
+        {
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default         backward;
+                }
+                divSchemes
+                {
+                    div(phi,U)      bounded Gauss linearUpwindV gradU;
+                }
+                laplacianSchemes
+                {
+                    default         Gauss linear limited corrected 0.33;
+                }
+                interpolationSchemes
+                {
+                    default         linear;
+                }
+                snGradSchemes
+                {
+                    default         limited corrected 0.33;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    p
+                    {
+                        solver          GAMG;
+                        smoother        DICGaussSeidel;
+                        tolerance       1e-6;
+                        relTol          0;
+                    }
+                    pFinal
+                    {
+                        $p;
+                    }
+                    "pcorr.*"
+                    {
+                        $p;
+                        tolerance       1e-2;
+                        relTol          0;
+                    }
+                    MeshPhi
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        tolerance       1e-2;
+                        relTol          0;
+                    }
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p               1;
+                    }
+                    equations
+                    {
+                        U               1;
+                    }
+                }
+                PIMPLE
+                {
+                    turbOnFinalIterOnly true;
+                    correctPhi          true;
+                    correctMeshPhi      true;
+                    nOuterCorrectors    2;
+                    nCorrectors         1;
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform (0 0 0);
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.06;
+                }
+            }
+            epsilon
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.0495;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform (0 -5 0);
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type fixedValue;
+                    value uniform 0.06;
+                }
+                epsilon
+                {
+                    type fixedValue;
+                    value uniform 0.0495;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type inletOutlet;
+                    inletValue uniform (0 0 0);
+                }
+                p
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+                k
+                {
+                    type inletOutlet;
+                    value uniform 0.06;
+                    inletValue uniform 0.06;
+                }
+                epsilon
+                {
+                    type inletOutlet;
+                    value uniform 0.0495;
+                    inletValue uniform 0.0495;
+                }
+            }
+            outerCylinder
+            {
+                U
+                {
+                    type noSlip;
+                }
+            }
+            "propeller.*"
+            {
+                U
+                {
+                    type movingWallVelocity;
+                    value uniform (0 0 0);
+                }
+            }
+            nonCouple
+            {
+                U
+                {
+                    type movingWallSlipVelocity;
+                    value uniform (0 0 0);
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

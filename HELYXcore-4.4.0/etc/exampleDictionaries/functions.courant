@@ -1,0 +1,9 @@
+cflnumber
+{
+    type courant;
+    functionObjectLibs ( "libreport.so" );
+
+    region region0;
+
+    logToFile true;
+}

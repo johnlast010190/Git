@@ -1,0 +1,420 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            stopAt          endTime;
+            endTime         10;
+            deltaT          0.001;
+            writeInterval   0.1;
+            adjustTimeStep  yes;
+            maxCo           0.5;
+            maxAlphaCo      0.5;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p T );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( transient ras vof energy );
+
+        materials ( water oil mercury air );
+
+        materialProperties
+        {
+            materialType    multiphase;
+
+            air
+            {
+                species (N2 O2);
+                materialType    fluid;
+                N2
+                {
+                    thermodynamics  hConst;
+                    equationOfState perfectGas;
+                    molWeight   28.02;
+
+                    thermodynamicsCoeffs
+                    {
+                        Cp          1039;
+                        Hf          0;
+                    }
+                    muModel scalarFunction1;
+                    muModelCoeffs
+                    {
+                        mu          1.84e-05;
+                    }
+                    kappaModel kappaPrandtl;
+                    kappaModelCoeffs
+                    {
+                        Pr          0.7;
+                    }
+                }
+                O2
+                {
+                    thermodynamics  hConst;
+                    equationOfState perfectGas;
+                    molWeight   16.0;
+
+                    thermodynamicsCoeffs
+                    {
+                        Cp          918;
+                        Hf          0;
+                    }
+                    muModel scalarFunction1;
+                    muModelCoeffs
+                    {
+                        mu          1.84e-05;
+                    }
+                    kappaModel kappaPrandtl;
+                    kappaModelCoeffs
+                    {
+                        Pr          0.7;
+                    }
+                }
+            }
+
+            mercury
+            {
+                materialType    fluid;
+                thermodynamics  eConst;
+                equationOfState rhoConst;
+                molWeight       200.59;
+
+                equationOfStateCoeffs
+                {
+                    rho        13529;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cv          139;
+                    Hf          0;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          1.522e-3;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr          0.022;
+                }
+            }
+
+            oil
+            {
+                materialType    fluid;
+                thermodynamics  eConst;
+                equationOfState rhoConst;
+                molWeight       100.21;
+
+                equationOfStateCoeffs
+                {
+                    rho        684;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cv          2240;
+                    Hf          0;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          3.76e-4;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr          6;
+                }
+            }
+
+            water
+            {
+                materialType    fluid;
+                thermodynamics  eConst;
+                equationOfState rPolynomial;
+                molWeight   18.0;
+
+                equationOfStateCoeffs
+                {
+                    C (0.001278 -2.1055e-06 3.9689e-09 4.3772e-13 -2.0225e-16);
+                }
+                thermodynamicsCoeffs
+                {
+                    Cv          4195;
+                    Hf          0;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          3.645e-4;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr          2.289;
+                }
+            }
+
+            binaryProperties
+            {
+                oil_mercury
+                {
+                    surfaceTensionModel constant;
+                    surfaceTensionModelCoeffs
+                    {
+                        sigma 0.3;
+                    }
+                }
+            }
+
+            referenceFields
+            {
+                p [1 -1 -2 0 0 0 0] 101325;
+            }
+        }
+
+        turbulenceModel laminar;
+
+        constant
+        {
+            g
+            {
+                value           (0 -9.81 0);
+            }
+        }
+
+        system
+        {
+            fvOptions
+            {
+                // Species fractions are uniform in this example - no need to solve
+                ~speciesConcentrationSolver {}
+            }
+        }
+
+        boundaryMesh
+        {
+            leftWall
+            {
+                type wall;
+            }
+            rightWall
+            {
+                type wall;
+            }
+            lowerWall
+            {
+                type wall;
+            }
+            atmosphere
+            {
+                type patch;
+            }
+            defaultFaces
+            {
+                type empty;
+            }
+        }
+
+        fields
+        {
+            U {initialisation{type fixedValue; value uniform ( 0 0 0 );} }
+            p {initialisation{type fixedValue; value uniform 0;} }
+            T {initialisation{type fixedValue; value uniform 293;} }
+            alpha.water
+            {
+                initialisation
+                {
+                    type cellSet;
+                    defaultValue uniform 0;
+                    setSources
+                    (
+                        boxToCell
+                        {
+                            box (0 0.1 -1) (0.1461 0.292 1);
+                            value 1;
+                        }
+                    );
+                }
+            }
+            alpha.oil
+            {
+                initialisation
+                {
+                    type cellSet;
+                    defaultValue uniform 0;
+                    setSources
+                    (
+                        boxToCell
+                        {
+                            box (0.1461 0 -1) (0.2922 0.292 1);
+                            value 1;
+                        }
+                    );
+                }
+            }
+            alpha.mercury
+            {
+                initialisation
+                {
+                    type cellSet;
+                    defaultValue uniform 0;
+                    setSources
+                    (
+                        boxToCell
+                        {
+                            box (0 0 -1) (0.1461 0.1 1);
+                            value 1;
+                        }
+                    );
+                }
+            }
+            alpha.air
+            {
+                initialisation
+                {
+                    type cellSet;
+                    defaultValue uniform 1;
+                    setSources
+                    (
+                        boxToCell
+                        {
+                            box (0 0 -1) (0.1461 0.292 1);
+                            value 0;
+                        }
+                        boxToCell
+                        {
+                            box (0.1461 0 -1) (0.2922 0.292 1);
+                            value 0;
+                        }
+                        boxToCell
+                        {
+                            box (0 0 -1) (0.1461 0.1 1);
+                            value 0;
+                        }
+                    );
+                }
+            }
+            N2.air {initialisation{type fixedValue; value uniform 0.88;} }
+            O2.air {initialisation{type fixedValue; value uniform 0.12;} }
+        }
+
+        boundaryConditions
+        {
+            atmosphere
+            {
+                p
+                {
+                    type totalPressure;
+                    p0 uniform 0;
+                    value uniform 0;
+                }
+                T
+                {
+                    type inletOutlet;
+                    inletValue uniform 293;
+                    value $inletValue;
+                }
+                alpha.air
+                {
+                    type inletOutlet;
+                    inletValue uniform 1;
+                    value $inletValue;
+                }
+                alpha.water
+                {
+                    type inletOutlet;
+                    inletValue uniform 0;
+                    value $inletValue;
+                }
+                alpha.oil
+                {
+                    type inletOutlet;
+                    inletValue uniform 0;
+                    value $inletValue;
+                }
+                alpha.mercury
+                {
+                    type inletOutlet;
+                    inletValue uniform 0;
+                    value $inletValue;
+                }
+                N2.air
+                {
+                    type inletOutlet;
+                    inletValue uniform 0.88;
+                    value $inletValue;
+                }
+                O2.air
+                {
+                    type inletOutlet;
+                    inletValue uniform 0.12;
+                    value $inletValue;
+                }
+            }
+            "(lowerWall|leftWall|rightWall)"
+            {
+                alpha.water
+                {
+                    type alphasContactAngle;
+                    thetaProperties
+                    {
+                        water_air ( 30 0 0 0 );
+                        water_oil ( 90 0 0 0 );
+                        water_mercury ( 90 0 0 0 );
+                    }
+                    value uniform 1;
+                }
+                alpha.mercury
+                {
+                    type alphasContactAngle;
+                    thetaProperties
+                    {
+                        mercury_air ( 130 0 0 0 );
+                        mercury_oil ( 90 0 0 0 );
+                        mercury_water ( 90 0 0 0 );
+                    }
+                    value uniform 1;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //
+

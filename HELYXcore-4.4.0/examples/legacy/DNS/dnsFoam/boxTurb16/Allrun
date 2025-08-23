@@ -1,0 +1,17 @@
+#!/bin/bash
+cd ${0%/*} || exit 1    # Run from this directory
+
+# Source tutorial run functions
+. $HELYX_PROJECT_DIR/bin/tools/RunFunctions
+
+# Get application name
+application=$(getApplication)
+
+cp 0/U 0/U.orig
+
+runApplication blockMesh
+runApplication boxTurb
+runApplication $application
+runApplication postProcess -func enstrophy
+
+#------------------------------------------------------------------------------

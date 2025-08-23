@@ -1,0 +1,155 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+// Which of the steps to run
+castellatedMesh true;
+snap            true;
+addLayers       true;
+
+autoBlockMesh true;
+blockData (0.128 0);
+
+// Geometry. Definition of all surfaces. All surfaces are of class
+// searchableSurface.
+// Surfaces are used
+// - to specify refinement for any mesh cell intersecting it
+// - to specify refinement for any mesh cell inside/outside/near
+// - to 'snap' the mesh boundary to the surface
+geometry
+{
+    ceiling.stl
+    {
+        type triSurfaceMesh;
+        name ceiling;
+    }
+    floor.stl
+    {
+        type triSurfaceMesh;
+        name floor;
+    }
+    human.stl
+    {
+        type triSurfaceMesh;
+        name human;
+    }
+    xmax.stl
+    {
+        type triSurfaceMesh;
+        name xmax;
+    }
+    xmin.stl
+    {
+        type triSurfaceMesh;
+        name xmin;
+    }
+    ymax.stl
+    {
+        type triSurfaceMesh;
+        name ymax;
+    }
+    ymin.stl
+    {
+        type triSurfaceMesh;
+        name ymin;
+    }
+}
+
+// Settings for the castellatedMesh generation.
+castellatedMeshControls
+{
+    // Feature based refinement
+    // ~~~~~~~~~~~~~~~~~~~~~~~~
+
+    features
+    (
+    );
+
+    // Surface based refinement
+    // ~~~~~~~~~~~~~~~~~~~~~~~~
+
+    refinementSurfaces
+    {
+        ceiling
+        {
+            // Surface-wise min and max refinement level
+            level (0 0);
+            regions	{}
+        }
+        floor
+        {
+            // Surface-wise min and max refinement level
+            level (0 0);
+            regions	{}
+        }
+        human
+        {
+            // Surface-wise min and max refinement level
+            level (2 2);
+            regions	{}
+        }
+        xmax
+        {
+            // Surface-wise min and max refinement level
+            level (0 0);
+            regions	{}
+        }
+        xmin
+        {
+            // Surface-wise min and max refinement level
+            level (0 0);
+            regions	{}
+        }
+        ymax
+        {
+            // Surface-wise min and max refinement level
+            level (0 0);
+            regions	{}
+        }
+        ymin
+        {
+            // Surface-wise min and max refinement level
+            level (0 0);
+            regions	{}
+        }
+    }
+
+    refinementRegions {}
+    featureRefineAngle 30.;
+
+    locationInMesh (0.5 0 0);
+}
+
+// Settings for the snapping.
+snapControls
+{
+    // Per final patch (so not geometry!) the layer information
+    featureEdges {}
+}
+
+// Settings for the layer addition.
+addLayersControls
+{
+    // Per final patch (so not geometry!) the layer information
+    layers
+    {
+        human{nSurfaceLayers 5;}
+    }
+}
+
+
+// ************************************************************************* //

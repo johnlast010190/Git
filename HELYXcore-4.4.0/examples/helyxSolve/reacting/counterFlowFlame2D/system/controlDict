@@ -1,0 +1,81 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     helyxSolve;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         0.5;
+
+deltaT          1e-06;
+
+writeControl    runTime;
+
+writeInterval   0.05;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  10;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   6;
+
+graphFormat     raw;
+
+runTimeModifiable true;
+
+libs            1 ( "" );
+
+adjustTimeStep  yes;
+
+maxCo           0.4;
+
+maxDeltaT       1;
+
+functions
+{
+    VR
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( T U p );
+        executeControl  timeStep;
+        type            volumeReport;
+        regions         ( region0 );
+        writeControl    timeStep;
+        writeInterval   1;
+        executeInterval 1;
+    }
+    Qdot
+    {
+        type            Qdot;
+        libs            ( "libfieldFunctionObjects.so" );
+        executeControl  writeTime;
+        writeControl    writeTime;
+    }
+}
+
+
+// ************************************************************************* //

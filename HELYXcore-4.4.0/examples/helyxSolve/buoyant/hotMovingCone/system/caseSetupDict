@@ -1,0 +1,276 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    regionGroups    1 ( fluid 1 ( region0 ) );
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startTime       0;
+            stopAt          endTime;
+            endTime         0.012;
+            deltaT          1e-5;
+            writeControl    timeStep;
+            writeInterval   100;
+            adjustTimeStep  no;
+            maxCo           0.2;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type            volumeReport;
+            fields          ( U p T );
+            functionObjectLibs ("libreport.so" );
+        }
+        cuttingPlane
+        {
+            type            surfaces;
+            functionObjectLibs ("libsampling.so");
+
+            writeControl   outputTime;
+
+            surfaceFormat   vtk;
+            fields          ( p U T );
+
+            interpolationScheme cellPoint;
+
+            surfaces
+            (
+                zNormal
+                {
+                    type            cuttingPlane;
+                    planeType       pointAndNormal;
+                    pointAndNormalDict
+                    {
+                        basePoint       (0 0 0);
+                        normalVector    (0 0 1);
+                    }
+                    interpolate     true;
+                }
+            );
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        boundaryMesh
+        {
+            movingWall
+            {
+                type wall;
+            }
+            farFieldMoving
+            {
+                type wall;
+            }
+            fixedWall
+            {
+                type wall;
+            }
+            axis
+            {
+                type empty;
+            }
+            left
+            {
+                type patch;
+            }
+            farField
+            {
+                type wall;
+            }
+            back
+            {
+                type wedge;
+            }
+            front
+            {
+                type wedge;
+            }
+        }
+        state           ( transient ras dynamic energy );
+        turbulenceModel laminar;
+        materials       ( air );
+        materialProperties
+        {
+            air
+            {
+                materialType    fluid;
+                thermodynamics  hConst;
+                equationOfState rhoConst;
+                buoyancyModel   Boussinesq;
+                equationOfStateCoeffs
+                {
+                    rho            1.205;
+                }
+                buoyancyModelCoeffs
+                {
+                    rho0 1.205;
+                    T0   300;
+                    beta 0.0034;
+                }
+                energy          sensibleEnthalpy;
+                muModel         scalarFunction1;
+                kappaModel      kappaPrandtl;
+                molWeight       28.9;
+
+                thermodynamicsCoeffs
+                {
+                    Cp 1006.8;
+                    Hf 0;
+                }
+                muModelCoeffs
+                {
+                    mu 1.8232e-05;
+                }
+                kappaModelCoeffs
+                {
+                    Pr 0.71;
+                }
+            }
+        }
+        constant
+        {
+            dynamicMeshDict
+            {
+                mover
+                {
+                    type            motionSolver;
+                    libs            ("libfvMeshMovers.so" "libfvMotionSolvers.so");
+                    motionSolver    velocityComponentLaplacian;
+                    velocityComponentLaplacianCoeffs
+                    {
+                        component       x;
+                        diffusivity     directional (1 200 0);
+                    }
+                }
+            }
+            g
+            {
+                value           ( 9.81 0 0 );
+            }
+        }
+        fieldMaps
+        {
+            pointMotionUx distance;
+        }
+        system
+        {
+            fvSolution
+            {
+                solvers
+                {
+                    cellMotionUx
+                    {
+                        solver          PCG;
+                        preconditioner  DIC;
+                        tolerance       1e-08;
+                        relTol          0;
+                    }
+                }
+                PIMPLE
+                {
+                    nOuterCorrectors 5;
+                    nCorrectors     1;
+                    nNonOrthogonalCorrectors 0;
+                }
+            }
+        }
+        fields
+        {
+            pointMotionUx
+            {
+                fieldDefinition
+                {
+                    dimensions [ 0 1 -1 0 0 0 0 ];
+                    meshType point;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            left
+            {
+                pointMotionUx
+                {
+                    type            uniformFixedValue;
+                    uniformValue    constant 0;
+                }
+                U
+                {
+                    type            pressureInletOutletVelocity;
+                    value           uniform (0 0 0);
+                }
+                p
+                {
+                    type            totalPressure;
+                    p0              uniform 0;
+                    value           uniform 0;
+                }
+                T
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 300;
+                    value           uniform 300;
+                }
+
+            }
+            farField
+            {
+                pointMotionUx
+                {
+                    type            slip;
+                }
+            }
+            farFieldMoving
+            {
+                pointMotionUx
+                {
+                    type            slip;
+                }
+            }
+            movingWall
+            {
+                pointMotionUx
+                {
+                    type            uniformFixedValue;
+                    uniformValue    table ((0 0) (0.006 0) (0.006001 0.5));
+                }
+                U
+                {
+                    type            movingWallVelocity;
+                    value           uniform ( 0 0 0 );
+                }
+                T
+                {
+                    type            fixedValue;
+                    value           uniform 500;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

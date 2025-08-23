@@ -1,0 +1,455 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            stopAt          endTime;
+            endTime         4e-05;
+            deltaT          1e-08;
+            writeInterval   1e-06;
+            purgeWrite      0;
+            adjustTimeStep  yes;
+            maxCo           0.5;
+            maxAlphaCo      0.5;
+            maxDeltaT       1e-08;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( transient les vof );
+
+        materials ( fuel air );
+
+        materialProperties
+        {
+            materialType    multiphase;
+
+            buoyancyModel   rhoModel;
+
+            air
+            {
+                materialType    fluid;
+                thermodynamics  hConst;
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho        20;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          1.7e-05;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr          0.7;
+                }
+            }
+
+            fuel
+            {
+                materialType    fluid;
+                thermodynamics  eConst;
+                equationOfState rhoConst;
+                molWeight   18.0;
+                equationOfStateCoeffs
+                {
+                    rho        840;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cv          4195;
+                    Hf          0;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          4.99968e-3;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr          2.289;
+                }
+            }
+
+            referenceFields
+            {
+                p       [1 -1 -2 0 0 0 0] 101325;
+                TConst  [ 0 0 0 1 0 0 0 ] 273.15;
+            }
+
+            phases          2 ( fuel air );
+
+            mixture         volumeMixture;
+
+            energy          sensibleInternalEnergy;
+
+            fuel_air
+            {
+                surfaceTensionModel constant;
+                surfaceTensionModelCoeffs
+                {
+                    sigma           0.0261;
+                }
+            }
+        }
+
+        turbulenceModel kEqn;
+        /*{
+            simulationType  LES;
+
+            LES
+            {
+                LESModel        kEqn;
+
+                turbulence      on;
+
+                printCoeffs     on;
+
+                delta           smooth;
+
+                cubeRootVolCoeffs
+                {
+                    deltaCoeff      1;
+                }
+
+                PrandtlCoeffs
+                {
+                    delta           cubeRootVol;
+                    cubeRootVolCoeffs
+                    {
+                        deltaCoeff      1;
+                    }
+
+                    smoothCoeffs
+                    {
+                        delta           cubeRootVol;
+                        cubeRootVolCoeffs
+                        {
+                            deltaCoeff      1;
+                        }
+
+                        maxDeltaRatio   1.1;
+                    }
+
+                    Cdelta          0.158;
+                }
+
+                vanDriestCoeffs
+                {
+                    delta           cubeRootVol;
+                    cubeRootVolCoeffs
+                    {
+                        deltaCoeff      1;
+                    }
+
+                    smoothCoeffs
+                    {
+                        delta           cubeRootVol;
+                        cubeRootVolCoeffs
+                        {
+                            deltaCoeff      1;
+                        }
+
+                        maxDeltaRatio   1.1;
+                    }
+
+                    Aplus           26;
+                    Cdelta          0.158;
+                }
+
+                smoothCoeffs
+                {
+                    delta           cubeRootVol;
+                    cubeRootVolCoeffs
+                    {
+                        deltaCoeff      1;
+                    }
+
+                    maxDeltaRatio   1.1;
+                }
+            }
+        }*/
+
+        constant
+        {
+            g
+            {
+                dimensions      [0 1 -2 0 0 0 0];
+                value           (0 0 0);
+            }
+            turbulenceProperties
+            {
+                simulationType  LES;
+                LES
+                {
+                    LESModel        kEqn;
+                    turbulence      on;
+                    printCoeffs     on;
+                    delta           smooth;
+                    cubeRootVolCoeffs
+                    {
+                        deltaCoeff      1;
+                    }
+                    PrandtlCoeffs
+                    {
+                        delta           cubeRootVol;
+                        cubeRootVolCoeffs
+                        {
+                            deltaCoeff      1;
+                        }
+                        smoothCoeffs
+                        {
+                            delta           cubeRootVol;
+                            cubeRootVolCoeffs
+                            {
+                                deltaCoeff      1;
+                            }
+                            maxDeltaRatio   1.1;
+                        }
+                        Cdelta          0.158;
+                    }
+                    vanDriestCoeffs
+                    {
+                        delta           cubeRootVol;
+                        cubeRootVolCoeffs
+                        {
+                            deltaCoeff      1;
+                        }
+                        smoothCoeffs
+                        {
+                            delta           cubeRootVol;
+                            cubeRootVolCoeffs
+                            {
+                                deltaCoeff      1;
+                            }
+                            maxDeltaRatio   1.1;
+                        }
+                        Aplus           26;
+                        Cdelta          0.158;
+                    }
+                    smoothCoeffs
+                    {
+                        delta           cubeRootVol;
+                        cubeRootVolCoeffs
+                        {
+                            deltaCoeff      1;
+                        }
+                        maxDeltaRatio   1.1;
+                    }
+                }
+            }
+        }
+        system
+        {
+            fvOptions
+            {
+                flowSolver
+                {
+                    type multiphaseSegregatedFlowSolver;
+                }
+                volumeFractionSolver
+                {
+                    type MULESVolumeFractionSolver;
+                    nAlphaSubCycles 2;
+                    cAlpha          1;
+                }
+            }
+            fvSolution
+            {
+                PIMPLE
+                {
+                    momentumPredictor no;
+                    nCorrectors     2;
+                    nNonOrthogonalCorrectors 1;
+                }
+            }
+        }
+        boundaryMesh
+        {
+            axis
+            {
+                type            empty;
+            }
+            inlet
+            {
+                type            inlet;
+            }
+            walls
+            {
+                type            wall;
+            }
+            atmosphere
+            {
+                type            atmosphere;
+            }
+            front
+            {
+                type            wedge;
+            }
+            back
+            {
+                type            wedge;
+            }
+        }
+        fields
+        {
+            U { initialisation{type fixedValue; value uniform ( 0 0 0 );} }
+            p { initialisation{type buoyantPressure; value uniform 0;} }
+            nuTilda { initialisation{type fixedValue; value uniform 0;} }
+            nut { initialisation{type fixedValue; value uniform 1e-11;} }
+            k { initialisation{type fixedValue; value uniform 1e-11;} }
+            alphat { initialisation{type fixedValue; value uniform 1e-11;} }
+            alpha.fuel { initialisation{type fixedValue; value uniform 0;} }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform (460 0 0);
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                nuTilda
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+                nut
+                {
+                    type            zeroGradient;
+                }
+                k
+                {
+                    type            fixedValue;
+                    value           uniform 1e-05;
+                }
+                alphat
+                {
+                    type            zeroGradient;
+                }
+                alpha.fuel
+                {
+                    type            fixedValue;
+                    value           uniform 1;
+                }
+            }
+            walls
+            {
+                p
+                {
+                    type            zeroGradient;
+                }
+                U
+                {
+                    type            noSlip;
+                }
+                nuTilda
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+                nut
+                {
+                    type            zeroGradient;
+                }
+                k
+                {
+                    type            fixedValue;
+                    value           uniform 1e-11;
+                }
+                alphat
+                {
+                    type            zeroGradient;
+                }
+                alpha.fuel
+                {
+                    type            zeroGradient;
+                }
+            }
+            atmosphere
+            {
+                U
+                {
+                    type            pressureInletOutletVelocity;
+                    value           uniform (0 0 0);
+                }
+                p
+                {
+                    type            totalPressure;
+                    p0              uniform 0;
+                    addStaticHead   true;
+                }
+                nuTilda
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 0;
+                    value           uniform 0;
+                }
+                nut
+                {
+                    type            zeroGradient;
+                }
+                k
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 0.001;
+                    value           uniform 1e-11;
+                }
+                alphat
+                {
+                    type            zeroGradient;
+                }
+                alpha.fuel
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 0;
+                    value           uniform 0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,16 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+
+#------------------------------------------------------------------------------
+
+# Backup 'nonConformalCouplesDict' file
+mv system/nonConformalCouplesDict system/nonConformalCouplesDict.bkp
+
+helyxClean
+
+rm -rf constant/
+rm -f *.eps
+
+mv system/nonConformalCouplesDict.bkp system/nonConformalCouplesDict
+
+#------------------------------------------------------------------------------

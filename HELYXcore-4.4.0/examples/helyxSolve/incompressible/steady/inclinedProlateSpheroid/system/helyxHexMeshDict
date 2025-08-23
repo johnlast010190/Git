@@ -1,0 +1,280 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+castellatedMesh true;
+snap true;
+addLayers true;
+blockType block;
+blockData ( 0.01 0 );
+crackDetection false;
+crackTol 0.05;
+allowTopoChanges true;
+finalDecomposition ptscotch;
+meshMode quality;
+
+geometry
+{
+    inclinedProlateSpheroid.bts
+    {
+        type triSurfaceMesh;
+        name inclinedProlateSpheroid;
+        appendRegionName false;
+    }
+    RR1
+    {
+        type searchableBox;
+        min ( -4.8 -2.4 -2.4 );
+        max ( 7.2 7.2 2.4 );
+    }
+    RR2
+    {
+        type searchableBox;
+        min ( -2.4 -1.2 -1.2 );
+        max ( 3.6 3.6 1.2 );
+    }
+}
+
+castellatedMeshControls
+{
+    features ();
+    refinementSurfaces
+    {
+        inclinedProlateSpheroid
+        {
+            level ( 6 6 );
+        }
+    }
+    refinementRegions
+    {
+        inclinedProlateSpheroid
+        {
+            mode distance;
+            levels ( ( 0.025 6 ) ( 0.05 5 ) ( 0.075 4 ) ( 0.1 3 ) );
+        }
+        RR1
+        {
+            mode inside;
+            levels ( ( 100000.0 1 ) );
+        }
+        RR2
+        {
+            mode inside;
+            levels ( ( 100000.0 2 ) );
+        }
+    }
+    maxLocalCells 250000000;
+    maxGlobalCells 1000000000;
+    minRefinementCells 100;
+    maxLoadUnbalance 0.1;
+    nCellsBetweenLevels 6;
+    resolveFeatureAngle -60.0;
+    featureRefineAngle 20.0;
+    refineSurfaceBoundary false;
+    minBaffleAngle -60.0;
+    allowFreeStandingZoneFaces false;
+    balanceThenRefine true;
+    nGapRefinements 0;
+    minZoneRegionSize 1;
+    additionalInsideCheck false;
+    moveCentroidsTol -1.0;
+    interfaceRefine true;
+    splitCells false;
+    wrapper
+    {
+        wrap false;
+        volSources true;
+        volDistance 1.0;
+        meshInMM false;
+        maxIter 200;
+        writeFields false;
+        invert false;
+        sigma 3.0;
+        cutoff 1000.0;
+    }
+    locationsInMesh ( ( ( 0.0 4.0 0.0 ) none ) );
+    interZonesBaffle false;
+    singleCellGapClosure false;
+    filterFreeStandingHoles false;
+    extrudeExtraRemoval false;
+    fullLeakChecks true;
+    locationsOutsideMesh ();
+}
+
+snapControls
+{
+    featureEdges {}
+    nOuterIter 1;
+    nPreFeatureIter 0;
+    nSolveIter 10;
+    nFeatureIter 60;
+    globalFeatureEdges true;
+    globalRegionSnap false;
+    nSmoothPatch 2;
+    tolerance 4.0;
+    nRelaxIter 5;
+    zoneFeatureSnapping true;
+    directFeatureSnapping true;
+    geometryFeatureLines true;
+    snapSurfBoundary true;
+    collapseTol 0.25;
+    enlargeStencil false;
+    smoothSnappedSurface true;
+    featureSnapChecks true;
+    concaveTol 0.3;
+    nSliverSmooths 10;
+    mergeBoundaryFaces true;
+    averageSurfaceNormal true;
+    repatchOverlapping false;
+    acuteReflexSnapAngle 25.0;
+    minAcuteReflexSnapAngle 8.0;
+    preFaceMergeExtrude false;
+}
+
+addLayersControls
+{
+    layers
+    {
+        inlet
+        {
+            nSurfaceLayers 0;
+            expansionRatio 1.25;
+            grownUp false;
+            baffleCollapse false;
+        }
+        outlet
+        {
+            nSurfaceLayers 0;
+            expansionRatio 1.25;
+            grownUp false;
+            baffleCollapse false;
+        }
+        bottom
+        {
+            nSurfaceLayers 0;
+            expansionRatio 1.25;
+            grownUp false;
+            baffleCollapse false;
+        }
+        top
+        {
+            nSurfaceLayers 0;
+            expansionRatio 1.25;
+            grownUp false;
+            baffleCollapse false;
+        }
+        side1
+        {
+            nSurfaceLayers 0;
+            expansionRatio 1.25;
+            grownUp false;
+            baffleCollapse false;
+        }
+        side2
+        {
+            nSurfaceLayers 0;
+            expansionRatio 1.25;
+            grownUp false;
+            baffleCollapse false;
+        }
+        inclinedProlateSpheroid
+        {
+            nSurfaceLayers 25;
+            fch 1.0E-5;
+            fixedFCH false;
+            grownUp false;
+            maxLayerThickness 0.01;
+            baffleCollapse false;
+            relativeSizes false;
+        }
+    }
+    expansionRatio 1.25;
+    finalLayerThickness 0.4;
+    featureAngleTerminate 80;
+    maxFaceThicknessRatio 2.0;
+    maxProjectionDistance 10000.0;
+    writeVTK true;
+    fixedFCH false;
+    dualConcaveCollapse 300;
+    dualZoneLayersScaling 1.0;
+    dualLayerInterfaceWeights 0.5;
+    dualMaxOrtho 180;
+    dualReSnapZones true;
+    extrudeBlend true;
+    incrementLower true;
+    curvatureSplit true;
+    squishTol -1.0;
+}
+
+meshQualityControls
+{
+    maxNonOrtho 70.0;
+    maxBoundarySkewness 20;
+    maxInternalSkewness 6;
+    maxConcave 80.0;
+    minFlatness 0.5;
+    minVol 1.0E-14;
+    minTetQuality -1.0E30;
+    minArea 1.0E-13;
+    minTwist 0.05;
+    minDeterminant 1.0E-4;
+    minFaceWeight 0.08;
+    minVolRatio 0.02;
+    minTriangleTwist -0.99;
+    errorReduction 0.75;
+    nSmoothScale 10;
+    minVolCollapseRatio -1.0;
+    faceFaceCells false;
+    minSnapRelativeVolume -1;
+    smoothAlignedEdges false;
+    minSnapRelativeTetVolume -1;
+    maxGaussGreenCentroid -1;
+    nVolSmoothIter 8;
+    maxCellAspectRatio -1.0;
+    maxFaceCentreNonOrtho 180.0;
+    minEdgeLength -1.0;
+}
+
+debug 0;
+mergeTolerance 1.0E-6;
+meshAlgorithm extrude;
+outputProtected false;
+
+meshOptimization
+{
+    type cfMeshOptimize;
+    cfMeshOptimizeCoeffs
+    {
+        qualityThreshold 0.0;
+        numLaplaceIterations 0;
+        maxNumGlobalIterations 10;
+        maxNumIterations 50;
+        maxNumSurfaceIterations 2;
+        relaxedCheck false;
+        finalRelaxedCheck true;
+        checkWarped false;
+    }
+}
+
+cellRemoval
+{
+    checks ();
+    patch oldInternalFaces;
+    removeCells true;
+    writeVTK true;
+}
+
+
+// ************************************************************************* //

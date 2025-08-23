@@ -1,0 +1,16 @@
+solid top
+  facet normal 0 0 1
+    outer loop
+      vertex 0 0 72
+      vertex 384 0 72
+      vertex 384 144 72
+    endloop
+  endfacet
+  facet normal 0 0 1
+    outer loop
+      vertex 0 0 72
+      vertex 384 144 72
+      vertex 0 144 72
+    endloop
+  endfacet
+endsolid top

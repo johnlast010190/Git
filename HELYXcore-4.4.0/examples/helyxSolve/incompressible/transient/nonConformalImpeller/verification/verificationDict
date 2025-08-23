@@ -1,0 +1,41 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/outletFlowRate/0/surfaceFieldValue.dat";
+                reference "verification/short/outletFlowRate/0/surfaceFieldValue.dat";
+                variables "sum(phi)";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/inletFlowRate/0/surfaceFieldValue.dat";
+                reference "verification/short/inletFlowRate/0/surfaceFieldValue.dat";
+                variables "sum(phi)";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/outletFlowRate/0/surfaceFieldValue.dat";
+                reference "verification/long/outletFlowRate/0/surfaceFieldValue.dat";
+                variables "sum(phi)";
+            }
+            {
+                result "postProcessing/inletFlowRate/0/surfaceFieldValue.dat";
+                reference "verification/long/inletFlowRate/0/surfaceFieldValue.dat";
+                variables "sum(phi)";
+            }
+        );
+    }
+);

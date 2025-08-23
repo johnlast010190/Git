@@ -1,0 +1,340 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         2;
+            deltaT          1e-3;
+            writeControl    adjustableRunTime;
+            writeInterval   0.01;
+            writeFormat     ascii;
+            writePrecision  6;
+            maxCo           0.5;
+            maxAlphaCo      0.5;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p alpha.water );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( transient ras vof dynamic );
+        boundaryMesh
+        {
+            inlet
+            {
+                physicalType inlet;
+            }
+            outlet
+            {
+                physicalType outlet;
+            }
+            nonCoupleStationary
+            {
+                type nonConformal;
+            }
+            nonCoupleRotating
+            {
+                type nonConformal;
+            }
+        }
+        turbulenceModel laminar;
+        materials ( water air );
+        materialProperties
+        {
+            materialType multiphase;
+            passivePhase air;
+            water
+            {
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho 1000;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu 1e-3;
+                }
+            }
+            air
+            {
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho 1;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu 1.48e-5;
+                }
+            }
+            water_air
+            {
+                surfaceTensionModel constant;
+                surfaceTensionModelCoeffs
+                {
+                    sigma 0.07;
+                }
+            }
+            referenceFields
+            {
+                p [ 1 -1 -2 0 0 0 0 ] 0;
+            }
+        }
+        system
+        {
+            fvOptions
+            {
+                volumeFractionSolver
+                {
+                    type            MULESVolumeFractionSolver;
+                    nAlphaSubCycles 3;
+                    cAlpha          1;
+                }
+            }
+            meshObjects
+            {
+                rotatingFrame
+                {
+                    type            dynamicMotionCoordinateFrame;
+                    motionFunction
+                    {
+                        type            rotatingMotion;
+                        omega           -6.2832;    // rad/s
+                    }
+                    coordinateSystem
+                    {
+                        type            cartesian;
+                        origin          ( 0 0 0 );
+                        e1              ( 1 0 0 );
+                        e3              ( 0 0 1 );
+                    }
+                }
+            }
+            nonConformalCouplesDict
+            {
+                nonConformalCyclic
+                {
+                    patches          (nonCoupleStationary nonCoupleRotating);
+                    transformType    none;
+                }
+            }
+        }
+        constant
+        {
+            dynamicMeshDict
+            {
+                mover
+                {
+                    type            motionSolver;
+                    libs            ( "libfvMeshMovers.so" "libfvMotionSolvers.so" );
+                    motionSolver    solidBody;
+                    cellZone        rotating;
+                    referenceFrame  rotatingFrame;
+                }
+                topoChanger
+                {
+                    // type            refiner;
+                    type            refinerOF;
+                    libs            ("libfvMeshTopoChangers.so");
+
+                    cellZone        stationary;
+                    refineInterval  40;
+
+                    field           alpha.water;
+                    lowerRefineLevel 0.001;
+                    upperRefineLevel 0.999;
+
+                    unrefineLevel   10;
+                    nBufferLayers   1;
+                    maxRefinement   1;
+
+                    correctFluxes
+                    (
+                        (phi none)
+                        (phiv none)
+                        (alphaPhiv.air none)
+                        (alphaPhiv.water none)
+                        (meshPhi none)
+                        (ghf none)
+                    );
+
+                    maxCells        1000000;
+                    dumpLevel       true;
+                }
+                /* distributor
+                {
+                    type            distributor;
+                    libs            ("libfvMeshDistributors.so");
+                    redistributionInterval 100;
+                } */
+            }
+            g
+            {
+                value           (0 -9.81 0);
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform (1 0 0);
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            alpha.water
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+        }
+        boundaryTypeDefaults
+        {
+            nonConformal
+            {
+                U
+                {
+                    type movingWallSlipVelocity;
+                    value uniform (1 0 0);
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform (1 0 0);
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                }
+                alpha.water
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type outletPhaseMeanVelocity;
+                    alpha alpha.water;
+                    Umean 1.0;
+                    value uniform (1 0 0);
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                alpha.water
+                {
+                    type variableHeightFlowRate;
+                    lowerBound 0;
+                    upperBound 1;
+                    value uniform 0;
+                }
+            }
+            wall
+            {
+                U
+                {
+                    type movingWallVelocity;
+                    value uniform (1 0 0);
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                }
+                alpha.water
+                {
+                    type zeroGradient;
+                }
+            }
+            atmosphere
+            {
+                U
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform (1 0 0);
+                }
+                p
+                {
+                    type totalPressure;
+                    value uniform 0;
+                    p0 uniform 0;
+                }
+                alpha.water
+                {
+                    type inletOutlet;
+                    inletValue uniform 0;
+                    value uniform 0;
+                }
+            }
+            internalFaces
+            {
+                ".*"
+                {
+                    type internal;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

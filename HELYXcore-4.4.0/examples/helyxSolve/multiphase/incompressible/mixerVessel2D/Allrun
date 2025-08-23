@@ -1,0 +1,23 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+./Allrun.pre
+
+# Create mesh
+helyxRun blockMesh
+helyxRun topoSet
+helyxRun setsToZones -noFlipMap
+
+# Setup
+helyxRun caseSetup
+
+# Run
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch mixerVessel2D.foam
+
+#------------------------------------------------------------------------------

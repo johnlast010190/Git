@@ -1,0 +1,84 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      changeDictionaryDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+boundary
+{
+    minY
+    {
+        type            patch;
+    }
+    minZ
+    {
+        type            patch;
+    }
+    maxZ
+    {
+        type            patch;
+    }
+    ".*_to_.*"
+    {
+        sampleMode      nearestPatchFace;
+    }
+}
+
+T
+{
+    internalField   uniform 300;
+
+    boundaryField
+    {
+        ".*"
+        {
+            type            zeroGradient;
+            value           uniform 300;
+        }
+
+        heater_to_topAir
+        {
+            type            turbulentTemperatureRadCoupledMixed;
+            Tnbr            T;
+            kappaMethod     solidThermo;
+            QrNbr           Qr;
+            Qr              none;
+            value           uniform 300;
+        }
+
+        heater_to_bottomAir
+        {
+            type            turbulentTemperatureRadCoupledMixed;
+            Tnbr            T;
+            kappaMethod     solidThermo;
+            QrNbr           Qr;
+            Qr              none;
+            value           uniform 300;
+        }
+
+        "heater_to_.*"
+        {
+            type            turbulentTemperatureCoupledBaffleMixed;
+            Tnbr            T;
+            kappaMethod     solidThermo;
+            value           uniform 300;
+        }
+        minY
+        {
+            type            fixedValue;
+            value           uniform 500;
+        }
+    }
+}
+
+// ************************************************************************* //

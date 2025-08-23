@@ -1,0 +1,2 @@
+# Time	Umin	Umin location	Umax	Umax location	Umean	UstDev	epsilonmin	epsilonmin location	epsilonmax	epsilonmax location	epsilonmean	epsilonstDev	kmin	kmin location	kmax	kmax location	kmean	kstDev
+10	8.39829	( 0.0025 0.049375 0.0025 )	10.0602	( 0.0025 -0.013125 0.0025 )	10	0.276133	5.19696e-09	( 0.0025 -0.013125 0.0025 )	250.107	( 0.0025 -0.049375 0.0025 )	6.58897	38.6193	7.32693e-11	( 0.0025 -0.005625 0.0025 )	0.689264	( 0.0025 -0.049375 0.0025 )	0.0201665	0.107977

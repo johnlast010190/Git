@@ -1,0 +1,369 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom latestTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 500;
+            deltaT constant 1.0;
+            writeControl timeStep;
+            writeInterval 100;
+            purgeWrite 0;
+            writeFormat binary;
+            writePrecision 10;
+            writeCompression uncompressed;
+            timeFormat general;
+            timePrecision 6;
+            graphFormat raw;
+            runTimeModifiable yes;
+            adjustTimeStep false;
+            maxCo 0;
+            maxAlphaCo 0;
+            maxDeltaT 0;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+        FR
+        {
+            type forces;
+            functionObjectLibs ( "libforces.so" );
+            log true;
+            CofR (0 0 0);
+            patches ( buildings );
+            executeControl onEnd;
+            writeControl onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (steady ras energy);
+        boundaryMesh
+        {
+            wall
+            {
+                type wall;
+            }
+            ground
+            {
+                type wall;
+            }
+            buildings
+            {
+                type wall;
+            }
+            inlet
+            {
+                type patch;
+            }
+            outlet
+            {
+                type patch;
+            }
+            frontAndBack
+            {
+                type symmetry;
+            }
+        }
+        turbulenceModel kEpsilon;
+        materials (air);
+        materialProperties
+        {
+            air
+            {
+                materialName    air;
+                materialType    fluid;
+                thermodynamics  hConst;
+                equationOfState perfectGas;
+                energy          sensibleEnthalpy;
+                buoyancyModel   rhoModel;
+
+                molWeight 28.9;
+
+                thermodynamicsCoeffs
+                {
+                    Cp 1006.0;
+                    Hf 0.0;
+                }
+
+                muModel       scalarFunction1;
+                muModelCoeffs
+                {
+                    mu 1.84E-5;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                     Pr 0.85;
+                }
+                referenceFields
+                {
+                    p [ 1 -1 -2 0 0 0 0 ] 100000;
+                }
+            }
+        }
+        constant
+        {
+            g
+            {
+                dimensions [0  1 -2  0 0 0 0];
+                value ( 0.0 0.0 -9.81 );
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 10.0 0.0 0.0 );
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 1.5;
+                }
+            }
+            epsilon
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.03;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 293.0;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type buoyantPressure;
+                    nNonOrthogonalCorrectors 7;
+                    value uniform 0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            wall
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                }
+                T
+                {
+                    type fixedValue;
+                    value uniform 293.0;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 1.5;
+                }
+                epsilon
+                {
+                    type epsilonWallFunction;
+                    value uniform 0.03;
+                }
+            }
+            buildings
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                }
+                T
+                {
+                    type turbulentHeatFluxTemperature;
+                    value uniform 300.0;
+                    q uniform 0.0;
+                    heatSource flux;
+                    kappaMethod fluidThermo;
+                    kappaName none;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 1.5;
+                }
+                epsilon
+                {
+                    type epsilonWallFunction;
+                    value uniform 0.03;
+                }
+                nut
+                {
+                    type nutkWallFunction;
+                    value uniform 0.0;
+                }
+            }
+            atmosphere
+            {
+                U
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type totalPressure;
+                    value uniform 0;
+                    p0 uniform 0;
+                    gamma 1.0;
+                    addStaticHead true;
+                }
+                T
+                {
+                    type inletOutlet;
+                    value uniform 293.0;
+                    inletValue uniform 293.0;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    value uniform 0.1;
+                    intensity 0.02;
+                }
+                epsilon
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    value uniform 0.01;
+                    mixingLength 0.07;
+                }
+            }
+            inlet
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 10.0 0.0 0.0 );
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                }
+                T
+                {
+                    type fixedValue;
+                    value uniform 293.0;
+                }
+                k
+                {
+                    type fixedValue;
+                    value uniform 1.5;
+                }
+                epsilon
+                {
+                    type fixedValue;
+                    value uniform 0.03;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type totalPressure;
+                    value uniform 0;
+                    p0 uniform 0;
+                    gamma 1.0;
+                    addStaticHead true;
+                }
+                T
+                {
+                    type inletOutlet;
+                    value uniform 293.0;
+                    inletValue uniform 293.0;
+                }
+                k
+                {
+                    type inletOutlet;
+                    inletValue uniform 1.5;
+                    value uniform 1.5;
+                }
+                epsilon
+                {
+                    type inletOutlet;
+                    inletValue uniform 0.03;
+                    value uniform 0.03;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

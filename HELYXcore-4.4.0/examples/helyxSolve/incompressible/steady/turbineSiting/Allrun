@@ -1,0 +1,38 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy input surface from resources directory
+mkdir -p constant/triSurface
+cp "$HELYX_TUTORIALS"/resources/geometry/terrain.stl constant/triSurface/
+
+# Create background mesh in series
+helyxRun blockMesh
+
+cp system/decomposeParDict.hierarchical system/decomposeParDict
+helyxRun decomposePar
+
+cp system/decomposeParDict.ptscotch system/decomposeParDict
+helyxRun helyxHexMesh -overwrite
+
+# Extract actuation disks cellZones
+helyxRun topoSet
+
+# Setup
+helyxRun caseSetup
+
+# Run
+helyxRun helyxSolve
+
+# Reconstruct geometry
+helyxRun -serial reconstructParMesh -constant
+
+# Reconstruct fields for all times
+helyxRun -serial reconstructPar
+
+# Create dummy file for ParaView visualisation
+touch turbineSiting.foam
+
+#------------------------------------------------------------------------------

@@ -1,0 +1,40 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy input surface from resources directory
+mkdir -p constant/triSurface
+cp "$HELYX_TUTORIALS"/resources/geometry/flatRoof3D/* constant/triSurface/
+
+# Mesh generation
+helyxRun -parallel helyxHexMesh
+
+# Setup for the snow pack initialisaion
+helyxRun caseSetup -dict system/caseSetupDict.pack
+
+# Make the snow pack on the roof
+helyxRun moveDynamicMesh
+
+# Copy the points to the constant directory
+mv processor0/1/polyMesh/points processor0/constant/polyMesh/
+mv processor1/1/polyMesh/points processor1/constant/polyMesh/
+mv processor2/1/polyMesh/points processor2/constant/polyMesh/
+mv processor3/1/polyMesh/points processor3/constant/polyMesh/
+mv processor4/1/polyMesh/points processor4/constant/polyMesh/
+mv processor5/1/polyMesh/points processor5/constant/polyMesh/
+
+# Remove the points from the processor directories
+rm -r processor*/1/
+
+# Setup the case
+helyxRun -append caseSetup -dict system/caseSetupDict
+
+# Run
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch flatRoof3D.foam
+
+#------------------------------------------------------------------------------

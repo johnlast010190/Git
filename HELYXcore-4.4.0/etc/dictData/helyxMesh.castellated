@@ -1,0 +1,94 @@
+    // Refinement parameters
+    // ~~~~~~~~~~~~~~~~~~~~~
+
+    // While refining maximum number of cells per processor. This is basically
+    // the number of cells that fit on a processor. If you choose this too small
+    // it will do just more refinement iterations to obtain a similar mesh.
+    maxLocalCells 100000000;
+
+    // Overall cell limit (approximately). Refinement will stop immediately
+    // upon reaching this number so a refinement level might not complete.
+    // Note that this is the number of cells before removing the part which
+    // is not 'visible' from the keepPoint. The final number of cells might
+    // actually be a lot less.
+    maxGlobalCells 1000000000;
+
+    // The surface refinement loop might spend lots of iterations refining just a
+    // few cells. This setting will cause refinement to stop if <= minimumRefine
+    // are selected for refinement. Note: it will at least do one iteration
+    // (unless the number of cells to refine is 0)
+    minRefinementCells 100;
+
+    // Allow a certain level of imbalance during refining
+    // (since balancing is quite expensive)
+    // Expressed as fraction of perfect balance (= overall number of cells /
+    // nProcs). 0=balance always.
+    maxLoadUnbalance 0.10;
+
+    // Number of buffer layers between different levels.
+    // 1 means normal 2:1 refinement restriction, larger means slower
+    // refinement.
+    nCellsBetweenLevels 2;
+
+    // Resolve sharp angles
+    resolveFeatureAngle -60.;
+    featureRefineAngle 20.;
+    refineSurfaceBoundary false;
+
+    //Can be set global, surface or region basis, to remove
+    //individual baffle faces not aligned with the surface by this angle
+    minBaffleAngle -60;
+
+    // Are zone faces allowed only inbetween different cell zones
+    // or also just free standing?   
+    allowFreeStandingZoneFaces false;
+
+    // Perform balancing before refinement 
+    balanceThenRefine true;
+
+    // Perform gap refinement iterations
+    nGapRefinements 0;
+
+    // Remove small disconnected regions from zone 
+    minZoneRegionSize 0; //default 0
+
+    // Whether to perform additional inside check for shell refinement
+    additionalInsideCheck false;
+
+    wrapper
+    {
+        // Switch on/off wrapper (default off)        
+    	wrap false;
+
+	    // Flow outlet patches need to be defined using outlets keyword
+	    // if outlets keyword is not specified picks up blockMesh boundaries
+	    outlets (inlet outlet ffmaxy ffminy ffmaxz ffminz);
+
+	    // Two mechanisms for excluding regions 1) list of exclusion
+        //  points or 2) global cutoff (default).
+
+    	//excludePoints ((0.0 0.0 0.5));
+	    cutoff 1000.;
+        	
+        // standard deviation used
+        sigma 3.0;
+
+	    // Default is to use volume sources where cells within a distance 
+	    // (set by volDistance) of non outlet patches are seeded with 
+	    // volumetric sources
+	    volSources true;
+	    volDistance 1.0;
+
+	    // adjust porosity and volumetric source strength to allow cutoff 
+	    // to be consistently set
+	    meshInMM false;
+
+	    // Maximum number of solver iteration to perform
+	    maxIter 200;
+
+	    // Write wrapper debug
+	    writeFields false;
+
+	    // Invert cells for removal
+	    invert false;
+    }

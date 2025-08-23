@@ -1,0 +1,85 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+autoBlockMesh false;
+
+geometry
+{
+    tower.stl
+    {
+        type triSurfaceMesh;
+        name tower;
+        appendRegionName false;
+    }
+    opening.stl
+    {
+        type triSurfaceMesh;
+        name plumeInlet;
+        appendRegionName false;
+    }
+}
+
+castellatedMeshControls
+{
+    refinementSurfaces
+    {
+        tower
+        {
+            level ( 2 2 );
+        }
+        plumeInlet
+        {
+            level ( 2 2 );
+        }
+    }
+    refinementRegions
+    {
+    }
+    locationsInMesh ( ( (11.11111 0.0001 0.0001) none ) );
+}
+
+addLayersControls
+{
+    layers
+    {
+        ground
+        {
+            nSurfaceLayers 3;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        tower
+        {
+            nSurfaceLayers 3;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        plumeInlet
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,28 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+# tags: asan
+
+#------------------------------------------------------------------------------
+  
+# copy default controlDict to system so blockMesh can run
+cp $HELYX_ETC/caseDicts/preProcessing/createCase/createCase.controlDict system/controlDict
+
+# Background mesh in series
+helyxRun blockMesh
+
+# Decompose case
+helyxRun decomposePar
+
+# Mesh in parallel
+helyxRun helyxHexMesh
+
+# Setup
+helyxRun foamExpandDictionary caseSetupDict
+helyxRun caseSetup
+
+# Run
+helyxRun helyxSolve
+
+#------------------------------------------------------------------------------

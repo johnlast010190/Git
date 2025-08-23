@@ -1,0 +1,67 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/dir1/FF/0/force.dat";
+                reference "verification/short/dir1/FF/0/force.dat";
+                variables "(pressure_x pressure_y pressure_z)";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/dir2/FF2/0/force.dat";
+                reference "verification/short/dir2/FF2/0/force.dat";
+                variables "(pressure_x pressure_y pressure_z)";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/dir3/FF3/0/force.dat";
+                reference "verification/short/dir3/FF3/0/force.dat";
+                variables "(pressure_x pressure_y pressure_z)";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/VR_mesh/0/volumeReport.tsv";
+                reference "verification/short/VR_mesh/0/volumeReport.tsv";
+                variables "aspectRatiomean" "determinantmean" "nonOrthogonalitymean" "skewnessmean" "volumeRatiomean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/dir1/FF/0/force.dat";
+                reference "verification/long/dir1/FF/0/force.dat";
+                variables "(pressure_x pressure_y pressure_z)";
+            }
+            {
+                result "postProcessing/dir2/FF2/0/force.dat";
+                reference "verification/long/dir2/FF2/0/force.dat";
+                variables "(pressure_x pressure_y pressure_z)";
+            }
+            {
+                result "postProcessing/dir3/FF3/0/force.dat";
+                reference "verification/long/dir3/FF3/0/force.dat";
+                variables "(pressure_x pressure_y pressure_z)";
+            }
+            {
+                result "postProcessing/VR_mesh/0/volumeReport.tsv";
+                reference "verification/long/VR_mesh/0/volumeReport.tsv";
+                variables "aspectRatiomean" "determinantmean" "nonOrthogonalitymean" "skewnessmean" "volumeRatiomean";
+            }
+        );
+    }
+);
+
+tags asan;

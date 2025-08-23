@@ -1,0 +1,166 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+castellatedMesh true;
+snap            true;
+addLayers       false;
+
+autoBlockMesh   true;
+blockData       ( 0.01 0 );
+
+crackDetection  false;
+
+geometry
+{
+    AMI.obj
+    {
+        type        triSurfaceMesh;
+        name        AMI;
+    }
+    innerInlet.obj
+    {
+        type        triSurfaceMesh;
+        name        innerInlet;
+    }
+    outerInlet.obj
+    {
+        type        triSurfaceMesh;
+        name        outerInlet;
+    }
+    innerOutlet.obj
+    {
+        type        triSurfaceMesh;
+        name        innerOutlet;
+    }
+    outerOutlet.obj
+    {
+        type        triSurfaceMesh;
+        name        outerOutlet;
+    }
+    rotorBlades.obj
+    {
+        type        triSurfaceMesh;
+        name        rotorBlades;
+    }
+    shaft.obj
+    {
+        type        triSurfaceMesh;
+        name        shaft;
+    }
+    statorBlades.obj
+    {
+        type        triSurfaceMesh;
+        name        statorBlades;
+    }
+    wall.obj
+    {
+        type        triSurfaceMesh;
+        name        walls;
+    }
+};
+
+castellatedMeshControls
+{
+    refinementSurfaces
+    {
+        AMI
+        {
+            level       (2 2);
+            faceZone    rotatingZone;
+            cellZone    rotatingZone;
+            cellZoneInside  inside;
+            faceType    boundary;
+        }
+        innerInlet
+        {
+            level       (1 1);
+            patchInfo
+            {
+                type inlet;
+            }
+        }
+        outerInlet
+        {
+            level       (1 1);
+            patchInfo
+            {
+                type inlet;
+            }
+        }
+        innerOutlet
+        {
+            level       (1 1);
+            patchInfo
+            {
+                type outlet;
+            }
+        }
+        outerOutlet
+        {
+            level       (1 1);
+            patchInfo
+            {
+                type outlet;
+            }
+        }
+        rotorBlades
+        {
+            level       (2 2);
+            faceZone rotorBlades;
+            faceType baffle;
+            allowFreeStandingZoneFaces true;
+        }
+        shaft
+        {
+            level       (1 1);
+        }
+        statorBlades
+        {
+            level       (2 2);
+            faceZone statorBlades;
+            faceType baffle;
+            allowFreeStandingZoneFaces true;
+        }
+        walls
+        {
+            level       (1 1);
+        }
+    }
+
+    refinementRegions {}
+
+    locationInMesh (0.035 0.043 0.017);
+}
+
+// Settings for the snapping.
+snapControls
+{
+    // Per final patch (so not geometry!) the layer information
+    featureEdges {}
+}
+
+// Settings for the layer addition.
+addLayersControls
+{
+
+    // Per final patch (so not geometry!) the layer information
+    layers {}
+}
+
+
+// ************************************************************************* //

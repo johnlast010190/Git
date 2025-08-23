@@ -1,0 +1,21 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+
+#------------------------------------------------------------------------------
+
+# Backup files
+mkdir -p org
+mv system/p org
+mv system/U org
+mv system/controlDict2 org
+
+helyxClean
+
+mv org/p system/
+mv org/U system/
+mv org/controlDict2 system/
+rm -rf org
+
+rm -rf constant
+
+#------------------------------------------------------------------------------

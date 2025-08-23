@@ -1,0 +1,53 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/default/VR_default/0/volumeReport.tsv";
+                reference "verification/short/default/VR_default/0/volumeReport.tsv";
+                variables "Umean" "pmean" "CH4mean" "O2mean" "N2mean";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/pipe/inletPipe/0/surfaceReport.dat";
+                reference "verification/short/pipe/inletPipe/0/surfaceReport.dat";
+                variables "massFlux" "CH4mean";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/pipe/outletPipe/0/surfaceReport.dat";
+                reference "verification/short/pipe/outletPipe/0/surfaceReport.dat";
+                variables "massFlux" "CH4mean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/default/VR_default/0/volumeReport.tsv";
+                reference "verification/long/default/VR_default/0/volumeReport.tsv";
+                variables "Umean" "pmean" "CH4mean" "O2mean" "N2mean";
+            }
+            {
+                result "postProcessing/pipe/inletPipe/0/surfaceReport.dat";
+                reference "verification/long/pipe/inletPipe/0/surfaceReport.dat";
+                variables "massFlux" "CH4mean";
+            }
+            {
+                result "postProcessing/pipe/outletPipe/0/surfaceReport.dat";
+                reference "verification/long/pipe/outletPipe/0/surfaceReport.dat";
+                variables "massFlux" "CH4mean";
+            }
+        );
+    }
+);

@@ -1,0 +1,25 @@
+runs
+(
+    full
+    {
+        checks
+        (
+            {
+                result "postProcessing/VR_drop/200/volumeReport.tsv";
+                reference "verification/full/VR_drop/200/volumeReport.tsv";
+                variables "U.dropmean" "alpha.dropmean";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/full/VR/0/volumeReport.tsv";
+                variables "Umean" "pmean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+);
+
+tags asan;

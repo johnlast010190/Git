@@ -1,0 +1,136 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+meshAlgorithm standard;
+
+blockType block;
+blockData ( 0.01 0 );
+
+geometry
+{
+    fire.stl
+    {
+        type triSurfaceMesh;
+        name fire;
+        appendRegionName false;
+    }
+}
+
+surfaces
+{
+    fire
+    {
+        type searchableBox;
+        min ( -0.75 -0.75 -3.0 );
+        max ( 0.75 0.75 -2.5 );
+    }
+}
+
+castellatedMeshControls
+{
+    features ();
+    refinementSurfaces
+    {
+        fire
+        {
+            level ( 0 0 );
+            faceType internal;
+            faceZone fire;
+            cellZoneInside inside;
+            cellZone fire;
+            baffleChecks true;
+            allowFreeStandingZoneFaces false;
+        }
+    }
+    refinementRegions
+    {
+        fire
+        {
+            mode inside;
+            levels ( ( 100000.0 1 ) );
+        }
+    }
+
+    locationsInMesh ( ( ( 0.0 0.0 0.0 ) none ) );
+}
+
+snapControls
+{
+}
+
+addLayersControls
+{
+    layers
+    {
+        ffminx
+        {
+            nSurfaceLayers 0;
+            grownUp true;
+        }
+        ffmaxx
+        {
+            nSurfaceLayers 0;
+            grownUp true;
+        }
+        ffminy
+        {
+            nSurfaceLayers 0;
+            grownUp true;
+        }
+        ffmaxy
+        {
+            nSurfaceLayers 0;
+            grownUp true;
+        }
+        ffminz
+        {
+            nSurfaceLayers 3;
+            expansionRatio 1.25;
+            finalLayerThickness 0.4;
+            grownUp automatic;
+        }
+        ffmaxz
+        {
+            nSurfaceLayers 0;
+            expansionRatio 1.25;
+            finalLayerThickness 0.4;
+            grownUp automatic;
+        }
+        fire
+        {
+            nSurfaceLayers 0;
+            expansionRatio 1.25;
+            finalLayerThickness 0.4;
+            grownUp false;
+        }
+        fire_slave
+        {
+            nSurfaceLayers 0;
+            expansionRatio 1.25;
+            finalLayerThickness 0.4;
+            grownUp false;
+        }
+    }
+    writeVTK false;
+}
+
+meshQualityControls
+{
+}
+
+// ************************************************************************* //

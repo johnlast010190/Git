@@ -1,0 +1,570 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | HELYX(R): Open-source CFD for Enterprise                 |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | Engys Ltd. http://www.engys.com                          |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    location system;
+    object helyxHexMeshDict;
+}
+    castellatedMesh 0;
+    snap 1;
+    addLayers 0;
+
+    allowTopoChanges false;
+
+    finalDecomposition hierarchical;//parhip;
+
+    meshMode quality;
+
+    VDBrefinement 1;
+    blockData     ( 1500 0 );
+
+    VDBdomain
+    {
+        //boundingBox in axis-aligned local coordinates
+        min ( -60000 -30000 0 );
+        max ( 120000  30000 60000 );
+        //max ( 120000  0 60000 ); //symmetry
+    
+        patches
+        {
+            xmin {type wall;     name WT_inlet;   }
+            xmax {type wall;     name WT_outlet;  }
+            ymin {type wall;     name WT_ymin;}
+            ymax {type wall;     name WT_ymax;}
+            //ymax {type symmetry; name WT_symmetry;}
+            zmin {type wall;     name WT_ground;  }
+            zmax {type wall;     name WT_top;     }
+        }
+
+        //scaleVoxel (1.5 1 1);
+    
+        //coordinateSystem
+        //{
+        //    type            cartesian;
+        //    origin          ( 0 0 0 );
+        //    //15 deg yaw
+        //    e1              ( 0.9659 0.2588 0 );
+        //    e2              ( 0.2588 0.9659 0 );
+    
+        //    yawPitchRoll    (15 0 0);
+        //    //rollPitchYaw    (0 0 15);
+        //}
+    
+	    //DEBUG flags
+        //subsetInnerGrid true;
+        //subsetOuterGrid true;
+        balanceSurfaceCells false;
+        writeGrids      false;
+        threadedVDBtoPolyMesh true;
+        //procAsWall true;
+    }
+
+    distanceRefinement
+    {
+        mode distance;
+        levels ( ( 10 9 ) ( 150 8 ) ( 200 7 ) ( 300 6 ) ( 800 5 ) );
+    }
+
+    geometry
+    {
+        F1_2022_0_45_mm.stp
+        {
+            type CADSurface;
+            //type distributedCADSurface;
+            //decompositionMethod balanceArea;
+
+            name F1_2022_SL;
+
+            linDeflection   0.05;
+            angDeflection   0.1;
+            nameRegionsBy   solid;//shell;
+            //forceTriangulation true; //default false;
+            appendRegionName false;
+            regions
+            {
+                Monocoque                   { name Monocoque; }
+                T-tray                      { name T-tray; }
+                Halo                        { name Halo; }
+                Rear_wing                   { name Rear_wing; }
+                Front_wing_standard_downforce { name Front_wing; }
+                Powertrain                  { name Powertrain; }
+                Helmet                      { name Helmet; }
+                Left_mirror                 { name Left_mirror; }
+                Right_mirror                { name Right_mirror; }
+                Engine_cover                { name Engine_cover; }
+                Floor                       { name Floor; }
+                Heat_exchanger_duct_right   { name Heat_exchanger_duct_right; }
+                Heat_exchanger_duct_left    { name Heat_exchanger_duct_left; }
+                Airbox                      { name Airbox; }
+                Nose                        { name Nose; }
+                Planck                      { name Planck; }
+                Suspension_rear_left        { name Suspension_rear_left; }
+                Suspension_rear_right       { name Suspension_rear_right; }
+                Fin                         { name Fin; }
+                Floor_fence_left            { name Floor_fence_left; }
+                Floor_fence_right           { name Floor_fence_right; }
+                Suspension_front_left       { name Suspension_front_left; }
+                Suspension_front_right      { name Suspension_front_right; }
+                Front_left_winglet          { name Front_left_winglet; }
+                Front_right_winglet         { name Front_right_winglet; }
+                Rear_left_tyre              { name Rear_left_tyre; }
+                Front_left_tyre             { name Front_left_tyre; }
+                Front_right_tyre            { name Front_right_tyre; }
+                Rear_right_tyre             { name Rear_right_tyre; }
+                Rear_suspension_right_hub   { name Rear_suspension_right_hub; }
+                Rear_suspension_left_hub    { name Rear_suspension_left_hub; }
+                Rim_rear_right              { name Rim_rear_right; }
+                Rim_front_left              { name Rim_front_left; }
+                Rim_front_right             { name Rim_front_right; }
+                Rim_rear_left               { name Rim_rear_left; }
+                Rim_cover_front_left        { name Rim_cover_front_left; }
+                Rim_cover_front_right       { name Rim_cover_front_right; }
+                Rim_cover_rear_left         { name Rim_cover_rear_left; }
+                Rim_cover_rear_right        { name Rim_cover_rear_right; }
+                Rolling_road                { name Rolling_road; }
+            }
+        }
+
+        HE_left.obj
+        {
+            type triSurfaceMesh;
+            name HE_left;
+            appendRegionName false;
+        }
+        HE_right.obj
+        {
+            type triSurfaceMesh;
+            name HE_right;
+            appendRegionName false;
+        }
+
+        MRF_front_left.obj
+        {
+            type triSurfaceMesh;
+            name MRF_front_left;
+            appendRegionName false;
+        }
+        MRF_rear_left.obj
+        {
+            type triSurfaceMesh;
+            name MRF_rear_left;
+            appendRegionName false;
+        }
+        MRF_front_right.obj
+        {
+            type triSurfaceMesh;
+            name MRF_front_right;
+            appendRegionName false;
+        }
+        MRF_rear_right.obj
+        {
+            type triSurfaceMesh;
+            name MRF_rear_right;
+            appendRegionName false;
+        }
+
+        refBox3
+        {
+            type searchableBox;
+            min ( -10000 -10000     0 );
+            max ( 150000  10000 15000 );
+        }
+        refBox8_floor
+        {
+            type searchableBox;
+            min ( -500 -1050   0 );
+            max ( 4100  1050 200 );
+        }
+        refBox8_rear_wing
+        {
+            type searchableBox;
+            min ( 3100 -1050    0 );
+            max ( 5000  1050 1500 );
+        }
+        refBox7
+        {
+            type searchableBox;
+            min ( -1600 -2000    0 );
+            max (  6000  2000 1800 );
+        }
+        refBox6
+        {
+            type searchableBox;
+            min ( -2500 -2000    0 );
+            max ( 10000  2000 3000 );
+        }
+        refBox5
+        {
+            type searchableBox;
+            min ( -3500 -3000    0 );
+            max ( 14000  3000 4500 );
+        }
+        refBox4
+        {
+            type searchableBox;
+            min ( -5000 -4000    0 );
+            max ( 26000  4000 6000 );
+        }
+        refBox8_front_wing
+        {
+            type searchableBox;
+            min ( -1500 -1050   0 );
+            max (  -350  1050 600 );
+        }
+        refBox8_rear_wheels
+        {
+            type searchableBox;
+            min ( 3400 -1500   0 );
+            max ( 5000  1500 800 );
+        }
+        refBox8_front_wheels
+        {
+            type searchableBox;
+            min ( -350 -1500   0 );
+            max (  800  1500 800 );
+        }
+    }
+
+    castellatedMeshControls
+    {
+        features ( );
+        refinementSurfaces
+        {
+            F1_2022_SL
+            {
+                level ( 7 7 );
+                regions
+                {
+                    Monocoque                   { level ( 8 8 ); }
+                    T-tray                      { level ( 8 8 ); }
+                    Halo                        { level ( 8 8 ); }
+                    Rear_wing                     { level ( 8 9 ); }
+                    Front_wing_standard_downforce { level ( 8 9 ); }
+                    Powertrain                  { level ( 8 8 ); }
+                    Helmet                      { level ( 8 8 ); }
+                    Left_mirror                 { level ( 8 8 ); }
+                    Right_mirror                { level ( 8 8 ); }
+                    Engine_cover                { level ( 8 8 ); }
+                    Floor                       { level ( 8 8 ); }
+                    Heat_exchanger_duct_right   { level ( 8 8 ); }
+                    Heat_exchanger_duct_left    { level ( 8 8 ); }
+                    Airbox                      { level ( 8 8 ); }
+                    Nose                        { level ( 8 8 ); }
+                    Planck                      { level ( 8 8 ); }
+                    Suspension_rear_left        { level ( 8 8 ); }
+                    Suspension_rear_right       { level ( 8 8 ); }
+                    Fin                         { level ( 8 8 ); }
+                    Floor_fence_left            { level ( 8 8 ); }
+                    Floor_fence_right           { level ( 8 8 ); }
+                    Suspension_front_left       { level ( 8 9 ); featureRefineAngle 30;}
+                    Suspension_front_right      { level ( 8 9 ); featureRefineAngle 30;}
+                    Front_left_winglet          { level ( 8 8 ); }
+                    Front_right_winglet         { level ( 8 8 ); }
+                    Rear_left_tyre              { level ( 8 8 ); }
+                    Front_left_tyre             { level ( 8 8 ); }
+                    Front_right_tyre            { level ( 8 8 ); }
+                    Rear_right_tyre             { level ( 8 8 ); }
+                    Rear_suspension_right_hub   { level ( 8 8 ); }
+                    Rear_suspension_left_hub    { level ( 8 8 ); }
+                    Rim_rear_right              { level ( 8 8 ); }
+                    Rim_front_left              { level ( 8 8 ); }
+                    Rim_front_right             { level ( 8 8 ); }
+                    Rim_rear_left               { level ( 8 8 ); }
+                    Rim_cover_front_left        { level ( 8 8 ); }
+                    Rim_cover_front_right       { level ( 8 8 ); }
+                    Rim_cover_rear_left         { level ( 8 8 ); }
+                    Rim_cover_rear_right        { level ( 8 8 ); }
+                    Rolling_road                { level ( 8 8 ); }
+                }
+            }
+
+            HE_left
+            {
+                level ( 8 8 );
+                faceType internal;
+                faceZone HE_left;
+                cellZoneInside inside;
+                cellZone HE_left;
+                baffleChecks true;
+                allowFreeStandingZoneFaces false;
+            }
+            HE_right
+            {
+                level ( 8 8 );
+                faceType internal;
+                faceZone HE_right;
+                cellZoneInside inside;
+                cellZone HE_right;
+                baffleChecks true;
+                allowFreeStandingZoneFaces false;
+            }
+
+            MRF_front_left
+            {
+                level ( 8 8 );
+                faceType internal;
+                faceZone MRF_front_left;
+                cellZoneInside inside;
+                cellZone MRF_front_left;
+                baffleChecks true;
+                allowFreeStandingZoneFaces false;
+            }
+            MRF_rear_left
+            {
+                level ( 8 8 );
+                faceType internal;
+                faceZone MRF_rear_left;
+                cellZoneInside inside;
+                cellZone MRF_rear_left;
+                baffleChecks true;
+                allowFreeStandingZoneFaces false;
+            }
+        }
+
+        refinementRegions
+        {
+            //Halo { $distanceRefinement ; }
+
+            refBox3
+            {
+                mode inside;
+                levels ( ( 100000.0 3 ) );
+            }
+            refBox8_floor
+            {
+                mode inside;
+                levels ( ( 100000.0 8 ) );
+            }
+            refBox8_rear_wing
+            {
+                mode inside;
+                levels ( ( 100000.0 8 ) );
+            }
+            refBox7
+            {
+                mode inside;
+                levels ( ( 100000.0 7 ) );
+            }
+            refBox6
+            {
+                mode inside;
+                levels ( ( 100000.0 6 ) );
+            }
+            refBox5
+            {
+                mode inside;
+                levels ( ( 100000.0 5 ) );
+            }
+            refBox4
+            {
+                mode inside;
+                levels ( ( 100000.0 4 ) );
+            }
+            refBox8_front_wing
+            {
+                mode inside;
+                levels ( ( 100000.0 8 ) );
+            }
+            refBox8_rear_wheels
+            {
+                mode inside;
+                levels ( ( 100000.0 8 ) );
+            }
+            refBox8_front_wheels
+            {
+                mode inside;
+                levels ( ( 100000.0 8 ) );
+            }
+        }
+
+        nCellsBetweenLevels     6;
+        resolveFeatureAngle     15.0; //for VDBRefinement needs to be positive
+
+        locationsInMesh         ( ( ( -1000.0 -1000.0 1000.0 ) none ) );
+
+        maxLocalCells 	        250000000;
+        maxGlobalCells          1000000000;
+        minRefinementCells      100;
+        maxLoadUnbalance        0.1;
+        featureRefineAngle      20.0;
+        refineSurfaceBoundary   false;
+        minBaffleAngle          -60.0;
+        allowFreeStandingZoneFaces false;
+        balanceThenRefine       true;
+        nGapRefinements         1;
+        minZoneRegionSize       1;
+        additionalInsideCheck   false;
+        moveCentroidsTol        -1.0;
+        interfaceRefine         true;
+        splitCells              false;
+        interZonesBaffle        false;
+        singleCellGapClosure    false;
+    }
+    snapControls
+    {
+        featureEdges
+        {
+        }
+        nOuterIter 1;
+        nPreFeatureIter 0;
+        nSolveIter 10;
+        nFeatureIter 60;
+        globalFeatureEdges true;
+        globalRegionSnap false;
+        nSmoothPatch 2;
+        tolerance 4.0;
+        nRelaxIter 5;
+        zoneFeatureSnapping true;
+        directFeatureSnapping true;
+        geometryFeatureLines true;
+        snapSurfBoundary true;
+        collapseTol 0.25;
+        enlargeStencil true;
+        smoothSnappedSurface true;
+        featureSnapChecks true;
+        concaveTol 0.3;
+        nSliverSmooths 10;
+        mergeBoundaryFaces true;
+        averageSurfaceNormal true;
+        repatchOverlapping false;
+    }
+    addLayersControls
+    {
+        layers
+        {
+            "F1_.*"
+            {
+                nSurfaceLayers 4;
+                expansionRatio 1.25;
+                finalLayerThickness 0.4;
+                grownUp automatic;
+            }
+            "(.*inlet.*|.*outlet.*)"
+            {
+                nSurfaceLayers 0;
+                grownUp true;
+            }
+            WT_ground
+            {
+                nSurfaceLayers 4;
+                expansionRatio 1.25;
+                finalLayerThickness 0.4;
+                grownUp automatic;
+            }
+            WT_inlet
+            {
+                nSurfaceLayers 0;
+                grownUp true;
+            }
+            WT_outlet
+            {
+                nSurfaceLayers 0;
+                grownUp true;
+            }
+            WT_side
+            {
+                nSurfaceLayers 0;
+                grownUp true;
+            }
+            WT_symmetry
+            {
+                nSurfaceLayers 0;
+                grownUp true;
+            }
+            WT_top
+            {
+                nSurfaceLayers 0;
+                expansionRatio 1.25;
+                finalLayerThickness 0.4;
+                grownUp automatic;
+            }
+        }
+        relativeSizes true;
+        expansionRatio 1.25;
+        finalLayerThickness 0.4;
+        minThickness 0.2;
+        featureAngleMerge 45;
+        featureAngleTerminate 80.0;
+        nRelaxIter 5;
+        maxFaceThicknessRatio 2.0;
+        maxThicknessToMedialRatio 0.3;
+        minMedialAxisAngle 90;
+        maxLayerIter 30;
+        growConvexEdge true;
+        growConcaveEdge true;
+        growUpPatches true;
+        rebalance false;
+        layerRecovery 1;
+        nSmoothThickness 10;
+        nSmoothSurfaceNormals 6;
+        nSmoothNormals 3;
+        maxProjectionDistance 10000.0;
+        maxCellDistortion 50.0;
+        medialRatioExp 1;
+        growZoneLayers false;
+        writeVTK true;
+        fixedFCH false;
+        dualConcaveCollapse 0;
+        dualZoneLayersScaling 1.0;
+        dualLayerInterfaceWeights 0.5;
+        dualMaxOrtho 180;
+        dualReSnapZones false;
+        extrudeBlend true;
+    }
+    meshQualityControls
+    {
+        maxNonOrtho 70.0;
+        maxBoundarySkewness 20;
+        maxInternalSkewness 6;
+        maxConcave 80.0;
+        minFlatness 0.5;
+        minVol 1.0E-14;
+        minTetQuality -1.0E30;
+        minArea 1.0E-13;
+        minTwist 0.05;
+        minDeterminant 1.0E-4;
+        minFaceWeight 0.08;
+        minVolRatio 0.02;
+        minTriangleTwist -0.99;
+        errorReduction 0.75;
+        nSmoothScale 10;
+        minVolCollapseRatio -1.0;
+        faceFaceCells false;
+        minSnapRelativeVolume -1;
+        smoothAlignedEdges false;
+        minSnapRelativeTetVolume -1;
+        maxGaussGreenCentroid -1;
+        nVolSmoothIter 0;
+        maxCellAspectRatio -1.0;
+        maxFaceCentreNonOrtho 180.0;
+        minEdgeLength -1.0;
+    }
+    debug 0;
+    mergeTolerance 1.0E-6;
+    meshAlgorithm standard;
+    meshOptimization
+    {
+        type cfMeshOptimize;
+        cfMeshOptimizeCoeffs
+        {
+            qualityThreshold 0.0;
+            numLaplaceIterations 0;
+            maxNumGlobalIterations 10;
+            maxNumIterations 50;
+            maxNumSurfaceIterations 2;
+            relaxedCheck false;
+        }
+    }
+    cellRemoval
+    {
+        checks ( );
+        patch oldInternalFaces;
+    }

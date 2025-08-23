@@ -1,0 +1,91 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      fvOptions;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+injector1
+{
+    timeStart       1;
+    duration        500;
+    selectionMode   points;
+    points
+    (
+        (0.075 0.2 0.05)
+    );
+}
+
+options
+{
+    massSource1
+    {
+        type            scalarSemiImplicitSource;
+
+        $injector1;
+
+        volumeMode      absolute;
+        injectionRateSuSp
+        {
+            thermo:rho.steam     (1.0e-3 0); // kg/s
+        }
+    }
+/*
+    momentumSource1
+    {
+        type            vectorSemiImplicitSource;
+
+        $injector1;
+
+        volumeMode      absolute;
+        injectionRateSuSp
+        {
+                U.steam           ((0 1e-2 0) 0); // kg*m/s^2
+        }
+    }
+*/
+    energySource1
+    {
+        type            scalarSemiImplicitSource;
+
+        $injector1;
+
+        volumeMode      absolute;
+        injectionRateSuSp
+        {
+            e.steam      (3700 0); // kg*m^2/s^3
+        }
+    }
+    limitTsteam
+    {
+        type            limitTemperature;
+        active          yes;
+        selectionMode   all;
+        min             270;
+        max             2000;
+        phase           steam;
+    }
+
+    limitTwater
+    {
+        type            limitTemperature;
+        active          yes;
+        selectionMode   all;
+        min             270;
+        max             2000;
+        phase           water;
+    }
+}
+
+
+// ************************************************************************* //

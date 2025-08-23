@@ -1,0 +1,23 @@
+    surfElevation
+    {
+        type waveGauge;
+        functionObjectLibs ( "libreport.so" );
+        vofField alpha.water;
+        contourLevel 0.5;
+
+        // define the lines at which the field height will be mesured through time.
+        // heights are given relative to the start position for each gauge.
+        gauges
+        (
+            gauge_0
+            {
+                start  ( 0.055 0.0 0.005 );
+                end    ( 0.055 0.4 0.005 );
+            }
+            gauge_1
+            {
+                start  ( 0.105 0.0 0.005 );
+                end    ( 0.105 0.4 0.005 );
+            }
+        );
+    }    

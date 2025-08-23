@@ -1,0 +1,14 @@
+// -*- C++ -*-
+
+// ************************************************************************* //
+
+#include "fieldTransfer"
+#include "avg-Cparticulate"
+#include "sum-Cparticulate"
+// #include "sum-CparticulateMean"
+
+// #include "averaging.1612"            // generate time-averaged fields
+// #include "spatialDeviation.1612"     // spatial deviation compared to a mean field
+// #include "statistics.1612"           // transcribe volume fields -> surface
+
+// ************************************************************************* //

@@ -1,0 +1,358 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom latestTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 10.0;
+            deltaT constant 0.05;
+            writeControl runTime;
+            writeInterval 2.0;
+            purgeWrite 0;
+            writeFormat ascii;
+            writePrecision 6;
+            writeCompression uncompressed;
+            timeFormat general;
+            timePrecision 6;
+            graphFormat raw;
+            runTimeModifiable true;
+            adjustTimeStep false;
+            maxCo 0;
+            maxDeltaT 0;
+            maxAlphaCo 0;
+        }
+    }
+    functions
+    {
+        VR0
+        {
+            type volumeReport;
+            sets
+            (
+                zoneToCell
+                {
+                    name porousBlockage;
+                }
+            );
+            regions ( region0 );
+            fields ( U );
+            writeControl onEnd;
+            executeControl onEnd;
+            functionObjectLibs ( "libreport.so" );
+            outputFileFormat tsv;
+        }
+        VR1
+        {
+            type volumeReport;
+            regions ( region0 );
+            fields ( U p );
+            writeControl onEnd;
+            executeControl onEnd;
+            functionObjectLibs ( "libreport.so" );
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (transient ras);
+        boundaryMesh
+        {
+            inlet
+            {
+                type inlet;
+            }
+            outlet
+            {
+                type outlet;
+            }
+            top
+            {
+                type symmetry;
+            }
+            bottom
+            {
+                type symmetry;
+            }
+            frontAndBack
+            {
+                type empty;
+            }
+        }
+        turbulenceModel laminar;
+        materials (air);
+        materialProperties
+        {
+            air
+            {
+                materialName air;
+                materialType fluid;
+
+                molWeight 28.97;
+
+                thermodynamics hConst;
+                thermodynamicsCoeffs
+                {
+                    Cp 1006.0;
+                    Hf 0.0;
+                }
+
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr 0.85;
+                }
+
+                referenceFields
+                {
+                    p [1 -1 -2 0 0 0 0] 101325.0;
+                    T [0 0 0 1 0 0 0] 300.0;
+                }
+
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu 0.006025;
+                }
+
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho 1.205;
+                }
+            }
+        }
+        system
+        {
+            meshObjects
+            {
+                porousFrame
+                {
+                    type coordinateFrame;
+                    coordinateSystem
+                    {
+                        type cartesian;
+                        origin ( 0.0 0.0 0.0 );
+                        rotation
+                        {
+                            type axesRotation;
+                            e1 ( 1.0 0.0 0.0 );
+                            e2 ( 0.0 1.0 0.0 );
+                        }
+                    }
+                }
+            }
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default Euler;
+                }
+                gradSchemes
+                {
+                    default cellLimited Gauss linear 1;
+                    gradU Gauss linear;
+                    grad(p) Gauss linear;
+                }
+                divSchemes
+                {
+                    div(phi,U) bounded Gauss linearUpwindV gradU;
+                    default none;
+                    div(R) Gauss linear;
+                    div(nonlinearStress) Gauss linear;
+                    div((muEff*dev2(grad(U).T()))) Gauss linear;
+                    div((nuEff*dev2(T(grad(U))))) Gauss linear;
+                    div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
+                    div((nu*dev2(T(grad(U))))) Gauss linear;
+                }
+                laplacianSchemes
+                {
+                    default Gauss linear uncorrected;
+                }
+                interpolationSchemes
+                {
+                    default linear;
+                    interpolate(HbyA) linear;
+                }
+                snGradSchemes
+                {
+                    default uncorrected;
+                }
+                wallDist
+                {
+                    method meshWave;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    p
+                    {
+                        solver GAMG;
+                        tolerance 1e-06;
+                        relTol 0.1;
+                        smoother GaussSeidel;
+                    }
+                    U
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-6;
+                        relTol 0.1;
+                    }
+                    pFinal
+                    {
+                        solver GAMG;
+                        tolerance 1e-06;
+                        relTol 0;
+                        smoother GaussSeidel;
+                    }
+                    UFinal
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-6;
+                        relTol 0.0;
+                    }
+                    "(U|k|epsilon|omega|R|nuTilda)"
+                    {
+                        solver smoothSolver;
+                        smoother GaussSeidel;
+                        tolerance 1e-05;
+                        relTol 0;
+                    }
+                }
+                PIMPLE
+                {
+                    nCorrectors 2;
+                    nNonOrthogonalCorrectors 0;
+                    pRefCell 0;
+                    pRefValue 0;
+                    pMin -1.0E05;
+                    pMax 1.0E10;
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p 1.0;
+                    }
+                    equations
+                    {
+                        U 1.0;
+                        UFinal 1.0;
+                    }
+                }
+                cache
+                {
+                    grad(U) ;
+                }
+            }
+            fvOptions
+            {
+                porousBlockage_PO
+                {
+                    type explicitPorositySource;
+                    active true;
+                    explicitPorositySourceCoeffs
+                    {
+                        selectionMode cellZone;
+                        cellZone porousBlockage;
+                        type DarcyForchheimer;
+                        DarcyForchheimerCoeffs
+                        {
+                            d [0 -2 0 0 0 0 0] ( 1000.0 1000.0 1000.0 );
+                            f [0 -1 0 0 0 0 0] ( 0.0 0.0 0.0 );
+                            referenceFrame porousFrame;
+                        }
+                    }
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type default;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type default;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 1.0 0.0 0.0 );
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform ( 1.0 0.0 0.0 );
+                }
+                p
+                {
+                    type fixedValue;
+                    value uniform 0.0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

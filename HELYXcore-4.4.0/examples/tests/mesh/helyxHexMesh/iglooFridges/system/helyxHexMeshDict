@@ -1,0 +1,146 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+castellatedMesh true;
+snap            true;
+addLayers       true;
+
+geometry
+{
+    igloo
+    {
+        type searchableSphere;
+        centre (3 3 0);
+        radius 4;
+    }
+    box1
+    {
+        type searchableBox;
+        min (0 0 0);
+        max (1 1 1);
+    }
+    twoFridgeFreezers
+    {
+        type searchableSurfaceCollection;
+
+        mergeSubRegions true;
+
+        seal
+        {
+            surface box1;
+            scale (1.0 1.0 2.1);
+            transform
+            {
+                coordinateSystem
+                {
+                    type    cartesian;
+                    origin  (2 2 0);
+                    rotation
+                    {
+                        type    axesRotation;
+                        e1      (1 0 0);
+                        e3      (0 0 1);
+                    }
+                }
+            }
+        }
+        herring
+        {
+            surface box1;
+            scale (1.0 1.0 2.1);
+            transform
+            {
+                coordinateSystem
+                {
+                    type    cartesian;
+                    origin  (3.5 3 0);
+                    rotation
+                    {
+                        type    axesRotation;
+                        e1      (1 0 0);
+                        e3      (0 0 1);
+                    }
+                }
+            }
+        }
+    }
+};
+
+castellatedMeshControls
+{
+    features
+    (
+        {
+            file "fridgeA.eMesh";
+            levels ((0.01 3));
+        }
+    );
+    refinementSurfaces
+    {
+        twoFridgeFreezers
+        {
+            level (2 2);
+
+            regions
+            {
+                "cook.*"
+                {
+                    level (3 3);
+                }
+            }
+            patchInfo
+            {
+                type        wall;
+            }
+        }
+
+        "iglo.*"
+        {
+            level (1 1);
+            patchInfo
+            {
+                type        wall;
+            }
+        }
+    }
+    locationInMesh (3 0.28 0.43);
+}
+
+addLayersControls
+{
+    layers
+    {
+        "two.*"
+        {
+            nSurfaceLayers 3;
+        }
+        igloo
+        {
+            nSurfaceLayers 1;
+        }
+    }
+    meshShrinker displacementMotionSolver;
+    solver displacementLaplacian;
+    displacementLaplacianCoeffs
+    {
+        diffusivity quadratic inverseDistance ("two.*" igloo);
+    }
+}
+
+
+// ************************************************************************* //

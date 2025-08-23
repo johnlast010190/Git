@@ -1,0 +1,34 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Create background mesh
+helyxRun blockMesh
+
+# Refinement iteration 1
+helyxRun topoSet -dict system/topoSetDict.1
+helyxRun refineMesh -dict system/refineMeshDict -overwrite
+
+# Refinement iteration 2
+helyxRun -append topoSet -dict system/topoSetDict.2
+helyxRun -append refineMesh -dict system/refineMeshDict -overwrite
+
+# Refinement iteration 3
+helyxRun -append topoSet -dict system/topoSetDict.3
+helyxRun -append refineMesh -dict system/refineMeshDict -overwrite
+
+# Setup the case
+helyxRun caseSetup
+
+# Create baffles
+helyxRun createBaffles -overwrite
+
+# Run the case
+helyxRun
+
+# Create dummy file for ParaView visualisation
+touch channelBaffle.foam
+
+#------------------------------------------------------------------------------

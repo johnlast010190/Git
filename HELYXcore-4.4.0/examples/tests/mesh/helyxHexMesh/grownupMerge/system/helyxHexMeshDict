@@ -1,0 +1,114 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+// Which of the steps to run
+castellatedMesh true;
+snap            true;
+addLayers       true;
+
+blockType auto;
+blockData       ( 0.05 0 );
+meshAlgorithm extrude;
+
+geometry
+{
+    cylinder
+    {
+        type searchableCylinder;
+        radius 1.0;
+        point1 (0.0 0.0 -0.1);
+        point2 (0.0 0.0 0.6);
+    }
+    top
+    {
+        type searchablePlane;
+        planeType pointAndNormal;
+        pointAndNormalDict
+        {
+            basePoint ( 0.0 0.0 0.5 );
+            normalVector ( 0.0 0.0 1.0 );
+        }
+    }
+    bottom
+    {
+        type searchablePlane;
+        planeType pointAndNormal;
+        pointAndNormalDict
+        {
+            basePoint ( 0.0 0.0 0.0 );
+            normalVector ( 0.0 0.0 1.0 );
+        }
+    }
+};
+
+castellatedMeshControls
+{
+    features ();
+    refinementSurfaces
+    {
+        cylinder
+        {
+            level ( 0 0 );
+        }
+        top
+        {
+            level ( 0 0 );
+        }
+        bottom
+        {
+            level ( 0 0 );
+        }
+    }
+    refinementRegions {}
+    locationInMesh (0 0 0.25); // Inside point
+}
+
+snapControls
+{
+    featureEdges {}
+    extrudeMergeGrownUp true;
+}
+
+addLayersControls
+{
+    layers
+    {
+        cylinder
+        {
+            nSurfaceLayers -1;
+            grownUp true;
+            reSnap true;
+        }
+        top
+        {
+            nSurfaceLayers 5;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        bottom
+        {
+            nSurfaceLayers 5;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+    }
+    writeVTK false;
+}
+
+
+// ************************************************************************* //

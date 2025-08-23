@@ -1,0 +1,727 @@
+#!/bin/bash
+#/*---------------------------------------------------------------------------*\
+#|       o        |
+#|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+#|   o   O   o    |  Version : 4.4.0
+#|    o     o     |  ENGYS Ltd. <http://engys.com/>
+#|       o        |
+#\*---------------------------------------------------------------------------
+#License
+#    This file is part of HELYXcore.
+#    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+#
+#    HELYXcore is free software: you can redistribute it and/or modify it
+#    under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+#    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+#    for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+#Copyright
+#    (c) 2011-2014 OpenFOAM Foundation
+#    (c) 2015-2024 Engys Ltd.
+#
+# Script
+#     helyxLog
+#
+# Description
+#     extracts info from a helyx log file - see helyxLog -help
+#
+#     Not using array-of-array capabilities for backward compatibility with
+#     gawk < 4
+#
+# See also
+#     foamLog
+#
+#------------------------------------------------------------------------------
+Script=${0##*/}
+toolsDir=${0%/*}/tools
+siteDir=${CMAKE_PROJECT_NAME_SITE:-${CMAKE_PROJECT_NAME_INST_DIR:-<unknown>}/site}
+userDir=$HOME/.HELYXcore
+
+usage() {
+    exec 1>&2
+    while [ "$#" -ge 1 ]; do echo "$1"; shift; done
+    cat <<USAGE
+
+Usage: $Script [OPTIONS] <log>
+  -n                create single column files with the extracted data only
+  -quiet            quiet operation
+  -localDB          only use the local database file
+  -help             print the usage
+
+$Script - extracts xy files from adjoint logs.
+
+USAGE
+    exit 1
+}
+
+#------------------------------------------------------------------------------
+
+printHelp() {
+cat <<HELP
+-----------------------------------------------------------------------------
+Extracts information from HELYX log files.
+
+The program will generate and run an awk script which writes a set of files
+inside the logs/ directory.
+
+The default is to extract for all the 'Solved for' variables the initial
+residual, the final residual and the number of iterations. Additionally, a
+(user editable) database is used to extract data for standard non-solved for
+variables like Courant number, and execution time.
+
+The query database is a simple text format with three or four entries per line,
+separated with '/' :
+  Column 1 is the name of the variable (cannot contain spaces). It must be
+     unique within the database file. If prefixed with "section:", the entry
+     declares the beginning of a section in the file. If prefixed with
+     "endSection:", the entry declares the end of the corresponding section.
+     If prefixed by "sectionName:", the name of the section will be updated.
+  Column 2 is the extended regular expression used to select the line.
+     If this column contains bracketed subexpressions, these are used to
+     replace the strings '\1', '\2', etc within the variable name in column 1.
+  Column 3 is the extended regular expression used to extract the value within
+     the line. The value taken is the first bracketed subexpression. In the
+     case of a section or sectionName entry, the first bracketed
+     subexpression is used as the section name.
+  Column 4 (optional) is a section identifier (as declared in Column 1 of a
+     separate section entry) within which the variable is considered to
+     belong. The variable is only extracted when such a section is active.
+     The name of the current section is prepended to the variable name.
+
+The database ($Script.db) will be taken from these locations:
+
+    .
+    $userDir/$HELYX_PROJECT_VERSION
+    $userDir
+    $siteDir/$HELYX_PROJECT_VERSION
+    $siteDir
+    $HELYX_PROJECT_DIR/etc
+    $toolsDir
+
+Variables are extracted into files named <var>_<count>, for every <var>
+specified, where <count> is incremented for every occurrence inside the active
+section. When the section ends, <count> is reset. If a new section with the
+same identifier starts, the previous section of that type is ended
+automatically.
+
+Two sections are given special treatment: objective, and timeIteration.
+
+For variables within the objective section (as well as for the 'solved-for'
+variables) the output is named <objective>_<var>_<count>_all,
+<objective>_<var>_count>_initial and <objective>_<var>_<count>_final where
+<objective> is the objective being solved for, or "Primal"; <var> is the
+variable specified; <count> is incremented for every occurrence within a
+sub-iteration; and "all" denotes output as a running list of every sub-
+iteration whereas "initial" and "final" denote output for only the first or
+last sub-iteration for each objective in each timestep.
+
+For variables that are 'Solved for', the initial residual name will be
+<var>, the final residual receives the name <var>FinalRes, and the number of
+solver iterations will be <var>Iters.
+
+The files are output in a simple xy format with the first column being either
+the time iteration number (for time iteration output and for initial/final sub-
+iteration output) or the running total sub-iteration number for that
+particular objective (for sub-iteration output). The second column contains the
+extracted values. Option -n creates single column files with the extracted data
+only.
+
+Various special files are output to facilitate plotting:
+<objective>_time_all - The value of time at each running objective/primal
+sub-iteration
+<objective>_subIter_all - The sub-iteration number at each running sub-iteration
+<objective>_time_final - The value of time at each time iteration
+<objective>_runningSubIter_final - The final running total of sub-iterations
+   at each time iteration
+All <objective>_*_all files and <objective>_*_final files have the same number
+of lines as one another for a given objective and can be plotted together.
+
+-----------------------------------------------------------------------------
+HELP
+
+usage
+}
+
+
+unset quietOpt localDB nOpt
+
+# parse options
+while [ "$#" -gt 0 ]
+do
+    case "$1" in
+    -h | -help)
+        printHelp
+        exit 0
+        ;;
+    -n)
+        nOpt=true
+        shift
+        ;;
+    -q | -quiet | -s | -silent)
+        quietOpt=true
+        shift
+        ;;
+    -localDB)
+        localDB=true
+        shift
+        ;;
+    -*)
+        usage "unknown option: '$*'"
+        ;;
+    *)
+        break
+        ;;
+    esac
+done
+
+# find the database file
+DBFILE=$Script.db
+[ -f $DBFILE ] || DBFILE=`foamEtcFile $Script.db` || DBFILE=$toolsDir/$Script.db
+
+# need the database file
+[ -f $DBFILE ] || {
+    echo "$Script: Cannot read database $DBFILE"
+    exit 1
+}
+
+# single logFile
+if [ $# -eq 1 ]
+then
+    LOG=$1
+    [ -r "$LOG" ] && [ -f "$LOG" ] || usage "Cannot read log $LOG"
+else
+    usage
+fi
+
+
+myEcho()
+{
+   [ "$quietOpt" = true ] || echo "$*"
+}
+
+
+# getQueries dbFile queryName
+# Gets regular expressions for a certain queryName from the database
+getQueries()
+{
+    dbFile=$1
+    queryName=$2
+
+    [ -f "$dbFile" ] || {
+        echo "Cannot find dbFile $dbFile"
+        exit 1
+    }
+
+    escQueryName=$(echo $queryName | sed 's:[\\]:\\\\:g') #Escape the backslashes for awk
+    LINEQ=`grep -v '^#' $dbFile | awk -F '/' "/$escQueryName/ {if (\"$escQueryName\" "'!= $1) next; print $2}'`
+    NUMQ=`grep -v '^#' $dbFile | awk -F '/' "/$escQueryName/ {if (\"$escQueryName\" "'!= $1) next; print $3}'`
+    SECTQ=`grep -v '^#' $dbFile | awk -F '/' "/$escQueryName/ {if (\"$escQueryName\" "'!= $1) next; print $4}'`
+    # Escaped versions for awk
+    escLINEQ=$(echo $LINEQ | sed 's:[\\]:\\\\:g')
+    escNUMQ=$(echo $NUMQ | sed 's:[\\]:\\\\:g')
+
+    #echo "For $queryName found line selection /$LINEQ/ , column selection /$NUMQ/" 1>&2
+    #if [ ! "$LINEQ" -o ! "$NUMQ" ]
+    #then
+    #    echo "Did not find query for $2 in database $1" 1>&2
+    #fi
+}
+
+
+# getDbQueryList dbFile
+# Echoes list of possible queries
+getDbQueryList()
+{
+    grep -v '^#' $1 | grep -v '.*sub$' | grep '[^ \t]' | awk -F '/' '{print $1}'
+}
+
+
+# getAllQueries dbFile logFile  
+# Gets all queries from database and from logfile
+getAllQueries()
+{
+    queries=`getDbQueryList $1`
+
+    for q in $queries
+    do
+        echo "$q"
+    done
+}
+
+
+#-----------------------------
+# Main
+#-----------------------------
+
+caseDir=.
+outputDir=$caseDir/logs
+
+[ -d "$caseDir" ] || {
+    echo "$Script: Cannot read $caseDir"
+    exit 1
+}
+
+QUERYNAMES=`getAllQueries $DBFILE $LOG`
+
+#
+# Make logs dir in case directory and place awk file there
+#
+mkdir -p $outputDir
+AWKFILE=$outputDir/$Script.awk
+
+myEcho "Using:"
+myEcho "  log      : $LOG"
+myEcho "  database : $DBFILE"
+myEcho "  awk file : $AWKFILE"
+myEcho "  files to : $outputDir"
+myEcho ""
+
+
+#-----------------------------
+# Generate Awk program
+#-----------------------------
+
+rm -f $AWKFILE 2> /dev/null
+cat << AWK_CONTENTS > $AWKFILE
+# header
+BEGIN {
+    Iteration=0
+    SubIteration=0
+    OFS="\t"
+}
+
+AWK_CONTENTS
+
+cat << AWK_CONTENTS >> $AWKFILE
+# Print line to an output file
+function printOutput(name,abscissa,value)
+{
+    file="$outputDir/" name
+    if ("$nOpt" == "true")
+    {
+        print value > file
+    }
+    else
+    {
+        print abscissa, value > file
+    }
+}
+
+# Clear variables for specified section type
+function clearVars(sectionType)
+{
+    for (key in queryVal)
+    {
+        split(key, keys, SUBSEP)
+        section = keys[1]
+        queryName = keys[2]
+        counter = keys[3]
+
+        if (section == sectionType)
+        {
+            delete queryVal[key]
+        }
+    }
+
+    for (key in queryCounter)
+    {
+        split(key, keys, SUBSEP)
+        section = keys[1]
+        queryName = keys[2]
+
+        if (section == sectionType)
+        {
+            delete queryCounter[key]
+        }
+    }
+
+    delete activeSection[sectionType]
+
+}
+
+AWK_CONTENTS
+# ----------
+
+#
+# Code for printing values at the end of a section
+#
+cat << AWK_CONTENTS >> $AWKFILE
+function endOfSection(sectionType)
+{
+    # Specially-handled sections first
+    if (sectionType == "timeIteration")
+    {
+        #
+        # Time iteration section
+        #
+
+        # Print solved-for variables - those that weren't part of primal or objective sections
+        if ("objective" in activeSection)
+        {
+            objective = activeSection["objective"]
+            Time = activeSection["timeIteration"]
+
+            SubIteration++
+            runningSubIteration[objective]++
+
+            # Print sub-iteration number
+            printOutput(objective "_subIter_all", runningSubIteration[objective], SubIteration)
+
+            # Print time-step number
+            printOutput(objective "_timeIter_all", runningSubIteration[objective], Iteration+1)
+
+            # Print time
+            printOutput(objective "_Time_all", runningSubIteration[objective], Time)
+
+            # Print solved-for variables
+            for (key in initRes)
+            {
+                split(key, keys, SUBSEP)
+                varName = keys[1]
+                counter = keys[2]
+                printOutput(objective "_" varName "_" counter-1 "_all", runningSubIteration[objective], initRes[key])
+                printOutput(objective "_" varName "FinalRes" "_" counter-1 "_all", runningSubIteration[objective], finalRes[key])
+                printOutput(objective "_" varName "Iters" "_" counter-1 "_all", runningSubIteration[objective], iters[key])
+            }
+
+            # Print queries
+            for (key in queryVal)
+            {
+                split(key, keys, SUBSEP)
+                section = keys[1]
+                queryName = keys[2]
+                counter = keys[3]
+                if (sectionType == section)
+                {
+                    printOutput(queryName "_" counter-1 "_all", runningSubIteration[objective], queryVal[key])
+                    # Store for final-iteration output
+                    queryVal["objective", queryName, counter] = queryVal[key]
+                }
+            }
+
+            if (SubIteration == 1)
+            {
+                # Print initial value of solved-for variables
+                for (key in initRes)
+                {
+                    split(key, keys, SUBSEP)
+                    varName = keys[1]
+                    counter = keys[2]
+                    printOutput(objective "_" varName "_" counter-1 "_initial", Iteration+1, initRes[key])
+                    printOutput(objective "_" varName "FinalRes" "_" counter-1 "_initial", Iteration+1, finalRes[key])
+                    printOutput(objective "_" varName "Iters" "_" counter-1 "_initial", Iteration+1, iters[key])
+                }
+
+                # Print queries
+                for (key in queryVal)
+                {
+                    split(key, keys, SUBSEP)
+                    section = keys[1]
+                    queryName = keys[2]
+                    counter = keys[3]
+                    if (sectionType == section)
+                    {
+                        printOutput(queryName "_" counter-1 "_initial", Iteration+1, queryVal[key])
+                    }
+                }
+            }
+        }
+        else
+        {
+            for (key in initRes)
+            {
+                split(key, keys, SUBSEP)
+                varName = keys[1]
+                counter = keys[2]
+                printOutput(varName "_" counter-1, Iteration+1, initRes[key])
+                printOutput(varName "FinalRes" "_" counter-1, Iteration+1, finalRes[key])
+                printOutput(varName "Iters" "_" counter-1, Iteration+1, iters[key])
+            }
+
+            for (key in queryVal)
+            {
+                split(key, keys, SUBSEP)
+                section = keys[1]
+                queryName = keys[2]
+                counter = keys[3]
+
+                if (section == sectionType)
+                {
+                    printOutput(queryName "_" counter-1, Iteration+1, queryVal[key])
+                }
+            }
+        }
+        Iteration++
+
+        delete initRes
+        delete finalRes
+        delete iters
+
+        delete solveCounter
+    }
+    else if (sectionType == "objective")
+    {
+        #
+        # Objective section (switching between primal and each adjoint obj)
+        #
+
+        objective = activeSection[sectionType]
+        Time = activeSection["timeIteration"]
+
+        # Print number of sub-iterations
+        printOutput(objective "_subIter_final", Iteration+1, SubIteration)
+
+        # Print cumulative sub-iteration
+        printOutput(objective "_runningSubIter_final", Iteration+1, runningSubIteration[objective])
+
+        # Print final value of solved-for variables
+        for (key in initRes)
+        {
+            split(key, keys, SUBSEP)
+            varName = keys[1]
+            counter = keys[2]
+            printOutput(objective "_" varName "_" counter-1 "_final", Iteration+1, initRes[key])
+            printOutput(objective "_" varName "FinalRes" "_" counter-1 "_final", Iteration+1, finalRes[key])
+            printOutput(objective "_" varName "Iters" "_" counter-1 "_final", Iteration+1, iters[key])
+        }
+
+        # Print queries
+        for (key in queryVal)
+        {
+            split(key, keys, SUBSEP)
+            section = keys[1]
+            queryName = keys[2]
+            counter = keys[3]
+            if (sectionType == section)
+            {
+                printOutput(queryName "_" counter-1 "_final", Iteration+1, queryVal[key])
+            }
+        }
+
+        SubIteration = 0
+
+        delete initRes
+        delete finalRes
+        delete iters
+
+    }
+    else
+    {
+        #
+        # General user defined section
+        #
+
+        for (key in queryVal)
+        {
+            split(key, keys, SUBSEP)
+            section = keys[1]
+            queryName = keys[2]
+            counter = keys[3]
+            if (sectionType == section)
+            {
+                printOutput(queryName "_" counter-1, Iteration+1, queryVal[key])
+            }
+        }
+    }
+
+    clearVars(sectionType)
+
+}
+
+AWK_CONTENTS
+# ----------
+
+#
+# Code for singularity handling.
+#
+cat << AWK_CONTENTS >> $AWKFILE
+# Skip whole line with singularity variable
+/solution singularity/ {
+    next;
+}
+
+AWK_CONTENTS
+# ----------
+
+#
+# Code for extracting solved for quantities
+#
+[ "$localDB" = true ] ||
+    cat << AWK_CONTENTS >> $AWKFILE
+# Extraction of any solved for variable
+/Solving for / {
+
+    if (match(\$0, "Solving for ([^,]*)"))
+    {   
+        # select fourth field and strip off comma from end of fourth field
+        varName = substr(\$4, 0, length(\$4)-1)
+
+        gsub(/[\(\) ]/, "", varName)
+
+        solveCounter[varName]++
+    }
+
+    if (match(\$0, "Initial residual = ([^,]*),"))
+    {
+        # select eighth field and strip off comma from end of eighth field
+        val[1] = substr(\$8, 0, length(\$8)-1)
+        initRes[varName, solveCounter[varName]] = val[1]
+    }
+
+    if (match(\$0, "Final residual = ([^,]*),"))
+    {
+        # select twelfth field and strip off comma from end of twelfth field
+        val[1] = substr(\$12, 0, length(\$12)-1)
+        finalRes[varName, solveCounter[varName]] = val[1]
+    }
+
+    if (match(\$0, "No Iterations ([^[,:space:]]*)"))
+    {
+        # select fifteenth (last) field (no comma to strip off here)
+        val[1] = substr(\$15, 0, length(\$15))
+        iters[varName, solveCounter[varName]] = val[1]
+    }
+}
+
+AWK_CONTENTS
+# ----------
+
+#
+# Code to process time-iteration level queries
+#
+for queryName in $QUERYNAMES
+do
+    getQueries $DBFILE $queryName
+    if [ "$LINEQ" -a "$NUMQ" ]
+    then
+        #Escape the backslashes for awk
+        escQueryName=$(echo $queryName | sed 's:[\\]:\\\\:g')
+
+        cat << AWK_CONTENTS >> $AWKFILE
+# Extraction of $queryName
+/$LINEQ/ {
+    if (\$0 ~ "^.*$escLINEQ.*$") 
+            {
+                qn = "$escQueryName"
+            }
+AWK_CONTENTS
+        # If section name specified, only continue if there is an active
+        # section of that type
+        if [ "$SECTQ" ]
+        then
+            echo "    if (\"$SECTQ\" in activeSection)" >> $AWKFILE
+            echo "    {" >> $AWKFILE
+            echo "        qn = activeSection[\"$SECTQ\"] \"_\" qn" >> $AWKFILE
+        else
+            SECTQ="timeIteration" # Default section
+            echo "    {" >> $AWKFILE
+        fi
+
+        # For the case where $escNUMQ is an empty set of brackets, temporarily 
+        # add a space between the brackets, since awk does not recognise empty 
+        # brackets as a valid regular expression (as gawk does). The brackets 
+        # and the space are then stripped away in the next if-statement.
+        if [[ "$escNUMQ" == "()" ]]
+        then
+            escNUMQ="([:space:])"
+        fi
+
+        cat << AWK_CONTENTS >> $AWKFILE
+
+        if (match(\$0, "$escNUMQ"))
+        {
+            # Remove the regex part of \$escNUMQ
+            split("$escNUMQ", str, "(")
+
+            # Remove \$escNUMQ and everthing to the left of it from \$0
+            leftcut[1] = substr(\$0, RSTART + length(str[1]))
+
+            # Remove everything after the first space in leftcut[1]
+            split(leftcut[1], val, " ")
+        
+            if (sub("^section:", "", qn))
+            {
+                if (qn in activeSection)
+                {
+                    endOfSection(qn)
+                }
+                activeSection[qn] = val[1]
+            }
+            else if (sub("^sectionName:", "", qn))
+            {
+                if (qn in activeSection)
+                {
+                    activeSection[qn] = val[1]
+                }
+            }
+            else if (sub("^endSection:", "", qn))
+            {
+                if (qn in activeSection)
+                {
+                    endOfSection(qn)
+                    delete activeSection[qn]
+                }
+            }
+            else
+            {
+                queryCounter["$SECTQ", qn]++
+                queryVal["$SECTQ", qn, queryCounter["$SECTQ", qn]] = val[1]
+            }
+        }        
+    }
+}
+AWK_CONTENTS
+    fi
+done
+# ----------
+
+#
+# Code to finish off currently active sections
+#
+cat << AWK_CONTENTS >> $AWKFILE
+# End marker
+/^End$/ {
+    for (sectionType in activeSection)
+    {
+        # End off the special sections in the correct order
+        if (sectionType != "timeIteration" && sectionType != "objective")
+        {
+            if (length(activeSection[sectionType]) > 0)
+            {
+                endOfSection(sectionType)
+            }
+        }
+    }
+    if ("timeIteration" in activeSection)
+    {
+        endOfSection("timeIteration")
+    }
+    if ("objective" in activeSection)
+    {
+        endOfSection("objective")
+    }
+}
+
+AWK_CONTENTS
+
+#-----------------------------
+# Run awk program on log
+#-----------------------------
+(
+    cmd="awk -f $AWKFILE $LOG"
+    myEcho "Executing: $cmd"
+    $cmd
+    myEcho ""
+)
+
+myEcho "End"
+
+#------------------------------------------------------------------------------

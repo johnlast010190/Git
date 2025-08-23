@@ -1,0 +1,78 @@
+#------------------------------------------------------------------------------
+# Modified 2010-2012 Copyright (C) Engys Ltd
+#------------------------------------------------------------------------------
+# Source tutorial run functions
+set -e
+. $HELYX_PROJECT_DIR/bin/tools/RunFunctions
+
+function reMesh(){
+    echo "Trying to remesh"
+    if [ -d reMesh ]
+    then
+        rm -rf reMesh
+    fi
+
+    createCase reMesh
+    cp system/helyxHexMeshDict reMesh/system
+    cp commonFiles/controlDict reMesh/system
+    cp commonFiles/caseSetupDict reMesh/system
+    cp commonFiles/decomposeParDict reMesh/system
+    cp commonFiles/helyxMapDict reMesh/system
+    cp commonFiles/*.stl.gz reMesh/constant/triSurface
+    cp commonFiles/*_motion reMesh
+
+    cd reMesh
+
+    runParallel helyxHexMesh -time $1
+    runParallel caseSetup -time $1
+
+    controlDict="system/controlDict"
+    sed \
+    -e s/"\(deltaT[ \t]*\) 0.0001;"/"\1 $3;"/g \
+    $controlDict > temp.$$
+    mv temp.$$ $controlDict
+
+    runParallel helyxMap -mapScalarFields "(k nut omega p)" -mapVectorFields "(U)" -sourceCase .. -sourceTime latestTime
+
+    cd ..
+
+    rm -rf processor*/$2*
+
+    pattern="processor"
+    for _dir in *"${pattern}"*; do
+        cp -r reMesh/${_dir}/$1 ${_dir}
+    done
+}
+
+iter=0
+rm -rf processor*
+rm -rf log.*
+cp commonFiles/caseSetupDict system
+cp commonFiles/helyxHexMeshDict system
+cp commonFiles/decomposeParDict system
+cp commonFiles/*_motion .
+if [ ! -d constant/triSurface ]
+ then
+    mkdir  constant/triSurface
+fi
+cp commonFiles/*.stl.gz constant/triSurface
+
+runParallel helyxHexMesh
+
+runParallel caseSetup
+
+while true
+do
+    runParallel pimpleDyMFoam
+    mv log.pimpleDyMFoam log.pimpleDyMFoam$iter
+
+    if (grep "Remesh Latest Time:" log.pimpleDyMFoam$iter); then
+        currTime=$(grep "Remesh Latest Time:" log.pimpleDyMFoam$iter | sed 's/.*:\(.*\)/\1/')
+        oldTime=$(grep "Remesh Old Time:" log.pimpleDyMFoam$iter | sed 's/.*:\(.*\)/\1/')
+        timeStep=$(grep "Remesh Time Step:" log.pimpleDyMFoam$iter | sed 's/.*:\(.*\)/\1/')
+        reMesh $oldTime $currTime $timeStep
+    else
+        break;
+    fi
+    iter=$(($iter+1))
+done

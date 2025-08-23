@@ -1,0 +1,46 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      decomposeParDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+numberOfSubdomains 20;
+
+method          structured;
+
+structuredCoeffs
+{
+    method      simple;
+    patches     (region0_to_panelRegion_wallPanel region0_to_panelRegion_internalWallPanel_top region0_to_panelRegion_internalWallPanel_bottom);
+
+    simpleCoeffs
+    {
+         n               ( 5 1 4 );
+    }
+}
+
+
+hierarchicalCoeffs
+{
+    n               ( 1 2 2 );
+    order           xyz;
+}
+
+manualCoeffs
+{
+    dataFile        "cellDecomposition";
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,13 @@
+name BLACK_BODY_RADIATION;
+colorSpace RGB;
+hsvWrap true;
+points
+(
+);
+colors
+(
+    ( 0 0 0 )
+    ( 1 0 0 )
+    ( 1 1 0 )
+    ( 1 1 1 )
+);

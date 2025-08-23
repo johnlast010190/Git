@@ -1,0 +1,56 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      volumetricFFTDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+blockSize       100;
+
+fLower          800;
+
+fUpper          2500;
+
+startTime       1e-05;
+
+numberOfTimeSteps 3;
+
+timeRatio       1;
+
+hanning         on;
+
+calculateOneThirdOctaveFFT on;
+
+calculateEveryFrequency on;
+
+calculateReverseFFT on;
+
+binary          off;
+
+filterBands     ( ( 20 1000 ) ( 1000 2500 ) );
+
+reverseFFTRatio 1;
+
+hanningCoeff    1;
+
+internal        off;
+
+pName           pBound;
+
+patches         ( lowerWall );
+
+compressible    false;
+
+rho             1;
+
+
+// ************************************************************************* //

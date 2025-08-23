@@ -1,0 +1,128 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : 4.4.0
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) 2013-2016 OpenFOAM Foundation
+
+Application
+    thermoFoam
+
+Group
+    grpHeatTransferSolvers
+
+Description
+    Solver for energy transport and thermodynamics on a frozen flow field.
+
+\*---------------------------------------------------------------------------*/
+
+#include "cfdTools/general/include/fvCFD.H"
+#include "rhoThermo/rhoThermo.H"
+#include "turbulentFluidThermoModels/turbulentFluidThermoModel.H"
+#include "LES/LESModel/LESModel.H"
+#include "solverObjects/radiation/radiationSolver.H"
+#include "cfdTools/general/fvOptions/fvOptions.H"
+#include "cfdTools/general/solutionControl/simpleControl/simpleControl.H"
+#include "cfdTools/general/solutionControl/pimpleControl/pimpleControl.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+int main(int argc, char *argv[])
+{
+    #define NO_CONTROL
+    #include "db/functionObjects/functionObjectList/postProcess.H"
+
+    #include "include/setRootCase.H"
+
+    DeprecationWarningInFunction
+    (
+        "thermoFoam",
+        "solver",
+        40300,
+        "Please use the helyxSolve application instead."
+    );
+
+    #include "include/createTime.H"
+    #include "include/createMesh.H"
+    #include "createFields.H"
+
+    const volScalarField& alphaEff = talphaEff();
+
+    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+    Info<< "\nEvolving thermodynamics\n" << endl;
+
+    if (mesh.solution().dict().found("SIMPLE"))
+    {
+        simpleControl simple(mesh);
+
+        while (simple.loop())
+        {
+            Info<< "Time = " << runTime.timeName() << nl << endl;
+
+            while (simple.correctNonOrthogonal())
+            {
+                #include "EEqn.H"
+            }
+
+            fvOptions.correct();
+
+            Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
+                << "  ClockTime = " << runTime.elapsedClockTime() << " s"
+                << nl << endl;
+
+            runTime.write();
+        }
+    }
+    else
+    {
+        pimpleControl pimple(mesh);
+
+        while (runTime.run())
+        {
+            runTime++;
+
+            Info<< "Time = " << runTime.timeName() << nl << endl;
+
+            while (pimple.correctNonOrthogonal())
+            {
+                #include "EEqn.H"
+            }
+
+            fvOptions.correct();
+
+            Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
+                << "  ClockTime = " << runTime.elapsedClockTime() << " s"
+                << nl << endl;
+
+            runTime.write();
+        }
+    }
+
+    Info<< "End\n" << endl;
+
+    return 0;
+}
+
+
+// ************************************************************************* //

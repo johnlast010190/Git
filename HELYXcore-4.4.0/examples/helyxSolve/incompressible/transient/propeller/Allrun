@@ -1,0 +1,32 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy STL files from resources directory
+mkdir -p constant/triSurface
+cp "$HELYX_TUTORIALS"/resources/geometry/propeller/* constant/triSurface/
+cp "$HELYX_TUTORIALS"/resources/geometry/propellerTip.obj.gz constant/triSurface/
+
+# Mesh
+helyxRun helyxHexMesh -overwrite
+helyxRun renumberMesh -overwrite
+
+# Create patches
+helyxRun topoSet
+helyxRun createPatch -overwrite
+
+# Decomposition
+helyxRun decomposePar -force
+
+# Setup
+helyxRun caseSetup
+
+# Run
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch propeller.foam
+
+#------------------------------------------------------------------------------

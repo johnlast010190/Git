@@ -1,0 +1,199 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+castellatedMesh true;
+snap            true;
+addLayers       true;
+
+geometry
+{
+    "Common_Geometry.stl"
+    {
+        type triSurfaceMesh;
+        name Common_Geometry;
+        regions
+        {
+            patch_0_0
+            {
+                name patch_0_0;
+            }
+
+            patch_0_2
+            {
+                name patch_0_2;
+            }
+
+            patch_1_0
+            {
+                name patch_1_0;
+            }
+
+            patch_2_0
+            {
+                name patch_2_0;
+            }
+
+        }
+    }
+    "MeshRefinement.stl"
+    {
+        type triSurfaceMesh;
+        name MeshRefinement;
+    }
+    refinementBoxTop
+    {
+        type searchableBox;
+        min ( -0.004 0 0.02 );
+        max ( 0.004 0.1 0.11 );
+    }
+    refinementBoxBottom
+    {
+        type searchableBox;
+        min ( -0.004 0 -0.1 );
+        max ( 0.004 0.1 -0.02 );
+    }
+};
+
+castellatedMeshControls
+{
+    maxLocalCells 100000000;
+    maxGlobalCells 2000000000;
+    minRefinementCells 0;
+    nCellsBetweenLevels 3;
+
+    features ();
+
+    refinementSurfaces
+    {
+        Common_Geometry
+        {
+            level (0 0);
+        }
+
+        MeshRefinement
+        {
+            level (1 1);
+            faceZone MeshRefinement;
+            cellZone sphere;
+            faceType boundary;
+        }
+
+    }
+
+    resolveFeatureAngle 30;
+
+    refinementRegions
+    {
+        refinementBoxTop
+        {
+            levels ((1 1));
+            mode inside;
+        }
+        refinementBoxBottom
+        {
+            levels ((1 1));
+            mode inside;
+        }
+    }
+
+    locationInMesh (0.04 0.005 0.0);
+    allowFreeStandingZoneFaces true;
+}
+
+snapControls
+{
+    nSmoothPatch 3;
+    tolerance 1.0;
+    nSolveIter 100;
+    nRelaxIter 5;
+    nFeatureSnapIter 10;
+
+    implicitFeatureSnap true;
+    explicitFeatureSnap false;
+}
+
+addLayersControls
+{
+    relativeSizes true;
+    layers
+    {
+        MeshRefinement
+        {
+            nSurfaceLayers 5;
+            expansionRatio 1.2;
+        }
+    }
+
+    expansionRatio 1.2;
+    finalLayerThickness 0.3;
+    minThickness 0.1;
+    nGrow 0;
+    featureAngle 120;
+    nRelaxIter 3;
+    nSmoothSurfaceNormals 1;
+    nSmoothNormals 3;
+    nSmoothThickness 10;
+    maxFaceThicknessRatio 0.5;
+    maxThicknessToMedialRatio 0.3;
+    minMedialAxisAngle 90;
+    minMedianAxisAngle 90;
+    nBufferCellsNoExtrude 0;
+    nLayerIter 50;
+}
+
+meshQualityControls
+{
+    maxNonOrtho 65;
+
+    maxBoundarySkewness 20;
+    maxInternalSkewness 4;
+
+    maxConcave 80;
+    minVol 1e-13;
+    minTetQuality -1;
+    minArea -1;
+    minTwist 0.01;
+    minDeterminant 0.001;
+    minFaceWeight 0.05;
+    minVolRatio 0.01;
+    minTriangleTwist -1;
+    nSmoothScale 4;
+    errorReduction 0.75;
+    relaxed
+    {
+        maxNonOrtho 75;
+    }
+}
+
+extrudeDict
+{
+   targetExtrude
+   {
+       type avePatchNormal;
+       action new;
+       flatten true;
+       exposedPatchName "patch_0_2";
+       sourcePatches (patch_0_2);
+       nLayers 1;
+       fch 0.001;
+       useExistingCellZones true;
+   }
+}
+
+mergeTolerance 1e-6;
+
+
+// ************************************************************************* //

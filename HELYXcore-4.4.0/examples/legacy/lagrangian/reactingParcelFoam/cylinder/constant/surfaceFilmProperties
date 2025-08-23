@@ -1,0 +1,66 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      surfaceFilmProperties;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+surfaceFilmModel thermoSingleLayer;
+
+region      wallFilmRegion;
+
+active          true;
+
+viscosity
+{
+    model        Newtonian;
+}
+
+sigma       0.07;
+
+deltaWet    1e-4;
+
+hydrophilic no;
+
+turbulenceModel
+{
+    model       laminar;
+    Cf          0.005;
+}
+
+forces
+{
+    thermocapillary;
+}
+
+upperSurfaceModels
+{
+    heatTransfer
+    {
+        model    constant;
+        c0       1e-8;
+    }
+}
+
+lowerSurfaceModels
+{
+    heatTransfer
+    {
+        model   constant;
+        c0      1e-8;
+    }
+}
+
+
+// ************************************************************************* //

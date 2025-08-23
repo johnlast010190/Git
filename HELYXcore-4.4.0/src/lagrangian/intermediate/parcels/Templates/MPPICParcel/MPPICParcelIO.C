@@ -1,0 +1,192 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : 4.4.0
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) 2016 OpenCFD Ltd.
+    (c) 2013-2017 OpenFOAM Foundation
+
+\*---------------------------------------------------------------------------*/
+
+#include "parcels/Templates/MPPICParcel/MPPICParcel.H"
+#include "db/IOstreams/IOstreams.H"
+#include "db/IOobjects/IOField/IOField.H"
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+template<class ParcelType>
+Foam::string Foam::MPPICParcel<ParcelType>::propertyList_ =
+    Foam::MPPICParcel<ParcelType>::propertyList();
+
+template<class ParcelType>
+Foam::string Foam::MPPICParcel<ParcelType>::propertyTypes_ =
+    Foam::MPPICParcel<ParcelType>::propertyTypes();
+
+template<class ParcelType>
+const std::size_t Foam::MPPICParcel<ParcelType>::sizeofFields
+(
+    sizeof(MPPICParcel<ParcelType>) - sizeof(ParcelType)
+);
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+template<class ParcelType>
+Foam::MPPICParcel<ParcelType>::MPPICParcel
+(
+    const polyMesh& mesh,
+    Istream& is,
+    bool readFields
+)
+:
+    ParcelType(mesh, is, readFields),
+    UCorrect_(Zero)
+{
+    if (readFields)
+    {
+        if (is.format() == IOstream::ASCII)
+        {
+            is >> UCorrect_;
+        }
+        else
+        {
+            is.read(reinterpret_cast<char*>(&UCorrect_), sizeofFields);
+        }
+    }
+
+    is.check(FUNCTION_NAME);
+}
+
+
+template<class ParcelType>
+template<class CloudType>
+void Foam::MPPICParcel<ParcelType>::readFields(CloudType& c)
+{
+    const bool read = c.size();
+
+    ParcelType::readFields(c);
+
+    IOField<vector> UCorrect
+    (
+        c.fieldIOobject("UCorrect", IOobject::MUST_READ),
+        read
+    );
+    c.checkFieldIOobject(c, UCorrect);
+
+    label i = 0;
+
+    forAllIter(typename CloudType, c, iter)
+    {
+        MPPICParcel<ParcelType>& p = iter();
+
+        p.UCorrect_ = UCorrect[i];
+
+        i++;
+    }
+}
+
+
+template<class ParcelType>
+template<class CloudType>
+void Foam::MPPICParcel<ParcelType>::writeFields(const CloudType& c)
+{
+    ParcelType::writeFields(c);
+
+    label np = c.size();
+
+    IOField<vector>
+        UCorrect(c.fieldIOobject("UCorrect", IOobject::NO_READ), np);
+
+    label i = 0;
+
+    forAllConstIter(typename CloudType, c, iter)
+    {
+        const MPPICParcel<ParcelType>& p = iter();
+
+        UCorrect[i] = p.UCorrect();
+
+        i++;
+    }
+
+    UCorrect.write(np > 0);
+}
+
+
+template<class ParcelType>
+template<class CloudType>
+void Foam::MPPICParcel<ParcelType>::writeObjects
+(
+    const CloudType& c,
+    objectRegistry& obr
+)
+{
+    ParcelType::writeObjects(c, obr);
+
+    label np = c.size();
+
+    IOField<vector>&
+        UCorrect(cloud::createIOField<vector>("UCorrect", np, obr));
+
+    label i = 0;
+
+    forAllConstIter(typename CloudType, c, iter)
+    {
+        const MPPICParcel<ParcelType>& p = iter();
+
+        UCorrect[i] = p.UCorrect();
+
+        i++;
+    }
+}
+
+
+// * * * * * * * * * * * * * * * IOstream Operators  * * * * * * * * * * * * //
+
+template<class ParcelType>
+Foam::Ostream& Foam::operator<<
+(
+    Ostream& os,
+    const MPPICParcel<ParcelType>& p
+)
+{
+    if (os.format() == IOstream::ASCII)
+    {
+        os  << static_cast<const ParcelType&>(p)
+            << token::SPACE << p.UCorrect();
+    }
+    else
+    {
+        os  << static_cast<const ParcelType&>(p);
+        os.write
+        (
+            reinterpret_cast<const char*>(&p.UCorrect_),
+            MPPICParcel<ParcelType>::sizeofFields
+        );
+    }
+
+    os.check(FUNCTION_NAME);
+    return os;
+}
+
+
+// ************************************************************************* //

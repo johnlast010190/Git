@@ -1,0 +1,68 @@
+    // Whether to use relative or absolute sizing for layer addition
+    relativeSizes true;
+
+    // Expansion factor for layer mesh
+    expansionRatio 1.25;
+
+    //- Wanted thickness of final added cell layer. If multiple layers
+    //  is the
+    //  thickness of the layer furthest away from the wall.
+    //  Relative to undistorted size of cell outside layer.
+    finalLayerThickness 0.4;
+
+    //- Minimum thickness of cell layer. If for any reason layer
+    //  cannot be above minThickness do not add layer.
+    //  Relative to undistorted size of cell outside layer.
+    minThickness 0.2;
+
+     // Advanced settings
+
+    //- What feature angle to try merge two faces
+    featureAngleMerge 45;
+
+    // Terminate layers at feature edges specified with this angle (0 to disable)
+    featureAngleTerminate 80;
+
+    //- Maximum number of snapping relaxation iterations. Should stop
+    //  before upon reaching a correct mesh.
+    nRelaxIter 5;
+
+    // Stop layer growth on highly warped cells
+    maxFaceThicknessRatio 2.0;
+
+    // Reduce layer growth where ratio thickness to medial
+    // distance is large
+    maxThicknessToMedialRatio 0.3;
+
+    // Angle used to pick up medial axis points
+    minMedialAxisAngle 90;
+
+    // Maximum number of layer generation iterations
+    maxLayerIter  30;
+
+    // Try and grow around convex edges
+    growConvexEdge true;
+
+    // Try and grow around concave edges
+    growConcaveEdge true;
+
+    // Try to grow layers up non grown planar surfaces (inlets, symmetry etc)
+    growUpPatches true;
+
+    // Whether to re-balance based on predicted number of layer cells 
+    preBalance false;
+
+    // Where layers collapse recover layers by this increment
+    layerRecovery 1;
+
+    // Smooth layer thickness over surface patches
+    nSmoothThickness 10;
+
+    // Smooth surface normals
+    nSmoothSurfaceNormals 6;
+
+    // Smooth interior normals
+    nSmoothNormals 3;
+
+    // set vtk output of layer additions
+    writeVTK true;

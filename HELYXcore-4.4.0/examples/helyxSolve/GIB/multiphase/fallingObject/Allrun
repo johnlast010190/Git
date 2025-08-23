@@ -1,0 +1,29 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy STL file
+mkdir -p constant/triSurface
+cp "$HELYX_TUTORIALS"/resources/geometry/GIBgeometries/stamp2.stl constant/triSurface/
+
+# Mesh in series
+helyxRun blockMesh
+
+# Create GIB interface
+helyxRun modifyGIBBoundary -addGIB
+
+# Setup
+helyxRun caseSetup
+
+# Remove unneeded point fields
+rm -f 0/pointDisplacement 0/pointMotionU
+
+# Run
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch fallingObject.foam
+
+#------------------------------------------------------------------------------

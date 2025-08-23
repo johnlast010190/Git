@@ -1,0 +1,236 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom latestTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 0.01;
+            deltaT 1e-5;
+            writeControl timeStep;
+            writeInterval 1;
+            purgeWrite 0;
+            writeFormat ascii;
+            writePrecision 10;
+            writeCompression uncompressed;
+            timeFormat general;
+            timePrecision 6;
+            runTimeModifiable yes;
+            adjustTimeStep no;
+            maxCo 0.5;
+        }
+    }
+    functions
+    {
+        fp1
+        {
+            functionObjectLibs ( "libfieldFunctionObjects.so" );
+            operations 
+            (
+                {
+                    operation patchWrite;
+                    fieldName pBound;
+                    inField p;
+                    patches (lowerWall);
+                }
+            );
+            writeControl    writeTime;
+            type            fieldProcess;
+            calculationControl continuous;
+            outputControl   outputTime;
+        }
+        fieldAverage1
+        {
+            type            fieldAverage;
+            libs            ("libfieldFunctionObjects.so");
+            writeControl    writeTime;
+            fields
+            (
+                U
+                {
+                    mean        on;
+                    prime2Mean  on;
+                    base        time;
+                }
+                p
+                {
+                    mean        on;
+                    prime2Mean  on;
+                    base        time;
+                }
+            );
+        }
+        VR
+        {
+            type             volumeReport;
+            fields           ( UMean pMean );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+        WSS
+        {
+            type             wallShearStress;
+            libs             ("libfieldFunctionObjects.so");
+            executeControl   onEnd;
+            writeControl     onEnd;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (transient les);
+        boundaryMesh
+        {
+            inlet
+            {
+                type inlet;
+            }
+            outlet
+            {
+                type outlet;
+            }
+            "(upperWall|lowerWall)"
+            {
+                type wall;
+            }
+            frontAndBack
+            {
+                type empty;
+            }
+        }
+        turbulenceModel dynamicKEqn;
+        materials (air);
+        system
+        {
+            fvSolution
+            {
+                PIMPLE
+                {
+                    nOuterCorrectors 3;
+                    nCorrectors 1;
+                    nNonOrthogonalCorrectors 0;
+                    pMinFactor 0.5;
+                    pMaxFactor 2.0;
+                }
+            }
+            volumetricFFTDict
+            {
+                blockSize 100;
+                fLower 800;
+                fUpper 2500;
+                startTime 1e-5;
+                numberOfTimeSteps 3;
+                timeRatio 1;
+                hanning on;
+                calculateOneThirdOctaveFFT on;
+                calculateEveryFrequency on;
+                calculateReverseFFT on;
+                binary off;
+                filterBands ((20 1000)(1000 2500));
+                reverseFFTRatio 1;
+                hanningCoeff 1.0;
+                internal off;
+                pName pBound;
+                patches (lowerWall);
+                compressible false;
+                rho 1;
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type            turbulentInlet;
+                    referenceField  uniform (10 0 0);
+                    fluctuationScale (0.02 0.01 0.01);
+                    value           uniform (10 0 0);
+                }
+                k
+                {
+                    type            fixedValue;
+                    value           uniform 2e-5;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type            pressureInletOutletVelocity;
+                    inletValue      uniform (0 0 0);
+                    value           uniform (0 0 0);
+                }
+                p
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

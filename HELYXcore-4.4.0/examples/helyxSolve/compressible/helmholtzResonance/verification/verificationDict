@@ -1,0 +1,44 @@
+runs
+(
+    short
+    {
+        steps 10;
+        restart false;
+        checks
+        (
+            {
+                result "modelled/postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/short/modelled/VR/0/volumeReport.tsv";
+                variables "Umax" "Umean" "Tmax" "Tmean";              
+            }
+            {
+                result "resolved/postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/short/resolved/VR/0/volumeReport.tsv";
+                variables "Umax" "Umean" "Tmax" "Tmean";
+                absolute 0.000000002;
+                relative 0.000000002;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "modelled/postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/long/modelled/VR/0/volumeReport.tsv";
+                variables "Umax" "Umean" "Tmax" "Tmean";
+            }
+            {
+                result "resolved/postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/long/resolved/VR/0/volumeReport.tsv";
+                variables "Umax" "Umean" "Tmax" "Tmean";
+            }
+        );
+    }
+);
+
+unstable true;
+operatingSystem windows;
+reason "This example has a Bash script, which is not available on Windows";

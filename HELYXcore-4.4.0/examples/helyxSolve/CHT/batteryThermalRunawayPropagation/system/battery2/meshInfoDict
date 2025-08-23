@@ -1,0 +1,136 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | HELYX(R): Open-source CFD for Enterprise                 |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | Engys Ltd. http://www.engys.com                          |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    location system;
+    object meshInfoDict;
+}
+    points 18544;
+    cells 14552;
+    faces 47405;
+    internalFaces 41839;
+    boundaryPatches 4;
+    faceZones 7;
+    cellZones 5;
+    domainVolume 1.633781092E-5;
+    hexahedra 13924;
+    prisms 0;
+    wedges 16;
+    pyramids 0;
+    tetWedges 0;
+    tetrahedra 0;
+    polyhedra 612;
+    boundingBox ( 0.01097848094 -0.008999999613 5.000000237E-4 ) ( 0.02902152073 0.008999999613 0.06500067491 );
+    patchesInfo
+    {
+        battery2_to_busbar
+        {
+            faces 432;
+            points 477;
+            area 1.70010698E-4;
+            normal ( -6.655769603E-12 1.097875595E-14 0.9999999964 );
+        }
+        battery2_to_air
+        {
+            faces 3288;
+            points 3576;
+            area 0.003724711467;
+            normal ( 3.037483954E-13 -5.330467194E-16 0.0224987178 );
+        }
+        enclosure
+        {
+            faces 164;
+            points 185;
+            area 2.538119296E-4;
+            normal ( 0.0 0.0 -1.0 );
+        }
+    }
+    cellZonesInfo
+    {
+        battery1
+        {
+            cells 0;
+            volume 0.0;
+            centroid ( 0.0 0.0 0.0 );
+        }
+        battery2
+        {
+            cells 14552;
+            volume 1.633781092E-5;
+            centroid ( 0.01999999954 -3.061290716E-11 0.03275123017 );
+        }
+        battery3
+        {
+            cells 0;
+            volume 0.0;
+            centroid ( 0.0 0.0 0.0 );
+        }
+        busbar
+        {
+            cells 0;
+            volume 0.0;
+            centroid ( 0.0 0.0 0.0 );
+        }
+        air
+        {
+            cells 0;
+            volume 0.0;
+            centroid ( 0.0 0.0 0.0 );
+        }
+    }
+    faceZonesInfo
+    {
+        battery2_to_busbar
+        {
+            faces 432;
+            area 1.70010698E-4;
+            centroid ( 0.01999999966 -2.536815463E-16 0.06499999916 );
+        }
+        air_to_battery1
+        {
+            faces 0;
+            area 0.0;
+            centroid ( 0.0 0.0 0.0 );
+        }
+        air_to_busbar
+        {
+            faces 0;
+            area 0.0;
+            centroid ( 0.0 0.0 0.0 );
+        }
+        battery1_to_busbar
+        {
+            faces 0;
+            area 0.0;
+            centroid ( 0.0 0.0 0.0 );
+        }
+        air_to_battery2
+        {
+            faces 3288;
+            area 0.003724711467;
+            centroid ( 0.01999999954 -8.932772065E-12 0.03347490432 );
+        }
+        air_to_battery3
+        {
+            faces 0;
+            area 0.0;
+            centroid ( 0.0 0.0 0.0 );
+        }
+        battery3_to_busbar
+        {
+            faces 0;
+            area 0.0;
+            centroid ( 0.0 0.0 0.0 );
+        }
+    }
+    meshingInfo
+    {
+    }

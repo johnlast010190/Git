@@ -1,0 +1,133 @@
+#!/bin/bash
+#---------------------------------------------------------------------------
+#|       o        |
+#|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+#|   o   O   o    |  Version : 4.4.0
+#|    o     o     |  ENGYS Ltd. <http://engys.com/>
+#|       o        |
+#---------------------------------------------------------------------------
+#License
+#    This file is part of HELYXcore.
+#    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+#
+#    HELYXcore is free software: you can redistribute it and/or modify it
+#    under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+#    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+#    for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+#Copyright
+#    (c) 2011-2016 OpenFOAM Foundation 
+#
+# Script
+#     foamRunTutorials
+#
+# Description
+#     Run either Allrun or blockMesh/application in current directory
+#     and all its subdirectories.
+#
+#------------------------------------------------------------------------------
+
+# Normally use standard "make"
+make="make"
+
+# Source tutorial run functions
+. $HELYX_PROJECT_DIR/bin/tools/RunFunctions
+
+thisScript=$0
+scriptDir="$PWD"
+if [ "/${thisScript#/}" != "$thisScript" ]
+then
+    thisScript="$scriptDir/$thisScript"
+fi
+
+skipFirst=false
+VERBOSE=true
+startDir="./"
+
+# Parse options
+while [ "$#" -gt 0 ]
+do
+    case "$1" in
+    -t | -test)
+        passArgs="-test"
+        shift
+        ;;
+    -s | -skipFirst)
+        skipFirst=true
+        shift
+        ;;
+    -i | -silent)
+        VERBOSE=false
+        shift
+        ;;
+        
+    *)
+        startDir="$1"
+        shift
+        ;;
+    esac
+done
+
+# If startDir is a directory, use it as the starting directory
+if [ -d $startDir ] 
+then
+    cd $startDir
+elif [ -d $scriptDir/$startDir ]
+then
+    cd $scriptDir/$startDir 
+fi
+
+# If an argument is supplied do not execute ./Allrun to avoid recursion
+if ! $skipFirst && [ -f "./Allrun" ] 
+then
+    # Run specialised Allrun script.
+    ./Allrun $passArgs
+elif [ -f "./Allrun" ] && [ -d system ]
+then
+    # Run specialised Allrun script.
+    ./Allrun $passArgs
+elif [ -d system ]
+then
+    # Run normal case.
+    parentDir=$(dirname $PWD)
+    application=$(getApplication)
+    runApplication blockMesh
+    runApplication $application
+else
+    # Loop over sub-directories and compile any applications
+    for caseName in *
+    do
+        if [ -d $caseName -a -d "$caseName/Make" ]
+        then
+            ( compileApplication $caseName )
+        fi
+    done
+    FOAM_TARGETS=$(for d in *; do [ -d "$d" ] && echo "$d"; done | xargs)
+
+    # Run all cases which have not already been run
+    if [ "$VERBOSE" = "true" ]; then
+        $make -k -f $HELYX_PROJECT_DIR/bin/tools/MakefileDirs \
+              FOAM_TARGETS="$FOAM_TARGETS" \
+              HELYX_APPLICATIONS="$thisScript" FOAM_ARGS="$passArgs"
+    else
+        $make --silent -k -f $HELYX_PROJECT_DIR/bin/tools/MakefileDirs \
+              FOAM_TARGETS="$FOAM_TARGETS" \
+              HELYX_APPLICATIONS="$thisScript" FOAM_ARGS="$passArgs"
+    fi
+fi
+
+# If startDir is a directory, use it as the starting directory
+if [ -d $startDir ] || [ -d $scriptDir/$startDir ]
+then
+    cd $scriptDir
+fi
+
+#------------------------------------------------------------------------------

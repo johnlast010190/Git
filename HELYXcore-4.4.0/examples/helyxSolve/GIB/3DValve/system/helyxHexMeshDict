@@ -1,0 +1,118 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+meshAlgorithm standard;
+
+castellatedMesh true;
+snap true;
+addLayers true;
+
+blockType auto;
+blockData ( 0.005 0 );
+
+geometry
+{
+    inlet.stl
+    {
+        type triSurfaceMesh;
+        name inlet;
+        appendRegionName false;
+    }
+    outlet.stl
+    {
+        type triSurfaceMesh;
+        name outlet;
+        appendRegionName false;
+    }
+    wallDuct.stl
+    {
+        type triSurfaceMesh;
+        name wallDuct;
+        appendRegionName false;
+    }
+    sphere
+    {
+        type searchableSphere;
+        centre ( 0.0 0.0 0.0 );
+        radius 0.085;
+    }
+}
+
+castellatedMeshControls
+{
+    features ( );
+    refinementSurfaces
+    {
+        inlet
+        {
+            level ( 0 0 );
+        }
+        outlet
+        {
+            level ( 0 0 );
+        }
+        wallDuct
+        {
+            level ( 1 1 );
+        }
+    }
+    refinementRegions
+    {
+        sphere
+        {
+            mode inside;
+            levels ( ( 100000.0 1 ) );
+        }
+    }
+
+    locationsInMesh ((( -0.007244 -0.45132 -0.003404 ) none));
+}
+
+snapControls
+{
+}
+
+addLayersControls
+{
+    layers
+    {
+        inlet
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        outlet
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        wallDuct
+        {
+            nSurfaceLayers 3;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+    }
+}
+
+// ************************************************************************* //

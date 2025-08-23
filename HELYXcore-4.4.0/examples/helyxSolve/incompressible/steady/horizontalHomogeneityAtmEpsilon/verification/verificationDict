@@ -1,0 +1,70 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/SE/10/sets0_scalar.tsv";
+                reference "verification/short/SE/10/sets0_scalar.tsv";
+                variables "distance" "epsilon" "k" "nut";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/SE/10/sets0_vector.tsv";
+                reference "verification/short/SE/10/sets0_vector.tsv";
+                variables "distance" "U_0" "U_1" "U_2";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/SE/10/sets1_scalar.tsv";
+                reference "verification/short/SE/10/sets1_scalar.tsv";
+                variables "distance" "epsilon" "k" "nut";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/SE/10/sets1_vector.tsv";
+                reference "verification/short/SE/10/sets1_vector.tsv";
+                variables "distance" "U_0" "U_1" "U_2";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/SE/50/sets0_scalar.tsv";
+                reference "verification/long/SE/50/sets0_scalar.tsv";
+                variables "distance" "epsilon" "k" "nut";
+            }
+            {
+                result "postProcessing/SE/50/sets0_vector.tsv";
+                reference "verification/long/SE/50/sets0_vector.tsv";
+                variables "distance" "U_0" "U_1" "U_2";
+            }
+            {
+                result "postProcessing/SE/50/sets1_scalar.tsv";
+                reference "verification/long/SE/50/sets1_scalar.tsv";
+                variables "distance" "epsilon" "k" "nut";
+            }
+            {
+                result "postProcessing/SE/50/sets1_vector.tsv";
+                reference "verification/long/SE/50/sets1_vector.tsv";
+                variables "distance" "U_0" "U_1" "U_2";
+            }
+        );
+    }
+);
+
+// Removed from Windows due to a bug in the 'sets' function object (CO-9065)
+unstable true;
+operatingSystem windows;
+reason "This example is unstable on Windows";

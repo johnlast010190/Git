@@ -1,0 +1,77 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : dev
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) ICE Stroemungsfoschungs GmbH
+    (c) 1991-2008 OpenCFD Ltd.
+
+Contributors/Copyright:
+    2012-2013, 2016-2017 Bernhard F.W. Gschaider <bgschaid@hfd-research.com>
+
+ SWAK Revision: $Id$
+\*---------------------------------------------------------------------------*/
+
+#ifndef LagrangianCloudSourcePluginFunctionI_H
+#define LagrangianCloudSourcePluginFunctionI_H
+
+namespace Foam {
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+
+template<class LookupCloudType>
+bool LagrangianCloudSourcePluginFunction::hasCloudAs()
+{
+    supportedTypes_.insert(typeid(LookupCloudType).name());
+    //    supportedTypes_.insert(LookupCloudType::typeName);
+
+    return mesh().template foundObject<LookupCloudType>
+        (
+            cloudName()
+        );
+}
+
+template<class OtherCloudType,class LookupCloudType>
+const OtherCloudType &LagrangianCloudSourcePluginFunction::getCloudAs()
+{
+    return
+        //        dynamicCast<const OtherCloudType &>(
+        dynamic_cast<const OtherCloudType &>(
+            mesh().template lookupObject<LookupCloudType>
+            (
+                cloudName()
+            )
+        );
+}
+
+
+
+// * * * * * * * * * * * * * * * Concrete implementations * * * * * * * * * //
+
+
+} // namespace
+
+// ************************************************************************* //
+
+#endif

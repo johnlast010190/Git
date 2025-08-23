@@ -1,0 +1,78 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      molConfigDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Euler angles, expressed in degrees as phi, theta, psi, see
+// http://mathworld.wolfram.com/EulerAngles.html
+
+sectionA
+{
+    massDensity             1004;
+    temperature             298;
+    bulkVelocity            (0.0 0.0 0.0);
+    latticeIds
+    (
+        water
+    );
+    tetherSiteIds           ();
+    latticePositions
+    (
+        (0 0 0)
+    );
+    anchor                  (0 0 0);
+    orientationAngles       (0 0 0);
+    latticeCellShape        (1 1 1);
+}
+
+sectionB
+{
+    massDensity             1004;
+    temperature             298;
+    bulkVelocity            (0.0 0.0 0.0);
+    latticeIds
+    (
+        water
+    );
+    tetherSiteIds           ();
+    latticePositions
+    (
+        (0 0 0)
+    );
+    anchor                  (0 0 0);
+    orientationAngles       (0 0 0);
+    latticeCellShape        (1 1 1);
+}
+
+sectionC
+{
+    massDensity             1004;
+    temperature             298;
+    bulkVelocity            (0.0 0.0 0.0);
+    latticeIds
+    (
+        water
+    );
+    tetherSiteIds           ();
+    latticePositions
+    (
+        (0 0 0)
+    );
+    anchor                  (0 0 0);
+    orientationAngles       (0 0 0);
+    latticeCellShape        (1 1 1);
+}
+
+// ************************************************************************* //

@@ -1,0 +1,487 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields yes;
+        resetBoundaryFields yes;
+        resetSystemDicts yes;
+        resetConstDicts yes;
+        resetBoundaryMesh yes;
+        deleteUnusedFields yes;
+    }
+    regionGroups    1 ( fluid 1 ( region0 ) );
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       latestTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         500;
+            deltaT          1;
+            writeControl    timeStep;
+            writeInterval   50;
+            purgeWrite      2;
+            writeFormat     ascii;
+            writePrecision  6;
+            writeCompression uncompressed;
+            timeFormat      general;
+            timePrecision   6;
+            graphFormat     raw;
+            runTimeModifiable yes;
+        }
+    }
+    functions
+    {
+        vr1
+        {
+            type            volumeReport;
+            fields          ( U p Cparticulate );
+        }
+        surfaces1
+        {
+            type            surfaces;
+            region          region0;
+            writeInterval   1;
+            enabled         true;
+            writeControl    outputTime;
+            fields          ( U p );
+            interpolationScheme cellPointFace;
+            surfaceFormat   vtk;
+            writeStatistics true;
+            writeFields     false;
+            surfaces
+            (
+                xplane
+                {
+                    type            plane;
+                    planeType       pointAndNormal;
+                    pointAndNormalDict
+                    {
+                        point     ( 0 0 0 );
+                        normal    ( 1 0 0 );
+                    }
+                }
+                yplane
+                {
+                    type            plane;
+                    planeType       pointAndNormal;
+                    pointAndNormalDict
+                    {
+                        point     ( 0 0 0 );
+                        normal    ( 0 1 0 );
+                    }
+                }
+                zplane
+                {
+                    type            plane;
+                    planeType       pointAndNormal;
+                    pointAndNormalDict
+                    {
+                        point     ( 0 0 0 );
+                        normal    ( 0 0 1 );
+                    }
+                }
+            );
+        }
+        fp1
+        {
+            type            fieldProcess;
+            calculationControl continuous;
+            operations      ( { operation wallShear ; fieldName tauw ; nearCellValue false ; write true ; } );
+            writeControl   outputTime;
+        }
+        surfaceReport1
+        {
+            type            surfaceReport;
+            name            SR1;
+            weighting       area;
+            fields          ( tauw );
+            surfaces        ( { type patch ; name tank ; } );
+        }
+        runTimeTermination
+        {
+            functionObjectLibs ( "libutilityFunctionObjects.so" );
+            type runTimeControl;
+            conditionLogicalOperator and;
+            conditions
+            {
+                minMax1
+                {
+                    type            minMax;
+                    functionObject  vr1;
+                    fields          ( "mean(U)" );
+                    mode            maximum;
+                    value           0.131;
+                }
+                minIter1
+                {
+                    type minIter;
+                    minIter 100;
+                }
+                mean1
+                {
+                    type            average;
+                    functionObject  surfaceReport1;
+                    fields          ( "mean(tauw)" );
+                    tolerance       1e-6;
+                    startTime       10;
+                    window          10;
+                    windowType      APPROXIMATE;
+                }
+            }
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        boundaryMesh
+        {
+            tank
+            {
+                type            wall;
+            }
+        }
+        state           ( steady ras Cparticulate );
+        turbulenceModel kOmegaSST;
+        materials       ( air );
+        constant
+        {
+            g
+            {
+                dimensions      [ 0 1 -2 0 0 0 0 ];
+                value           ( 0 0 -9.81 );
+            }
+        }
+        system
+        {
+            meshObjects
+            {
+                thrusterA
+                {
+                    type            motionCoordinateFrame;
+                    motionFunction
+                    {
+                        type rotatingMotion;
+                        rotatingMotionCoeffs
+                        {
+                            omega           20.943;
+                        }
+                    }
+                    coordinateSystem
+                    {
+                        type            cartesian;
+                        origin          ( -4 0.75 0 );
+                        rotation
+                        {
+                            type cylindrical;
+                            axis (1 0 0);
+                        }
+                    }
+                }
+                thrusterB
+                {
+                    type            motionCoordinateFrame;
+                    motionFunction
+                    {
+                        type rotatingMotion;
+                        rotatingMotionCoeffs
+                        {
+                            omega           20.943;
+                        }
+                    }
+                    coordinateSystem
+                    {
+                        type            cartesian;
+                        origin          ( 4.04698 -0.75 0 );
+                        rotation
+                        {
+                            type cylindrical;
+                            axis            ( -0.9396882597 -0.3420321252 0 );
+                        }
+                    }
+                }
+            }
+            fvOptions
+            {
+                YCparticulate
+                {
+                    type            concentrationTransport;
+                    active          true;
+                    hookOp          solve;
+                    fieldName       Cparticulate;
+                }
+                settlingVelocity
+                {
+                    type            settlingVelocityTakacs;
+                    active          true;
+                    fieldName       Cparticulate;
+                    V0              (0 0 -0.01);
+                    constant        true;
+                    selectionMode   all;
+                }
+                thrusterA
+                {
+                    type            thrusterActuationDiskSource;
+                    active          on;
+
+                    thrusterActuationDiskSourceCoeffs
+                    {
+                        timeStart       0;
+                        duration        10000;
+                        rhoRef          1.205;
+                        selectionMode   cellZone;
+                        cellZone        thrusterA;
+                        fieldNames      ( U );
+                        fanMode         localVelocity;
+
+                        referenceFrame thrusterA;
+
+                        f               (2 -1);
+                        loadProfile table
+                        (
+                            ( 0 0 )
+                            ( 0.1 0 )
+                            ( 0.3 0.2 )
+                            ( 0.7 0.8 )
+                            ( 0.75 1 )
+                            ( 0.95 1 )
+                            ( 1 0.2 )
+                        );
+
+                        alphaProfile table
+                        (
+                            ( 0 0 )
+                            ( 0.1 0 )
+                            ( 0.11 30 )
+                            ( 0.5 15 )
+                            ( 1 10 )
+                        );
+                    }
+                }
+                thrusterB
+                {
+                    type            thrusterActuationDiskSource;
+                    active          on;
+
+                    thrusterActuationDiskSourceCoeffs
+                    {
+                        timeStart       0;
+                        duration        10000;
+                        rhoRef          1.205;
+                        selectionMode   cellZone;
+                        cellZone        thrusterB;
+                        fieldNames      ( U );
+                        fanMode         localVelocity;
+
+                        referenceFrame thrusterB;
+
+                        f               (2 -1);
+                        loadProfile table
+                        (
+                            ( 0 0 )
+                            ( 0.1 0 )
+                            ( 0.3 0.2 )
+                            ( 0.7 0.8 )
+                            ( 0.75 1 )
+                            ( 0.95 1 )
+                            ( 1 0.2 )
+                        );
+
+                        alphaProfile table
+                        (
+                            ( 0 0 )
+                            ( 0.1 0 )
+                            ( 0.11 30 )
+                            ( 0.5 15 )
+                            ( 1 10 )
+                        );
+                    }
+                }
+            }
+            fvSchemes
+            {
+                gradSchemes
+                {
+                    turbulence      cellLimited Gauss linear 1;
+                    grad(k)         cellLimited Gauss linear 1;
+                    grad(omega)     cellLimited Gauss linear 1;
+                    default         cellLimited Gauss linear 1;
+                    gradU           cellLimited Gauss linear 1;
+                    grad(p)         Gauss linear;
+                }
+                divSchemes
+                {
+                    div(phi,k)      bounded Gauss linearUpwind turbulence;
+                    div(phi,omega)  bounded Gauss linearUpwind turbulence;
+                    div(phi,U)      bounded Gauss linearUpwindV gradU;
+                    default         none;
+                    div(R)          Gauss linear;
+                    div(nonlinearStress) Gauss linear;
+                    div((muEff*dev2(grad(U).T()))) Gauss linear;
+                    div((nuEff*dev2(T(grad(U))))) Gauss linear;
+                    div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
+                    div((nu*dev2(T(grad(U))))) Gauss linear;
+                    div(phi,Cparticulate) Gauss upwind;
+                }
+                laplacianSchemes
+                {
+                    laplacian(DkEff,k) Gauss linear limited 0.333;
+                    laplacian(DomegaEff,omega) Gauss linear limited 0.333;
+                    default         Gauss linear limited 0.333;
+                }
+                interpolationSchemes
+                {
+                    default         linear;
+                    interpolate(HbyA) linear;
+                }
+                snGradSchemes
+                {
+                    default         limited 0.333;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    k
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-06;
+                        relTol          0.1;
+                    }
+                    omega
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-06;
+                        relTol          0.1;
+                    }
+                    p
+                    {
+                        solver          GAMG;
+                        agglomerator    faceAreaPair;
+                        mergeLevels     1;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 200;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        scaleCorrection true;
+                        tolerance       1e-10;
+                        relTol          0.01;
+                    }
+                    U
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-06;
+                        relTol          0.1;
+                    }
+                    Cparticulate
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-06;
+                        relTol          0.1;
+                    }
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p               0.3;
+                    }
+                    equations
+                    {
+                        k               0.7;
+                        omega           0.7;
+                        U               0.7;
+                        Cparticulate    0.7;
+                    }
+                }
+                SIMPLE
+                {
+                    nNonOrthogonalCorrectors 0;
+                    pRefCell        0;
+                    pRefValue       0;
+                    modifiedMomentumInterp true;
+                }
+                cache
+                {
+                    grad(U);
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform ( 0 0 0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 0.001;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 0.1;
+                }
+            }
+            Cparticulate
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 1;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

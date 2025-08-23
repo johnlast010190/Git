@@ -1,0 +1,23 @@
+name BLUE_TO_RED_JET;
+colorSpace RGB;
+hsvWrap true;
+points
+(
+	0
+	0.1
+	0.4
+	0.5
+	0.6
+	0.9
+	1
+);
+colors
+(
+    ( 0 0 0.5 )
+    ( 0 0 1 )
+    ( 0 1 1 )
+    ( 0 1 0 )
+    ( 1 1 0 )
+    ( 1 0 0 )
+    ( 0.5 0 0 )
+);

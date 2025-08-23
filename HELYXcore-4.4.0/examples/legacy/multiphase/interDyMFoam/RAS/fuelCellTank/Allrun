@@ -1,0 +1,20 @@
+#!/bin/sh
+cd ${0%/*} || exit 1    # Run from this directory
+
+# Source tutorial run functions
+. $HELYX_PROJECT_DIR/bin/tools/RunFunctions
+
+touch case.foam
+
+mkdir -p constant/triSurface
+\cp $HELYX_TUTORIALS/resources/geometry/fuelCellTank/*  constant/triSurface/.
+
+runParallel helyxHexMesh -constant
+runParallel modifyGIBBoundary -constant -addGIB -name 'trap1' -faceZone 'trap1' -triSurfaceName tDoor1.stl -orientByPatches "(tank_L)" -parallel
+mv log.modifyGIBBoundary log.modifyGIBBoundary_trap1
+runParallel modifyGIBBoundary -constant -addGIB -name 'trap2' -faceZone 'trap2' -triSurfaceName tDoor2.stl -orientByPatches "(tank_R)" -parallel
+mv log.modifyGIBBoundary log.modifyGIBBoundary_trap2
+runParallel caseSetup
+runParallel $(getApplication)
+
+#------------------------------------------------------------------------------

@@ -1,0 +1,41 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Create the underlying block mesh
+helyxRun blockMesh
+
+# Create faceSet for burner inlet and faceZone for coupled wall
+helyxRun topoSet
+
+# Create burner inlet
+helyxRun createPatch -overwrite
+
+# Extrude Film
+helyxRun extrudeToRegionMesh -dict system/extrudeToRegionMeshDictFilm -overwrite
+
+# Extrude pyrolysis
+helyxRun -append extrudeToRegionMesh -dict system/extrudeToRegionMeshDictPyr -overwrite
+
+# Change samplePatch in the boundary to coupled patch betwee region0 and
+# pyrolysis
+helyxRun changeDictionary -region filmRegion -constant
+
+# Create faceSets for inlet, outlet, sides for the Film
+helyxRun -append topoSet -region filmRegion
+
+# Create actual patches
+helyxRun -append createPatch -region filmRegion -overwrite
+
+# Setup the case
+helyxRun caseSetup
+
+# Run
+helyxRun helyxSolve
+
+# Create dummy file for paraview
+touch flameSpreadWaterSuppressionPanel.foam
+
+#------------------------------------------------------------------------------

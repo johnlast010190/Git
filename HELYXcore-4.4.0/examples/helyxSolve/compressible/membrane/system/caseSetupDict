@@ -1,0 +1,515 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    regionGroups
+    (
+        fluids ( default pipe )
+    );
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       startTime;
+            endTime         10;
+            deltaT          1e-3;
+            writeControl    adjustableRunTime;
+            writeInterval   0.1;
+            writePrecision  6;
+            writeCompression off;
+            runTimeModifiable true;
+            adjustTimeStep  yes;
+            maxCo           1;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            regions          ( default pipe );
+            fields           ( U p CH4 O2 N2 );
+            executeControl   timeStep;
+            executeInterval  1;
+            writeControl     timeStep;
+            writeInterval    1;
+            outputFileFormat tsv;
+        }
+        inletPipe
+        {
+            functionObjectLibs ( "libreport.so" );
+            logToFile       yes;
+            weighting       area;
+            fluxName        phi;
+            fields          ( CH4 );
+            surfaces        ( { type patch ; name inletPipe; } );
+            constraints     ( );
+            executeControl  timeStep;
+            type            surfaceReport;
+            regions         ( pipe );
+        }
+        outletPipe
+        {
+            functionObjectLibs ( "libreport.so" );
+            logToFile       yes;
+            weighting       area;
+            fluxName        phi;
+            fields          ( CH4 );
+            surfaces        ( { type patch ; name outletPipe; } );
+            constraints     ( );
+            executeControl  timeStep;
+            type            surfaceReport;
+            regions         ( pipe );
+        }
+        inletSleeve
+        {
+            functionObjectLibs ( "libreport.so" );
+            logToFile       yes;
+            weighting       area;
+            fluxName        phi;
+            fields          ( CH4 );
+            surfaces        ( { type patch ; name inletSleeve; } );
+            constraints     ( );
+            executeControl  timeStep;
+            type            surfaceReport;
+            regions         ( default );
+        }
+        outletSleeve
+        {
+            functionObjectLibs ( "libreport.so" );
+            logToFile       yes;
+            weighting       area;
+            fluxName        phi;
+            fields          ( CH4 );
+            surfaces        ( { type patch ; name outletSleeve; } );
+            constraints     ( );
+            executeControl  timeStep;
+            type            surfaceReport;
+            regions         ( default );
+        }
+    }
+}
+
+regions
+{
+    fluids
+    {
+        materials ( O2 CH4 N2 );
+
+        materialProperties
+        {
+            materialType    fluid;
+            mixture         standardMixture;
+            energy          sensibleEnthalpy;
+            defaultSpecie N2;
+
+            O2
+            {
+                equationOfState perfectGas;
+                thermodynamics janaf;
+                thermodynamicsCoeffs
+                {
+                    Tlow 200;
+                    Thigh 5000;
+                    Tcommon 1000;
+                    highCpCoeffs ( 3.69758 0.00061352 -1.25884e-07 1.77528e-11 -1.13644e-15 -1233.93 3.18917 );
+                    lowCpCoeffs ( 3.21294 0.00112749 -5.75615e-07 1.31388e-09 -8.76855e-13 -1005.25 6.03474 );
+                }
+                muModel muSutherland;
+                muModelCoeffs
+                {
+                    As 1.67212e-06;
+                    Ts 170.672;
+                }
+                kappaModel kappaSutherland;
+                molWeight 31.9988;
+            }
+
+            CH4
+            {
+                equationOfState perfectGas;
+                thermodynamics  janaf;
+                thermodynamicsCoeffs
+                {
+                    Tlow 200;
+                    Thigh 6000;
+                    Tcommon 1000;
+                    highCpCoeffs ( 1.63543 0.0100844 -3.36924e-06 5.34973e-10 -3.15528e-14 -10005.6 9.9937 );
+                    lowCpCoeffs ( 5.14988 -0.013671 4.91801e-05 -4.84744e-08 1.66694e-11 -10246.6 -4.64132 );
+                }
+                muModel muSutherland;
+                muModelCoeffs
+                {
+                    As 1.67212e-06;
+                    Ts 170.672;
+                }
+                kappaModel kappaSutherland;
+                molWeight 16.0428;
+            }
+
+            N2
+            {
+                equationOfState perfectGas;
+                thermodynamics  janaf;
+                thermodynamicsCoeffs
+                {
+                    Tlow 200;
+                    Thigh 5000;
+                    Tcommon 1000;
+                    highCpCoeffs ( 2.92664 0.00148798 -5.68476e-07 1.0097e-10 -6.75335e-15 -922.798 5.98053 );
+                    lowCpCoeffs ( 3.29868 0.00140824 -3.96322e-06 5.64152e-09 -2.44486e-12 -1020.9 3.95037 );
+                }
+                muModel muSutherland;
+                muModelCoeffs
+                {
+                    As 1.67212e-06;
+                    Ts 170.672;
+                }
+                kappaModel kappaSutherland;
+                molWeight 28.0134;
+            }
+
+            referenceFields
+            {
+                p               [ 1 -1 -2 0 0 0 0 ] 100000;
+                TConst          [ 0 0 0 1 0 0 0 ] 293;
+            }
+        }
+    }
+    default
+    {
+        state (transient ras);
+        turbulenceModel kEpsilon;
+        fieldMaps { alphat alphatCompressible; }
+        system
+        {
+            fvSolution
+            {
+                PIMPLE { nOuterCorrectors 1; }
+                solvers
+                {
+                    Yi
+                    {
+                        solver          GAMG;
+                        agglomerator    algebraicPair;
+                        mergeLevels     1;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 200;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        maxIter         20;
+                        scaleCorrection true;
+                        tolerance       1e-07;
+                        relTol          0.001;
+                    }
+                    YiFinal
+                    {
+                        solver          GAMG;
+                        agglomerator    algebraicPair;
+                        mergeLevels     1;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 200;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        maxIter         20;
+                        scaleCorrection true;
+                        tolerance       1e-07;
+                        relTol          0;
+                    }
+                }
+            }
+        }
+        boundaryMesh
+        {
+            inletSleeve
+            {
+                type patch;
+            }
+            outletSleeve
+            {
+                type patch;
+            }
+            wallSleeve
+            {
+                type wall;
+            }
+            default_to_pipe
+            {
+                type            mappedWall;
+                sampleMode      nearestPatchFaceAMI;
+                sampleRegion    pipe;
+                samplePatch     pipe_to_default;
+                AMILowWeightCorrection 0.01;
+                tol             0;
+            }
+        }
+        fields
+        {
+            U { initialisation { type fixedValue; value uniform ( 0.1 0.0 0.0 );} }
+            k { initialisation { type fixedValue; value uniform 0.00375; } }
+            epsilon { initialisation { type fixedValue; value uniform 0.012; } }
+            p { initialisation { type fixedValue; value uniform 0; } }
+            alphat { initialisation { type fixedValue; value uniform 0; } }
+            O2 { initialisation { type fixedValue; value uniform 0.23; } }
+            CH4 { initialisation { type fixedValue; value uniform 0.0; } }
+            N2 { initialisation { type fixedValue; value uniform 0.77; } }
+            nut { initialisation { type fixedValue; value uniform 0.0; } }
+
+        }
+        boundaryConditions
+        {
+            inletSleeve
+            {
+                U { type fixedValue; value uniform (1 0 0); }
+                p { type fixedFluxPressure; }
+                k { type turbulentIntensityKineticEnergyInlet; intensity 0.05; value uniform 0.00375; }
+                epsilon { type turbulentMixingLengthDissipationRateInlet; mixingLength 0.1; phi phi; k k; value uniform 0.012; }
+                alphat { type fixedValue; value uniform 0; }
+                CH4 { type fixedValue; value uniform 0.0; }
+                N2 { type fixedValue; value uniform 0.77; }
+                O2 { type fixedValue; value uniform 0.23; }
+                nut { type calculated; value uniform 0; }
+            }
+            outletSleeve
+            {
+                U { type pressureInletOutletVelocity; value uniform (1 0 0); }
+                p { type totalPressure; gamma 1; p0 uniform 0; value uniform 0; }
+                k { type inletOutlet; inletValue uniform 0.00375; value uniform 0.00375; }
+                epsilon { type inletOutlet; inletValue uniform 0.012; value uniform 0.012; }
+                alphat { type zeroGradient; }
+                CH4 { type inletOutlet; inletValue uniform 0.0; value uniform 0.0; }
+                N2 { type inletOutlet; inletValue uniform 0.77; value uniform 0.77; }
+                O2 { type inletOutlet; inletValue uniform 0.23; value uniform 0.23; }
+                nut { type calculated; value uniform 0; }
+            }
+            wallSleeve
+            {
+                U { type noSlip; }
+                p { type fixedFluxPressure; }
+                k { type kqRWallFunction; value uniform 0.00375; }
+                epsilon { type epsilonWallFunction; value uniform 0.012; }
+                alphat { type alphatWallFunction; Prt 0.85; value uniform 0; }
+                CH4 { type zeroGradient; }
+                N2 { type zeroGradient; }
+                O2 { type zeroGradient; }
+                nut { type nutkWallFunction; value uniform 0; }
+            }
+            default_to_pipe
+            {
+                U { type specieTransferVelocity; value uniform (0 0 0); }
+                p { type fixedFluxPressure; }
+                k { type kqRWallFunction; value uniform 0.00375; }
+                epsilon { type epsilonWallFunction; value uniform 0.012; }
+                alphat { type alphatWallFunction; Prt 0.85; value uniform 0; }
+                CH4
+                {
+                    type semiPermeableBaffleMassFraction;
+                    c 0.1;
+                    property massFraction;
+                    value uniform 0.0;
+                    inletValue uniform 0.0;
+                    diffusionLimited true;
+                }
+                O2
+                {
+                    type semiPermeableBaffleMassFraction;
+                    property massFraction;
+                    value uniform 0.23;
+                    inletValue uniform 0.23;
+                }
+                N2
+                {
+                    type semiPermeableBaffleMassFraction;
+                    property massFraction;
+                    value uniform 0.77;
+                    inletValue uniform 0.77;
+                }
+                nut { type nutkWallFunction; value uniform 0; }
+            }
+        }
+    }
+    pipe
+    {
+        state (transient ras);
+        turbulenceModel kEpsilon;
+        fieldMaps { alphat alphatCompressible; }
+
+        system
+        {
+            fvSolution
+            {
+                PIMPLE { nOuterCorrectors 1; }
+
+                solvers
+                {
+                    Yi
+                    {
+                        solver          GAMG;
+                        agglomerator    algebraicPair;
+                        mergeLevels     1;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 200;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        maxIter         20;
+                        scaleCorrection true;
+                        tolerance       1e-07;
+                        relTol          0.001;
+                    }
+                    YiFinal
+                    {
+                        solver          GAMG;
+                        agglomerator    algebraicPair;
+                        mergeLevels     1;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 200;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        maxIter         20;
+                        scaleCorrection true;
+                        tolerance       1e-07;
+                        relTol          0;
+                    }
+                }
+            }
+        }
+        boundaryMesh
+        {
+            inletPipe
+            {
+                type patch;
+            }
+            outletPipe
+            {
+                type patch;
+            }
+            wallPipe
+            {
+                type wall;
+            }
+            pipe_to_default
+            {
+                type       mappedWall;
+                sampleMode nearestPatchFaceAMI;
+                sampleRegion default;
+                samplePatch default_to_pipe;
+                patchName default_to_pipe;
+                AMILowWeightCorrection 0.01;
+                tol 0;
+            }
+        }
+        fields
+        {
+            U { initialisation { type fixedValue; value uniform ( 0.0 0.0 0.0 );} }
+            k { initialisation { type fixedValue; value uniform 0.00375; } }
+            epsilon { initialisation { type fixedValue; value uniform 0.012; } }
+            p { initialisation { type fixedValue; value uniform 0; } }
+            alphat { initialisation { type fixedValue; value uniform 0; } }
+            O2 { initialisation { type fixedValue; value uniform 0; } }
+            CH4 { initialisation { type fixedValue; value uniform 0.5; } }
+            N2 { initialisation { type fixedValue; value uniform 0.5;} }
+            nut { initialisation { type fixedValue; value uniform 0.0; } }
+        }
+        boundaryConditions
+        {
+            inletPipe
+            {
+                U { type fixedValue; value uniform (0 0 1); }
+                p { type fixedFluxPressure; }
+                k { type fixedValue; value uniform 0.00375; }
+                epsilon { type fixedValue; value uniform 0.012; }
+                alphat { type fixedValue; value uniform 0; }
+                CH4 { type fixedValue; value uniform 0.5; }
+                N2 { type fixedValue; value uniform 0.5; }
+                O2 { type fixedValue; value uniform 0.0; }
+                T { type fixedValue; value uniform 293; }
+                nut { type calculated; value uniform 0; }
+            }
+            outletPipe
+            {
+                U { type  pressureInletOutletVelocity; value uniform (0 0 1); }
+                p { type totalPressure; gamma 1; p0 uniform 0; value uniform 0; }
+                k { type zeroGradient; }
+                epsilon { type zeroGradient; }
+                alphat { type zeroGradient; }
+                CH4 { type inletOutlet; inletValue uniform 0.5; value uniform 0.5; }
+                N2 { type inletOutlet; inletValue uniform 0.5; value uniform 0.5; }
+                O2 { type inletOutlet; inletValue uniform 0.0; value uniform 0.0; }
+                nut { type calculated; value uniform 0; }
+            }
+            wallPipe
+            {
+                U { type noSlip; }
+                p { type fixedFluxPressure; }
+                k { type kqRWallFunction; value uniform 0.00375; }
+                epsilon { type epsilonWallFunction; value uniform 0.012; }
+                alphat { type alphatWallFunction; Prt 0.85; value uniform 0; }
+                CH4 { type zeroGradient; }
+                N2 { type zeroGradient; }
+                O2 { type zeroGradient; }
+                nut { type nutkWallFunction; value uniform 0; }
+            }
+            pipe_to_default
+            {
+                U { type specieTransferVelocity; value uniform (0 0 0); }
+                p { type fixedFluxPressure; }
+                k { type kqRWallFunction; value uniform 0.00375; }
+                epsilon { type epsilonWallFunction; value uniform 0.012; }
+                alphat { type alphatWallFunction; Prt 0.85; value uniform 0; }
+                CH4
+                {
+                    type semiPermeableBaffleMassFraction;
+                    c 0.1;
+                    property massFraction;
+                    value uniform 0.5;
+                    inletValue uniform 0.5;
+                    diffusionLimited true;
+                }
+                N2
+                {
+                    type semiPermeableBaffleMassFraction;
+                    property massFraction;
+                    value uniform 0.5;
+                    inletValue uniform 0.5;
+                }
+                O2
+                {
+                    type semiPermeableBaffleMassFraction;
+                    property massFraction;
+                    value uniform 0.0;
+                    inletValue uniform 0.0;
+                }
+                nut { type nutkWallFunction; value uniform 0; }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,37 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy torus surface from resources directory
+mkdir -p constant/geometry
+cp "$HELYX_TUTORIALS"/resources/geometry/ballValve/ballValve-torus.obj.gz constant/geometry/
+
+# Mesh in series
+helyxRun blockMesh
+helyxRun topoSet
+helyxRun transformPoints -rollPitchYaw "(0 0 -45)" -pointSet "ball"
+
+# Decompose the geometry
+helyxRun decomposePar -cellDist
+
+# Setup
+helyxRun caseSetup
+
+# Check mesh quality
+helyxRun checkMesh -constant
+
+# Set the value of the scalar transport field
+helyxRun setFields
+
+# Run
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch nonConformalBallValve.foam
+
+# Plot the flow rates and error graphs
+./plotGraphs
+
+#------------------------------------------------------------------------------

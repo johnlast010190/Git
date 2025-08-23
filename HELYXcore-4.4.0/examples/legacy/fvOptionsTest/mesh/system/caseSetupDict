@@ -1,0 +1,349 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | Helyx:                                                   |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | Web:     http://www.engys.com                            |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields yes;
+        resetBoundaryFields yes;
+        resetSystemDicts yes;
+        resetConstDicts yes;
+        resetBoundaryMesh yes;
+        deleteUnusedFields no;
+    }
+    regionGroups    1 ( fluid 1 ( region0 ) );
+    system
+    {
+        controlDict
+        {
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         100;
+            deltaT          1;
+            writeControl    runTime;
+            writeInterval   100;
+            purgeWrite      0;
+            writeFormat     ascii;
+            writePrecision  6;
+            writeCompression uncompressed;
+            timeFormat      general;
+            timePrecision   6;
+            runTimeModifiable yes;
+            adjustTimeStep  yes;
+            maxCo           0.8;
+        }
+    }
+    functions
+    {
+        vr1
+        {
+            type            volumeReport;
+            fields          ( U p );
+        }
+        zf
+        {
+            type            zoneForces;
+            verbose         true;
+            logToFile       true;
+        }
+    }
+}
+
+regions
+{
+    fluid
+    {
+    }
+    region0
+    {
+        modificationSwitches
+        {
+        }
+        boundaryMesh
+        {
+            inlet
+            {
+                type            inlet;
+            }
+            outlet
+            {
+                type            outlet;
+            }
+            ffmaxy
+            {
+                type            wall;
+            }
+            ffminy
+            {
+                type            wall;
+            }
+            ffmaxz
+            {
+                type            wall;
+            }
+            ffminz
+            {
+                type            wall;
+            }
+        }
+        state 
+        (
+            steady
+            incompressible
+            ras
+            buoyant
+        );
+
+        turbulenceModel kOmegaSST;
+        materials       ( air );
+        materialProperties
+        {
+        }
+        fieldMaps
+        {
+        }
+        constant
+        {
+            g
+            {
+                dimensions      [ 0 1 -2 0 0 0 0 ];
+                value           ( 0 0 -9.81 );
+            }
+        }
+        system
+        {
+            meshObjects
+            {
+                rotatingFrame
+                {
+                    type            motionCoordinateFrame;
+                    motionFunction
+                    {
+                        type rotatingMotion;
+                        omega               100;
+                    }
+                    coordinateSystem
+                    {
+                        type            cartesian;
+                        origin          ( 0.35 0 0 );
+                        coordinateRotation
+                        {
+                            type            cylindrical;
+                            axis              ( 1 0 0 );
+                        }
+                    }
+                }
+                porousFrame
+                {
+                    type            coordinateFrame;
+                    coordinateSystem
+                    {
+                        type            cartesian;
+                        origin          ( 0 0 0 );
+                        coordinateRotation
+                        {
+                            type            axesRotation;
+                            e1              ( 1 0 0 );
+                            e2              ( 0 1 0 );
+                        }
+                    }
+                }
+            }
+            fvOptions
+            {
+                mrf
+                {
+                    type            MRFSource;
+                    active          yes;
+
+                    MRFSourceCoeffs
+                    {
+                        selectionMode   cellZone;
+                        cellZone        mrf;
+                        referenceFrame  rotatingFrame;
+                    }
+                }
+                porous
+                {
+                    type            explicitPorositySource;
+                    active          yes;
+
+                    explicitPorositySourceCoeffs
+                    {
+                        active          yes;
+
+                        selectionMode   cellZone;
+                        cellZone        porous;
+                        type            powerLaw;
+
+                        powerLawCoeffs
+                        {
+                            C0              400;
+                            C1              1.8;
+                            referenceFrame porousFrame;
+                        }
+                    }
+                }
+//startthermal
+                thermal
+                {
+                    type            fixedTemperatureConstraint;
+                    active          yes;
+
+                    fixedTemperatureConstraintCoeffs
+                    {
+                        selectionMode   cellZone;
+                        cellZone        thermal;
+                        mode            uniform;
+                        temperature     350;
+                    }
+                }
+//endthermal
+            }
+        }
+        global
+        {
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type            potentialFlow;
+                }
+            }
+//startinitp
+            p
+            {
+                initialisation
+                {
+                    type            potentialFlow;
+                }
+            }
+//endinitp
+            p_rgh
+            {
+                initialisation
+                {
+                    type            potentialFlow;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 295;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type            turbulentIL;
+                    I               0.4;
+                    L               0.5;
+                    Uref            0.2;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type            turbulentIL;
+                    I               0.4;
+                    L               0.5;
+                    Uref            0.2;
+                }
+            }
+            nuTilda
+            {
+                initialisation
+                {
+                    type            turbulentIL;
+                    I               0.4;
+                    L               0.5;
+                    Uref            0.2;
+                }
+            }
+        }
+        boundaryTypeDefaults
+        {
+            wall
+            {
+            }
+            inlet
+            {
+            }
+            outlet
+            {
+            }
+            patch
+            {
+            }
+        }
+        boundaryConditions
+        {
+            disc
+            {
+                U
+                {
+                    type            fixedValueVelocity;
+                    referenceFrame  rotatingFrame;
+                    value uniform (0 0 0);
+                }
+            }
+            inlet
+            {
+                T
+                {
+                    type            fixedValue;
+                    value           uniform 295;
+                }
+                U
+                {
+                    type            fixedValue;
+                    value           uniform ( 5 0 0 );
+                }
+                k
+                {
+                    type            fixedValue;
+                    value           uniform 0.000604;
+                }
+                omega
+                {
+                    type            fixedValue;
+                    value           uniform 0.008;
+                }
+                nuTilda
+                {
+                    type            fixedValue;
+                    value           uniform 0.3;
+                }
+            }
+        }
+        functions
+        {
+        }
+    }
+}
+
+
+// ************************************************************************* //

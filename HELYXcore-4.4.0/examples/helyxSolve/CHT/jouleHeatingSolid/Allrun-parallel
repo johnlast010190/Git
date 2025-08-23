@@ -1,0 +1,28 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Mesh in series
+helyxRun -l log.blockMesh.solid blockMesh -region solid
+
+# Decompose
+helyxRun -l log.decomposePar.solid decomposePar -region solid
+
+# Setup
+helyxRun caseSetup
+
+# Run
+helyxRun helyxSolve
+
+# Reconstruct
+helyxRun -l log.reconstructPar.solid -serial reconstructPar -latestTime -region solid
+
+# Plot curves against analytical solution
+./createGraphs
+
+# Create dummy file for ParaView visualisation
+touch jouleHeatingSolid.foam
+
+# -----------------------------------------------------------------------------

@@ -1,0 +1,46 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      radiationProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+radiation on;
+
+radiationModel  fvDOM;
+
+fvDOMCoeffs
+{
+    nPhi        3;          // azimuthal angles in PI/2 on X-Y.(from Y to X)
+    nTheta      5;          // polar angles in PI (from Z to X-Y plane)
+    convergence 1e-3;   // convergence criteria for radiation iteration
+    maxIter     10;         // maximum number of iterations
+}
+
+// Number of flow iterations per radiation iteration
+solverFreq 10;
+
+absorptionEmissionModel constant;
+
+constantCoeffs
+{
+   absorptivity 0.5;
+   emissivity 0.5;
+   E 0;
+}
+
+scatterModel    none;
+sootModel       none;
+transmissivityModel none;
+
+// ************************************************************************* //

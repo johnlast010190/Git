@@ -1,0 +1,90 @@
+meshQualityControls
+{
+    //- Maximum non-orthogonality allowed. Set to 180 to disable.
+    maxNonOrtho 70;
+
+    //- Max skewness allowed. Set to <0 to disable.
+    maxBoundarySkewness 20;
+    maxInternalSkewness 6;
+
+    //- Max concaveness allowed. Is angle (in degrees) below which concavity
+    //  is allowed. 0 is straight face, <0 would be convex face.
+    //  Set to 180 to disable.
+    maxConcave 80;
+
+    //- Minimum projected area v.s. actual area. Set to -1 to disable.
+    minFlatness 0.5;
+
+    //- Minimum pyramid volume. Is absolute volume of cell pyramid.
+    //  Set to very negative number (e.g. -1E30) to disable.
+    minVol 1e-16;
+
+    //- Minimum quality of the tet formed by the face-centre
+    //  and variable base point minimum decomposition triangles and
+    //  the cell centre. This has to be a positive number for tracking
+    //  to work. Set to very negative number (e.g. -1E30) to
+    //  disable.
+    //     <0 = inside out tet,
+    //      0 = flat tet
+    //      1 = regular tet
+    minTetQuality -1e30;//1e-30;
+
+    //- Minimum face area. Set to <0 to disable.
+    minArea 1e-13;
+
+    //- Minimum face twist. Set to <-1 to disable. dot product of face normal
+    //- and face centre triangles normal
+    minTwist 0.05;
+
+    //- minimum normalised cell determinant
+    //- 1 = hex, <= 0 = folded or flattened illegal cell
+    minDeterminant 0.0001;
+
+    //- minFaceWeight (0 -> 0.5)
+    minFaceWeight 0.08;
+
+    //- minVolRatio (0 -> 1)
+    minVolRatio 0.02;
+
+    //must be >0 for Fluent compatibility
+    minTriangleTwist -0.99;
+
+
+    // Advanced
+
+    //- Number of error distribution iterations
+    nSmoothScale 10;
+    //- amount to scale back displacement at error points
+    errorReduction 0.75;
+
+    //- keep cells where collapsed volume ratio above this value 
+    minVolCollapseRatio -1;
+
+    //Check for poorly connected cells
+    faceFaceCells true;
+
+    // Monitor cell volume during snapping so ratio of cell volume to
+    //undistorted cell volume cannot fall below this ratio
+    minSnapRelativeVolume -1;
+
+    // same as minSnapRelativeVolume but for tetrahedral cells only
+    minSnapRelativeTetVolume -1;
+
+    // Check distance from gauss-green cell centre 
+    // to geometric cell centre relative to the undistorted cell size 
+    maxGaussGreenCentroid -1;
+
+    // Perform additional orthogonality check based on cell-centre 
+    // to face-centre vector
+    maxFaceCentreNonOrtho 180;
+
+    // Perform checks of cell aspect ratio (For unit cube AR=1.732)
+    // AR calculated as max to min of following distances
+    // - Distance from cell centroid to face centre dotted with face normal
+    // - Distance between cell centroid and cell nodes
+    // Set to -1 to disable checks  
+    maxCellAspectRatio -1;
+
+    //- project and smooth point edges which are closely aligned 
+    smoothAlignedEdges false;
+}

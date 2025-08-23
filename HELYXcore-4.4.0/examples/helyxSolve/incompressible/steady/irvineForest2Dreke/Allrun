@@ -1,0 +1,28 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Generate mesh
+helyxRun blockMesh
+helyxRun -log "log.topoSet1" topoSet -dict system/topoSetDict1
+helyxRun createPatch -overwrite
+helyxRun -log "log.topoSet2" topoSet -dict system/topoSetDict2
+
+# Decompose
+helyxRun decomposePar
+
+# Setup
+helyxRun caseSetup
+
+# Run
+helyxRun helyxSolve
+
+# Plot curves against experimental data
+./constant/experimentalData/plot_vertical_profiles.py
+
+# Create dummy file for ParaView visualisation
+touch irvineForest2Dreke.foam
+
+#------------------------------------------------------------------------------

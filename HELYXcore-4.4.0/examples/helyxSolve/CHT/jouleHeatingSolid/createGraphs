@@ -1,0 +1,94 @@
+#!/bin/bash
+#---------------------------------------------------------------------------
+#|       o        |
+#|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+#|   o   O   o    |  Version : 4.4.0
+#|    o     o     |  ENGYS Ltd. <http://engys.com/>
+#|       o        |
+#---------------------------------------------------------------------------
+# License
+#    This file is part of HELYXcore.
+#    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+#
+#    HELYXcore is free software: you can redistribute it and/or modify it
+#    under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+#    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+#    for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright
+#    (c) 2017 OpenCFD Ltd.
+#    (c) 2023 Engys Ltd.
+#
+# Script
+#     createGraphs
+#
+# Description
+#     Creates .eps graph of HELYX results vs analytical solution for the
+#     Joule heating case.
+#
+#------------------------------------------------------------------------------
+
+cd "${0%/*}" || exit 1    # Run from this directory
+
+# Stop on first error
+set -e
+
+# test if gnuplot exists on the system
+if ! which gnuplot > /dev/null 2>&1
+then
+    echo "HELYX FATAL ERROR: gnuplot not found - skipping graph creation" >&2
+    exit 1
+fi
+
+
+TLAST=$(foamListTimes -latestTime)
+
+echo "Creating graph"
+HXDATA="postProcessing/solid/sample1/$TLAST/centreLine_scalar.xy"
+
+if [ ! -f "$HXDATA" ]
+then
+    echo "HELYX FATAL ERROR: HELYX results not available in $HXDATA" >&2
+    exit 1
+fi
+
+gnuplot<<EOF
+set terminal postscript eps color enhanced
+set output "HX_vs_ANALYTICAL.eps"
+set xlabel "Length, x / [m]"
+set ylabel "Temperature / [K]"
+set grid
+set key left top
+rho = 7.837e-6
+sigma = 1/rho
+kappa = 200
+L = 2.5
+D = 0.1
+H = 0.1
+vol = 2.0*L*D*H
+V = 1.5
+R = rho*2*L/(D*H)
+I = V/R
+P = I*V
+Q = P/vol
+Ts = 500
+T(x) = Q*L*L/(2*kappa)*(1-(x/L)*(x/L)) + Ts
+
+
+plot \
+    "$HXDATA" u 1:2 w lines title "HELYX", \
+    T(x) w linespoints lt 0 pt 6 pi 15 title "Analytical"
+EOF
+
+echo "End"
+
+
+#------------------------------------------------------------------------------

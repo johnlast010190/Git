@@ -1,0 +1,94 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     helyxSolve;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         6;
+
+deltaT          1e-05;
+
+writeControl    adjustableRunTime;
+
+writeInterval   0.1;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  10;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   6;
+
+graphFormat     raw;
+
+runTimeModifiable yes;
+
+adjustTimeStep  yes;
+
+maxCo           0.2;
+
+maxDeltaT       1;
+
+libs            1 ( "" );
+
+functions
+{
+    VR
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( T U p );
+        executeControl  onEnd;
+        type            volumeReport;
+        regions         ( gas );
+        writeControl    onEnd;
+    }
+    wallHeatFlux-gas
+    {
+        type            wallHeatFlux;
+        kappaMethod     fluidThermo;
+        region          gas;
+        libs            ( "libfieldFunctionObjects.so" );
+    }
+    wallHeatFlux-solid
+    {
+        type            wallHeatFlux;
+        kappaMethod     solidThermo;
+        region          solid;
+        libs            ( "libfieldFunctionObjects.so" );
+    }
+    Qdot
+    {
+        type            Qdot;
+        libs            ( "libcombustionModels.so" );
+        region          gas;
+        executeControl  writeTime;
+        writeControl    writeTime;
+    }
+}
+
+
+// ************************************************************************* //

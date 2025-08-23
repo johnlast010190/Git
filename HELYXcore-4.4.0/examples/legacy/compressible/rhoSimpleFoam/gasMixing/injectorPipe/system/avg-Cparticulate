@@ -1,0 +1,23 @@
+// -*- C++ -*-
+//
+// Averaging of volume fields or fields on an externally loaded surface.
+avg-Cparticulate-0.25
+{
+    ${settings_avg}
+    subRegion   plane-0.25;
+}
+
+avg-Cparticulate-0.45
+{
+    ${settings_avg}
+    subRegion   plane-0.45;
+}
+
+avg-Cparticulate-0.55
+{
+    ${settings_avg}
+    subRegion   plane-0.55;
+}
+
+
+// ************************************************************************* //

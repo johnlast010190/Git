@@ -1,0 +1,260 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields yes;
+        resetBoundaryFields yes;
+        resetSystemDicts yes;
+        resetConstDicts yes;
+        resetBoundaryMesh yes;
+        deleteUnusedFields yes;
+    }
+    regionGroups    1 ( fluid 1 ( region0 ) );
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       latestTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         0.1;
+            deltaT          0.001;
+            writeControl    adjustableRunTime;
+            writeInterval   0.01;
+            purgeWrite      0;
+            writeFormat     ascii;
+            adjustTimeStep  yes;
+            maxCo           1;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        boundaryMesh
+        {
+            AMI
+            {
+                type            cyclicAMI;
+                matchTolerance  0.002;
+                neighbourPatch  AMI_slave;
+            }
+            AMI_slave
+            {
+                type            cyclicAMI;
+                matchTolerance  0.002;
+                neighbourPatch  AMI;
+            }
+        }
+        state           ( transient ras energy dynamic );
+        turbulenceModel kEpsilon;
+        materials       ( air );
+        materialProperties
+        {
+            air
+            {
+                equationOfState perfectGas;
+            }
+        }
+        constant
+        {
+            dynamicMeshDict
+            {
+                mover
+                {
+                    type            motionSolver;
+                    libs            ("libfvMeshMovers.so" "libfvMotionSolvers.so");
+                    motionSolver    solidBody;
+                    referenceFrame  rotatingFrame;
+                    cellZone        rotatingZone;
+                }
+            }
+        }
+        system
+        {
+            meshObjects
+            {
+                rotatingFrame
+                {
+                    type dynamicMotionCoordinateFrame;
+                    motionFunction
+                    {
+                        type rotatingMotion;
+                        omega 25;
+                    }
+                    coordinateSystem
+                    {
+                        type cartesian;
+                        origin ( 0 0 0 );
+                        e1 (1 0 0);
+                        e3 (0 0 1);
+                    }
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type            potentialFlow;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type            potentialFlow;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type            Prandtl;
+                }
+            }
+            epsilon
+            {
+                initialisation
+                {
+                    type            Prandtl;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            innerInlet
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform ( 0 0 0.2 );
+                }
+                k
+                {
+                    type            fixedValue;
+                    value           uniform 2.4e-05;
+                }
+                epsilon
+                {
+                    type            fixedValue;
+                    value           uniform 5.7e-05;
+                }
+                T
+                {
+                    type            fixedValue;
+                    value           uniform 233;
+                }
+            }
+            outerInlet
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform ( 0 0 0.1 );
+                }
+                k
+                {
+                    type            fixedValue;
+                    value           uniform 6e-06;
+                }
+                epsilon
+                {
+                    type            fixedValue;
+                    value           uniform 3.98e-05;
+                }
+                T
+                {
+                    type            fixedValue;
+                    value           uniform 293;
+                }
+            }
+            innerOutlet
+            {
+                p
+                {
+                    type            totalPressure;
+                    value           uniform 0;
+                    p0              uniform 0;
+                }
+            }
+            outerOutlet
+            {
+                p
+                {
+                    type            totalPressure;
+                    value           uniform 0;
+                    p0              uniform 0;
+                }
+            }
+            rotorBlades
+            {
+                U
+                {
+                    type            rotatingWallVelocity;
+                    origin          ( 0 0 0 );
+                    axis            ( 0 0 1 );
+                    omega           25;
+                    value           uniform ( 0 0 0 );
+                }
+            }
+            rotorBlades_slave
+            {
+                U
+                {
+                    type            rotatingWallVelocity;
+                    origin          ( 0 0 0 );
+                    axis            ( 0 0 1 );
+                    omega           25;
+                    value           uniform ( 0 0 0 );
+                }
+            }
+            shaft
+            {
+                U
+                {
+                    type            rotatingWallVelocity;
+                    origin          ( 0 0 0 );
+                    axis            ( 0 0 1 );
+                    omega           25;
+                    value           uniform ( 0 0 0 );
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

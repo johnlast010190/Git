@@ -1,0 +1,65 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/VR_cooler/0/volumeReport.tsv";
+                reference "verification/short/VR_cooler/0/volumeReport.tsv";
+                variables "Tmean";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/VR_heater/0/volumeReport.tsv";
+                reference "verification/short/VR_heater/0/volumeReport.tsv";
+                variables "Tmean";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/SR_in/0/surfaceReport.tsv";
+                reference "verification/short/SR_in/0/surfaceReport.tsv";
+                variables "pmean";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/SR_out/0/surfaceReport.tsv";
+                reference "verification/short/SR_out/0/surfaceReport.tsv";
+                variables "Tmax";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/VR_cooler/0/volumeReport.tsv";
+                reference "verification/long/VR_cooler/0/volumeReport.tsv";
+                variables "Tmean";
+            }
+            {
+                result "postProcessing/VR_heater/0/volumeReport.tsv";
+                reference "verification/long/VR_heater/0/volumeReport.tsv";
+                variables "Tmean";
+            }
+            {
+                result "postProcessing/SR_in/0/surfaceReport.tsv";
+                reference "verification/long/SR_in/0/surfaceReport.tsv";
+                variables "pmean";
+            }
+            {
+                result "postProcessing/SR_out/0/surfaceReport.tsv";
+                reference "verification/long/SR_out/0/surfaceReport.tsv";
+                variables "Tmax";
+            }
+        );
+    }
+);

@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+TOP_LEVEL_DIR=$(git rev-parse --show-toplevel)
+SCRIPT_DIR=$TOP_LEVEL_DIR/bin/tools
+
+CHANGED_FILES=$(git diff --name-only --cached --diff-filter=ACMR)
+for file in $CHANGED_FILES; do
+	# file-specific validations
+	case $file in
+		".gitmodules" )
+			echo "Git modules should NOT be changed."
+			echo "Remove it from your commit and try again."
+			exit 200
+			;;
+		*".C" | *".H")
+			echo "Style checking $file..."
+			$SCRIPT_DIR/checkStyle.sh $TOP_LEVEL_DIR/$file
+			git add $file	# re-add in case of changes
+			;;
+
+	esac
+
+	# any file validation
+	size=$(stat -c%s $file)
+	if [ $size -ge 1048576 ]; then
+		echo "Files are limited to up to 1Mb in size; \"$file\" exceeds this limit."
+		exit 201
+	fi
+done

@@ -1,0 +1,29 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy input surfaces from resources directory
+mkdir -p constant/triSurface
+cp "$HELYX_TUTORIALS"/resources/geometry/gearPump/* constant/triSurface/
+
+# Mesh in parallel
+helyxRun -p helyxHexMesh
+
+# Create GIB interface
+helyxRun modifyGIBBoundary -addGIB -name "Gears" -faceZone "Gears" -triSurfaceName Gears.stl -orientByPatches "(inlet)"
+
+# Setup
+helyxRun caseSetup
+
+# Check
+helyxRun checkMesh
+
+# Run
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch gearPump.foam
+
+#------------------------------------------------------------------------------

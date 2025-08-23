@@ -1,0 +1,31 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/short/VR/0/volumeReport.tsv";
+                variables "Umin" "Umax" "Umean" "pmin" "pmax" "UstDev" "pmean" "pstDev" "AoAmin" "AoAmax" "AoAmean" "AoAstDev";
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/long/VR/0/volumeReport.tsv";
+                variables "Umin" "Umax" "Umean" "pmin" "pmax" "UstDev" "pmean" "pstDev" "AoAmin" "AoAmax" "AoAmean" "AoAstDev";
+            }
+        );
+    }
+);
+
+unstable true;
+operatingSystem windows;
+reason "This example has a Bash script, which is not available on Windows";

@@ -1,0 +1,41 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/VR-fire/0/volumeReport.dat";
+                reference "verification/short/VR-fire/0/volumeReport.dat";
+                variables "Tmean";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/VR/0/volumeReport.dat";
+                reference "verification/short/VR/0/volumeReport.dat";
+                variables "Tmean" "Umean" "kmean" "nutmean" "omegamean" "pmean" "rhomean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/VR-fire/0/volumeReport.dat";
+                reference "verification/long/VR-fire/0/volumeReport.dat";
+                variables "Tmean";
+            }
+            {
+                result "postProcessing/VR/0/volumeReport.dat";
+                reference "verification/long/VR/0/volumeReport.dat";
+                variables "Tmean" "Umean" "kmean" "nutmean" "omegamean" "pmean" "rhomean";
+            }
+        );
+    }
+);

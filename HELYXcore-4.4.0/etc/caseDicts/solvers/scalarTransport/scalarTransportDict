@@ -1,0 +1,25 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+
+// controlDict settings
+startTime       0;
+
+stopAt          endTime;
+endTime         1;
+
+deltaT          1e-4;
+
+writeControl    runTime;
+writeInterval   1e-2;
+
+// transportProperties settings
+DT      DT [ 0 2 -1 0 0 0 0 ] 1e-9;
+
+#includeEtc "caseDicts/solvers/scalarTransport/scalarTransportDict.cfg"
+
+// ************************************************************************* //

@@ -1,0 +1,67 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       pointVectorField;
+    object      pointMotionU;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [ 0 1 0 0 0 0 0 ];
+
+internalField   uniform ( 0 0 0 );
+
+boundaryField
+{
+    maxZ
+    {
+        type            fixedValue;
+        value           uniform ( 0 0 0 );
+    }
+    minZ
+    {
+        type            surfaceDisplacement;
+        value           uniform ( 0 0 0 );
+        velocity        ( 10 10 10 );
+        geometry
+        {
+            AcrossRiver.stl
+            {
+                type            triSurfaceMesh;
+            }
+        }
+        projectMode     fixedNormal;
+        projectDirection ( 0 0 1 );
+        wedgePlane      -1;
+    }
+    maxX
+    {
+        type            fixedNormalSlip;
+        n               ( 1 0 0 );
+    }
+    minX
+    {
+        type            fixedNormalSlip;
+        n               ( 1 0 0 );
+    }
+    minY
+    {
+        type            fixedNormalSlip;
+        n               ( 0 1 0 );
+    }
+    maxY
+    {
+        type            fixedNormalSlip;
+        n               ( 0 1 0 );
+    }
+}
+
+
+// ************************************************************************* //

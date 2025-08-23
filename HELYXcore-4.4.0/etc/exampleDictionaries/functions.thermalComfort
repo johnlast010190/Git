@@ -1,0 +1,25 @@
+comfort
+{
+    functionObjectLibs ("libutilityFunctionObjects.so");
+    type thermalComfort;
+
+    outputControl   outputTime;
+
+    //clothes resistivity
+    clo 1.0;
+    //metabolic rate
+    met 1.0;
+    //work 
+    work 0.0;
+
+    //Relative humidity (%) if w field not available
+    RH 50.0;
+    //Turbulent Intensity (%)
+    Tu 40.0;
+    
+    solarSources (solar);
+
+    //Optional specification of U and p fields
+    UName U;
+    pName p;
+}

@@ -1,0 +1,68 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      radiationProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solverFreq      1;
+
+radiationModel  P1;
+
+P1Coeffs
+{
+    C               C [0 0 0 0 0 0 0] 0;
+}
+
+absorptionEmissionModel binaryAbsorptionEmission;
+
+binaryAbsorptionEmissionCoeffs
+{
+    model1
+    {
+        absorptionEmissionModel constant;
+        constantCoeffs
+        {
+            absorptivity 0.5;
+            emissivity 0.5;
+            E 0;
+        }
+    }
+    model2
+    {
+        absorptionEmissionModel cloud;
+        cloudCoeffs
+        {
+            cloudNames
+            (
+                coalCloud1
+                limestoneCloud1
+            );
+        }
+    }
+}
+
+scatterModel    cloudScatter;
+
+cloudScatterCoeffs
+{
+    cloudNames
+    (
+        coalCloud1
+        limestoneCloud1
+    );
+}
+
+transmissivityModel none;
+
+// ************************************************************************* //

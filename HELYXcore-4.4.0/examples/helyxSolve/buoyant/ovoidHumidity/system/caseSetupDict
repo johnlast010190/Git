@@ -1,0 +1,304 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+    }
+    regionGroups  1 ( fluid  1 ( region0 ));
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom startTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 0.2;
+            deltaT 0.001;
+            writeControl adjustableRunTime;
+            writeInterval 0.1;
+            purgeWrite 0;
+            writeFormat ascii;
+            writePrecision 6;
+            writeCompression uncompressed;
+            timeFormat general;
+            timePrecision 6;
+            runTimeModifiable true;
+            adjustTimeStep true;
+            maxCo 0.8;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type volumeReport;
+            fields
+            (
+                U
+                w
+                T
+                p
+                k
+                omega
+            );
+            executeControl onEnd;
+            writeControl onEnd;
+            outputFileFormat tsv;
+        }
+        SR
+        {
+            type surfaceReport;
+            executeControl onEnd;
+            writeControl onEnd;
+            functionObjectLibs ( "libreport.so" );
+            surfaces
+            (
+                {
+                    type patch;
+                    name human;
+                }
+
+            );
+            logToFile true;
+            fields ( T  w  filmMass );
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        boundaryMesh
+        {
+            xmin
+            {
+                type inlet;
+            }
+            xmax
+            {
+                type outlet;
+            }
+        }
+        state ( transient  ras  energy  humidity );
+        turbulenceModel kOmegaSST;
+        materials ( air );
+        materialProperties
+        {
+            air
+            {
+                buoyancyModel Boussinesq;
+                buoyancyModelCoeffs
+                {
+                    rho0 1.205;
+                    beta 0.00333;
+                    T0 300;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cp 1006.8;
+                    Hf 0;
+                }
+                kappaModelCoeffs
+                {
+                    Pr 0.7142408241;
+                }
+                muModelCoeffs
+                {
+                    mu 1.82320115E-05;
+                }
+                referenceFields
+                {
+                    p  [ 1 -1 -2 0 0 0 0 ]  101325;
+                }
+            }
+        }
+        constant
+        {
+            g
+            {
+                dimensions  [ 0 1 -2 0 0 0 0 ] ;
+                value ( 0  0  -9.81 );
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type potentialFlow;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type buoyantPressure;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type Prandtl;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type Prandtl;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 300;
+                }
+            }
+            w
+            {
+                initialisation
+                {
+                    type relativeHumidity;
+                    relativeHumidity 0.1;
+                    T T;
+                    Pabs 100000;
+                }
+            }
+        }
+        boundaryTypeDefaults
+        {
+            wall
+            {
+                T
+                {
+                    type turbulentHeatFluxTemperature;
+                    kappaMethod fluidThermo;
+                    value uniform 300.0;
+                    q uniform 0.0;
+                    heatSource flux;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            human
+            {
+                T
+                {
+                    type groupOfHumansHeatFlux;
+                    heatSource flux;
+                    q uniform 60;
+                    value uniform 300;
+                    kappaMethod fluidThermo;
+                    demographics
+                    {
+                        maleAdult
+                        {
+                            number 1;
+                            height 1.8;
+                            weight 80;
+                            age 30;
+                        }
+                        femaleAdult
+                        {
+                            number 0;
+                            height 1.6;
+                            weight 60;
+                            age 30;
+                        }
+                        maleChild
+                        {
+                            number 0;
+                            height 1;
+                            weight 20;
+                            age 5;
+                        }
+                        femaleChild
+                        {
+                            number 0;
+                            height 1;
+                            weight 20;
+                            age 5;
+                        }
+                    }
+                    averagingDistance 0.25;
+                }
+                w
+                {
+                    type phaseChangeHumidity;
+                    filmMass uniform 0.01;
+                    droplets true;
+                    contactAngle 100;
+                    thermalCoupling true;
+                    steadyEvaporation false;
+                    value uniform 0;
+                }
+            }
+            xmin
+            {
+                U
+                {
+                    type fixedValue;
+                    value  uniform ( 1  0  0 );
+                }
+                T
+                {
+                    type fixedValue;
+                    value uniform 300;
+                }
+                w
+                {
+                    type relativeHumidityInletOutlet;
+                    relativeHumidity uniform 0.1;
+                    value uniform 0;
+                }
+            }
+            xmax
+            {
+                p
+                {
+                    type totalPressure;
+                    p0 uniform 0;
+                    addStaticHead true;
+                    value uniform 0;
+                }
+                w
+                {
+                    type relativeHumidityInletOutlet;
+                    relativeHumidity uniform 0.1;
+                    value uniform 0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

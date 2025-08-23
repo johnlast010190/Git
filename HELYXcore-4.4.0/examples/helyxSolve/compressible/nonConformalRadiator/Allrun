@@ -1,0 +1,28 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy input surface from resources directory
+mkdir -p constant/triSurface/
+cp $HELYX_TUTORIALS/resources/geometry/waterRadiator/* constant/triSurface/
+
+# Mesh in parallel
+helyxRun -parallel helyxHexMesh
+helyxRun extrudeMesh -overwrite
+
+# Setup
+helyxRun caseSetup
+
+# Run
+helyxRun helyxSolve
+
+# Reconstruct
+helyxRun -serial reconstructParMesh -constant -withZero
+helyxRun -serial reconstructPar -withZero
+
+# Create dummy file for ParaView visualisation
+touch nonConformalRadiator.foam
+
+#------------------------------------------------------------------------------

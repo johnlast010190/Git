@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Source tutorial clean functions
+. $HELYX_PROJECT_DIR/bin/tools/CleanFunctions
+
+cleanCase
+removeCase reMesh
+rm -f constant/regionProperties
+rm -f *.vtk
+rm -r system/helyxHexMeshDict

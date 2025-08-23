@@ -1,0 +1,29 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/short/VR/0/volumeReport.tsv";
+                variables "Umax" "Umean" "pmax" "pmean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/long/VR/0/volumeReport.tsv";
+                variables "Umax" "Umean" "pmax" "pmean";
+            }
+        );
+    }
+);

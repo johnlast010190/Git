@@ -1,0 +1,152 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+castellatedMesh true;
+
+snap            true;
+
+addLayers       false;
+
+autoBlockMesh   true;
+
+blockData       (7.5e-4 0);
+
+geometry
+{
+    "box.stl"
+    {
+        type triSurfaceMesh;
+        name box;
+        regions
+        {
+            face0
+            {
+                name left;
+            }
+
+            face1
+            {
+                name right;
+            }
+
+            face2
+            {
+                name bottom;
+            }
+
+            face3
+            {
+                name top;
+            }
+
+            face4
+            {
+                name back;
+            }
+
+            face5
+            {
+                name front;
+            }
+
+        }
+    }
+
+    "cylinder.stl"
+    {
+        type triSurfaceMesh;
+        name element;
+    }
+
+    "clip1.stl"
+    {
+        type triSurfaceMesh;
+        name clip1;
+    }
+
+    "clip2.stl"
+    {
+        type triSurfaceMesh;
+        name clip2;
+    }
+
+};
+
+castellatedMeshControls
+{
+    refinementSurfaces
+    {
+
+        box
+        {
+            level (0 0);
+        }
+
+        element
+        {
+            level (0 0);
+            faceZone element;
+            cellZoneInside inside;
+            cellZone element;
+        }
+
+        clip1
+        {
+            level (0 0);
+            faceZone clip1;
+            cellZoneInside inside;
+            cellZone clip1;
+        }
+
+        clip2
+        {
+            level (0 0);
+            faceZone clip2;
+            cellZoneInside inside;
+            cellZone clip2;
+        }
+
+    }
+
+    refinementRegions
+    {
+        element
+        {
+            mode inside;
+            levels ((1 0));
+        }
+
+        clip1
+        {
+            mode inside;
+            levels ((1 0));
+        }
+
+        clip2
+        {
+            mode inside;
+            levels ((1 0));
+        }
+
+    }
+
+    locationInMesh (0.01 0.01 0.01);
+}
+
+
+// ************************************************************************* //

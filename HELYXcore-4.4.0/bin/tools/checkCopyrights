@@ -1,0 +1,167 @@
+#!/usr/bin/python3
+# ---------------------------------------------------------------------------
+# |       o        |
+# |    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+# |   o   O   o    |  Version : 4.4.0
+# |    o     o     |  ENGYS Ltd. <http://engys.com/>
+# |       o        |
+# ---------------------------------------------------------------------------
+# License
+#    This file is part of HELYXcore.
+#    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+#
+#    HELYXcore is free software: you can redistribute it and/or modify it
+#    under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+#    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+#    for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright
+#    (c) 2021 Engys Ltd.
+
+# Script
+#     updateVersionNumbers
+#
+# Description
+#     This script updates the version numbers in header files.
+#
+# ------------------------------------------------------------------------------
+
+# We don't have to rely on environment variables anymore!
+import pathlib
+import re
+
+import SourceTreeTools
+
+# TODO:  Be cleverer about warning about funny-looking Engys copyrights
+INCORRECT_ENGYS_COPYRIGHTS = set(
+    [
+        "ENGYS LTD",
+        "Engys Ltd",
+        "ENGYS Ltd.",
+        "Engys",
+        "ENGYS",
+        "ENGYS ltd.",
+    ]
+)
+
+VALID_COPYRIGHTS = set(
+    [
+        "University of Maryland and Sunil Arya and",
+        "University of Maryland and Sunil Arya and David",
+        "OpenCFD Ltd.",
+        "IH-Cantabria",
+        "OpenFOAM Foundation",
+        "Engys Ltd                                               |",
+        "Engys Ltd.",
+        "H. Jasak All rights reserved",
+        "Jovani Favero",
+        "blueCAPE Lda",
+        "H. Jasak",
+        "Ivor Clifford",
+        "Symscape",
+        "blueCAPE Ltda.",
+        "Deepak Bandyopadhyay, Lutz Kettner",
+        "Icon CG Ltd.",
+        "ICON CFD",
+        "Icon-CG Ltd.",
+        "Rudolf Hellmuth - Vascular Flow Technologies",
+        "OpenFOAM Fundation",
+        "CSIR",
+        "DHI",
+        "Henry G Weller",
+        "Peter Broede",
+        "OpenCFD Ltd",
+        "OpenCFD.Ltd",
+        "FSD blueCAPE Lda",
+        "OpenFOAM Foundation :",
+        "Bernhard Gschaider",
+        "Hrv Jasak",
+        "Kevin Maki",
+        "D.Segersson SMHI",
+        "Hannes Kroeger <hannes@kroegeronline.net>",
+        "Geometric Tools, LC",
+        "Johan Heyns - CSIR, South Africa",
+        "Oliver Oxtoby - CSIR, South Africa",
+        "Mark Olesen",
+        "Vascular Flow",
+        "Wikki Ltd",
+        "Wikki Ltd.",
+        "Takuya OSHIMA",
+        "Hannes Kroeger",
+        "OpenCFD ltd.",
+        "The Regents of the University of California.",
+        "Regents of the University of California.",
+        "blueCape Lda.",
+        "blueCAPE Ltd",
+        "blueCAPE Ltd",
+        "Free Software",
+        "OpenFOAM Foundation D. Segersson is held by the author.",
+        "PCOpt/NTUA",
+        "Oliver Oxtoby - CSIR, South Africa               |",
+        "Johan Heyns - CSIR, South Africa                 |",
+        "J Heyns",
+        "Oliver Oxtoby",
+        "Klas Jareteg",
+        "Alexey Matveichev",
+    ]
+)
+
+# TODO:  Implement this
+FILE_BLACKLIST = [
+    "surfaceCoarsen.C"
+    # Bunnylod, OFversion_template.rc
+]
+
+
+class CopyrightChecker:
+    def __init__(self, file_paths):
+        self.file_paths = file_paths
+
+    def check_copyrights(self):
+        # TODO:  Catch cases where copyrights don't have years assigned to them
+        self.pattern = re.compile(r"(.*?\([cC]\)\s*?)([0-9\-]{4,9})\s+(.*)")
+        for input_file in self.file_paths:
+            with open(input_file, "r") as f:
+                # TODO:  Parse the header properly
+                for _ in range(50):
+                    try:
+                        current_line = f.readline()
+                        match = re.search(self.pattern, current_line)
+                        if match:
+                            indent = match[1]
+                            year = match[2]
+                            copyright_holder = match[3]
+                            if copyright_holder.strip() in INCORRECT_ENGYS_COPYRIGHTS:
+                                correct_engys_copyright = f"{indent}{year} Engys Ltd.\n"
+                                print(f'Fixing Engys copyright in {input_file}:')
+                                print(f'    \"{current_line.strip()}\" -> \"{correct_engys_copyright.strip()}\"')
+                                SourceTreeTools.replace_string_in_file(
+                                    input_file, current_line, correct_engys_copyright
+                                )
+                            if copyright_holder.strip() not in VALID_COPYRIGHTS:
+                                print(f"\nWarning:  I don't recognise the following copyright.  If it's correct please add it to VALID_COPYRIGHTS in {__file__}.")
+                                print("\t", input_file)
+                                print("\tyear:", year)
+                                print("\tCopyright holder:", copyright_holder)
+
+                    except (UnicodeDecodeError):
+                        continue
+
+
+if __name__ == "__main__":
+    dir_info = SourceTreeTools.HelyxDirectoryInfo()
+
+    for parent_dir in dir_info.directories_dict:
+        file_path_getter = SourceTreeTools.FilePathGetter(
+            parent_dir, dir_info.directories_dict[parent_dir]
+        )
+        checker = CopyrightChecker(file_path_getter.all_file_paths)
+        checker.check_copyrights()

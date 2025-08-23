@@ -1,0 +1,316 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+// Which of the steps to run
+castellatedMesh true;
+snap            true;
+addLayers       true;
+
+autoBlockMesh   true;
+blockData       ( 0.03125 0 );
+
+// Geometry. Definition of all surfaces.
+geometry
+{
+    INTERFACE_RAD_IN.bts
+    {
+        type    triSurfaceMesh;
+        name    INTERFACE_RAD_IN;
+        transforms
+        (
+            {
+                type           recess;
+                direction      ( 0.0 -1.0 0.0 );
+                distance       0.01;
+                addLocation    true;
+                projectToPlane true;
+            }
+        );
+    }
+    INTERFACE_RAD_OUT.bts
+    {
+        type    triSurfaceMesh;
+        name    INTERFACE_RAD_OUT;
+        transforms
+        (
+            {
+                type           recess;
+                direction      ( 0.0 1.0 0.0 );
+                distance       0.01;
+                addLocation    true;
+                projectToPlane true;
+            }
+        );
+    }
+    INTERFACE_WATER_IN.bts
+    {
+        type    triSurfaceMesh;
+        name    INTERFACE_WATER_IN;
+    }
+    INTERFACE_WATER_OUT.bts
+    {
+        type    triSurfaceMesh;
+        name    INTERFACE_WATER_OUT;
+    }
+    WATER-Core.bts
+    {
+        type    triSurfaceMesh;
+        name    WATER-Core;
+    }
+    WATER_CIRCUIT.bts
+    {
+        type    triSurfaceMesh;
+        name    WATER_CIRCUIT;
+    }
+    WATER_CORE.bts
+    {
+        type    triSurfaceMesh;
+        name    WATER_CORE;
+    }
+}
+
+// Settings for the castellatedMesh generation
+castellatedMeshControls
+{
+    features
+    ();
+
+    refinementSurfaces
+    {
+        INTERFACE_RAD_IN
+        {
+            level    ( 2 2 );
+        }
+        INTERFACE_RAD_OUT
+        {
+            level    ( 2 2 );
+        }
+        INTERFACE_WATER_IN
+        {
+            level    ( 0 0 );
+            faceType internal;
+            faceZone INTERFACE_WATER_IN;
+            cellZoneInside inside;
+            baffleChecks true;
+            allowFreeStandingZoneFaces false;
+        }
+        INTERFACE_WATER_OUT
+        {
+            level    ( 0 0 );
+            faceType internal;
+            faceZone INTERFACE_WATER_OUT;
+            cellZone heaterRad;
+            cellZoneInside inside;
+            baffleChecks true;
+            allowFreeStandingZoneFaces false;
+        }
+        WATER-Core
+        {
+            level    ( 2 2 );
+        }
+        WATER_CIRCUIT
+        {
+            level    ( 0 0 );
+            autoBlockSurface false;
+            regions
+            {
+                Core
+                {
+                    level ( 1 3 );
+                    proximityIncrement 0;
+                    curvature 20.0;
+                }
+                Protrusions
+                {
+                    level ( 1 2 );
+                    proximityIncrement 0;
+                }
+                Pipe
+                {
+                    level ( 1 2 );
+                }
+                Headers
+                {
+                    level ( 2 2 );
+                    proximityIncrement 1;
+                    curvature 20.0;
+                }
+                Inlet
+                {
+                    level ( 1 1 );
+                }
+                Outlet
+                {
+                    level ( 1 1 );
+                }
+            }
+        }
+        WATER_CORE
+        {
+            level ( 0 0 );
+            autoBlockSurface false;
+            regions
+            {
+                Tubes
+                {
+                    level ( 2 2 );
+                }
+                Tubes_Slide
+                {
+                    level ( 2 2 );
+                }
+            }
+        }
+    }
+
+    refinementRegions
+    {}
+
+    locationsInMesh ( ( ( -0.25 -0.1 0.0 ) none ) );
+}
+
+// Settings for the snapping
+snapControls
+{
+    featureEdges
+    {}
+}
+
+// Settings for the layer addition
+addLayersControls
+{
+    layers
+    {
+        INTERFACE_RAD_IN
+        {
+            nSurfaceLayers 0;
+            grownUp true;
+        }
+        INTERFACE_RAD_OUT
+        {
+            nSurfaceLayers 0;
+            grownUp true;
+        }
+        INTERFACE_WATER_IN
+        {
+            nSurfaceLayers 0;
+            grownUp true;
+        }
+        INTERFACE_WATER_IN_slave
+        {
+            nSurfaceLayers 0;
+            grownUp true;
+        }
+        INTERFACE_WATER_OUT
+        {
+            nSurfaceLayers 0;
+            grownUp true;
+        }
+        INTERFACE_WATER_OUT_slave
+        {
+            nSurfaceLayers 0;
+            grownUp true;
+        }
+        WATER-Core
+        {
+            nSurfaceLayers 2;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        WATER_CIRCUIT_Core
+        {
+            nSurfaceLayers 0;
+            grownUp automatic;
+        }
+        WATER_CIRCUIT_Protrusions
+        {
+            nSurfaceLayers 2;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        WATER_CIRCUIT_Pipe
+        {
+            nSurfaceLayers 2;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        WATER_CIRCUIT_Headers
+        {
+            nSurfaceLayers 2;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        WATER_CIRCUIT_Inlet
+        {
+            nSurfaceLayers 0;
+            grownUp true;
+        }
+        WATER_CIRCUIT_Outlet
+        {
+            nSurfaceLayers 0;
+            grownUp true;
+        }
+        WATER_CORE_Tubes
+        {
+            nSurfaceLayers 2;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        WATER_CORE_Tubes_Slide
+        {
+            nSurfaceLayers 2;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+    }
+}
+
+// Settings for cell removal
+cellRemoval
+{
+    checks      ( );
+    patch       oldInternalFaces;
+    removeCells true;
+    writeVTK    true;
+}
+
+// Settings for extrusion
+extrudeDict
+{
+    extrude
+    {
+        type target;
+        action add;
+        sourcePatches ( INTERFACE_RAD_IN );
+        nLayers 50;
+        cellZone coolerRad;
+        sourceFaceZone int1-CF;
+        targetPatches ( INTERFACE_RAD_OUT );
+        translational false;
+        targetFaceZone int2-CFT;
+    }
+}
+
+
+// ************************************************************************* //

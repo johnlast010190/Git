@@ -1,0 +1,113 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+// Which of the steps to run
+castellatedMesh true;
+snap            true;
+addLayers       true;
+
+// Geometry. Definition of all surfaces.
+geometry
+{
+    ahmed_body.stl
+    {
+        type    triSurfaceMesh;
+        name    ahmed;
+    }
+
+    refinementBox
+    {
+        type searchableBox;
+        min (-1.5 -0.4 0.0);
+        max ( 2.0  0.4 0.5);
+    }
+}
+
+// Settings for the castellatedMesh generation
+castellatedMeshControls
+{
+    features
+    ();
+
+    refinementSurfaces
+    {
+        ahmed
+        {
+            // Surface-wise min and max refinement level
+            level (2 3);
+
+            regions
+            {
+                // Region-wise override
+                ".*front_h"
+                {
+                    level (3 4);
+                }
+                ".*front_v"
+                {
+                    level (3 4);
+                }
+                ".*stilts"
+                {
+                    level (4 4);
+                }
+            }
+        }
+    }
+
+    refinementRegions
+    {
+         refinementBox
+         {
+             mode inside;
+             levels ((1E15 2));
+         }
+    }
+
+    locationInMesh (3 0 0.5);
+
+    splitCells true;
+}
+
+// Settings for the snapping
+snapControls
+{
+    // Per final patch (so not geometry!) the layer information
+    featureEdges
+    {}
+}
+
+// Settings for the layer addition
+addLayersControls
+{
+    // Per final patch (so not geometry!) the layer information
+    layers
+    {
+        "(ahmed_body.*|ahmed_stilts.*)"
+        {
+            nSurfaceLayers 4;
+        }
+        ffminz
+        {
+            nSurfaceLayers 4;
+        }
+    }
+}
+
+
+// ************************************************************************* //

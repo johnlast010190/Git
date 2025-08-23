@@ -1,0 +1,16 @@
+solid solid_1
+ facet normal -1 0 0
+  outer loop
+   vertex 0.257499993 -0.0260000005 -0.112000003
+   vertex 0.257499993 -0.0759999976 -0.112000003
+   vertex 0.257499993 -0.0260000005 -0.0370000005
+  endloop
+ endfacet
+ facet normal -1 0 0
+  outer loop
+   vertex 0.257499993 -0.0260000005 -0.0370000005
+   vertex 0.257499993 -0.0759999976 -0.112000003
+   vertex 0.257499993 -0.0759999976 -0.0370000005
+  endloop
+ endfacet
+endsolid

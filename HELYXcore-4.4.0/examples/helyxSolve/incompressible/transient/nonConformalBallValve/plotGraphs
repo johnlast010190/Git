@@ -1,0 +1,39 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Input data
+inletFlowRate=postProcessing/inletFlowRate/0/surfaceFieldValue.dat
+lowerOutletFlowRate=postProcessing/lowerOutletFlowRate/0/surfaceFieldValue.dat
+upperOutletFlowRate=postProcessing/upperOutletFlowRate/0/surfaceFieldValue.dat
+
+# Plot flow rates graph
+gnuplot << EOF
+set terminal postscript eps color enhanced
+set output "flow_rate.eps"
+set key top center
+set xlabel "Time (s)"
+set ylabel "Volumetric flow rate (m^3/s)"
+plot \
+    "$inletFlowRate" us 1:(-\$2*1e-3) every 10 w p t "Inlet", \
+    "$lowerOutletFlowRate" us 1:(\$2*1e-3) w l t "Lower outlet", \
+    "$upperOutletFlowRate" us 1:(\$2*1e-3) w l t "Upper outlet", \
+    "< paste $lowerOutletFlowRate $upperOutletFlowRate" \
+    us 1:(\$2*1e-3+\$4*1e-3) w l t "Total outlet"
+EOF
+
+# Plot error graph
+gnuplot << EOF
+set terminal postscript eps color enhanced
+set output "inlet_outlet_error.eps"
+set xlabel "Time (s)"
+set ylabel "Inlet/outlet conservation error (%)"
+set yrange [-0.1:0.1]
+plot \
+    "< paste $inletFlowRate $lowerOutletFlowRate $upperOutletFlowRate" \
+    us 1:(100*(\$2+\$4+\$6)/\$2) w l t ''
+EOF
+
+#------------------------------------------------------------------------------

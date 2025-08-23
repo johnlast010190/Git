@@ -1,0 +1,60 @@
+#/*---------------------------------------------------------------------------*\
+#|       o        |
+#|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+#|   o   O   o    |  Version : 4.4.0
+#|    o     o     |  ENGYS Ltd. <http://engys.com/>
+#|       o        |
+#\*---------------------------------------------------------------------------
+#License
+#    This file is part of HELYXcore.
+#    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+#
+#    HELYXcore is free software: you can redistribute it and/or modify it
+#    under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+#    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+#    for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+#Copyright
+#    (c) 2021 Engys Ltd.
+#
+# Description
+#     Here lie the mortal remains of the wmake build system.  This file prints
+#     an error, partly as an attempt to re-train the muscle memory of OpenFOAM
+#     veterans and partly as a grim memento mori for unmaintained build systems
+#     everywhere.
+#
+#------------------------------------------------------------------------------
+
+error=$(cat <<END
+
+[==================================  Error  ===================================]
+
+wmake support has been entirely removed from HELYX version 3.5.
+
+
+To run HELYX, please source platforms/activeBuild.shrc.
+
+(Note:  activeBuild.shrc points to the run-time settings for the latest build.
+Specific builds can be sourced directly, e.g. by sourcing files like
+"platforms/linux64GccDPInt32Opt.shrc").
+
+
+To compile HELYX, please use the CMake build system.
+
+For more information please see the compilation guide on the ENGYS portal
+(www.engys.com) or contact support@engys.com.
+
+[==============================================================================]
+\n
+END
+)
+
+echo -e "$error"

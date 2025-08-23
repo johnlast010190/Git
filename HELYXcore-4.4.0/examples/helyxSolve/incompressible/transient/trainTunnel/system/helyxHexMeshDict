@@ -1,0 +1,141 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+castellatedMesh true;
+
+snap            true;
+
+addLayers       true;
+
+autoBlockMesh   true;
+
+blockData       ( 0.1 0 );
+
+crackDetection  false;
+
+geometry
+{
+    domain.stl
+    {
+        type            triSurfaceMesh;
+        name            domain;
+    }
+    ami.stl
+    {
+        type            triSurfaceMesh;
+        name            ami;
+    }
+    train.stl
+    {
+        type            triSurfaceMesh;
+        name            train;
+    }
+    tunnel
+    {
+        type  searchableRing;
+        point1 (0 0 10.0);
+        point2 (0 0 20.0);
+        innerRadius 1;
+        outerRadius 2.5;
+    }
+}
+
+castellatedMeshControls
+{
+    features ();
+    refinementSurfaces
+    {
+        domain
+        {
+            level           ( 0 0 );
+            regions
+            {
+            }
+        }
+        ami
+        {
+            faceZone        ami;
+            cellZone        ami;
+            faceType        boundary;//internal;//baffle;
+            cellZoneInside  none;
+
+            level           ( 0 0 );
+            regions
+            {
+            }
+        }
+        train
+        {
+            level           ( 0 0 );
+            regions
+            {
+            }
+        }
+        tunnel
+        {
+            level           ( 0 0 );
+            regions
+            {
+            }
+        }
+    }
+    refinementRegions {}
+
+    locationInMesh (0 0 0.9);
+}
+
+snapControls
+{
+    featureEdges {}
+}
+
+addLayersControls
+{
+    layers
+    {
+        "domain_.*"
+        {
+            nSurfaceLayers  0;
+        }
+        "ami_.*"
+        {
+            nSurfaceLayers  0;
+        }
+        train
+        {
+            nSurfaceLayers  3;
+        }
+        tunnel
+        {
+            nSurfaceLayers  3;
+        }
+    }
+}
+
+repatchRegions
+{
+    movingPatch
+    {
+        location (0 0 0.9); // needed if zone entry does not exist
+        zone movingRegion;
+        excludePatches (ami ami_slave domain_inlet domain_outlet);
+    }
+}
+
+
+// ************************************************************************* //

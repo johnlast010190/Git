@@ -1,0 +1,55 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      frontalAreaDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+resolution 5.0E-3;
+
+boundSurfaces
+{
+   box
+   {
+      type searchableBox;
+      min (-1.0 -0.7 0.0);
+      max (8.0 0.7 2.5);
+   }
+}
+
+coordinates
+{
+   origin          (0 0 0);
+
+   coordinateRotation
+   {
+      e1              (0.9848 0.1736 0);
+      e2              (0 0 1);
+      type            axesRotation;
+   }
+}
+
+filterLength 0.04; // Delaunay method filter
+
+geometry
+{
+   motorBike.obj
+    {
+        type triSurfaceMesh;
+        name motorBike;
+    }
+}
+
+writeVTK false;
+
+
+// ************************************************************************* //

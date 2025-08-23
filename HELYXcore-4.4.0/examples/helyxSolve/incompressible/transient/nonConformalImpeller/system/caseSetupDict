@@ -1,0 +1,268 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh false;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom startTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 4;
+            deltaT 0.001;
+            writeControl adjustableRunTime;
+            writeInterval 0.1;
+            purgeWrite 0;
+            writeFormat ascii;
+            writePrecision 10;
+            writeCompression uncompressed;
+            timeFormat general;
+            timePrecision 6;
+            runTimeModifiable yes;
+            adjustTimeStep yes;
+            maxCo 1;
+        }
+        meshObjects
+        {
+            rotatingFrame
+            {
+                type dynamicMotionCoordinateFrame;
+                motionFunction
+                {
+                   type  rotatingMotion;
+                   omega 6.2832;
+                }
+                coordinateSystem
+                {
+                    type cartesian;
+                    origin (0 0 0);
+                    e1 ( 0 1 0 );
+                    e3 ( 1 0 0 );
+                }
+            }
+        }
+        nonConformalCouplesDict
+        {
+            nonConformalCoupleIn
+            {
+                patches         (nonCoupleIn1 nonCoupleIn2);
+                couplingType    periodic;
+                transformType   rotational;
+                rotationAxis    (-1 0 0);
+                rotationCentre  (0 0 0);
+                sectorAngle     30;
+            }
+            nonConformalCoupleOut
+            {
+                patches         (nonCoupleOut1 nonCoupleOut2);
+                couplingType    periodic;
+                transformType   rotational;
+                rotationAxis    (-1 0 0);
+                rotationCentre  (0 0 0);
+                sectorAngle     -30;
+            }
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type volumeReport;
+            regions ( region0 );
+            fields ( U p );
+            writeControl timeStep;
+            writeInterval 1;
+            executeControl timeStep;
+            executeInterval 1;
+            functionObjectLibs ( "libreport.so" );
+            outputFileFormat tsv;
+        }
+        inletFlowRate
+        {
+            type surfaceFieldValue;
+            libs ("libfieldFunctionObjects.so");
+            writeFields     false;
+            log             false;
+            regionType      patch;
+            name            inlet;
+            fields          (phi);
+            operation       sum;
+            executeControl  onEnd;
+            writeControl    onEnd;
+        }
+        outletFlowRate
+        {
+            type surfaceFieldValue;
+            libs ("libfieldFunctionObjects.so");
+            writeFields     false;
+            log             false;
+            regionType      patch;
+            name            outlet;
+            fields          (phi);
+            operation       sum;
+            executeControl  onEnd;
+            writeControl    onEnd;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (transient ras dynamic);
+        turbulenceModel kEpsilon;
+        materials (air);
+        constant
+        {
+            dynamicMeshDict
+            {
+                mover
+                {
+                    type            motionSolver;
+                    libs            ("libfvMeshMovers.so" "libfvMotionSolvers.so");
+                    motionSolver    solidBody;
+                    cellZone        rotating;
+                    referenceFrame  rotatingFrame;
+                }
+            }
+        }
+        system
+        {
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default smartBounded backward;
+                }
+            }
+            fvSolution
+            {
+                PIMPLE
+                {
+                    correctMeshPhi false;
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.00015;
+                }
+            }
+            epsilon
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.0002025;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+        }
+        boundaryTypeDefaults
+        {
+            nonConformal
+            {
+                U
+                {
+                    type movingWallSlipVelocity;
+                    value uniform (0 0 0);
+                }
+            }
+        }
+        boundaryConditions
+        {
+            "(inlet|outlet)"
+            {
+                U
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform (0 0 0);
+                }
+                p
+                {
+                    type totalPressure;
+                    p0 uniform 0;
+                    value uniform 0;
+                }
+                k
+                {
+                    type inletOutlet;
+                    inletValue uniform 0.00015;
+                    value uniform 0.00015;
+                }
+                epsilon
+                {
+                    type inletOutlet;
+                    inletValue uniform 0.0002025;
+                    value uniform 0.0002025;
+                }
+            }
+            statorDuct
+            {
+                U
+                {
+                    type noSlip;
+                }
+            }
+            "(rotorDuct|rotorBlades)"
+            {
+                U
+                {
+                    type movingWallVelocity;
+                    value uniform (0 0 0);
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,25 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Create mesh
+helyxRun blockMesh
+
+# Setup
+helyxRun caseSetup
+
+# Run
+helyxRun helyxSolve
+
+# Setup case for disperse Eulerian simulation
+helyxRun -l log.caseSetup.disperseEulerian caseSetup -dict system/caseSetupDict.restart -latestTime
+
+# Run disperse Eulerian
+helyxRun -l log.helyxSolve.disperseEulerian helyxSolve
+
+# Create dummy file for ParaView visualization
+touch cubicBuilding.foam
+
+#------------------------------------------------------------------------------

@@ -1,0 +1,21 @@
+name ELEMENTS_CPX;
+colorSpace RGB;
+hsvWrap true;
+points
+(
+	0
+	0.48
+	0.481
+	0.519
+	0.52
+	1
+);
+colors
+(
+    ( 0 0 1 )
+    ( 0 1 1 )
+    ( 0.8 0.8 0.8 )
+    ( 0.8 0.8 0.8 )
+    ( 1 1 0 )
+    ( 1 0 0 )
+);

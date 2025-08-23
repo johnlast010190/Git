@@ -1,0 +1,31 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/VR/0/volumeReport.dat";
+                reference "verification/short/VR/0/volumeReport.dat";
+                variables "Tmin" "Tmax" "Umin" "Umax" "pmin" "pmax";
+                absolute 0.0001;
+                relative 0.0001;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/VR/0/volumeReport.dat";
+                reference "verification/long/VR/0/volumeReport.dat";
+                variables "Tmin" "Tmax" "Umin" "Umax" "pmin" "pmax";
+                absolute 0.0001;
+                relative 0.0001;
+            }
+        );
+    }
+);

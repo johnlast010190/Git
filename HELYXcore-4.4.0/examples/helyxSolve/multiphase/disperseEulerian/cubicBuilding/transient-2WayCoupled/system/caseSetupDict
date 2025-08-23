@@ -1,0 +1,515 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom startTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 100;
+            deltaT 0.1;
+            writeControl adjustableRunTime;
+            writeInterval 5;
+            purgeWrite 0;
+            writeFormat ascii;
+            writePrecision 6;
+            timeFormat general;
+            timePrecision 6;
+            runTimeModifiable yes;
+            adjustTimeStep true;
+            maxCo 20;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+
+regions
+{
+    region0
+    {
+        state (transient ras);
+        fieldMaps
+        {
+            alpha.rain1      phase;
+            U.rain1          UdispersedPhase;
+            alpha.rain2      phase;
+            U.rain2          UdispersedPhase;
+            alpha.rain3      phase;
+            U.rain3          UdispersedPhase;
+            alpha.rain4      phase;
+            U.rain4          UdispersedPhase;
+            alpha.rain5      phase;
+            U.rain5          UdispersedPhase;
+            alpha.rain6      phase;
+            U.rain6          UdispersedPhase;
+            alpha.rain7      phase;
+            U.rain7          UdispersedPhase;
+            alpha.rain8      phase;
+            U.rain8          UdispersedPhase;
+            alpha.rain9      phase;
+            U.rain9          UdispersedPhase;
+            alpha.rain10     phase;
+            U.rain10         UdispersedPhase;
+            alpha.rain11     phase;
+            U.rain11         UdispersedPhase;
+            alpha.rain12     phase;
+            U.rain12         UdispersedPhase;
+            alpha.rain13     phase;
+            U.rain13         UdispersedPhase;
+            alpha.rain14     phase;
+            U.rain14         UdispersedPhase;
+            alpha.rain15     phase;
+            U.rain15         UdispersedPhase;
+            alpha.rain16     phase;
+            U.rain16         UdispersedPhase;
+            alpha.rain17     phase;
+            U.rain17         UdispersedPhase;
+        }
+        boundaryMesh
+        {
+            inlet
+            {
+                type inlet;
+            }
+            outlet
+            {
+                type outlet;
+            }
+            top
+            {
+                type patch;
+            }
+            ground
+            {
+                type wall;
+            }
+            sides
+            {
+                type patch;
+            }
+            cube
+            {
+                type wall;
+            }
+        }
+        turbulenceModel kEpsilon;
+        materials (air);
+        materialProperties
+        {
+            air
+            {
+                equationOfStateCoeffs
+                {
+                    rho 1.225;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cp 1004.4;
+                }
+                muModelCoeffs
+                {
+                    mu 1.7885e-05;
+                }
+                kappaModelCoeffs
+                {
+                    Pr 1.0;
+                }
+                referenceFields
+                {
+                    p [ 1 -1 -2 0 0 0 0 ] 0;
+                }
+            }
+        }
+        system
+        {
+            fvSolution
+            {
+                solvers
+                {
+                    "alpha\..*"
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-06;
+                        relTol          0.01;
+                        maxIter         50;
+                    }
+                    "U\..*"
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-06;
+                        relTol          0.01;
+                        maxIter         50;
+                    }
+                }
+                relaxationFactors
+                {
+                    equations
+                    {
+                        "alpha\..*"     1;
+                        "U\..*"         1;
+                    }
+                }
+                PIMPLE
+                {
+                    nOuterCorrectors 2;
+                    nCorrectors     2;
+                }
+            }
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    "ddt\(alpha\..*\)" Euler;
+                    "ddt\(U\..*\)"  Euler;
+                }
+                gradSchemes
+                {
+                    "grad\(U\..*\)" Gauss linear;
+                    "grad\(alpha\..*\)" Gauss linear;
+                }
+                divSchemes
+                {
+                    div(phid,alphad) Gauss upwind;
+                    div(phid,Ud)    Gauss upwind;
+                    div(Rca)        Gauss linear;
+                    div(phiRa,Ud)   Gauss linear;
+                }
+                laplacianSchemes
+                {
+                    laplacian(nutd,alphad) Gauss linear corrected;
+                    laplacian(nutd,Ud) Gauss linear corrected;
+                }
+            }
+            fvOptions
+            {
+                rainDroplets
+                {
+                    type            disperseEulerian;
+                    active          true;
+                    phiName         phiwdr;
+                    alphaTD         false;
+                    solveTD         true;
+                    solveFinal      true;//solve on final outer iter only!
+                }
+                momentumCoupling
+                {
+                    type            disperseEulerianSource;
+                    active          true;
+                    dispersePhase   "rainDroplets";
+                    fields ( U );
+                }
+            }
+        }
+        constant
+        {
+            g
+            {
+                dimensions      [ 0 1 -2 0 0 0 0 ];
+                value           ( 0 0 -9.81 );
+            }
+            disperseEulerianProperties
+            {
+                rain
+                {
+                    rhoc            rhoc [ 1 -3 0 0 0 ] 1;
+                    muc             muc [ 1 -1 -1 0 0 ] 1.46e-05;
+                    rhod            rhod [ 1 -3 0 0 0 ] 1000; // should not be used for GunnKinzer
+                    diam            diam [ 0 1 0 0 0 ] 0.0003;
+                    dragModel       GunnKinzer;
+                    Td              285.85;
+                    liftModel       none;
+                    Cl              0.5;
+                    turbulentDispersionModel none;
+                    Sct             1e+06;
+                }
+                phases
+                (
+                    rain1
+                    {
+                        $rain;
+                    }
+                    rain2
+                    {
+                        $rain;
+                        diam            diam [ 0 1 0 0 0 ] 0.0004;
+                    }
+                    rain3
+                    {
+                        $rain;
+                        diam            diam [ 0 1 0 0 0 ] 0.0005;
+                    }
+                    rain4
+                    {
+                        $rain;
+                        diam            diam [ 0 1 0 0 0 ] 0.0006;
+                    }
+                    rain5
+                    {
+                        $rain;
+                        diam            diam [ 0 1 0 0 0 ] 0.0007;
+                    }
+                    rain6
+                    {
+                        $rain;
+                        diam            diam [ 0 1 0 0 0 ] 0.0008;
+                    }
+                    rain7
+                    {
+                        $rain;
+                        diam            diam [ 0 1 0 0 0 ] 0.0009;
+                    }
+                    rain8
+                    {
+                        $rain;
+                        diam            diam [ 0 1 0 0 0 ] 0.001;
+                    }
+                    rain9
+                    {
+                        $rain;
+                        diam            diam [ 0 1 0 0 0 ] 0.0012;
+                    }
+                    rain10
+                    {
+                        $rain;
+                        diam            diam [ 0 1 0 0 0 ] 0.0014;
+                    }
+                    rain11
+                    {
+                        $rain;
+                        diam            diam [ 0 1 0 0 0 ] 0.0016;
+                    }
+                    rain12
+                    {
+                        $rain;
+                        diam            diam [ 0 1 0 0 0 ] 0.0018;
+                    }
+                    rain13
+                    {
+                        $rain;
+                        diam            diam [ 0 1 0 0 0 ] 0.002;
+                    }
+                    rain14
+                    {
+                        $rain;
+                        diam            diam [ 0 1 0 0 0 ] 0.003;
+                    }
+                    rain15
+                    {
+                        $rain;
+                        diam            diam [ 0 1 0 0 0 ] 0.004;
+                    }
+                    rain16
+                    {
+                        $rain;
+                        diam            diam [ 0 1 0 0 0 ] 0.005;
+                    }
+                    rain17
+                    {
+                        $rain;
+                        diam            diam [ 0 1 0 0 0 ] 0.006;
+                    }
+                );
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform (3 0 0);
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.357075;
+                }
+            }
+            epsilon
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 1.125;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            "U\..*"
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform ( 0 0 0 );
+                }
+            }
+            "alpha\..*"
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 1;
+                }
+            }
+        }
+        boundaryTypeDefaults
+        {
+            wall
+            {
+                "alpha\..*"
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 0;
+                    value           uniform 0;
+                    phi             phid;
+                    fluxTransition  true;
+                }
+                "U\..*"
+                {
+                    type            zeroGradient;
+                }
+            }
+            outlet
+            {
+                "alpha\..*"
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 0;
+                    value           uniform 0;
+                    phi             phid;
+                    fluxTransition  true;
+                }
+                "U\..*"
+                {
+                    type            zeroGradient;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            atmBoundaryLayer
+            {
+                Uref            10.0;
+                Zref            10.0;
+                zDir            (0 1 0);
+                flowDir         (1 0 0);
+                z0              uniform 0.03;
+                zGround         uniform 0.0;
+            }
+            inlet
+            {
+                U
+                {
+                    type            atmBoundaryLayerInletVelocity;
+                    $atmBoundaryLayer;
+                    value           uniform (10 0 0);
+                }
+                k
+                {
+                    type            atmBoundaryLayerInletK;
+                    $atmBoundaryLayer;
+                    value           uniform 0.357075;
+                }
+                epsilon
+                {
+                    type            atmBoundaryLayerInletEpsilon;
+                    $atmBoundaryLayer;
+                    value           uniform 1.125;
+                }
+                "alpha\..*"
+                {
+                    type            fixedValue;
+                    value           uniform 1.0;
+                }
+                "U\..*"
+                {
+                    type            zeroGradient;
+                }
+            }
+            top
+            {
+                U { type slip; }
+                p { type slip; }
+                k { type slip; }
+                epsilon { type slip; }
+                alphat { type slip; }
+                "alpha\..*"
+                {
+                    type            fixedValue;
+                    value           uniform 1.0;
+                }
+                "U\..*"
+                {
+                    type            zeroGradient;
+                }
+            }
+            sides
+            {
+                U { type slip; }
+                p { type slip; }
+                k { type slip; }
+                epsilon { type slip; }
+                alphat { type slip; }
+                "alpha\..*" { type slip; }
+                "U\..*" { type slip; }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

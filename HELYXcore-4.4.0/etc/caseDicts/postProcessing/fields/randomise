@@ -1,0 +1,21 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+-------------------------------------------------------------------------------
+Description
+    Adds a random component to a field, with a specified perturbation
+    magnitude.
+
+\*---------------------------------------------------------------------------*/
+
+#includeEtc "caseDicts/postProcessing/fields/randomise.cfg"
+
+field           <fieldName>;
+
+// Set the magnitude of the perturbation
+magPerturbation <scalar>;
+
+// ************************************************************************* //

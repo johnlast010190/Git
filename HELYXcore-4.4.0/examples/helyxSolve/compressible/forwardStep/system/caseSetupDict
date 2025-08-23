@@ -1,0 +1,221 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields yes;
+        resetBoundaryFields yes;
+        resetSystemDicts yes;
+        resetConstDicts yes;
+        resetBoundaryMesh yes;
+        deleteUnusedFields no;
+    }
+
+    regionGroups    1 ( fluid 1 ( region0 ) );
+
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         4;
+            deltaT          0.005;
+            writeControl    runTime;
+            writeInterval   0.1;
+            purgeWrite      0;
+        }
+    }
+
+    functions
+    {
+        Ma
+        {
+            libs            ("libfieldFunctionObjects.so");
+            type            MachNo;
+            executeControl  writeTime;
+            writeControl    writeTime;
+        }
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        boundaryMesh
+        {
+            inlet
+            {
+                type            inlet;
+            }
+            outlet
+            {
+                type            outlet;
+            }
+            bottom
+            {
+                type            symmetryPlane;
+            }
+            top
+            {
+                type            symmetryPlane;
+            }
+            obstacle
+            {
+                type            wall;
+            }
+            defaultFaces
+            {
+                type            empty;
+            }
+        }
+        state           ( transient ras energy transonic );
+        turbulenceModel laminar;
+        materials       ( normalisedGas );
+        materialProperties
+        {
+            normalisedGas
+            {
+                // Note: these are the properties for a "normalised" inviscid gas
+                //       for which the speed of sound is 1 m/s at a temperature of 1K
+                //       and gamma = 7/5
+
+                materialType    fluid;
+                equationOfState perfectGas;
+                energy          sensibleEnthalpy;
+                thermodynamics  hConst;
+                thermodynamicsCoeffs
+                {
+                    Cp          2.5;
+                    Hf          0;
+                }
+
+                muModel         scalarFunction1;
+                muModelCoeffs
+                {
+                    mu 0;
+                }
+                kappaModel      kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr 1;
+                }
+
+                molWeight 11640.3;
+
+                referenceFields
+                {
+                    p [ 1 -1 -2 0 0 0 0 ] 0;
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform ( 3 0 0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 1;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 1;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform (3 0 0);
+                }
+                p
+                {
+                    type            fixedValue;
+                    value           uniform 1;
+                }
+                T
+                {
+                    type            fixedValue;
+                    value           uniform 1;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type zeroGradient;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                T
+                {
+                    type zeroGradient;
+                }
+            }
+            obstacle
+            {
+                U
+                {
+                    type noSlip;
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 1;
+                }
+                T
+                {
+                    type zeroGradient;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

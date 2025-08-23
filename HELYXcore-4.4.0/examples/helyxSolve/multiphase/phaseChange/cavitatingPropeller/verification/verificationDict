@@ -1,0 +1,27 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/short/VR/0/volumeReport.tsv";
+                variables "Umin" "Umax" "Umean" "pmin" "pmax" "pmean" "pstDev" "UstDev" "alpha.watermin" "alpha.watermax" "alpha.watermean" "alpha.waterstDev" "totalVolume";
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/long/VR/0/volumeReport.tsv";
+                variables "Umin" "Umax" "Umean" "pmin" "pmax" "pmean" "pstDev" "UstDev" "alpha.watermin" "alpha.watermax" "alpha.watermean" "alpha.waterstDev" "totalVolume";
+            }
+        );
+    }
+);

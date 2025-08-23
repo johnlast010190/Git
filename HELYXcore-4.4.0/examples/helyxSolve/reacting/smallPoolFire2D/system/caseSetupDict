@@ -1,0 +1,665 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields yes;
+        resetBoundaryFields yes;
+        resetSystemDicts yes;
+        resetConstDicts yes;
+        resetBoundaryMesh yes;
+        deleteUnusedFields yes;
+    }
+
+    regionGroups    1 ( fluid 1 ( region0 ) );
+
+    system
+    {
+        controlDict
+        {
+            startFrom       startTime;
+            startTime       0.0;
+            stopAt          endTime;
+            endTime         3.0;
+            deltaT          0.001;
+            writeControl    adjustableRunTime;
+            writeInterval   0.1;
+            purgeWrite      0;
+            runTimeModifiable yes;
+            adjustTimeStep  yes;
+            maxCo           0.5;
+        }
+    }
+
+    functions
+    {
+        VR
+        {
+            type volumeReport;
+            fields ( T U p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+        probes
+        {
+            type            thermoCoupleProbes;
+            libs            ("libutilityFunctionObjects.so");
+            writeControl    onEnd;
+            writeInterval   1;
+
+            solver          rodas23;
+            absTol          1e-12;
+            relTol          1e-8;
+
+            interpolationScheme cellPoint;
+
+            // thermocouple properties
+            rho             8908;
+            Cp              440;
+            d               1e-3;
+            epsilon         0.85;
+            radiationField  G;
+            probeLocations  ((0 0.5 0));
+            fields          (T);
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        materials ( O2 H2O CH4 CO2 N2 );
+
+        materialProperties
+        {
+            materialType    fluid;
+            mixture         standardMixture;
+            defaultSpecie   N2;
+            energy          sensibleEnthalpy;
+            fuel            CH4;
+            buoyancyModel   rhoModel;
+
+            O2
+            {
+                molWeight       31.9988;
+                equationOfState perfectGas;
+                thermodynamics  janaf;
+                thermodynamicsCoeffs
+                {
+                    Tlow            200;
+                    Thigh           5000;
+                    Tcommon         1000;
+                    highCpCoeffs    ( 3.69758 0.00061352 -1.25884e-07 1.77528e-11 -1.13644e-15 -1233.93 3.18917 );
+                    lowCpCoeffs     ( 3.21294 0.00112749 -5.75615e-07 1.31388e-09 -8.76855e-13 -1005.25 6.03474 );
+                }
+                kappaModel kappaSutherland;
+                muModel muSutherland;
+                muModelCoeffs { As 1.67212e-06; Ts 170.672; }
+            }
+
+            H2O
+            {
+                molWeight       18.0153;
+                equationOfState perfectGas;
+                thermodynamics  janaf;
+                thermodynamicsCoeffs
+                {
+                    Tlow            200;
+                    Thigh           5000;
+                    Tcommon         1000;
+                    highCpCoeffs    ( 2.67215 0.00305629 -8.73026e-07 1.201e-10 -6.39162e-15 -29899.2 6.86282 );
+                    lowCpCoeffs     ( 3.38684 0.00347498 -6.3547e-06 6.96858e-09 -2.50659e-12 -30208.1 2.59023 );
+                }
+                kappaModel kappaSutherland;
+                muModel muSutherland;
+                muModelCoeffs { As 1.67212e-06; Ts 170.672; }
+            }
+
+            CH4
+            {
+                molWeight       16.0428;
+                equationOfState perfectGas;
+                thermodynamics  janaf;
+                thermodynamicsCoeffs
+                {
+                    Tlow            200;
+                    Thigh           6000;
+                    Tcommon         1000;
+                    highCpCoeffs    ( 1.63543 0.0100844 -3.36924e-06 5.34973e-10 -3.15528e-14 -10005.6 9.9937 );
+                    lowCpCoeffs     ( 5.14988 -0.013671 4.91801e-05 -4.84744e-08 1.66694e-11 -10246.6 -4.64132 );
+                }
+                kappaModel kappaSutherland;
+                muModel muSutherland;
+                muModelCoeffs { As 1.67212e-06; Ts 170.672; }
+            }
+
+            CO2
+            {
+                molWeight       44.01;
+                equationOfState perfectGas;
+                thermodynamics  janaf;
+                thermodynamicsCoeffs
+                {
+                    Tlow            200;
+                    Thigh           5000;
+                    Tcommon         1000;
+                    highCpCoeffs    ( 4.45362 0.00314017 -1.27841e-06 2.394e-10 -1.66903e-14 -48967 -0.955396 );
+                    lowCpCoeffs     ( 2.27572 0.00992207 -1.04091e-05 6.86669e-09 -2.11728e-12 -48373.1 10.1885 );
+                }
+                kappaModel kappaSutherland;
+                muModel muSutherland;
+                muModelCoeffs { As 1.67212e-06; Ts 170.672; }
+            }
+
+            N2
+            {
+                molWeight       28.0134;
+                equationOfState perfectGas;
+                thermodynamics  janaf;
+                thermodynamicsCoeffs
+                {
+                    Tlow            200;
+                    Thigh           5000;
+                    Tcommon         1000;
+                    highCpCoeffs    ( 2.92664 0.00148798 -5.68476e-07 1.0097e-10 -6.75335e-15 -922.798 5.98053 );
+                    lowCpCoeffs     ( 3.29868 0.00140824 -3.96322e-06 5.64152e-09 -2.44486e-12 -1020.9 3.95037 );
+                }
+                kappaModel kappaSutherland;
+                muModel muSutherland;
+                muModelCoeffs { As 1.67212e-06; Ts 170.672; }
+            }
+            referenceFields
+            {
+                p [ 1 -1 -2 0 0 0 0 ] 0;
+            }
+        }
+        state ( transient les energy radiation reacting );
+
+        // Needed for P1 radiationModel
+        fieldMaps { G Intensity; soot species; }
+
+        turbulenceModel kEqn;
+
+        system
+        {
+            fvOptions
+            {
+                reactions { isReactingFoam yes; }
+            }
+            fvSchemes
+            {
+                ddtSchemes { default Euler; }
+
+                gradSchemes
+                {
+                    default         Gauss linear;
+                    turbulence      Gauss linear;
+                    grad(k)         Gauss linear;
+                    grad(epsilon)   Gauss linear;
+                    gradU           Gauss linear;
+                    grad(h)         Gauss linear;
+                    grad(e)         Gauss linear;
+                    grad(K)         Gauss linear;
+                    grad(T)         Gauss linear;
+                }
+
+                divSchemes
+                {
+                    default         none;
+                    div(phi,epsilon) Gauss limitedLinear 1;
+                    div(phi,U)      Gauss LUST grad(U);
+                    div(U)          Gauss linear;
+                    div(phi,K)      Gauss linear;
+                    // div(phi,Yi)     Gauss limitedLinear01 1;
+                    div(Ji,hi)      Gauss limitedLinear 1;
+                    // div(phi,h)      Gauss limitedLinear01 1;
+                    div(phi,k)      Gauss limitedLinear 1;
+                    div(phi,FSDomega) Gauss limitedLinear 1;
+                    div(phi,Yi)   Gauss multivariateSelection
+                    {
+                        O2              limitedLinear01 1;
+                        CH4             limitedLinear01 1;
+                        N2              limitedLinear01 1;
+                        H2O             limitedLinear01 1;
+                        CO2             limitedLinear01 1;
+                        h               limitedLinear 1;
+                    };
+                    div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
+                    div(Ji,Ii_h)    Gauss upwind;
+                }
+
+                laplacianSchemes
+                {
+                    default         Gauss linear corrected;
+                    laplacian((rho*DkEff),k) Gauss linear corrected;
+                    laplacian((rho*DepsilonEff),epsilon) Gauss linear corrected;
+                    laplacian((rho*nuEff),U) Gauss linear corrected;
+                    laplacian(rhorAUf,p) Gauss linear corrected;
+                    laplacian(rhoD_Yi,Yi) Gauss linear corrected;
+                    laplacian(kappa,T) Gauss linear corrected;
+                }
+                interpolationSchemes { default linear; }
+                snGradSchemes { default corrected; }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    rho
+                    {
+                        solver              PCG;
+                        preconditioner      DIC;
+                        tolerance           1e-6;
+                        relTol              0.1;
+                    };
+
+                    rhoFinal
+                    {
+                        $rho;
+                        tolerance           1e-6;
+                        relTol              0;
+                    };
+
+                    p
+                    {
+                        solver              GAMG;
+                        tolerance           1e-6;
+                        relTol              0.05;
+                        smoother            GaussSeidel;
+                    };
+
+                    pFinal
+                    {
+                        solver              GAMG;
+                        smoother            GaussSeidel;
+                        tolerance           1e-6;
+                        relTol              0;
+                    };
+
+                    ph
+                    {
+                        solver              GAMG;
+                        tolerance           1e-6;
+                        relTol              0.05;
+                        smoother            GaussSeidel;
+                    }
+                    U { solver PBiCGStab; preconditioner DILU; tolerance 1e-6; relTol 0.1; nSweeps 1; };
+                    UFinal  { solver PBiCGStab; preconditioner DILU; nSweeps 1; tolerance 1e-6; relTol 0; };
+
+                    Yi { solver PBiCGStab; preconditioner DILU; tolerance 1e-6; relTol 0.1; nSweeps 1; };
+                    YiFinal  { solver PBiCGStab; preconditioner DILU; nSweeps 1; tolerance 1e-6; relTol 0; };
+
+                    k { solver PBiCGStab; preconditioner DILU; tolerance 1e-6; relTol 0.1; nSweeps 1; };
+                    kFinal  { solver PBiCGStab; preconditioner DILU; nSweeps 1; tolerance 1e-6; relTol 0; };
+
+                    h { solver PBiCGStab; preconditioner DILU; tolerance 1e-6; relTol 0.1; nSweeps 1; };
+                    hFinal  { solver PBiCGStab; preconditioner DILU; nSweeps 1; tolerance 1e-6; relTol 0; };
+
+                    FSDomega { solver PBiCGStab; preconditioner DILU; tolerance 1e-6; relTol 0.1; nSweeps 1; };
+                    FSDomegaFinal  { solver PBiCGStab; preconditioner DILU; nSweeps 1; tolerance 1e-6; relTol 0; };
+
+                    Ii
+                    {
+                        solver                  GAMG;
+                        tolerance               1e-4;
+                        relTol                  0.1;
+                        smoother                symGaussSeidel;
+                        maxIter                 3;
+                        nPostSweeps             1;
+                    }
+
+                    G
+                    {
+                        solver          PCG;
+                        preconditioner  DIC;
+                        tolerance       1e-04;
+                        relTol          0;
+                    }
+
+                }
+                relaxationFactors
+                {
+                    fields { p 1; }
+                    equations { U 1; Yi 1; h 1; }
+                }
+                PIMPLE
+                {
+                    momentumPredictor   yes;
+                    nOuterCorrectors    1;
+                    nCorrectors         2;
+                    nNonOrthogonalCorrectors 0;
+                }
+            }
+        }
+
+        constant
+        {
+            turbulenceProperties
+            {
+                simulationType  LES;
+
+                LES
+                {
+                    LESModel       kEqn;
+                    delta          cubeRootVol;
+                    turbulence      on;
+                    printCoeffs     on;
+                    cubeRootVolCoeffs { eltaCoeff 1; }
+                    PrandtlCoeffs
+                    {
+                        delta           cubeRootVol;
+                        cubeRootVolCoeffs { deltaCoeff 1; }
+                        smoothCoeffs
+                        {
+                            delta           cubeRootVol;
+                            cubeRootVolCoeffs { deltaCoeff 1; }
+                            maxDeltaRatio   1.1;
+                        }
+                        Cdelta 0.158;
+                    }
+                    vanDriestCoeffs
+                    {
+                        delta cubeRootVol;
+                        cubeRootVolCoeffs { deltaCoeff 1; }
+                        smoothCoeffs
+                        {
+                            delta cubeRootVol;
+                            cubeRootVolCoeffs { deltaCoeff 1; }
+                            maxDeltaRatio 1.1;
+                        }
+                        Aplus 26;
+                        Cdelta 0.158;
+                    }
+                    smoothCoeffs
+                    {
+                        delta cubeRootVol;
+                        cubeRootVolCoeffs { deltaCoeff 1; }
+                        maxDeltaRatio   1.1;
+                    }
+                }
+            }
+            hRef
+            {
+                dimensions      [0 1 0 0 0 0 0];
+                value           1;
+            }
+            radiationProperties
+            {
+                radiation on;
+                radiationModel  fvDOM;
+                fvDOMCoeffs
+                {
+                    nPhi        4;          // azimuthal angles in PI/2 on X-Y.(from Y to X)
+                    nTheta      0;          // polar angles in PI (from Z to X-Y plane)
+                    convergence 1e-2;       // convergence criteria for radiation iteration
+                    maxIter     4;          // maximum number of iterations
+                }
+
+                // Number of flow iterations per radiation iteration
+                solverFreq 10;
+                absorptionEmissionModel greyMeanCombustion;
+
+                greyMeanCombustionCoeffs
+                {
+                    lookUpTableFileName     none;
+                    EhrrCoeff                0.0;
+                    CO2
+                    {
+                        Tcommon         200;   // Common Temp
+                        invTemp         true;  // Is the polynomio using inverse temperature.
+                        Tlow            200;   // Low Temp
+                        Thigh           2500;  // High Temp
+
+                        loTcoeffs       // coefss for T < Tcommon
+                        (
+                            0           //  a0            +
+                            0           //  a1*T          +
+                            0           //  a2*T^(+/-)2   +
+                            0           //  a3*T^(+/-)3   +
+                            0           //  a4*T^(+/-)4   +
+                            0           //  a5*T^(+/-)5   +
+                        );
+                        hiTcoeffs        //coefss for T > Tcommon
+                        (
+                            18.741
+                            -121.31e3
+                            273.5e6
+                            -194.05e9
+                            56.31e12
+                            -5.8169e15
+                        );
+
+                    }
+                    H2O
+                    {
+                        Tcommon         200;
+                        invTemp         true;
+                        Tlow            200;
+                        Thigh           2500;
+                        loTcoeffs       ( 0 0 0 0 0 0 );
+                        hiTcoeffs       ( -0.23093 -1.12390e3 9.4153e6 -2.99885e9 0.51382e12 -1.868e10 );
+                    }
+                    CH4
+                    {
+                        Tcommon         200;
+                        Tlow            200;
+                        Thigh           2500;
+                        invTemp         false;
+                        loTcoeffs       ( 0 0 0 0 0 0 );
+                        hiTcoeffs       ( 6.6334 -0.0035686 1.6682e-8 2.5611e-10 -2.6558e-14 0 );
+                    }
+                    O2
+                    {
+                        Tcommon         200;
+                        invTemp         true;
+                        Tlow            200;
+                        Thigh           2500;
+                        loTcoeffs       ( 0 0 0 0 0 0 );
+                        hiTcoeffs       ( 0.1 0 0 0 0 0 );
+                    }
+                    N2
+                    {
+                        Tcommon         200;
+                        invTemp         true;
+                        Tlow            200;
+                        Thigh           2500;
+                        loTcoeffs       ( 0 0 0 0 0 0 );
+                        hiTcoeffs       ( 0.1 0 0 0 0 0 );
+                    }
+                }
+
+                scatterModel        none;
+                sootModel           mixtureFraction;
+
+                // CH4 + 2O2 + 7.5N2 = CO2 + 2H2O + 7.5N2 + nuSoot soot
+                mixtureFractionCoeffs { nuSoot 0.055; Wsoot 12; }
+                transmissivityModel none;
+            }
+
+            boundaryRadiationProperties
+            {
+                ".*"
+                {
+                    mode            lookup;
+                    emissivity      1;
+                    absorptivity    0;
+                }
+            }
+
+            combustionProperties
+            {
+                combustionModel  infinitelyFastChemistry;
+                infinitelyFastChemistryCoeffs { semiImplicit no; C 5.0; }
+                diffusionMulticomponentCoeffs
+                {
+                    Ci          (1.0 1.5);
+                    fuels       (CH4 CO);
+                    oxidants    (O2 O2);
+                    YoxStream   (0.23 0.23);
+                    YfStream    (1.0 1.0);
+                    sigma       (0.02 0.02);
+                    oxidantRes  (0.015 0.005);
+                    ftCorr      (0  0);
+                    laminarIgn  false;
+                }
+
+                FSDCoeffs
+                {
+                    semiImplicit no;
+                    Cv          0.1;
+                    ftVarMin    1e-2;
+                    reactionRateFlameArea relaxation;
+                    fuel Methane;
+                    semiImplicit no;
+                    relaxationCoeffs
+                    {
+                        C 2.0;
+                        alpha 1.0;
+                        Methane { omega0 0.5; eta -0.013; omegaMin 0.01; sigmaExt 470; }
+                        Propane { omega0 0.4; eta -0.00656; omegaMin 0.01; sigmaExt 450; }
+                    }
+                }
+
+                reaction { reaction "CH4 + 2O2 + 7.5N2 = CO2 + 2H2O + 7.5N2"; }
+
+                // reactions
+                // {
+                //     methaneReaction
+                //     {
+                //         type        irreversibleArrheniusReaction;
+                //         reaction    "CH4^0.9 + 2O2^1.1 = CO + 2H2O";
+                //         A           2.119e12;
+                //         beta        0;
+                //         Ta          17676;
+                //     }
+
+                //     COReaction
+                //     {
+                //         type         irreversibleArrheniusReaction;
+                //         reaction     "CO + 0.5O2^0.25 = CO2";
+                //         A            1e6;
+                //         beta         0;
+                //         Ta           6060;
+                //     }
+                // }
+            }
+
+            g
+            {
+                dimensions      [0 1 -2 0 0 0 0];
+                value           (0 -9.8 0);
+            }
+        }
+
+        boundaryMesh
+        {
+            base { type patch; }
+            outlet { type outlet; }
+            sides { type patch; }
+            frontAndBack { type empty; }
+            inlet { type inlet; }
+        }
+
+        fields
+        {
+            U { initialisation{type fixedValue; value uniform (0 0 0);} }
+            T { initialisation{type fixedValue; value uniform 300;} }
+            G { initialisation{type fixedValue; value uniform 0;} }
+            p { initialisation{type buoyantPressure; value uniform 101325;} }
+            k { initialisation{type fixedValue; value uniform 1e-4;} }
+            ph { initialisation{type fixedValue; value uniform 0;} }
+            nut { initialisation{type fixedValue; value uniform 0;} }
+            alphat { initialisation{type fixedValue; value uniform 0;} }
+            CH4 { initialisation{type fixedValue; value uniform 0;} }
+            O2 { initialisation{type fixedValue; value uniform 0.23301;} }
+            N2 { initialisation{type fixedValue; value uniform 0.76699;} }
+            FSDomega { initialisation{type fixedValue; value uniform 0;} }
+            IDefault { initialisation{type fixedValue; value uniform 0;} }
+            Ydefault { initialisation{type fixedValue; value uniform 0;} }
+            soot { initialisation{type fixedValue; value uniform 0;} }
+        }
+
+        boundaryTypeDefaults
+        {
+            wall { G { type MarshakRadiation; T T; value uniform 0; } }
+            inlet { G { type MarshakRadiation; T T; value uniform 0; } }
+            outlet { G { type MarshakRadiation; T T; value uniform 0; } }
+        }
+
+        boundaryConditions
+        {
+            "(outlet|sides)"
+            {
+                alphat { type zeroGradient; }
+                CH4 { type inletOutlet; inletValue uniform 0; value uniform 0; }
+                O2 { type inletOutlet; inletValue uniform 0.23301; value uniform 0.23301; }
+                N2 { type inletOutlet; inletValue uniform 0.76699; value uniform 0.76699; }
+                FSDomega { type inletOutlet; inletValue uniform 0; value uniform 0; }
+                IDefault { type greyDiffusiveRadiation; value uniform 0; }
+                Ydefault { type inletOutlet; inletValue uniform 0; value uniform 0; }
+                soot { type calculated; value uniform 0; }
+                k { type inletOutlet; inletValue uniform 1e-4; value uniform 1e-4; }
+                nut { type zeroGradient; }
+                T { type inletOutlet; inletValue uniform 300; value uniform 300; }
+                U { type pressureInletOutletVelocity; value uniform (0 0 0); }
+                p { type totalPressure; p0 uniform 101325; value uniform 101325; addStaticHead true; }
+                ph { type fixedFluxPressure; value uniform 0;}
+            }
+            base
+            {
+                alphat { type zeroGradient; }
+                CH4 { type zeroGradient; }
+                O2 { type zeroGradient; }
+                N2 {  type zeroGradient; }
+                FSDomega { type zeroGradient; }
+                IDefault { type greyDiffusiveRadiation; value uniform 0; }
+                Ydefault { type zeroGradient; }
+                soot { type calculated; value uniform 0; }
+                k { type zeroGradient; }
+                nut { type zeroGradient; }
+                T { type zeroGradient; }
+                U { type noSlip; }
+                p { type fixedFluxPressure; value uniform 101325;}
+                ph { type fixedFluxPressure; value uniform 0;}
+            }
+            inlet
+            {
+                alphat { type zeroGradient; }
+                CH4 { type fixedValue; value uniform 1; }
+                O2 { type fixedValue; value uniform 0; }
+                N2 { type fixedValue; value uniform 0; }
+                FSDomega { type fixedValue; value uniform 0; }
+                IDefault { type greyDiffusiveRadiation; value uniform 0; }
+                Ydefault { type fixedValue; value uniform 0; }
+                soot { type calculated; value uniform 0; }
+                k { type fixedValue; value uniform 1e-4; }
+                nut { type zeroGradient; }
+                T { type fixedValue; value uniform 300; }
+                U { type fixedValue; value uniform (0 0.05 0);}
+                p { type fixedFluxPressure; value uniform 101325;}
+                ph { type fixedFluxPressure; value uniform 0;}
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

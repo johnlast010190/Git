@@ -1,0 +1,212 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | HELYX(R): Open-source CFD for Enterprise                 |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | ENGYS Ltd. <http://engys.com/>                           |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    regionGroups   ( fluid ( region0 ) );
+    system
+    {
+        controlDict
+        {
+            endTime         3;
+            deltaT          1e-04;
+            writeControl    adjustableRunTime;
+            writeInterval   0.01;
+            adjustTimeStep  yes;
+            maxCo           0.25;
+            maxAlphaCo      0.25;
+            maxDeltaT       1e-03;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p alpha.water );
+            executeControl   onEnd;
+            writeControl     onEnd;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state           ( dynamic transient ras vof );
+        turbulenceModel laminar;
+        materials       ( water air );
+        materialProperties
+        {
+            referenceFields
+            {
+                TConst          [ 0 0 0 1 0 0 0 ] 273.15;
+                p               [ 1 -1 -2 0 0 0 0 ] 101325;
+            }
+            water
+            {
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho             1000;
+                }
+                muModelCoeffs
+                {
+                    mu              1e-03;
+                }
+                kappaModelCoeffs
+                {
+                    Pr              2.289;
+                }
+            }
+            air
+            {
+                equationOfStateCoeffs
+                {
+                    rho             1;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cp              1006.8;
+                    Hf              0;
+                }
+                muModelCoeffs
+                {
+                    mu              1.48e-05;
+                }
+            }
+            air_water
+            {
+                surfaceTensionModelCoeffs
+                {
+                    sigma           0.07;
+                }
+            }
+        }
+        constant
+        {
+            g
+            {
+                value           ( 0 -9.81 0 );
+            }
+            dynamicMeshDict
+            {
+                GIBChanger
+                {
+                    type            solidBody;
+                    libs            ( "libfvMeshGIBChangers.so" );
+                    solidBodyCoeffs
+                    {
+                        triSurfaceName  GIB_box.stl;
+                        region0Patch    ( atmosphere );
+                        solverMotionFunctions
+                        {
+                            motionSolver    sixDoFRigidBodyGIBMotionSolver;
+                            motionSolverLibs ("libsixDoFRigidBodyMotion.so");
+                            centreOfMass    (0.035 0.185 0);
+                            mass            0.0002;
+                            g               (0 -9.81 0);
+                            momentOfInertia (1 1 1);
+                            patches         (ib1);
+                            triSurfaceName  GIB_box.stl;
+                            solver
+                            {
+                                type symplectic;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        system
+        {
+            fvSolution
+            {
+                PIMPLE
+                {
+                    nOuterCorrectors 1;
+                    nCorrectors     2;
+                    nNonOrthogonalCorrectors 0;
+                }
+            }
+        }
+        fields
+        {
+            alpha.water
+            {
+                initialisation
+                {
+                    type cellSet;
+                    defaultValue uniform 0;
+                    setSources
+                    (
+                        boxToCell
+                        {
+                            box (-10 -10 -10) (10 0.1 10);
+                            value 1;
+                        }
+                    );
+                }
+            }
+        }
+        boundaryMesh
+        {
+            ib1
+            {
+                type indirectWall;
+                faceZone wallZone;
+                indirectPolyPatchType master;
+            }
+            ib2
+            {
+                type inactive;
+                faceZone wallZone;
+                indirectPolyPatchType slave;
+            }
+        }
+        boundaryConditions
+        {
+            atmosphere
+            {
+                alpha.water
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 0;
+                    value           uniform 0;
+                }
+                p
+                {
+                    type            totalPressure;
+                    p0              uniform 0;
+                    value           uniform 0;
+                }
+            }
+            ib1
+            {
+                U
+                {
+                    type            movingWallVelocity;
+                    value           uniform ( 0 0 0 );
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

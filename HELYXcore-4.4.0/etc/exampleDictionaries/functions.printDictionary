@@ -1,0 +1,20 @@
+printDicts
+{
+    type printDictionary;
+    functionObjectLibs ( "libreport.so" );
+
+    region region0;
+
+    debug 0;
+    
+    dictionaries
+    (
+        controlDict
+        fvSchemes
+        fvSolution
+        transportProperties
+        turbulenceProperties
+        porosityProperties
+        MRFProperties 
+    );
+}

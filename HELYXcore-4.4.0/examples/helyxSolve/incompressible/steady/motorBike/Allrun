@@ -1,0 +1,32 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy input surface from resources directory
+mkdir -p constant/triSurface
+cp "$HELYX_TUTORIALS"/resources/geometry/motorBike.obj.gz constant/triSurface/
+
+# Run snapping of the mesh in parallel
+helyxRun -parallel helyxHexMesh -overwrite
+
+# Report patch summary
+helyxRun patchSummary -constant
+
+# Setup
+helyxRun caseSetup
+
+# Run
+helyxRun helyxSolve
+
+# Reconstruct geometry
+helyxRun -serial reconstructParMesh -constant
+
+# Reconstruct fields for all times
+helyxRun -serial reconstructPar -withZero
+
+# Create dummy file for ParaView visualisation
+touch motorBike.foam
+
+#------------------------------------------------------------------------------

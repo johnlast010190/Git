@@ -1,0 +1,126 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+meshAlgorithm extrude;
+
+castellatedMesh true;
+snap true;
+addLayers true;
+
+blockType auto;
+blockData ( 0.0025 0 );
+
+geometry
+{
+    Case.ebs
+    {
+        type triSurfaceMesh;
+        name Case;
+        appendRegionName false;
+    }
+    inlet.ebs
+    {
+        type triSurfaceMesh;
+        name inlet;
+        appendRegionName false;
+    }
+    outlet.ebs
+    {
+        type triSurfaceMesh;
+        name outlet;
+        appendRegionName false;
+    }
+    refinementBox
+    {
+        type searchableBox;
+        min ( -0.04 -0.08 -0.025 );
+        max ( 0.04 0.04 0.025 );
+    }
+}
+
+castellatedMeshControls
+{
+    features ( );
+    refinementSurfaces
+    {
+        Case
+        {
+            level ( 0 0 );
+        }
+        inlet
+        {
+            level ( 0 0 );
+        }
+        outlet
+        {
+            level ( 0 0 );
+        }
+    }
+    refinementRegions
+    {
+        refinementBox
+        {
+            mode inside;
+            levels ( ( 100000.0 1 ) );
+        }
+    }
+
+    locationsInMesh ( ( ( 0.0 -0.0245 0.0 ) none ) );
+
+    nCellsBetweenLevels 4;
+}
+
+snapControls
+{
+}
+
+addLayersControls
+{
+    layers
+    {
+        Case
+        {
+            nSurfaceLayers 4;
+            expansionRatio 1.25;
+            grownUp false;
+            baffleCollapse false;
+        }
+        inlet
+        {
+            nSurfaceLayers 0;
+            expansionRatio 1.25;
+            grownUp true;
+            reSnap false;
+            baffleCollapse false;
+        }
+        outlet
+        {
+            nSurfaceLayers 0;
+            expansionRatio 1.25;
+            grownUp true;
+            reSnap false;
+            baffleCollapse false;
+        }
+    }
+}
+
+meshQualityControls
+{
+}
+
+// ************************************************************************* //

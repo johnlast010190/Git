@@ -1,0 +1,22 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Mesh
+m4 system/blockMeshDict.m4 > system/blockMeshDict
+helyxRun blockMesh
+
+# Generate the sliding patches
+helyxRun createBaffles -overwrite
+helyxRun mergeOrSplitBaffles -split -overwrite
+
+# Setup and run
+helyxRun caseSetup
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch nonConformalMixerVessel2D.foam
+
+#------------------------------------------------------------------------------

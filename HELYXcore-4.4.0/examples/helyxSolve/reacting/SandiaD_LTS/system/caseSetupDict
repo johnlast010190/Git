@@ -1,0 +1,669 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields yes;
+        resetBoundaryFields yes;
+        resetSystemDicts yes;
+        resetConstDicts yes;
+        resetBoundaryMesh yes;
+        deleteUnusedFields yes;
+    }
+
+    regionGroups    1 ( fluid 1 ( region0 ) );
+
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       latestTime;
+            deltaT          1;
+            stopAt          endTime;
+            endTime         1500;
+            writeControl    timeStep;
+            writeInterval   100;
+        }
+    }
+
+    functions
+    {
+        VR
+        {
+            type volumeReport;
+            regions ( region0 );
+            fields ( T U p );
+            writeControl timeStep;
+            writeInterval 1;
+            executeControl timeStep;
+            executeInterval 1;
+            functionObjectLibs ("libreport.so" );
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        materials
+        (
+            H2 H O O2 OH H2O HO2 H2O2 C CH CH2 "CH2(S)" CH3 CH4 CO CO2 HCO CH2O
+            CH2OH CH3O CH3OH C2H C2H2 C2H3 C2H4 C2H5 C2H6 HCCO CH2CO HCCOH
+            N2 AR C3H7 C3H8 CH2CHO CH3CHO
+        );
+
+        materialProperties
+        {
+            materialType    fluid;
+            mixture         standardMixture;
+            defaultSpecie     N2;
+            energy          sensibleEnthalpy;
+
+            #include "compressibleGasGRI"
+            referenceFields
+            {
+                p [ 1 -1 -2 0 0 0 0 ] 0;
+            }
+        }
+        state ( transient ras energy radiation reacting );
+
+        // Needed for P1 radiationModel
+        fieldMaps { G Intensity; }
+
+        turbulenceModel kEpsilon;
+
+        system
+        {
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default         localEuler;
+                }
+
+                gradSchemes
+                {
+                    default         Gauss linear;
+                    turbulence      Gauss linear;
+                    grad(k)         Gauss linear;
+                    grad(epsilon)   Gauss linear;
+                    gradU           Gauss linear;
+                    grad(h)         Gauss linear;
+                    grad(e)         Gauss linear;
+                    grad(K)         Gauss linear;
+                    grad(T)         Gauss linear;
+                }
+
+                divSchemes
+                {
+                    default         none;
+                    div(phi,k)      Gauss limitedLinear 1;
+                    div(phi,epsilon) Gauss limitedLinear 1;
+                    div(phi,U)      Gauss limitedLinearV 1;
+                    div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
+                    div(phi,Yi)     Gauss limitedLinear01 1;
+                    div(phi,Yi_h)   Gauss limitedLinear01 1;
+                    div(Ji,hi)      Gauss limitedLinear 1;
+                    div(phi,h)      Gauss limitedLinear01 1;
+                    div(phi,K)      Gauss limitedLinear 1;
+                }
+
+                laplacianSchemes
+                {
+                    default         Gauss linear orthogonal;
+                    laplacian((rho*DkEff),k) Gauss linear orthogonal;
+                    laplacian((rho*DepsilonEff),epsilon) Gauss linear orthogonal;
+                    laplacian((rho*nuEff),U) Gauss linear orthogonal;
+                    laplacian(rhorAUf,p) Gauss linear orthogonal;
+                    laplacian(rhoD_Yi,Yi) Gauss linear orthogonal;
+                    laplacian(kappa,T) Gauss linear orthogonal;
+                }
+
+                interpolationSchemes
+                {
+                    default         linear;
+                }
+
+                snGradSchemes
+                {
+                    default         orthogonal;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    G
+                    {
+                        solver          PCG;
+                        preconditioner  DIC;
+                        tolerance       1e-5;
+                        relTol          0.1;
+                    }
+                    GFinal
+                    {
+                        $G;
+                        relTol          0;
+                    }
+                }
+                relaxationFactors
+                {
+                    fields { p 1; }
+                    equations { U 1; Yi 1; h 1; }
+                }
+                PIMPLE
+                {
+                    momentumPredictor   yes;
+                    nOuterCorrectors    1;
+                    nCorrectors         2;
+                    nNonOrthogonalCorrectors 0;
+                    maxDeltaT           2e-4;
+                    maxCo               0.25;
+                    alphaTemp           0.05;
+                    alphaY              0.05;
+                    Yref
+                    {
+                        O2                  0.1;
+                        CH4                 0.1;
+                    }
+                    rDeltaTSmoothingCoeff   0.025;
+                    rDeltaTDampingCoeff     0.7;
+                }
+            }
+        }
+
+        constant
+        {
+            radiationProperties
+            {
+                radiationModel  P1;
+                solverFreq 1;
+                absorptionEmissionModel greyMeanCombustion;
+                speciesSettings
+                {
+                    Tcommon         200;   //Common Temp
+                    Tlow            200;   //Low Temp
+                    Thigh           2500;  //High Temp
+                    invTemp         true;
+                    loTcoeffs       ( 0 0 0 0 0 0 ); // coeffs for T < Tcommon
+                    hiTcoeffs       ( 0.1 0 0 0 0 0 );
+                }
+                greyMeanCombustionCoeffs
+                {
+                    lookUpTableFileName      none;
+                    EhrrCoeff                0.0;
+                    CO2
+                    {
+                        $speciesSettings;
+                        // a0 +a1*T +a2*T^(+/-)2 + a3*T^(+/-)3 + a4*T^(+/-)4 + a5*T^(+/-)5
+                        hiTcoeffs ( 18.741 -121.31e3 273.5e6 -194.05e9 56.31e12 -5.8169e15 );
+                    }
+                    H2O
+                    {
+                        $speciesSettings;
+                        hiTcoeffs ( -0.23093 -1.12390e3 9.4153e6 -2.99885e9 0.51382e12 -1.868e10 );
+                    }
+                    CH4
+                    {
+                        $speciesSettings;
+                        invTemp false;
+                        hiTcoeffs ( 6.6334 -0.0035686 1.6682e-8 2.5611e-10 -2.6558e-14 0 );
+                    }
+                    O2 { $speciesSettings; }
+                    N2 { $speciesSettings; }
+                }
+                scatterModel    none;
+                sootModel       none;
+                transmissivityModel none;
+            }
+
+            boundaryRadiationProperties
+            {
+                ".*"
+                {
+                    mode            lookup;
+                    emissivity      1;
+                    absorptivity    0;
+                }
+            }
+
+            combustionProperties
+            {
+                combustionModel  EDC;
+                active  true;
+                EDCCoeffs { version v2005; }
+            }
+
+            chemistryProperties
+            {
+                chemistryType { solver ode; }
+                chemistry       off;
+                importantSpecies { CO2; H2O; CH4; O2;}
+                initialChemicalTimeStep 1e-07;
+
+                odeCoeffs
+                {
+                    solver          seulex;
+                    absTol          1e-8;
+                    relTol          0.1;
+                }
+
+                reduction
+                {
+                    log             on;
+                    tolerance       0.0001;
+                    method          DAC;
+                    initialSet ( CO CH4 HO2 );
+                    automaticSIS    off;
+                    fuelSpecies ( (CH4 1) );
+                }
+                tabulation
+                {
+                    log             on;
+                    printProportion off;
+                    printNumRetrieve off;
+                    tolerance       0.003;
+                    method          ISAT;
+                    scaleFactor
+                    {
+                        otherSpecies    1;
+                        Temperature     1000;
+                        Pressure        1e+15;
+                        deltaT          1;
+                    }
+                    maxNLeafs       5000;
+                    chPMaxLifeTime  1000;
+                    maxGrowth       100;
+                    checkEntireTreeInterval 500;
+                    maxDepthFactor  2;
+                    minBalanceThreshold 30;
+                    MRURetrieve     false;
+                    maxMRUSize      0;
+                    growPoints      true;
+                    maxNumNewDim    10;
+                }
+                elements ( O H C N Ar );
+                #include "reactionsGRI"
+            }
+
+            g
+            {
+                value           (0 0 -9.81);
+            }
+        }
+
+        boundaryMesh
+        {
+            inletCH4 { type inlet; }
+            wallOutside { type wall; }
+            wallTube { type wall; }
+            inletPilot { type inlet;}
+            inletAir { type inlet; }
+            outlet { type outlet; }
+            frontAndBack_pos { type wedge; }
+            frontAndBack_neg { type wedge; }
+        }
+
+        fields
+        {
+            U { initialisation{type fixedValue; value uniform (0 0 0.9);} }
+            T { initialisation{type fixedValue; value uniform 300;} }
+            G { initialisation{type fixedValue; value uniform 0;} }
+            p { initialisation{type fixedValue; value uniform 1e5;} }
+            k { initialisation{type fixedValue; value uniform 30;} }
+            epsilon { initialisation{type fixedValue; value uniform 30000;} }
+            nut { initialisation{type fixedValue; value uniform 0;} }
+            alphat { initialisation{type fixedValue; value uniform 0;} }
+            OH { initialisation{type fixedValue; value uniform 0;} }
+            O { initialisation{type fixedValue; value uniform 0;} }
+            H2O { initialisation{type fixedValue; value uniform 0;} }
+            H2 { initialisation{type fixedValue; value uniform 0;} }
+            H { initialisation{type fixedValue; value uniform 0;} }
+            CO { initialisation{type fixedValue; value uniform 0;} }
+            CO2 { initialisation{type fixedValue; value uniform 0;} }
+            CH4
+            {
+                initialisation
+                {
+                    type cellSet;
+                    defaultValue uniform 0.0;
+                    setSources
+                    (
+                        boxToCell
+                        {
+                            box (-1 -10 -100) (0.0036 10 0);
+                            value 0.1561;
+                        }
+                    );
+                }
+            }
+            O2
+            {
+                initialisation
+                {
+                    type cellSet;
+                    defaultValue uniform 0.23;
+                    setSources
+                    (
+                        boxToCell
+                        {
+                            box (-1 -10 -100) (0.0036 10 0);
+                            value 0.1966;
+                        }
+                    );
+                }
+            }
+            N2
+            {
+                initialisation
+                {
+                    type cellSet;
+                    defaultValue uniform 0.77;
+                    setSources
+                    (
+                        boxToCell
+                        {
+                            box (-1 -10 -100) (0.0036 10 0);
+                            value 0.6473;
+                        }
+                    );
+                }
+            }
+        }
+
+        boundaryTypeDefaults
+        {
+            wall
+            {
+                T { type zeroGradient; }
+                G
+                {
+                    type            MarshakRadiation;
+                    T               T;
+                    value           uniform 0;
+                }
+            }
+            inlet
+            {
+                G
+                {
+                    type            MarshakRadiation;
+                    T               T;
+                    value           uniform 0;
+                }
+            }
+            outlet
+            {
+                G
+                {
+                    type            MarshakRadiation;
+                    T               T;
+                    value           uniform 0;
+                }
+            }
+        }
+
+        boundaryConditions
+        {
+            inletCH4
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform (0 0 49.6);
+                }
+                T
+                {
+                    type            fixedValue;
+                    value           uniform 294;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    intensity 0.0458;
+                    value uniform 1;
+                }
+                epsilon
+                {
+                    type            turbulentMixingLengthDissipationRateInlet;
+                    mixingLength    0.000504;
+                    phi             phi;
+                    k               k;
+                    value           uniform 1;
+                }
+                nut { type calculated; value uniform 0;}
+                alphat { type calculated; value uniform 0;}
+                CH4
+                {
+                    type            fixedValue;
+                    value           uniform 0.1561;
+                }
+                N2
+                {
+                    type            fixedValue;
+                    value           uniform 0.6473;
+                }
+                O2
+                {
+                    type            fixedValue;
+                    value           uniform 0.1966;
+                }
+            }
+            inletPilot
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform (0 0 11.4);
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    intensity 0.0628;
+                    value uniform 1;
+                }
+                epsilon
+                {
+                    type            turbulentMixingLengthDissipationRateInlet;
+                    mixingLength    0.000735;
+                    phi             phi;
+                    k               k;
+                    value           uniform 1;
+                }
+                nut { type calculated; value uniform 0;}
+                alphat { type calculated; value uniform 0;}
+                T
+                {
+                    type            fixedValue;
+                    value           uniform 1880;
+                }
+                CO
+                {
+                    type            fixedValue;
+                    value           uniform 4.07e-3;
+                }
+                CO2
+                {
+                    type            fixedValue;
+                    value           uniform 0.1098;
+                }
+                H
+                {
+                    type            fixedValue;
+                    value           uniform 2.48e-5;
+                }
+                H2
+                {
+                    type            fixedValue;
+                    value           uniform 1.29e-4;
+                }
+                H2O
+                {
+                    type            fixedValue;
+                    value           uniform 0.0942;
+                }
+                N2
+                {
+                    type            fixedValue;
+                    value           uniform 0.7342;
+                }
+                O
+                {
+                    type            fixedValue;
+                    value           uniform 7.47e-4;
+                }
+                O2
+                {
+                    type            fixedValue;
+                    value           uniform 0.054;
+                }
+                OH
+                {
+                    type            fixedValue;
+                    value           uniform 0.0028;
+                }
+            }
+            inletAir
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform (0 0 0.9);
+                }
+                T
+                {
+                    type            fixedValue;
+                    value           uniform 291;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    intensity 0.0471;
+                    value uniform 1;
+                }
+                epsilon
+                {
+                    type            turbulentMixingLengthDissipationRateInlet;
+                    mixingLength    0.019677;
+                    value           uniform 1;
+                }
+                nut { type calculated; value uniform 0;}
+                alphat { type calculated; value uniform 0;}
+                N2
+                {
+                    type            fixedValue;
+                    value           uniform 0.77;
+                }
+                O2
+                {
+                    type            fixedValue;
+                    value           uniform 0.23;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type            pressureInletOutletVelocity;
+                    value           uniform (0 0 0.9);
+                }
+                p
+                {
+                    type            totalPressure;
+                    value           uniform 1e5;
+                    p0              uniform 1e5;
+                    gamma           1.4;
+                    addStaticHead   false;
+                }
+                k { type zeroGradient; }
+                epsilon { type zeroGradient; }
+                nut { type calculated; value uniform 0;}
+                alphat { type calculated; value uniform 0;}
+                N2
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 0.77;
+                    value           uniform 0.77;
+                }
+                O2
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 0.23;
+                    value           uniform 0.23;
+                }
+            }
+            wallOutside
+            {
+                k { type kqRWallFunction; value uniform 30;}
+                epsilon
+                {
+                    type            epsilonWallFunction;
+                    Cmu             0.09;
+                    kappa           0.41;
+                    E               9.8;
+                    value           uniform 30000;
+                }
+                nut
+                {
+                    type            nutkWallFunction;
+                    Cmu             0.09;
+                    kappa           0.41;
+                    E               9.8;
+                    value           uniform 0;
+                }
+                alphat
+                {
+                    type            alphatWallFunction;
+                    Prt             0.85;
+                    value           uniform 0;
+                }
+            }
+            wallTube
+            {
+                k { type kqRWallFunction; value uniform 30;}
+                epsilon
+                {
+                    type            epsilonWallFunction;
+                    Cmu             0.09;
+                    kappa           0.41;
+                    E               9.8;
+                    value           uniform 30000;
+                }
+                nut
+                {
+                    type            nutkWallFunction;
+                    Cmu             0.09;
+                    kappa           0.41;
+                    E               9.8;
+                    value           uniform 0;
+                }
+                alphat
+                {
+                    type            alphatWallFunction;
+                    Prt             0.85;
+                    value           uniform 0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

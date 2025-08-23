@@ -1,0 +1,335 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+meshAlgorithm extrude;
+
+castellatedMesh true;
+snap true;
+addLayers true;
+autoBlockMesh true;
+blockData ( 0.1 0 );
+
+geometry
+{
+    Left
+    {
+        type searchableCylinder;
+        point1 ( -11.0 0.0 0.0 );
+        point2 ( -10.0 0.0 0.0 );
+        radius 1.0;
+    }
+    Right
+    {
+        type searchableCylinder;
+        point1 ( 10.0 0.0 0.0 );
+        point2 ( 11.0 0.0 0.0 );
+        radius 1.0;
+    }
+    LeftRingA
+    {
+        type searchableRing;
+        point1 ( -10.01 0.0 0.0 );
+        point2 ( -10.0 0.0 0.0 );
+        innerRadius 0.02;
+        outerRadius 0.022;
+    }
+    LeftEndCapA
+    {
+        type searchableCylinder;
+        point1 ( -10.005 0.0 0.0 );
+        point2 ( -10.0 0.0 0.0 );
+        radius 0.021;
+    }
+    LeftRingB
+    {
+        type searchableRing;
+        point1 ( -10.01 -0.1 0.0 );
+        point2 ( -10.0 -0.1 0.0 );
+        innerRadius 0.02;
+        outerRadius 0.022;
+    }
+    LeftEndCapB
+    {
+        type searchableCylinder;
+        point1 ( -10.005 -0.1 0.0 );
+        point2 ( -10.0 -0.1 0.0 );
+        radius 0.021;
+    }
+    LeftRingC
+    {
+        type searchableRing;
+        point1 ( -10.01 0.1 0.0 );
+        point2 ( -10.0 0.1 0.0 );
+        innerRadius 0.02;
+        outerRadius 0.022;
+    }
+    LeftEndCapC
+    {
+        type searchableCylinder;
+        point1 ( -10.005 0.1 0.0 );
+        point2 ( -10.0 0.1 0.0 );
+        radius 0.021;
+    }
+    RightRingA
+    {
+        type searchableRing;
+        point1 ( 10.01 0.0 0.0 );
+        point2 ( 10.0 0.0 0.0 );
+        innerRadius 0.02;
+        outerRadius 0.022;
+    }
+    RightEndCapA
+    {
+        type searchableCylinder;
+        point1 ( 10.005 0.0 0.0 );
+        point2 ( 10.0 0.0 0.0 );
+        radius 0.021;
+    }
+    RightRingB
+    {
+        type searchableRing;
+        point1 ( 10.01 -0.1 0.0 );
+        point2 ( 10.0 -0.1 0.0 );
+        innerRadius 0.02;
+        outerRadius 0.022;
+    }
+    RightEndCapB
+    {
+        type searchableCylinder;
+        point1 ( 10.005 -0.1 0.0 );
+        point2 ( 10.0 -0.1 0.0 );
+        radius 0.021;
+    }
+    RightRingC
+    {
+        type searchableRing;
+        point1 ( 10.01 0.1 0.0 );
+        point2 ( 10.0 0.1 0.0 );
+        innerRadius 0.02;
+        outerRadius 0.022;
+    }
+    RightEndCapC
+    {
+        type searchableCylinder;
+        point1 ( 10.005 0.1 0.0 );
+        point2 ( 10.0 0.1 0.0 );
+        radius 0.021;
+    }
+}
+
+castellatedMeshControls
+{
+    features ();
+    refinementSurfaces
+    {
+        Left
+        {
+            level ( 0 0 );
+        }
+        Right
+        {
+            level ( 0 0 );
+        }
+        LeftRingA
+        {
+            level ( 6 6 );
+        }
+        LeftEndCapA
+        {
+            level ( 6 6 );
+        }
+        LeftRingB
+        {
+            level ( 6 6 );
+        }
+        LeftEndCapB
+        {
+            level ( 6 6 );
+        }
+        LeftRingC
+        {
+            level ( 6 6 );
+        }
+        LeftEndCapC
+        {
+            level ( 6 6 );
+        }
+        RightRingA
+        {
+            level ( 6 6 );
+        }
+        RightEndCapA
+        {
+            level ( 6 6 );
+        }
+        RightRingB
+        {
+            level ( 6 6 );
+        }
+        RightEndCapB
+        {
+            level ( 6 6 );
+        }
+        RightRingC
+        {
+            level ( 6 6 );
+        }
+        RightEndCapC
+        {
+            level ( 6 6 );
+        }
+    }
+    refinementRegions {}
+
+    locationsInMesh
+    (
+        ( ( -10.5 0.0 0.0 ) none )
+        ( ( 10.5 0.0 0.0 ) point0 )
+    );
+}
+
+snapControls
+{
+}
+
+addLayersControls
+{
+    layers
+    {
+        Left
+        {
+            nSurfaceLayers 5;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        Right
+        {
+            nSurfaceLayers 5;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        LeftRingA
+        {
+            nSurfaceLayers 5;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        LeftEndCapA
+        {
+            nSurfaceLayers -1;
+            expansionRatio 1.25;
+            grownUp false;
+            reSnap true;
+        }
+        LeftRingB
+        {
+            nSurfaceLayers 5;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        LeftEndCapB
+        {
+            nSurfaceLayers -1;
+            expansionRatio 1.25;
+            grownUp false;
+            reSnap true;
+        }
+        LeftRingC
+        {
+            nSurfaceLayers 5;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        LeftEndCapC
+        {
+            nSurfaceLayers -1;
+            expansionRatio 1.25;
+            grownUp false;
+            reSnap true;
+        }
+        RightRingA
+        {
+            nSurfaceLayers 5;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        RightEndCapA
+        {
+            nSurfaceLayers -1;
+            expansionRatio 1.25;
+            grownUp false;
+            reSnap true;
+        }
+        RightRingB
+        {
+            nSurfaceLayers 5;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        RightEndCapB
+        {
+            nSurfaceLayers -1;
+            expansionRatio 1.25;
+            grownUp false;
+            reSnap true;
+        }
+        RightRingC
+        {
+            nSurfaceLayers 5;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        RightEndCapC
+        {
+            nSurfaceLayers -1;
+            expansionRatio 1.25;
+            grownUp false;
+            reSnap true;
+        }
+    }
+}
+
+debug 0;
+mergeTolerance 1.0E-6;
+
+extrudeDict
+{
+    targetExtrude
+    {
+        type target;
+        action add;
+        sourcePatches ("LeftEndCap.*");
+        targetPatches ("RightEndCap.*");
+        nLayers 100;
+        cellZone "extrusion";
+        sourceFaceZone "source";
+        targetFaceZone "target";
+    }
+}
+
+sourceTargetCheckDict
+{
+    targetExtrude
+    {
+        sourcePatches ("LeftEndCap.*");
+        targetPatches ("RightEndCap.*");
+        writeVTK true;
+    }
+}
+
+// ************************************************************************* //

@@ -1,0 +1,422 @@
+FoamFile
+{
+    version 2.0;
+    format ascii;
+
+    root "/home/ENGYS/b.dipaolo/HELYX/dev/HELYXcore-dev/examples/helyxSolve/incompressible/transient";
+    case "turbulentBoundaryLayer/processor7";
+    instance "../system";
+    local "";
+
+    class dictionary;
+    object caseSetupDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        strictPatchNameChecking false;
+    }
+    regionGroups    1 ( fluid 1 ( region0 ) );
+    system
+    {
+        controlDict
+        {
+            stopAt          endTime;
+            endTime         180;
+            deltaT          0.5;
+            writeControl    runTime;
+            writeInterval   60;
+            purgeWrite      0;
+        }
+    }
+    functions
+    {
+        fieldBlending
+        {
+            type            fieldBlendingFactor;
+            blendingSources
+            (
+                zonalDES
+                {
+                    type            zonalDES;
+                    CDES            1;
+                    minValue        0;
+                    maxValue        1;
+                    minCoeff        0;
+                    maxCoeff        1;
+                    functionType    cubic;
+                    write           false;
+                }
+            );
+            fieldBlending
+            (
+                U
+                {
+                    stabilise       10;
+                    blendingSources
+                    (
+                        cfl1
+                        {
+                            type            cfl;
+                            minValue        2;
+                            maxValue        4;
+                            minCoeff        1;
+                            maxCoeff        0;
+                            functionType    cubic;
+                            phi             phi;
+                            rho             rho;
+                            write           false;
+                        }
+                    );
+                }
+            );
+            functionObjectLibs ( "libfieldFunctionObjects.so" );
+            writeControl    writeTime;
+        }
+        FA1
+        {
+            functionObjectLibs ( "libfieldFunctionObjects.so" );
+            fields
+            (
+                U
+                {
+                    mean            on;
+                    prime2Mean      on;
+                    base            time;
+                }
+
+                p
+                {
+                    mean            on;
+                    prime2Mean      on;
+                    base            time;
+                }
+
+                k
+                {
+                    mean            on;
+                    prime2Mean      on;
+                    base            time;
+                }
+            );
+            writeControl    writeTime;
+            type            fieldAverage;
+            timeStart       640;
+        }
+        vr1
+        {
+            type            volumeReport;
+            fields          ( U p );
+            executeControl  onEnd;
+            writeControl    onEnd;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        modificationSwitches
+        {
+        }
+        boundaryMesh
+        {
+            inlet
+            {
+                type            inlet;
+            }
+            outlet
+            {
+                type            outlet;
+            }
+            right
+            {
+                type            symmetryPlane;
+            }
+            left
+            {
+                type            symmetryPlane;
+            }
+            ground
+            {
+                type            wall;
+            }
+            top
+            {
+                type            symmetryPlane;
+            }
+        }
+        state           ( transient les );
+        turbulenceModel SpalartAllmarasDDES;
+        materials       ( air );
+        system
+        {
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default         backward;
+                }
+                gradSchemes
+                {
+                    turbulence      cellLimited Gauss linear 1;
+                    grad(nuTilda)   cellLimited Gauss linear 1;
+                    default         cellLimited Gauss linear 1;
+                    gradU           cellLimited Gauss linear 1;
+                    grad(p)         Gauss linear;
+                }
+                divSchemes
+                {
+                    div(phi,nuTilda) bounded Gauss limitedLinear 1;
+                    div(phi,U)      bounded Gauss localBlended filteredLinear2V 0.5 0 LUSTV gradU;
+                    default         none;
+                    div(R)          Gauss linear;
+                    div((rho*R))    Gauss linear;
+                    div(nonlinearStress) Gauss linear;
+                    div((muEff*dev2(grad(U).T()))) Gauss linear;
+                    div((nuEff*dev2(T(grad(U))))) Gauss linear;
+                    div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
+                    div((nu*dev2(T(grad(U))))) Gauss linear;
+                    div(((rho*(thermo:mu|rho))*dev2(T(grad(U))))) Gauss linear;
+                }
+                laplacianSchemes
+                {
+                    laplacian(DnuTildaEff,nuTilda) Gauss linear uncorrected;
+                    default         Gauss linear uncorrected;
+                    laplacian((1|A(U)),p) Gauss linear limited 0.2;
+                }
+                interpolationSchemes
+                {
+                    default         linear;
+                    interpolate(HbyA) linear;
+                }
+                snGradSchemes
+                {
+                    default         limited 0.333;
+                }
+                wallDist
+                {
+                    method          meshWave;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    nuTilda
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-06;
+                        relTol          0.1;
+                    }
+                    nuTildaFinal
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-06;
+                        relTol          0;
+                    }
+                    p
+                    {
+                        solver          GAMG;
+                        agglomerator    faceAreaPair;
+                        mergeLevels     1;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 200;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        scaleCorrection true;
+                        tolerance       1e-10;
+                        relTol          0.01;
+                    }
+                    U
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-10;
+                        relTol          0.001;
+                    }
+                    pFinal
+                    {
+                        solver          GAMG;
+                        agglomerator    faceAreaPair;
+                        mergeLevels     1;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 200;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        scaleCorrection true;
+                        tolerance       1e-06;
+                        relTol          0;
+                    }
+                    UFinal
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-06;
+                        relTol          0;
+                    }
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p               1;
+                    }
+                    equations
+                    {
+                        nuTilda         1;
+                        nuTildaFinal    1;
+                        U               1;
+                        UFinal          1;
+                    }
+                }
+                cache
+                {
+                    grad(U)         ;
+                }
+                PIMPLE
+                {
+                    nOuterCorrectors 1;
+                    nCorrectors     3;
+                    nNonOrthogonalCorrectors 0;
+                    pRefCell        0;
+                    pRefValue       0;
+                    pMin            -1e+10;
+                    pMax            1e+10;
+                }
+            }
+        }
+        fields
+        {
+            nuTilda
+            {
+                initialisation
+                {
+                    type            Prandtl;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type            potentialFlow;
+                }
+            }
+            U
+            {
+                initialisation
+                {
+                    type            potentialFlow;
+                    value           uniform ( 0.5 0 0 );
+                    initialiseUBCs  true;
+                }
+            }
+        }
+        boundaryTypeDefaults
+        {
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                p
+                {
+                    type            zeroGradient;
+                }
+                U
+                {
+                    type            turbulentATSMABLInlet;
+                    vortonType      "typeR";
+                    mapMethod       nearestCell;
+                    distanceType    z;
+                    zCoeffs
+                    {
+                    }
+                    profileType     tabulated;
+                    tabulatedCoeffs
+                    {
+                        U               table ( ( 1 ( 2.073 0 0 ) ) ( 2 ( 2.88 0 0 ) ) ( 3 ( 3.391 0 0 ) ) ( 4 ( 3.765 0 0 ) ) ( 5 ( 4.06 0 0 ) ) ( 7.5 ( 4.607 0 0 ) ) ( 10 ( 5 0 0 ) ) ( 12.5 ( 5.307 0 0 ) ) ( 15 ( 5.56 0 0 ) ) ( 17.5 ( 5.774 0 0 ) ) ( 20 ( 5.959 0 0 ) ) ( 25 ( 6.271 0 0 ) ) ( 30 ( 6.526 0 0 ) ) ( 35 ( 6.742 0 0 ) ) ( 40 ( 6.929 0 0 ) ) ( 45 ( 7.094 0 0 ) ) ( 50 ( 7.242 0 0 ) ) ( 60 ( 7.499 0 0 ) ) ( 70 ( 7.716 0 0 ) ) ( 80 ( 7.904 0 0 ) ) ( 90 ( 8.07 0 0 ) ) ( 100 ( 8.218 0 0 ) ) ( 120 ( 8.475 0 0 ) ) ( 140 ( 8.693 0 0 ) ) ( 160 ( 8.881 0 0 ) ) ( 180 ( 9.047 0 0 ) ) ( 200 ( 9.196 0 0 ) ) ( 220 ( 9.331 0 0 ) ) ( 240 ( 9.454 0 0 ) ) ( 260 ( 9.567 0 0 ) ) ( 280 ( 9.671 0 0 ) ) ( 300 ( 9.769 0 0 ) ) ( 320 ( 9.86 0 0 ) ) ( 350 ( 9.987 0 0 ) ) ( 400 ( 10.175 0 0 ) ) ( 450 ( 10.342 0 0 ) ) ( 500 ( 10.491 0 0 ) ) ( 600 ( 10.748 0 0 ) ) ( 650 ( 10.861 0 0 ) ) ( 700 ( 10.966 0 0 ) ) ( 750 ( 11.064 0 0 ) ) ( 800 ( 11.155 0 0 ) ) ( 850 ( 11.241 0 0 ) ) ( 900 ( 11.321 0 0 ) ) ( 1000 ( 11.47 0 0 ) ) ( 1200 ( 11.728 0 0 ) ) );
+                        Lxyz            table ( ( 1 ( 10.293 10.293 10.293 ) ) ( 2 ( 16.241 16.241 16.241 ) ) ( 3 ( 20.976 20.976 20.976 ) ) ( 4 ( 25.027 25.027 25.027 ) ) ( 5 ( 28.616 28.616 28.616 ) ) ( 7.5 ( 36.229 36.229 36.229 ) ) ( 10 ( 42.524 42.524 42.524 ) ) ( 12.5 ( 47.906 47.906 47.906 ) ) ( 15 ( 52.594 52.594 52.594 ) ) ( 17.5 ( 56.73 56.73 56.73 ) ) ( 20 ( 60.409 60.409 60.409 ) ) ( 25 ( 66.669 66.669 66.669 ) ) ( 30 ( 71.782 71.782 71.782 ) ) ( 35 ( 76.018 76.018 76.018 ) ) ( 40 ( 79.572 79.572 79.572 ) ) ( 45 ( 82.591 82.591 82.591 ) ) ( 50 ( 85.189 85.189 85.189 ) ) ( 60 ( 89.47 89.47 89.47 ) ) ( 70 ( 92.96 92.96 92.96 ) ) ( 80 ( 96.039 96.039 96.039 ) ) ( 90 ( 96.039 96.039 96.039 ) ) ( 100 ( 96.039 96.039 96.039 ) ) ( 120 ( 96.039 96.039 96.039 ) ) ( 140 ( 96.039 96.039 96.039 ) ) ( 160 ( 96.039 96.039 96.039 ) ) ( 180 ( 96.039 96.039 96.039 ) ) ( 200 ( 96.039 96.039 96.039 ) ) ( 220 ( 96.039 96.039 96.039 ) ) ( 240 ( 96.039 96.039 96.039 ) ) ( 260 ( 96.039 96.039 96.039 ) ) ( 280 ( 96.039 96.039 96.039 ) ) ( 300 ( 96.039 96.039 96.039 ) ) ( 320 ( 96.039 96.039 96.039 ) ) ( 350 ( 96.039 96.039 96.039 ) ) ( 400 ( 96.039 96.039 96.039 ) ) ( 450 ( 96.039 96.039 96.039 ) ) ( 500 ( 96.039 96.039 96.039 ) ) ( 600 ( 96.039 96.039 96.039 ) ) ( 650 ( 96.039 96.039 96.039 ) ) ( 700 ( 96.039 96.039 96.039 ) ) ( 750 ( 96.039 96.039 96.039 ) ) ( 800 ( 96.039 96.039 96.039 ) ) ( 850 ( 96.039 96.039 96.039 ) ) ( 900 ( 96.039 96.039 96.039 ) ) ( 1000 ( 96.039 96.039 96.039 ) ) ( 1200 ( 96.039 96.039 96.039 ) ) );
+                        R               table ( ( 1 ( 1.10374 0 -0.33548 0.86092 0 0.60706 ) ) ( 2 ( 1.21349 0 -0.33487 0.94653 0 0.66743 ) ) ( 3 ( 1.27824 0 -0.33426 0.99704 0 0.70306 ) ) ( 4 ( 1.32428 0 -0.33365 1.03296 0 0.72839 ) ) ( 5 ( 1.35991 0 -0.33304 1.06076 0 0.74801 ) ) ( 7.5 ( 1.42385 0 -0.33151 1.11067 0 0.78326 ) ) ( 10 ( 1.46783 0 -0.32998 1.14504 0 0.80758 ) ) ( 12.5 ( 1.5005 0 -0.32846 1.1706 0 0.8257 ) ) ( 15 ( 1.52577 0 -0.32693 1.19041 0 0.8398 ) ) ( 17.5 ( 1.54581 0 -0.32541 1.20616 0 0.85106 ) ) ( 20 ( 1.56194 0 -0.32388 1.21887 0 0.86021 ) ) ( 25 ( 1.58564 0 -0.32083 1.23769 0 0.87392 ) ) ( 30 ( 1.60126 0 -0.31778 1.25027 0 0.88333 ) ) ( 35 ( 1.61122 0 -0.31472 1.25852 0 0.88978 ) ) ( 40 ( 1.61706 0 -0.31167 1.26362 0 0.89411 ) ) ( 45 ( 1.61979 0 -0.30862 1.26636 0 0.89687 ) ) ( 50 ( 1.62012 0 -0.30557 1.26731 0 0.89845 ) ) ( 60 ( 1.61559 0 -0.29946 1.26534 0 0.89916 ) ) ( 70 ( 1.6063 0 -0.29336 1.25991 0 0.89776 ) ) ( 80 ( 1.59398 0 -0.28726 1.25234 0 0.89517 ) ) ( 90 ( 1.57972 0 -0.28115 1.24348 0 0.89196 ) ) ( 100 ( 1.56421 0 -0.27505 1.23386 0 0.88848 ) ) ( 120 ( 1.53124 0 -0.26284 1.21363 0 0.88159 ) ) ( 140 ( 1.49726 0 -0.25063 1.19328 0 0.87548 ) ) ( 160 ( 1.46326 0 -0.23842 1.17346 0 0.87049 ) ) ( 180 ( 1.42964 0 -0.22621 1.15438 0 0.86661 ) ) ( 200 ( 1.39652 0 -0.21401 1.13603 0 0.8637 ) ) ( 220 ( 1.36388 0 -0.2018 1.11829 0 0.86154 ) ) ( 240 ( 1.33167 0 -0.18959 1.10102 0 0.85988 ) ) ( 260 ( 1.29982 0 -0.17738 1.08405 0 0.85848 ) ) ( 280 ( 1.26823 0 -0.16517 1.06723 0 0.85709 ) ) ( 300 ( 1.23686 0 -0.15296 1.05041 0 0.85548 ) ) ( 320 ( 1.20564 0 -0.14075 1.03345 0 0.85344 ) ) ( 350 ( 1.15902 0 -0.12244 1.00753 0 0.84917 ) ) ( 400 ( 1.08162 0 -0.09192 0.96226 0 0.83746 ) ) ( 450 ( 1.00441 0 -0.0614 0.91347 0 0.81839 ) ) ( 500 ( 0.92726 0 -0.03088 0.86054 0 0.79078 ) ) ( 600 ( 0.77301 0 0 0.7416 0 0.70877 ) ) ( 650 ( 0.69589 0 0 0.67604 0 0.65529 ) ) ( 700 ( 0.61877 0 0 0.60706 0 0.59482 ) ) ( 750 ( 0.54165 0 0 0.53531 0 0.52868 ) ) ( 800 ( 0.46453 0 0 0.46145 0 0.45824 ) ) ( 850 ( 0.38741 0 0 0.38612 0 0.38477 ) ) ( 900 ( 0.31029 0 0 0.30985 0 0.30939 ) ) ( 1000 ( 0.15605 0 0 0.15603 0 0.15602 ) ) ( 1200 ( 0.0017 0 0 0.0017 0 0.0017 ) ) );
+                        outOfBounds     clamp;
+                    }
+                    value           uniform ( 11 0 0 );
+                }
+                nuTilda
+                {
+                    type            fixedValue;
+                    value           uniform 1.51e-05;
+                }
+                nut
+                {
+                    type            calculated;
+                    value           uniform 1e-05;
+                }
+            }
+            outlet
+            {
+                p
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+                U
+                {
+                    type            inletOutlet;
+                    inletValue      uniform ( 0 0 0 );
+                    value           uniform ( 0.5 0 0 );
+                }
+                nuTilda
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 1.51e-05;
+                    value           uniform 1.51e-05;
+                }
+                nut
+                {
+                    type            calculated;
+                    value           uniform 0.001;
+                }
+            }
+            ground
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform ( 0 0 0 );
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                nuTilda
+                {
+                    type            zeroGradient;
+                }
+                nut
+                {
+                    type            nutUSpaldingWallFunction;
+                    value           uniform 0.001;
+                }
+            }
+        }
+    }
+}
+

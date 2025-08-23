@@ -1,0 +1,66 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      fvOptions;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+porosity
+{
+    type            explicitPorositySource;
+
+    explicitPorositySourceCoeffs
+    {
+        selectionMode   cellZone;
+        cellZone        porosity;
+        type            fixedCoeff;
+        active          yes;
+        cellZone        porosity;
+
+        fixedCoeffCoeffs
+        {
+            alpha       (500 -1000 -1000);
+            beta        (0 0 0);
+            rhoRef      1;
+            referenceFrame  porousFrame;
+        }
+    }
+}
+
+
+fixedTemperature
+{
+    type            fixedTemperatureConstraint;
+
+    selectionMode   cellZone;
+    cellZone        porosity;
+    mode            uniform;
+    temperature     350;
+}
+
+
+porosityTurbulence
+{
+    type            scalarFixedValueConstraint;
+
+    selectionMode   cellZone;
+    cellZone        porosity;
+    fieldValues
+    {
+        k           1;
+        epsilon     150;
+    }
+}
+
+
+// ************************************************************************* //

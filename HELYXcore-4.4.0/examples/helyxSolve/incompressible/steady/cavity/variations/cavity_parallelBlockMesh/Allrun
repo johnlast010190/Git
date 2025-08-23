@@ -1,0 +1,21 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Mesh in parallel
+helyxRun -np 6 -parallel parallelBlockMesh -vector "(1 0 0)"
+# Number of mesh slices will be same as number of processors specified in decomposeParDict, and 
+# therefore the value of -np above should also be the same.
+
+# Setup
+helyxRun caseSetup
+
+# Run
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch cavity.foam
+
+#------------------------------------------------------------------------------

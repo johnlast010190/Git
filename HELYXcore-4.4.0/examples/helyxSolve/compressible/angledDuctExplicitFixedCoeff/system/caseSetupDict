@@ -1,0 +1,399 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields  true;
+        resetBoundaryFields  true;
+        resetSystemDicts     true;
+        resetConstDicts      true;
+        resetBoundaryMesh    true;
+        deleteUnusedFields   true;
+    }
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         1000;
+            deltaT          1;
+            writeControl    timeStep;
+            writeInterval   100;
+            purgeWrite      0;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p rho );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (steady ras energy);
+        boundaryMesh
+        {
+            inlet
+            {
+                type inlet;
+            }
+            outlet
+            {
+                type outlet;
+            }
+        }
+        turbulenceModel kEpsilon;
+        materials (gas);
+        materialProperties
+        {
+            gas
+            {
+                materialName    gas;
+                materialType    fluid;
+                thermodynamics  hConst;
+                equationOfState perfectGas;
+                energy          sensibleInternalEnergy;
+
+                molWeight 28.9;
+
+                thermodynamicsCoeffs
+                {
+                    Cp 1005;
+                    Hf 0.0;
+                }
+                muModel       muSutherland;
+                muModelCoeffs
+                {
+                    As 1.4792e-06;
+                    Ts 116;
+                }
+                kappaModel    kappaSutherland;
+                referenceFields
+                {
+                    p         [ 1 -1 -2 0 0 0 0 ] 0;
+                }
+            }
+        }
+        system
+        {
+            fvSchemes
+            {
+                gradSchemes
+                {
+                    default         Gauss linear;
+                    turbulence      Gauss linear;
+                    grad(k)         Gauss linear;
+                    grad(epsilon)   Gauss linear;
+                    default         Gauss linear;
+                    gradU           Gauss linear;
+                    grad(h)         Gauss linear;
+                    grad(e)         Gauss linear;
+                    grad(K)         Gauss linear;
+                    grad(T)         Gauss linear;
+                }
+                divSchemes
+                {
+                    div(phi,U)      bounded Gauss upwind;
+                    div(phi,h)      bounded Gauss upwind;
+                    div(phi,e)      bounded Gauss upwind;
+                    div(phi,T)      bounded Gauss upwind;
+                    div(phi,K)      bounded Gauss upwind;
+                    div(phiv,p)     Gauss upwind;
+                }
+                laplacianSchemes
+                {
+                    default         Gauss linear corrected;
+                    laplacian((rho*DkEff),k) Gauss linear corrected;
+                    laplacian((rho*DepsilonEff),epsilon) Gauss linear corrected;
+                    laplacian((rho*nuEff),U) Gauss linear corrected;
+                    laplacian(rhorAUf,p) Gauss linear corrected;
+                    laplacian(kappa,T) Gauss linear corrected;
+                }
+                snGradSchemes
+                {
+                    default         corrected;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    p
+                    {
+                        solver          GAMG;
+                        nCellsInCoarsestLevel 20;
+                        smoother        GaussSeidel;
+                        tolerance       1e-8;
+                        relTol          0.05;
+                    }
+                    U
+                    {
+                        solver          smoothSolver;
+                        smoother        GaussSeidel;
+                        minIter         0;
+                    }
+                    e
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        tolerance       1e-6;
+                        relTol          0.1;
+                    }
+                    k
+                    {
+                        $U;
+                        tolerance       1e-7;
+                    }
+                    epsilon
+                    {
+                        $U;
+                        tolerance       1e-7;
+                    }
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        rho             0.01;
+                    }
+                    equations
+                    {
+                        k               0.5;
+                        epsilon         0.5;
+                        U               0.7;
+                        h               0.7;
+                        e               0.7;
+                        T               0.7;
+                    }
+                }
+                SIMPLE
+                {
+                    nNonOrthogonalCorrectors 0;
+                    pRefCell        0;
+                    pRefValue       1e5;
+                    pMin            40000;
+                    pMax            150000;
+                    pMinFactor      0.4;
+                    pMaxFactor      1.5;
+                }
+            }
+            meshObjects
+            {
+                porousFrame
+                {
+                    type            coordinateFrame;
+                    coordinateSystem
+                    {
+                        type            cartesian;
+                        origin          ( 0 0 0 );
+                        rotation
+                        {
+                            type            axesRotation;
+                            e1              ( 0.70710678 0.70710678 0 );
+                            e2              ( 0 0 1 );
+                        }
+                    }
+                }
+            }
+            fvOptions
+            {
+                porosity
+                {
+                    type            explicitPorositySource;
+
+                    explicitPorositySourceCoeffs
+                    {
+                        selectionMode   cellZone;
+                        cellZone        porosity;
+                        type            fixedCoeff;
+                        active          yes;
+                        cellZone        porosity;
+
+                        fixedCoeffCoeffs
+                        {
+                            alpha       (500 -1000 -1000);
+                            beta        (0 0 0);
+                            rhoRef      1;
+                            referenceFrame  porousFrame;
+                        }
+                    }
+                }
+                fixedTemperature
+                {
+                    type            fixedTemperatureConstraint;
+                    selectionMode   cellZone;
+                    cellZone        porosity;
+                    mode            uniform;
+                    temperature     350;
+                    fraction        table ((0 1) (1000 1));
+                }
+                porosityTurbulence
+                {
+                    type            scalarFixedValueConstraint;
+                    selectionMode   cellZone;
+                    cellZone        porosity;
+                    fieldValues
+                    {
+                        k           1;
+                        epsilon     150;
+                    }
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 1e5;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 1;
+                }
+            }
+            epsilon
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 200;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 293;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type            flowRateInletVelocity;
+                    massFlowRate    constant 0.1;
+                    value           uniform (0 0 0);
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                k
+                {
+                    type            turbulentIntensityKineticEnergyInlet;
+                    intensity       0.05;
+                    value           uniform 1;
+                }
+                epsilon
+                {
+                    type            turbulentMixingLengthDissipationRateInlet;
+                    mixingLength    0.005;
+                    value           uniform 200;
+                }
+                T
+                {
+                    type            fixedValue;
+                    value           uniform 293;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type            inletOutlet;
+                    value           uniform (0 0 0);
+                    inletValue      uniform (0 0 0);
+                }
+                p
+                {
+                    type            fixedValue;
+                    value           uniform 1e5;
+                    inputValue      uniform 1e5;
+                }
+                k
+                {
+                    type            inletOutlet;
+                    value           uniform 1;
+                    inletValue      uniform 1;
+                }
+                epsilon
+                {
+                    type            inletOutlet;
+                    value           uniform 200;
+                    inletValue      uniform 200;
+                }
+                T
+                {
+                    type            inletOutlet;
+                    value           uniform 293;
+                    inletValue      uniform 293;
+                }
+            }
+            porosityWall
+            {
+                U
+                {
+                    type            slip;
+                    value           uniform ( 0 0 0 );
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                T
+                {
+                    type            zeroGradient;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

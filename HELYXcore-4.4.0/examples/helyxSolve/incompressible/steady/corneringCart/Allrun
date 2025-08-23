@@ -1,0 +1,32 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Create mesh
+mkdir -p constant/triSurface
+cp "$HELYX_TUTORIALS"/resources/geometry/corneringCart/* constant/triSurface/.
+
+# Create background mesh in series
+helyxRun blockMesh
+
+# Decompose mesh
+helyxRun decomposePar
+
+# Create snapped mesh
+helyxRun helyxHexMesh
+
+# Create cells sets for porosity and MRF
+helyxRun topoSet
+
+# Setup
+helyxRun caseSetup
+
+# Run
+helyxRun
+
+# Create dummy file for ParaView visualisation
+touch corneringCart.foam
+
+#------------------------------------------------------------------------------

@@ -1,0 +1,7 @@
+
+This testcase simulates particle settling for really small particles in a stangant fluid.
+As a result, the terminal fall velocity should match the Stokes' law:
+======================================================================
+V_terminal = 2*(r^2)*(rho_d-rho_c)*g/(9*mu_c) = 0.008208 m/s
+
+

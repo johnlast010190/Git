@@ -1,0 +1,359 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom latestTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 1000.0;
+            writeControl timeStep;
+            writeInterval 500;
+            writeEndTime true;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type volumeReport;
+            regions ( region0 );
+            fields ( T U k omega p w mist );
+            writeControl timeStep;
+            writeInterval 1;
+            executeControl timeStep;
+            executeInterval 1;
+            functionObjectLibs ("libreport.so" );
+            outputFileFormat tsv;
+        }
+        SR_in
+        {
+            type surfaceReport;
+            regions ( region0 );
+            fields ( T U p w mist );
+            weighting flux;
+            fluxName phi;
+            homogeneity false;
+            surfaces ( { type patch; name in; } );
+            constraints
+            (
+                {
+                    type boundBox;
+                    min ( -1000.0 -1000.0 -1000.0 );
+                    max ( 1000.0 1000.0 1000.0 );
+                    keepInside true;
+                }
+            );
+            writeControl timeStep;
+            writeInterval 1;
+            executeControl timeStep;
+            executeInterval 1;
+            functionObjectLibs ("libreport.so" );
+        }
+        SR_out
+        {
+            type surfaceReport;
+            regions ( region0 );
+            fields ( T U p w mist );
+            weighting flux;
+            fluxName phi;
+            homogeneity false;
+            surfaces ( { type patch; name out; } );
+            constraints
+            (
+                {
+                    type boundBox;
+                    min ( -1000.0 -1000.0 -1000.0 );
+                    max ( 1000.0 1000.0 1000.0 );
+                    keepInside true;
+                }
+            );
+            writeControl timeStep;
+            writeInterval 1;
+            executeControl timeStep;
+            executeInterval 1;
+            functionObjectLibs ("libreport.so" );
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (steady ras energy humidity mist);
+        boundaryMesh
+        {
+            ffminx { type patch; }
+            ffmaxx { type patch; }
+            ffminy { type patch; }
+            ffmaxy { type patch; }
+            ffminz { type wall; }
+            ffmaxz { type patch; }
+            in { type inlet; }
+            out { type outlet; }
+            walls { type wall; }
+        }
+        turbulenceModel kOmegaSST;
+        materials (air);
+        materialProperties
+        {
+            air
+            {
+                materialName air;
+                materialType fluid;
+                molWeight 28.96;
+                energy sensibleEnthalpy;
+                equationOfState incompressiblePerfectGas;
+                equationOfStateCoeffs
+                {
+                    pConst 0.0;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu constant 1.846E-5;
+                }
+                thermodynamics hConst;
+                thermodynamicsCoeffs
+                {
+                    Hf 0.0;
+                    Cp 1004.9;
+                }
+                kappaModel scalarFunction1;
+                kappaModelCoeffs
+                {
+                    kappa 0.0262;
+                }
+                wconcentrationTransport
+                {
+                    D [0 2 -1 0 0 0 0] 2.0E-5;
+                    Sct 0.6;
+                    Cp [0 2 -2 -1 0 0 0] 1930.0;
+                }
+                referenceFields
+                {
+                    p [1 -1 -2 0 0 0 0] 101325.0;
+                }
+                buoyancyModel rhoModel;
+            }
+        }
+        constant
+        {
+            g
+            {
+                value ( 0.0 0.0 -9.81 );
+                dimensions [0  1 -2  0 0 0 0];
+            }
+        }
+        system
+        {
+            fvOptions
+            {
+                mistThermalAndMassSource
+                {
+                    type            mistThermalAndMassSource;
+                    active          true;
+                    mistThermalAndMassSourceCoeffs
+                    {
+                        mistProperties
+                        {
+                            diam            0.0001;
+                            terminalVelocity 1;
+                        }
+                    }
+                }
+            }
+        }
+        fields
+        {
+            U { initialisation { type fixedValue; value uniform ( 0.0 0.0 0.0 ); } }
+            p { initialisation { type buoyantPressure; } }
+            k { initialisation { type turbulentIL; I 0.05; L 0.01; Uref 1.0; } }
+            omega { initialisation { type turbulentIL; I 0.05; L 0.01; Uref 1.0; } }
+            T { initialisation { type fixedValue; value uniform 300.0; } }
+        }
+        boundaryConditions
+        {
+            ffminx
+            {
+                w
+                {
+                    type relativeHumidityInletOutlet;
+                    relativeHumidity uniform 0.5;
+                    value uniform 0;
+                }
+            }
+            ffmaxx
+            {
+                w
+                {
+                    type relativeHumidityInletOutlet;
+                    relativeHumidity uniform 0.5;
+                    value uniform 0;
+                }
+            }
+            ffminy
+            {
+                w
+                {
+                    type relativeHumidityInletOutlet;
+                    relativeHumidity uniform 0.5;
+                    value uniform 0;
+                }
+            }
+            ffmaxy
+            {
+                w
+                {
+                    type relativeHumidityInletOutlet;
+                    relativeHumidity uniform 0.5;
+                    value uniform 0;
+                }
+            }
+            ffminz
+            {
+                U
+                {
+                    type wallVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                }
+                T
+                {
+                    type turbulentHeatFluxTemperature;
+                    value uniform 300.0;
+                    q uniform 0.0;
+                    heatSource flux;
+                    kappaMethod fluidThermo;
+                    kappaName none;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 1e-20;
+                }
+                omega
+                {
+                    type knopOmegaWallFunction;
+                    value uniform 1;
+                }
+                nut
+                {
+                    type nutUTabulatedWallFunction;
+                    value uniform 0.001;
+                }
+            }
+            ffmaxz
+            {
+                w
+                {
+                    type relativeHumidityInletOutlet;
+                    relativeHumidity uniform 0.5;
+                    value uniform 0;
+                }
+            }
+            in
+            {
+                U
+                {
+                    type surfaceNormalFixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                    refValue uniform -1.0;
+                    profile constant -1.0;
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                }
+                T
+                {
+                    type patchMean;
+                    value uniform 300.0;
+                    patches ( out );
+                    offset constant 0.0;
+                }
+                w
+                {
+                    type patchMean;
+                    value uniform 0.0;
+                    patches ( out );
+                    offset constant 0.0;
+                }
+                mist
+                {
+                    type fixedValue;
+                    value uniform 0.005; // 5 g_mist/kg_air
+                }
+            }
+            out
+            {
+                U
+                {
+                    // type flowRateOutletVelocity;
+                    // value uniform ( 0.0 0.0 0.0 );
+                    // massFlowRate constant 0.03866171617;
+                    type flowRateOutletVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    uniform true;
+                    massFlowSplit constant 1;
+                    patches ( in );
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                }
+                T
+                {
+                    type inletOutlet;
+                    value uniform 300.0;
+                    inletValue uniform 300.0;
+                }
+                w
+                {
+                    type relativeHumidityInletOutlet;
+                    relativeHumidity uniform 0.5;
+                    value uniform 0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

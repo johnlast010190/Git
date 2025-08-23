@@ -1,0 +1,60 @@
+    //- Set number of outer feature snapping iterations
+    nOuterIter 1;
+
+    //- Set number of pre feature snapping iterations 
+    nPreFeatureIter 0;
+
+    //- Set number of displacement smoothing iterations	
+    nSolveIter 10;
+
+    //- Set number of main feature snapping iterations 
+    nFeatureIter 60;
+
+    //- Switch for performing global feature snapping
+    globalFeatureEdges true;
+
+    // Set direct snapping for region boundaries globally
+    globalRegionSnap false;
+
+    //- Number of patch smoothing iterations before finding correspondence
+    //  to surface
+    nSmoothPatch 2;
+
+    //- Relative distance for points to be attracted by surface feature point
+    //  or edge. True distance is this factor times local
+    //  maximum edge length.
+    tolerance 4.0;
+
+    //- Maximum number of snapping relaxation iterations. Should stop
+    //  before upon reaching a correct mesh.
+    nRelaxIter 5;
+
+     //Perform feature snapping for zoned surfaces
+    zoneFeatureSnapping true;
+
+     //snapping directly to geometric and region feature lines
+    directFeatureSnapping true;
+
+    // Set direct snapping for region feature lines
+    regionFeatureLines false;	   
+
+    // Set direct snapping for geometric feature lines
+    geometryFeatureLines true;
+
+    // Set tolerance for edge collapsing (-1 to disable)
+    collapseTol 0.25;
+
+    // Enlarge stencil used for surface search. Set to false
+    // for faster feature snapping
+    enlargeStencil true;
+
+    // Perform mesh quality checks during snapping to disable motion
+    // when errors are introduced. Set to false for faster feature snapping
+    featureSnapChecks true;
+
+    //Switch to enable smoothing of surface during feature snapping
+    smoothSnappedSurface true;
+
+    // Tolerance used to remove concavity in face (fraction of face area)
+    // Set negative to disable 
+    concaveTol 0.3;

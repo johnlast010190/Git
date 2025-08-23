@@ -1,0 +1,199 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    system
+    {
+        controlDict
+        {
+            stopAt          endTime;
+            endTime         2;
+            deltaT          0.001;
+            writeInterval   0.1;
+            adjustTimeStep  no;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p alpha.water );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+        out
+        {
+            type surfaceReport;
+            functionObjectLibs ("libreport.so");
+            surfaces ( {type patch; name top; } );
+            constraints ();
+            logToFile true;
+            fields ( U alpha.water );
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( transient ras vof dynamic );
+        materials ( water air );
+        constant
+        {
+            g { value ( 0 -9.81 0 ); }
+            dynamicMeshDict
+            {
+                GIBChanger
+                {
+                    type            solidBody;
+                    libs            ("libfvMeshGIBChangers.so");
+
+                    solidBodyCoeffs
+                    {
+                        triSurfaceName stamp2.stl;
+                        region0Patch (right);
+                        motionFunctions
+                        {
+                            referenceFrame linearMotionFrame;
+                        }
+                    }
+                }
+            }
+        }
+        system
+        {
+            meshObjects
+            {
+                linearMotionFrame
+                {
+                    type dynamicMotionCoordinateFrame;
+                    motionFunction
+                    {
+                        type linearMotion;
+                        velocity (0 -0.05 0);
+                    }
+                    coordinateSystem
+                    {
+                        type cartesian;
+                        origin ( 0 0 0 );
+                        e1 (1 0 0);
+                        e3 (0 0 1);
+                    }
+                }
+            }
+            fvSolution
+            {
+                PIMPLE
+                {
+                    nOuterCorrectors 3;
+                    checkMeshCourantNo true;
+                }
+            }
+            fvOptions
+            {
+                volumeFractionSolver
+                {
+                    nAlphaCorr      2;
+                    nAlphaSubCycles 1;
+                    MULESCorr       yes;
+                    nLimiterIter    5;
+                }
+            }
+        }
+        fields
+        {
+            alpha.water
+            {
+                initialisation
+                {
+                    type            cellSet;
+                    defaultValue    uniform 0;
+                    setSources
+                    (
+                        boxToCell
+                        {
+                            box             ( -1 -1 -1 ) ( 1 0.05 1 );
+                            value           1;
+                        }
+                    );
+                }
+            }
+        }
+        boundaryMesh
+        {
+            ib1
+            {
+                type indirectWall;
+                faceZone wallZone;
+                indirectPolyPatchType master;
+            }
+            ib2
+            {
+                type inactive;
+                faceZone wallZone;
+                indirectPolyPatchType slave;
+            }
+        }
+        boundaryConditions
+        {
+            top
+            {
+                p
+                {
+                    type            totalPressure;
+                    addStaticHead   true;
+                    value           uniform 0;
+                    p0              uniform 0;
+                }
+            }
+            ib1
+            {
+                U
+                {
+                    type            movingWallVelocity;
+                    value           uniform ( 0 0 0 );
+                }
+            }
+            ib2
+            {
+                U
+                {
+                    type            fixedValueZone;
+                    value           uniform ( 0 0 0 );
+                }
+                p
+                {
+                    type            fixedValueZone;
+                    value           uniform 0;
+                    cellZoneValue   0;
+                }
+                alpha.water
+                {
+                    type            fixedValueZone;
+                    value           uniform 0;
+                    cellZoneValue   0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

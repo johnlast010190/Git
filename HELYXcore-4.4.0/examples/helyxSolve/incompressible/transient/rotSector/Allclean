@@ -1,0 +1,16 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+
+#------------------------------------------------------------------------------
+
+# Clean stator files
+cd stator/
+helyxClean
+rm -rf constant
+
+# Clean main mesh files
+cd ..
+helyxClean
+rm -rf constant
+
+#------------------------------------------------------------------------------

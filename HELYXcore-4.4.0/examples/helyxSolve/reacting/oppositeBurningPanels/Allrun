@@ -1,0 +1,41 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Create mesh
+helyxRun blockMesh
+
+helyxRun -log log.topoSet.cRefine topoSet -dict system/cRefine.topoSetDict
+
+helyxRun refineMesh -overwrite -dict system/refineMeshDict
+
+helyxRun -log log.topoSet.f topoSet -dict system/f.topoSetDict
+
+# create the pyrolysis region.
+helyxRun extrudeToRegionMesh -overwrite
+
+helyxRun -log log.topoSet.fBurner topoSet -dict system/fBurner.topoSetDict
+
+helyxRun createPatch -overwrite
+
+# Decompose region0
+helyxRun -log log.decomposePar.master decomposePar -force
+
+# Decompose pyrolysis region
+helyxRun -log log.decomposePar.panelRegion decomposePar -region panelRegion
+
+helyxRun -log log.decomposePar.fields decomposePar -fields
+
+# Create dummy paraview file
+touch oppositeBurningPanels.foam
+
+# Setup the case
+helyxRun caseSetup
+
+# Run solver
+helyxRun
+
+
+#------------------------------------------------------------------------------

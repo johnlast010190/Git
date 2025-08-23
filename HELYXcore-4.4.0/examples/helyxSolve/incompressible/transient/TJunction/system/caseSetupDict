@@ -1,0 +1,313 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom startTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 1.5;
+            deltaT 0.001;
+            writeControl adjustableRunTime;
+            writeInterval 0.1;
+            purgeWrite 0;
+            writeFormat ascii;
+            writePrecision 6;
+            writeCompression uncompressed;
+            timeFormat general;
+            timePrecision 6;
+            runTimeModifiable yes;
+            adjustTimeStep yes;
+            maxCo 5;
+        }
+        materialProperties // put here to overwrite AoA data
+        {
+            AoAconcentrationTransport
+            {
+                D               [ 1 -1 -1 0 0 0 0 ] 1.8e-05; // dummy value, takes Sc instead since present
+                Sct             1;
+                Sc              1;
+            }
+        }
+    }
+    functions
+    {
+        probes
+        {
+            // Where to load it from
+            libs            ("libsampling.so");
+
+            type            probes;
+
+            // Name of the directory for probe data
+            name            probes;
+
+            // Write at same frequency as fields
+            writeControl    writeTime;
+            writeInterval   1;
+
+            // Fields to be probed
+            fields
+            (
+                p U
+            );
+
+            probeLocations
+            (
+                (1e-06 0 0.01)        // at inlet
+                (0.21 -0.20999 0.01)  // at outlet1
+                (0.21 0.20999 0.01)   // at outlet2
+                (0.21 0 0.01)         // at central block
+            );
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (transient ras AoA);
+        turbulenceModel kEpsilon;
+        materials (air);
+        materialProperties
+        {
+           referenceFields
+           {
+              p               [ 1 -1 -2 0 0 0 0 ] 100000;
+           }
+        }
+        system
+        {
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default         Euler;
+                }
+                gradSchemes
+                {
+                    default         Gauss linear;
+                }
+                divSchemes
+                {
+                    default          none;
+                    div(phi,U)       Gauss limitedLinearV 1;
+                    div(phi,k)       Gauss limitedLinear 1;
+                    div(phi,epsilon) Gauss limitedLinear 1;
+                    div(phi,AoA)     Gauss limitedLinear 1;
+                }
+                laplacianSchemes
+                {
+                    default         Gauss linear corrected;
+                }
+                snGradSchemes
+                {
+                    default         corrected;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    p
+                    {
+                        solver          GAMG;
+                        tolerance       1e-06;
+                        relTol          0.01;
+                        smoother        GaussSeidel;
+                    }
+                    pFinal
+                    {
+                        solver          GAMG;
+                        tolerance       1e-06;
+                        relTol          0;
+                        smoother        GaussSeidel;
+                    }
+                    U       { tolerance       1e-05; }
+                    k       { tolerance       1e-05; }
+                    epsilon { tolerance       1e-05; }
+                    UFinal  { tolerance       1e-05; }
+                    kFinal  { tolerance       1e-05; }
+                    epsilonFinal  { tolerance       1e-05; }
+                }
+                PIMPLE
+                {
+                    nOuterCorrectors 1;
+                    nCorrectors      2;
+                }
+                relaxationFactors
+                {
+                    equations
+                    {
+                        U           1;
+                    }
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.2;
+                }
+            }
+            epsilon
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 200;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type            pressureInletOutletVelocity;
+                    value           uniform (0 0 0);
+                }
+                p
+                {
+                    type            uniformTotalPressure;
+                    p0              table ( (0 10) (1 40) );
+                }
+                k
+                {
+                    type            turbulentIntensityKineticEnergyInlet;
+                    intensity       0.05;       // 5% turbulent intensity
+                    value           uniform 0.2;
+                }
+                epsilon
+                {
+                    type            turbulentMixingLengthDissipationRateInlet;
+                    mixingLength    0.01;       // 1cm - half channel height
+                    value           uniform 200;
+                }
+            }
+            outlet1
+            {
+                U
+                {
+                    type            inletOutlet;
+                    inletValue      uniform (0 0 0);
+                    value           uniform (0 0 0);
+                }
+                p
+                {
+                    type            fixedValue;
+                    value           uniform 10;
+                }
+                k
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 0.2;
+                }
+                epsilon
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 200;
+                }
+            }
+            outlet2
+            {
+                U
+                {
+                    type            inletOutlet;
+                    inletValue      uniform (0 0 0);
+                    value           uniform (0 0 0);
+                }
+                p
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+                k
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 0.2;
+                }
+                epsilon
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 200;
+                }
+            }
+            defaultFaces
+            {
+                U
+                {
+                    type            noSlip;
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                k
+                {
+                    type            kqRWallFunction;
+                    value           uniform 0;
+                }
+                epsilon
+                {
+                    type            epsilonWallFunction;
+                    value           uniform 200;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

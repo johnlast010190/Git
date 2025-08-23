@@ -1,0 +1,13 @@
+# Turbulence models in helyxTest	
+	
+kEpsilon	
+kEqn		
+kOmega	
+kOmegaSST	Curvature: FALSE		
+kOmegaSSTLM			
+laminar	
+LaunderSharmaKE	
+realizableKE			
+SpalartAllmaras	
+SpalartAllmarasDDES				
+WALE

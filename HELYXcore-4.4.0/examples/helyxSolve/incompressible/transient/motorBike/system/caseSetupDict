@@ -1,0 +1,504 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | Helyx:                                                   |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | Web:     http://www.engys.com                            |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         0.7;
+            deltaT          1e-4;
+            writeControl    timeStep;
+            writeInterval   1000;
+            purgeWrite      0;
+            writeFormat     binary;
+            writePrecision  6;
+            writeCompression off;
+            timeFormat      general;
+            timePrecision   6;
+            runTimeModifiable true;
+            libs ("libOpenFOAM.so" "libfieldFunctionObjects.so");
+        }
+
+    }
+    functions
+    {
+        VR
+        {
+            type volumeReport;
+            fields ( U p );
+            regions ( region0 );
+            writeControl onEnd;
+            executeControl onEnd;
+            functionObjectLibs ( "libreport.so" );
+            outputFileFormat tsv;
+        }
+        cuttingPlane
+        {
+            type            surfaces;
+            libs            ("libsampling.so");
+            writeControl    writeTime;
+
+            surfaceFormat   vtk;
+            fields          ( p U );
+
+            interpolationScheme cellPoint;
+            surfaces
+            (
+                yNormal
+                {
+                    type            cuttingPlane;
+                    planeType       pointAndNormal;
+                    pointAndNormalDict
+                    {
+                        point   (0 0 0);
+                        normal  (0 1 0);
+                    }
+                    interpolate     true;
+                }
+            );
+        }
+        streamLines
+        {
+            type            streamLine;
+
+            // Output every
+            writeControl    writeTime;
+            // writeInterval 10;
+
+            setFormat       vtk; //gnuplot; //xmgr; //raw; //jplot; //csv; //ensight;
+
+            // Velocity field to use for tracking.
+            U               U;
+
+            // Tracked forwards (+U) or backwards (-U)
+            trackForward    true;
+
+            // Names of fields to sample. Should contain above velocity field!
+            fields          (p U);
+
+            // Steps particles can travel before being removed
+            lifeTime        10000;
+
+            // Number of steps per cell (estimate). Set to 1 to disable subcycling.
+            nSubCycle       5;
+
+            // Cloud name to use
+            cloud           particleTracks;
+
+            // Seeding method.
+            seedSampleSet
+            {
+                type        uniform;
+                axis        x;  //distance;
+
+                // Note: tracks slightly offset so as not to be on a face
+                start       (-1.001 1e-7 0.0011);
+                end         (-1.001 1e-7 1.0011);
+                nPoints     20;
+            }
+        }
+        forceCoeffs1
+        {
+            type            forceCoeffs;
+
+            libs            ("libforces.so");
+
+            writeControl    timeStep;
+            timeInterval    1;
+
+            log             yes;
+
+            patches         (motorBikeGroup);
+            rho             rhoInf;      // Indicates incompressible
+            rhoInf          1.225;           // Redundant for incompressible
+            liftDir         (0 0 1);
+            dragDir         (1 0 0);
+            CofR            (0.72 0 0);  // Axle midpoint on ground
+            pitchAxis       (0 1 0);
+            magUInf         20;
+            lRef            1.42;        // Wheelbase length
+            Aref            0.75;        // Estimated
+            /*
+            binData
+            {
+                nBin        20;          // output data into 20 bins
+                direction   (1 0 0);     // bin direction
+                cumulative  yes;
+            }
+            */
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( transient les );
+        boundaryMesh
+        {
+            motorBike
+            {
+                type wall;
+            }
+            frontAndBack
+            {
+                type patch;
+            }
+            inlet
+            {
+                type patch;
+            }
+            outlet
+            {
+                type patch;
+            }
+            lowerWall
+            {
+                type wall;
+            }
+            upperWall
+            {
+                type wall;
+            }
+        }
+        turbulenceModel SpalartAllmarasDDES;
+        materials       ( air );
+        materialProperties
+        {
+            air
+            {
+                equationOfStateCoeffs
+                {
+                    rho 1.225;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cp 1004.4;
+                }
+                muModelCoeffs
+                {
+                    mu 6.125e-06;
+                }
+                kappaModelCoeffs
+                {
+                    Pr 1.0;
+                }
+                referenceFields
+                {
+                    p [ 1 -1 -2 0 0 0 0 ] 0;
+                }
+            }
+        }
+        constant
+        {
+            turbulenceProperties
+            {
+                simulationType LES;
+                LES
+                {
+                    LESModel            SpalartAllmarasDDES;
+                    delta               cubeRootVol;
+                    printCoeffs         on;
+                    turbulence          on;
+                    cubeRootVolCoeffs
+                    {
+                        deltaCoeff      1;
+                    }
+                    PrandtlCoeffs
+                    {
+                        delta           cubeRootVol;
+                        cubeRootVolCoeffs
+                        {
+                            deltaCoeff      1;
+                        }
+                        smoothCoeffs
+                        {
+                            delta           cubeRootVol;
+                            cubeRootVolCoeffs
+                            {
+                                deltaCoeff      1;
+                            }
+                            maxDeltaRatio   1.1;
+                        }
+                        Cdelta           0.158;
+                    }
+                    vanDriestCoeffs
+                    {
+                        delta           cubeRootVol;
+                        cubeRootVolCoeffs
+                        {
+                            deltaCoeff      1;
+                        }
+                        smoothCoeffs
+                        {
+                            delta           cubeRootVol;
+                            cubeRootVolCoeffs
+                            {
+                                deltaCoeff      1;
+                            }
+                            maxDeltaRatio   1.1;
+                        }
+                        Aplus            26;
+                        Cdelta           0.158;
+                    }
+                    smoothCoeffs
+                    {
+                        delta           cubeRootVol;
+                        cubeRootVolCoeffs
+                        {
+                            deltaCoeff      1;
+                        }
+                        maxDeltaRatio   1.1;
+                    }
+                }
+            }
+        }
+        system
+        {
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default backward;
+                }
+                gradSchemes
+                {
+                    default         Gauss linear;
+
+                    grad(nuTilda)   cellLimited Gauss linear 1;
+                    grad(U)         cellLimited Gauss linear 1;
+                }
+                divSchemes
+                {
+                    default         none;
+
+                    div(phi,U)      Gauss LUST unlimitedGrad(U);
+                    div(phi,k)      Gauss limitedLinear 1;
+                    div(phi,nuTilda) Gauss limitedLinear 1;
+
+                    div((nuEff*dev2(T(grad(U))))) Gauss linear;
+                }
+                laplacianSchemes
+                {
+                    default         Gauss linear limited corrected 0.33;
+                }
+                interpolationSchemes
+                {
+                    default         linear;
+                }
+                snGradSchemes
+                {
+                    default         limited corrected 0.33;
+                }
+                wallDist
+                {
+                    method meshWave;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    p
+                    {
+                        solver          GAMG;
+                        tolerance       1e-6;
+                        relTol          0.05;
+                        smoother        GaussSeidel;
+                        nCellsInCoarsestLevel 50;
+                    }
+                    pFinal
+                    {
+                        $p;
+                        relTol          0;
+                    }
+                    "(U|k|B|nuTilda)"
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        tolerance       1e-7;
+                        relTol          0;
+                    }
+                }
+                relaxationFactors
+                {
+                    "U.*"               1;
+                    "nuTilda.*"         1;
+                }
+                PIMPLE
+                {
+                    turbOnFinalIterOnly false;
+                    ddtPhiCorr true;
+                    momentumPredictor true;
+                    nOuterCorrectors 1;
+                    nCorrectors 3;
+                    nNonOrthogonalCorrectors 0;
+                    transonic       false;
+                    consistent      false;
+                    pRefCell 0;
+                    pRefValue 0;
+                    pMin -1.0E10;
+                    pMax 1.0E10;
+                    residualControl
+                    {
+                    }
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform (20 0 0);
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+            }
+            nuTilda
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 0.05;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform (20 0 0);
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                nuTilda
+                {
+                    type fixedValue;
+                    value uniform 0.05;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type inletOutlet;
+                    value uniform ( 0.0 0.0 0.0 );
+                    inletValue uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+                nuTilda
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 0.05;
+                    value           uniform 0.05;
+                }
+            }
+            lowerWall
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform (20 0 0);
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                k
+                {
+                    type            kqRWallFunction;
+                    value           uniform 0.24;
+                }
+                omega
+                {
+                    type            omegaWallFunction;
+                    value           uniform 1.78;
+                }
+            }
+            motorBikeGroup
+            {
+                U
+                {
+                    type            noSlip;
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                nuTilda
+                {
+                    type            fixedValue;
+                    value           uniform 0.05;
+                }
+            }
+            upperWall
+            {
+                "U|p|nuTilda"
+                {
+                    type            slip;
+                }
+            }
+            frontAndBack
+            {
+                "U|p|nuTilda"
+                {
+                    type            slip;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

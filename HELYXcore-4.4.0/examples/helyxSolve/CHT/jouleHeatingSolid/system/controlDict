@@ -1,0 +1,104 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     helyxSolve;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         2000;
+
+deltaT          1;
+
+writeControl    timeStep;
+
+writeInterval   50;
+
+purgeWrite      2;
+
+writeFormat     ascii;
+
+writePrecision  10;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   6;
+
+graphFormat     raw;
+
+runTimeModifiable yes;
+
+libs            1 ( "" );
+
+functions
+{
+    sample1
+    {
+        type            sets;
+        libs            ( "libsampling.so" );
+        writeControl    outputTime;
+        region          solid;
+        fields          ( T electrical_V electrical_sigma );
+        interpolationScheme cellPoint;
+        setFormat       raw;
+        sets            
+        (
+            centreLine
+            {
+                type            uniform;
+                axis            x;
+                start           ( -2.5 0.05 0.05 );
+                end             ( 2.5 0.05 0.05 );
+                nPoints         20;
+            }
+
+        )
+;
+    }
+    VR
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( h );
+        executeControl  timeStep;
+        type            volumeReport;
+        regions         ( solid );
+        writeControl    timeStep;
+        writeInterval   1;
+        executeInterval 1;
+        outputFileFormat tsv;
+    }
+    VP
+    {
+        functionObjectLibs ( "libsampling.so" );
+        enabled         true;
+        probeLocations  ( ( 0 0.05 0.05 ) );
+        fields          ( T electrical_V electrical_sigma );
+        executeControl  onEnd;
+        type            probes;
+        regions         ( solid );
+        writeControl    onEnd;
+        outputFileFormat tsv;
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,691 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields yes;
+        resetBoundaryFields yes;
+        resetSystemDicts yes;
+        resetConstDicts yes;
+        resetBoundaryMesh yes;
+        deleteUnusedFields yes;
+    }
+
+    regionGroups   ( fluids (default pelletFluid) solids ( pelletSolid ) );
+
+    solutionSchedule
+    {
+        instance1
+        (
+            ( default )
+            ( pelletFluid pelletSolid )
+        );
+    }
+
+    solutionMesh
+    {
+        default default;
+        pelletFluid pellet;
+        pelletSolid pellet;
+    }
+
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       latestTime;
+            deltaT          1;
+            stopAt          endTime;
+            endTime         2000;
+            writeControl    timeStep;
+            writeInterval   100;
+        }
+    }
+
+    functions
+    {
+        RR
+        {
+            type            specieReactionRates;
+            writeRRFields   ( ( CH4 0 ) );
+            writeQdotFields ( 0 );
+            region          pelletFluid;
+            writeControl     onEnd;
+        }
+        moleFractions
+        {
+            type            moleFractions;
+            species         ( CH4 CO2 H2 H2O );
+            regions         ( default pelletFluid );
+            writeControl     onEnd;
+        }
+        VR
+        {
+            type             volumeReport;
+            fields           ( T );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+        wallHeatFlux
+        {
+            type wallHeatFlux;
+            kappaMethod fluidThermo;
+            region default;
+            libs ( "libfieldFunctionObjects.so" );
+        }
+        samples
+        {
+            type sets;
+            libs ("libsampling.so");
+            regions ( default pelletFluid );
+
+            writeControl writeTime;
+
+            setFormat raw;
+            surfaceFormat vtk;
+            interpolationScheme cellPoint;
+
+            fields
+            (
+                X_CH4
+                X_CO2
+                X_H2
+                X_H2O
+                T
+                U
+                p
+            );
+
+            sets
+            (
+                yCenterLine1
+                {
+                    type        uniform;
+                    axis        x;
+
+                    start       (0 0.2 0.005 );
+                    end         (3 0.2 0.005 );
+                    nPoints     600;
+                }
+                yCenterLine2
+                {
+                    type        uniform;
+                    axis        x;
+
+                    start       (3 0.2 0.005 );
+                    end         (0 0.2 0.005 );
+                    nPoints     600;
+                }
+
+                xCenterLine1
+                {
+                    type        uniform;
+                    axis        y;
+
+                    start       (1 0 0.005 );
+                    end         (1 0.4 0.005 );
+                    nPoints     100;
+                }
+                xCenterLine2
+                {
+                    type        uniform;
+                    axis        y;
+
+                    start       (1 0.4 0.005 );
+                    end         (1 0 0.005 );
+                    nPoints     100;
+                }
+            );
+        }
+    }
+}
+
+regions
+{
+    ".*" {}
+    fluids
+    {
+        materials ( H2 CO2 H2O CH4 N );
+
+        materialProperties
+        {
+            materialType    fluid;
+            mixture         standardMixture;
+            defaultSpecie     N;
+            energy          sensibleEnthalpy;
+
+            CH4
+            {
+                equationOfState perfectGas;
+                thermodynamics  hConst;
+                thermodynamicsCoeffs
+                {
+                    Cp 2225;
+                    Sf 1.162e4;
+                    Hf -4.650e6;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu              1.119e-5;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr              1;
+                }
+
+                molWeight       16.04;
+
+                elements
+                {
+                    C       1;
+                    H       4;
+                }
+            }
+
+            CO2
+            {
+                equationOfState perfectGas;
+                thermodynamics  hConst;
+                thermodynamicsCoeffs
+                {
+                    Cp 844.0;
+                    Sf 4858;
+                    Hf -8.942e6;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu              1.494e-5;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr              1;
+                }
+
+                molWeight       44.01;
+
+                elements
+                {
+                    C       1;
+                    O       2;
+                }
+            }
+
+            H2
+            {
+                equationOfState perfectGas;
+                thermodynamics  hConst;
+                thermodynamicsCoeffs
+                {
+                    Cp 1.429e4;
+                    Sf 6.481e4;
+                    Hf 0;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu              8.878e-6;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr              1;
+                }
+
+                molWeight       2.016;
+
+                elements
+                {
+                    H       2;
+                }
+            }
+
+            H2O
+            {
+                equationOfState perfectGas;
+                thermodynamics  hConst;
+                thermodynamicsCoeffs
+                {
+                    Cp 1864;
+                    Sf 1.048e4;
+                    Hf -1.342e7;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu              1.268e-5;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr              1;
+                }
+
+                molWeight       18.0153;
+
+                elements
+                {
+                    O       1;
+                    H       2;
+                }
+            }
+
+            N
+            {
+                equationOfState perfectGas;
+                thermodynamics  hConst;
+                thermodynamicsCoeffs
+                {
+                    Cp 1484;
+                    Sf 1.093e4;
+                    Hf 3.374e7;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu              1.649e-5;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr              1;
+                }
+
+                molWeight       14.01;
+
+                elements
+                {
+                    N       1;
+                }
+            }
+        }
+    }
+    solids {}
+
+    default
+    {
+        state ( steady ras energy );
+
+        turbulenceModel laminar;
+
+        system
+        {
+            fvSchemes
+            {
+                divSchemes
+                {
+                    // Force upwind for easier benchmarking
+                    div(phi,U)      bounded Gauss upwind;
+                    div(phi,h)      bounded Gauss upwind;
+                    div(phi,K)      bounded Gauss upwind;
+                    div(phi,Yi)     bounded Gauss upwind;
+                }
+            }
+            fvOptions
+            {
+                boundaryHeatFlux
+                {
+                    type scalarEquationFlux;
+                    equation h;
+                    writeField yes;
+                }
+                boundaryMassFlux_H2
+                {
+                    type scalarEquationFlux;
+                    equation H2;
+                }
+                boundaryMassFlux_CH4
+                {
+                    type scalarEquationFlux;
+                    equation CH4;
+                }
+                boundaryMassFlux_CO2
+                {
+                    type scalarEquationFlux;
+                    equation CO2;
+                }
+                boundaryMassFlux_H2O
+                {
+                    type scalarEquationFlux;
+                    equation H2O;
+                }
+            }
+        }
+
+        boundaryMesh
+        {
+            ffminx
+            {
+                type inlet;
+            }
+            ffmaxx
+            {
+                type outlet;
+            }
+            ffminy
+            {
+                type wall;
+            }
+            ffmaxy
+            {
+                type wall;
+            }
+            ffminz
+            {
+                type empty;
+            }
+            ffmaxz
+            {
+                type empty;
+            }
+        }
+
+        fields
+        {
+            T { initialisation{type fixedValue; value uniform 550;} }
+            H2 { initialisation{type fixedValue; value uniform 1;} }
+            CO2 { initialisation{type fixedValue; value uniform 0;} }
+            H2O { initialisation{type fixedValue; value uniform 0;} }
+            CH4 { initialisation{type fixedValue; value uniform 0;} }
+        }
+
+        boundaryConditions
+        {
+            ffminx
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.05 0 0 );
+                }
+                T
+                {
+                    type inletOutlet;
+                    inletValue uniform 550;
+                    value $inletValue;
+                }
+                H2
+                {
+                    type inletOutlet;
+                    inletValue uniform 0.1549; // Mole fract = 0.8
+                    value $inletValue;
+                }
+                CO2
+                {
+                    type inletOutlet;
+                    inletValue uniform 0.8451; // Mole fract = 0.2
+                    value $inletValue;
+                }
+                H2O
+                {
+                    type inletOutlet;
+                    inletValue uniform 0;
+                    value $inletValue;
+                }
+                CH4
+                {
+                    type inletOutlet;
+                    inletValue uniform 0;
+                    value $inletValue;
+                }
+            }
+            ffmaxx
+            {
+                U
+                {
+                    type inletOutlet;
+                    inletValue uniform ( 0 0 0 );
+                    value uniform ( 0 0 0 );
+                }
+                p_rgh
+                {
+                    type fixedValue;
+                    value 0;
+                }
+                T
+                {
+                    type inletOutlet;
+                    inletValue uniform 550;
+                    value $inletValue;
+                }
+                H2
+                {
+                    type inletOutlet;
+                    inletValue uniform 1;
+                    value $inletValue;
+                }
+            }
+            ffminy
+            {
+                T
+                {
+                    type fixedValue;
+                    value uniform 550;
+                }
+            }
+            ffmaxy
+            {
+                T
+                {
+                    type fixedValue;
+                    value uniform 550;
+                }
+            }
+            default_to_pellet
+            {
+                T
+                {
+                    type regionCoupledEnergyFlux;
+                    value uniform 550;
+                }
+                H2
+                {
+                    type regionCoupledFlux;
+                    value uniform 1;
+                }
+                CH4
+                {
+                    type regionCoupledFlux;
+                    value uniform 0;
+                }
+                CO2
+                {
+                    type regionCoupledFlux;
+                    value uniform 0;
+                }
+                H2O
+                {
+                    type regionCoupledFlux;
+                    value uniform 0;
+                }
+                N
+                {
+                    type regionCoupledFlux;
+                    value uniform 0;
+                }
+            }
+        }
+    }
+
+    pelletFluid
+    {
+        state ( steady ras energy reacting frozenFlow );
+
+        materialProperties
+        {
+            speciesDiffusivity
+            {
+                H2 4e-6;
+                CO2 4e-6;
+                CH4 4e-6;
+                H2O 4e-6;
+            }
+
+            porosity 0.3;
+            tortuosity 10;
+            superficialReactionRate true;
+        }
+        constant
+        {
+            chemistryProperties
+            {
+                elements ( H C O );
+
+                reactions
+                {
+                    methanogenesis
+                    {
+                        type     irreversibleArrheniusReaction;
+                        reaction "4H2^1 + CO2^1 = CH4^0 + 2H2O^0";
+                        // k = A*exp(-Ta/T) (or 0 for T < Tcrit)
+                        // r = k[H2][CO2] (reaction rate in mol/s)
+                        A        0.1;
+                        beta     0;
+                        Ta       20;
+                    }
+                }
+            }
+        }
+
+        system
+        {
+            fvOptions
+            {
+                boundaryHeatFlux
+                {
+                    type scalarEquationFlux;
+                    equation h;
+                }
+                boundaryMassFlux_H2
+                {
+                    type scalarEquationFlux;
+                    equation H2;
+                }
+                boundaryMassFlux_CH4
+                {
+                    type scalarEquationFlux;
+                    equation CH4;
+                }
+                boundaryMassFlux_CO2
+                {
+                    type scalarEquationFlux;
+                    equation CO2;
+                }
+                boundaryMassFlux_H2O
+                {
+                    type scalarEquationFlux;
+                    equation H2O;
+                }
+            }
+        }
+
+        fields
+        {
+            T {initialisation{type fixedValue; value uniform 550;} }
+            H2 {initialisation{type fixedValue; value uniform 1;} }
+            CO2 {initialisation{type fixedValue; value uniform 0;} }
+            H2O {initialisation{type fixedValue; value uniform 0;} }
+            CH4 {initialisation{type fixedValue; value uniform 0;} }
+        }
+
+        boundaryConditions
+        {
+            pellet_to_default
+            {
+                T
+                {
+                    type regionCoupledEnergyFlux;
+                    value uniform 550;
+                }
+                H2
+                {
+                    type regionCoupledFlux;
+                    value uniform 1;
+                }
+                CH4
+                {
+                    type regionCoupledFlux;
+                    value uniform 0;
+                }
+                CO2
+                {
+                    type regionCoupledFlux;
+                    value uniform 0;
+                }
+                H2O
+                {
+                    type regionCoupledFlux;
+                    value uniform 0;
+                }
+                N
+                {
+                    type regionCoupledFlux;
+                    value uniform 0;
+                }
+            }
+        }
+    }
+
+    pelletSolid
+    {
+        state ( steady solid porous );
+
+        materials (catalyst);
+        materialProperties
+        {
+            catalyst
+            {
+                materialType solid;
+                energy sensibleEnthalpy;
+
+                molWeight 50;
+
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho 10;
+                }
+
+                thermodynamics  hConst;
+                thermodynamicsCoeffs
+                {
+                    Cp 1000;
+                    Hf 0;
+                }
+                kappaModel constSolid;
+                kappaModelCoeffs
+                {
+                    kappa 0.1;
+                }
+            }
+        }
+
+        fields
+        {
+            T {initialisation{type fixedValue; value uniform 550;} }
+        }
+    }
+}
+
+
+// ************************************************************************* //

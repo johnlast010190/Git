@@ -1,0 +1,64 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      sampleDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+libs ("libsampling.so");
+
+type sets;
+
+interpolationScheme cellPoint;
+
+setFormat raw;
+
+sets
+(
+    kw_line_x3
+    {
+        type            uniform;
+        axis            distance;
+        start           (3. 0. 0.005);
+        end             (3. 3. 0.005);
+        nPoints         50;
+    }
+    kw_line_x6
+    {
+        type            uniform;
+        axis            distance;
+        start           (6. 0. 0.005);
+        end             (6. 3. 0.005);
+        nPoints         50;
+    }
+    kw_line_y0.084
+    {
+        type            uniform;
+        axis            distance;
+        start           (0.01 0.084 0.003);
+        end             (8.95 0.084 0.003);
+        nPoints         150;
+    }
+    kw_line_y2.916
+    {
+        type		    uniform;
+        axis		    distance;
+        start		    (0.01 2.916 0.003);
+        end		        (8.95 2.916 0.003);
+        nPoints		    150;
+    }
+);
+
+fields ( Ux );
+
+
+// ************************************************************************* //

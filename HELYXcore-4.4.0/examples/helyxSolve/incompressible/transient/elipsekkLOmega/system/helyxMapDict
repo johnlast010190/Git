@@ -1,0 +1,35 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxMapDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+sourceTime      latestTime; // <scalar>|latestTime //optional. Default: latestTime
+
+fields          (p U nut); // optional, by default will map all the fields
+
+visualize       true;
+
+blockName       sampleBox;
+
+ndivisions      (127 127 1) ;
+
+boundBox        (-0.4 -0.15 0) (0.4 0.15 0.05);
+
+// Patches of solid object
+patches         (hole); // accepts regEx and patchGroups
+
+write_sample    true;
+
+
+// ************************************************************************* //

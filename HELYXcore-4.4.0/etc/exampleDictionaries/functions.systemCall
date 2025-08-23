@@ -1,0 +1,27 @@
+systemCall1
+{
+    type            systemCall;
+    functionObjectLibs ("libsystemCall.so");
+    enabled         true;
+    outputControl   outputTime;
+
+    // called every time step
+    executeCalls
+    (
+        "echo execute"
+    );
+
+    // called at the end of the run
+    endCalls
+    (
+        "echo \*\*\* writing .bashrc \*\*\*"
+        "cat ~/.bashrc"
+        "echo \*\*\* done \*\*\*"
+    );
+
+    // called every ouput time
+    writeCalls
+    (
+        "echo \*\*\* writing data \*\*\*"
+    );
+}

@@ -1,0 +1,253 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | HELYX                                                    |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | Web:     http://www.engys.com                            |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    location system;
+    object caseSetupDict;
+}
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking true;
+    }
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       latestTime;
+            endTime         300;
+            deltaT          constant 1;
+            writeControl    timeStep;
+            writeInterval   50;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type volumeReport;
+            fields ( U.drop1 alpha.drop1);
+            writeControl onEnd;
+            executeControl onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (steady ras);//disperseEulerian
+        boundaryMesh
+        {
+            top
+            {
+                type inlet;
+            }
+            sides
+            {
+                type wall;
+            }
+            bottom
+            {
+                type wall;
+            }
+        }
+
+        turbulenceModel laminar;
+        materials (air);
+
+        fieldMaps
+        {
+            alpha.drop1      phase;
+            U.drop1          UdispersedPhase;
+        }
+
+        constant
+        {
+            g
+            {
+                dimensions      [ 0 1 -2 0 0 0 0 ];
+                value           ( 0 0 -9.81 );
+            }
+            disperseEulerianProperties
+            {
+                phases
+                (
+                    drop1
+                    {
+                        rhoc            rhoc [ 1 -3 0 0 0 ] 1.205;
+                        muc             muc [ 1 -1 -1 0 0 ] 1.46e-05;
+                        rhod            rhod [ 1 -3 0 0 0 ] 2200;
+                        diam            diam [ 0 1 0 0 0 ] 1e-5;
+                        Td              293.15;
+                        dragModel       SchillerNaumann;
+                        liftModel       none;
+                        Cl              0.5;
+                        turbulentDispersionModel none;
+                        Sct             1e6;
+                    }
+                );
+            }
+        }
+
+        system
+        {
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    //ddt(alpha.drop1) CoEuler phid none 0.5;
+                    //ddt(U.drop1) CoEuler phid none 0.5;
+                    "ddt\(alpha\..*\)" CoEuler phid none 0.5;
+                    "ddt\(U\..*\)" CoEuler phid none 0.5;
+                }
+                gradSchemes
+                {
+                    //grad(U.drop1) leastSquares;
+                    //grad(alpha.drop1) leastSquares;
+                    "grad\(U\..*\)" leastSquares;
+                    "grad\(alpha\..*\)" leastSquares;
+                }
+                divSchemes
+                {
+                    div(phid,alphad) Gauss upwind;
+                    div(phid,Ud) Gauss linearUpwindV gradU;
+                    div(Rca) Gauss linear;
+                    div(phiRa,Ud) Gauss linear;
+                }
+                laplacianSchemes
+                {
+                    laplacian(nutd,alphad) Gauss linear limited 0.333;
+                    laplacian(nutd,Ud) Gauss linear limited 0.333;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    "alpha\..*"
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-06;
+                        relTol          0.1;
+                        maxIter         5;
+                    }
+                    "U\..*"
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-06;
+                        relTol          0.1;
+                        maxIter         5;
+                    }
+                }
+                relaxationFactors
+                {
+                    equations
+                    {
+                        "alpha\..*" 1;
+                        "U\..*" 1;
+                    }
+                }
+            }
+            fvOptions
+            {
+                flowSolver
+                {
+                    solveInterval   -1;
+                }
+                turbulenceSolver
+                {
+                    solveInterval   -1;
+                }
+                disperseEulerian
+                {
+                    type            disperseEulerian;
+                    active          true;
+                    phiName         phiwdr;
+                    alphaTD         false;
+                    solveTD         true;
+                }
+            }
+        }
+
+        fields
+        {
+        }
+
+        boundaryTypeDefaults
+        {
+            wall
+            {
+                p
+                {
+                    type zeroGradient;
+                }
+                /*U
+                {
+                    type fixedValue;
+                    value uniform ( 0 0 0);
+                }*/
+                "alpha\..*"
+                {
+                    type            inletOutlet;
+                    phi             phid;
+                    fluxTransition  true;
+                    inletValue      uniform 0;
+                    value           uniform 0;
+                }
+                "U*"
+                {
+                    type zeroGradient;
+                }
+            }
+            inlet
+            {
+                p
+                {
+                    type zeroGradient;
+                }
+                /*U
+                {
+                    type fixedValue;
+                    value uniform ( 0 0 0);
+                }*/
+                "alpha\..*"
+                {
+                    type            inletOutlet;
+                    phi             phid;
+                    fluxTransition  true;
+                    inletValue      uniform 3e-09;
+                    value           uniform 3e-09;
+                }
+                "U\..*"
+                {
+                    type zeroGradient;
+                }
+            }
+        }
+    }
+}

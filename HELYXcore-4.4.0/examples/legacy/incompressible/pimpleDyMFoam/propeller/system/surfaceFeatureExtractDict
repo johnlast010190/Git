@@ -1,0 +1,59 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      surfaceFeatureExtractDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+//innerCylinder.obj
+//{
+//    #include "surfaceFeatureExtractDictDefaults"
+//}
+
+
+innerCylinderSmall.obj
+{
+    #include "surfaceFeatureExtractDictDefaults"
+}
+
+
+outerCylinder.obj
+{
+    #include "surfaceFeatureExtractDictDefaults"
+}
+
+
+propellerStem1.obj
+{
+    #include "surfaceFeatureExtractDictDefaults"
+}
+
+
+propellerStem2.obj
+{
+    #include "surfaceFeatureExtractDictDefaults"
+}
+
+
+propellerStem3.obj
+{
+    #include "surfaceFeatureExtractDictDefaults"
+}
+
+
+propellerTip.obj
+{
+    #include "surfaceFeatureExtractDictDefaults"
+}
+
+
+// ************************************************************************* //

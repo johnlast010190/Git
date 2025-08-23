@@ -1,0 +1,362 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom startTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 3;
+            deltaT 1e-4;
+            writeControl timeStep;
+            writeInterval 300;
+            purgeWrite 2;
+            writeFormat ascii;
+            writePrecision 10;
+            writeCompression uncompressed;
+            writeEndTime true;
+            timeFormat general;
+            timePrecision 6;
+            graphFormat raw;
+            runTimeModifiable true;
+            adjustTimeStep true;
+            maxCo 0.666;
+            libs ( "" );
+            maxAlphaCo 0.333;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type                volumeReport;
+            functionObjectLibs  ( "libreport.so" );
+            regions             (region0);
+            logToFile           true;
+            fields              ( U p );
+            writeControl        onEnd;
+            executeControl      onEnd;
+	        outputFileFormat    tsv;
+        }
+        fluidHeight
+        {
+            type fluidHeight;
+            fieldName alpha.water;
+            threshold 0.5;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        boundaryMesh
+        {
+            inlet
+            {
+                type inlet;
+            }
+            outlet
+            {
+                type outlet;
+            }
+            sides
+            {
+                type symmetry;
+            }
+            atmosphere
+            {
+                type patch;
+            }
+            hull
+            {
+                type wall;
+            }
+        }
+        state (transient ras VOF);
+        turbulenceModel kOmegaSST;
+        materials (water air);
+        materialProperties
+        {
+            materialType multiphase;
+            passivePhase air;
+            air
+            {
+                binaryPhaseData
+                {
+                    water
+                    {
+                        sigma 0.07;
+                    }
+                }
+            }
+            water
+            {
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho 1000;
+                }
+                binaryPhaseData
+                {
+                    air
+                    {
+                        sigma 0.07;
+                    }
+                }
+            }
+        }
+        constant
+        {
+            g
+            {
+                dimensions      [ 0 1 -2 0 0 0 0 ];
+                value           ( 0 0 -9.81 );
+            }
+        }
+        system
+        {
+            fvOptions
+            {
+                propellerDisk
+                {
+                    type            PatersonAnnularThrusterSource;
+                    active          true;
+                    PatersonAnnularThrusterSourceCoeffs
+                    {
+                        shipForce
+                        {
+                            type            force;
+                            patches         ( hull );
+                            pName           p;
+                            Uname           U;
+                            rhoName         rho;
+                            rhoInf          1000;
+                            CofR            ( 0 0 0 );
+                            writeControl   timeStep;
+                            writeInterval  1;
+                            log             false;
+                        }
+                        Uship           ( 1 0 0 );
+                        propTipRadius   0.03;
+                        propHubRadius   0.005;
+                        propPosition    ( 0.51 0 -0.062 );
+                        propDirection   ( 1 0 0 );
+                        torqueDirection 1;
+                        propThickness   0.02;
+                        diskFraction    1;
+                        J 0.85;
+                        a ( -0.40573 1.27088 -1.49277 0.361952 -0.185526 0.708011 );
+                        b ( 0.490648 -1.37714 1.50366 -1.0211 -0.0107148 0.513481 );
+                        normaliseForces true;
+                    }
+                }
+                volumeFractionSolver
+                {
+                    nAlphaCorr      2;
+                    nAlphaSubCycles 1;
+                    cAlpha          1;
+
+                    MULESCorr       true;
+                    nLimiterIter    5;
+                }
+            }
+            fvSolution
+            {
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p               1;
+                    }
+                    equations
+                    {
+                        k               1;
+                        kFinal          1;
+                        omega           1;
+                        omegaFinal      1;
+                        U               0.9;
+                        UFinal          1;
+                        "alpha.*"       1;
+                    }
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 1 0 0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            alpha.water
+            {
+                initialisation
+                {
+                    type cellSet;
+                    defaultValue uniform 0;
+                    setSources
+                    (
+                        boxToCell
+                        {
+                            box             ( -100 -100 -100 ) ( 100 100 0 );
+                            value           1;
+                        }
+
+                    )
+                }
+            }
+            nut
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 5e-07;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.00015;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 2;
+                }
+            }
+        }
+        boundaryTypeDefaults
+        {
+            wall
+            {
+                nut
+                {
+                    type nutkWallFunction;
+                    value uniform 0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            atmosphere
+            {
+                U
+                {
+                    type pressureVelocity;
+                    value uniform ( 0 0 0 );
+                }
+                p_rgh
+                {
+                    type totalPressure;
+                    p0 uniform 0;
+                    U U;
+                    phi phi;
+                    rho rho;
+                    psi none;
+                    gamma 1;
+                    value uniform 0;
+                }
+                k
+                {
+                    type inletOutlet;
+                    inletValue uniform 0.00015;
+                    value uniform 0.00015;
+                }
+                omega
+                {
+                    type inletOutlet;
+                    inletValue uniform 2;
+                    value uniform 2;
+                }
+            }
+            inlet
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 1 0 0 );
+                }
+                k
+                {
+                    type fixedValue;
+                    value uniform 0.00015;
+                }
+                omega
+                {
+                    type fixedValue;
+                    value uniform 2;
+                }
+                alpha.water
+                {
+                    type interpolatedInletOutlet;
+                    runTimeModifiable false;
+                    distanceType    z;
+                    xscale          1;
+                    yscale          1;
+                    xoffset         0;
+                    yoffset         0;
+                    profile table   ( ( -100 1 ) ( 0 1 ) ( 0.0001 0 ) ( 100 0 ) );
+                    outOfBounds     clamp;
+                    value           uniform 1;
+                }
+            }
+            outlet
+            {
+                p
+                {
+                    type            fixedFluxPressure;
+                    value           uniform 0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

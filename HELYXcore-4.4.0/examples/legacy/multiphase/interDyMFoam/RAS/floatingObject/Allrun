@@ -1,0 +1,23 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Create mesh
+helyxRun blockMesh
+helyxRun topoSet
+helyxRun subsetMesh -overwrite c0 -patch floatingObject
+
+# Setup
+cp -r 0.orig 0
+helyxRun setFields
+helyxRun decomposePar
+
+# Run solver specified in controlDict
+helyxRun
+
+# Create dummy file for ParaView visualisation
+touch floatingObject.foam
+
+#------------------------------------------------------------------------------

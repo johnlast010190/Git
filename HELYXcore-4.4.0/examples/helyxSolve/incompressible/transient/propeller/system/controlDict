@@ -1,0 +1,135 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      binary;
+    class       dictionary;
+    arch        "LSB;label=32;scalar=64";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     helyxSolve;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         0.00075;
+
+deltaT          1e-05;
+
+writeControl    adjustableRunTime;
+
+writeInterval   0.001;
+
+purgeWrite      0;
+
+writeFormat     binary;
+
+writePrecision  6;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   6;
+
+graphFormat     raw;
+
+runTimeModifiable true;
+
+libs            1 ( "" );
+
+adjustTimeStep  false;
+
+maxCo           2;
+
+maxDeltaT       1;
+
+maxAlphaCo      0;
+
+functions
+{
+    Q
+    {
+        type            Q;
+        libs            ( "libfieldFunctionObjects.so" );
+        field           U;
+        executeControl  writeTime;
+        writeControl    writeTime;
+    }
+    surfaces
+    {
+        functionObjectLibs ( "libsampling.so" );
+        fields          ( U p );
+        interpolationScheme cellPoint;
+        surfaceFormat   vtk;
+        surfaces        
+        (
+            surfaces0
+            {
+                type            cuttingPlane;
+                planeType       pointAndNormal;
+                pointAndNormalDict
+                {
+                    basePoint       ( 0 0 0 );
+                    normalVector    ( 1 0 0 );
+                }
+                interpolate     true;
+            }
+
+            surfaces1
+            {
+                type            isoSurface;
+                isoField        Q;
+                isoValue        1000;
+                interpolate     true;
+                regularise      false;
+            }
+
+            surfaces2
+            {
+                type            patch;
+                patches         ( "propeller.*" );
+                interpolate     true;
+                triangulate     false;
+            }
+
+        )
+;
+        writeControl    writeTime;
+        type            surfaces;
+        regions         ( region0 );
+        writeFields     true;
+        writeStatistics false;
+        executeControl  onEnd;
+    }
+    FR
+    {
+        functionObjectLibs ( "libforces.so" );
+        directForceDensity false;
+        p               p;
+        U               U;
+        rhoName         rho;
+        rhoInf          1;
+        pRef            0;
+        CofR            ( 0 0 0 );
+        patches         ( propellerTip propellerStem1 propellerStem2 propellerStem3 );
+        executeControl  onEnd;
+        type            forces;
+        regions         ( region0 );
+        writeControl    onEnd;
+    }
+}
+
+
+// ************************************************************************* //

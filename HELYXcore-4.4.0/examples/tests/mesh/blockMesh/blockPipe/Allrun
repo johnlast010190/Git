@@ -1,0 +1,21 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy input surface from resources directory
+mkdir -p constant/geometry
+cp "$HELYX_TUTORIALS"/resources/geometry/blockPipe/* constant/geometry/
+
+# Mesh
+helyxRun blockMesh
+
+# Mesh report
+helyxRun checkMesh -writeAllMetrics
+helyxRun postProcess -constant -fields '( aspectRatio determinant nonOrthogonality skewness volumeRatio )'
+
+# Create dummy file for ParaView visualisation
+touch blockPipe.foam
+
+#------------------------------------------------------------------------------

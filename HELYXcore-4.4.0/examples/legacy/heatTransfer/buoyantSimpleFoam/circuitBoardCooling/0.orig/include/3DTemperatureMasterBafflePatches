@@ -1,0 +1,30 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+
+T
+{
+    type            thermalBaffle;
+    kappaMethod     fluidThermo;
+    value           uniform 300;
+
+    region          ${baffleRegion};
+    active          yes;
+
+    radiation
+    {
+        radiationModel          opaqueSolid;
+        absorptionEmissionModel none;
+        scatterModel            none;
+        transmissivityModel     none;
+    }
+
+    // New fvMesh (region) information
+    # include "extrudeModel"
+}
+
+// ************************************************************************* //

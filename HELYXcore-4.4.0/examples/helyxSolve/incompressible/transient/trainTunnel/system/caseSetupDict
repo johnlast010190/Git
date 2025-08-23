@@ -1,0 +1,224 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields yes;
+        resetBoundaryFields yes;
+        resetSystemDicts yes;
+        resetConstDicts yes;
+        resetBoundaryMesh yes;
+        deleteUnusedFields no;
+    }
+    regionGroups    1 ( fluid 1 ( region0 ) );
+    system
+    {
+        controlDict
+        {
+            startFrom       latestTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         1.5;
+            deltaT          constant 0.001;
+            writeControl    adjustableRunTime;
+            writeInterval   0.1;
+            purgeWrite      0;
+            adjustTimeStep  yes;
+            maxCo           5;
+            maxDeltaT       1;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type            volumeReport;
+            fields          ( U p );
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (transient ras dynamic);
+        boundaryMesh
+        {
+            domain_inlet
+            {
+                type            inlet;
+            }
+            domain_outlet
+            {
+                type            outlet;
+            }
+            domain_walls
+            {
+                type            symmetry;
+            }
+            ami
+            {
+                type            cyclicAMI;
+                matchTolerance  0.0001;
+                neighbourPatch  ami_slave;
+
+            }
+            ami_slave
+            {
+                type            cyclicAMI;
+                matchTolerance  0.0001;
+                neighbourPatch  ami;
+
+            }
+        }
+        turbulenceModel kOmegaSST;
+        materials       ( air );
+        materialProperties
+        {
+            air
+            {
+                materialType    fluid;
+                equationOfState rhoConst;
+                thermodynamics  hConst;
+                energy          sensibleEnthalpy;
+                equationOfStateCoeffs
+                {
+                    rho 1.205;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cp          1006.8;
+                    Hf          0;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu              1.82320e-5;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr              0.7142403737;
+                }
+                molWeight 28.96;
+                referenceFields
+                {
+                    p [ 1 -1 -2 0 0 0 0 ] 100000;
+                }
+            }
+        }
+        constant
+        {
+            dynamicMeshDict
+            {
+                mover
+                {
+                    type            multiSlider;
+                    libs            ("libfvMeshMovers.so");
+                    multiSliderCoeffs
+                    {
+                        movingRegion
+                        {
+                            movingPatches   ( movingPatch );
+                            velocity        table 6 ( ( 0 ( 0 0 0 ) ) ( 0.2 ( 0 0 5 ) ) ( 0.4 ( 0 0 10 ) ) ( 0.6 ( 0 0 15 ) ) ( 0.8 ( 0 0 20 ) ) ( 5 ( 0 0 20 ) ) );
+                            blendType       linear;
+                            initialDisplacement ( 0 0 -10 );
+                        }
+                    }
+                }
+            }
+        }
+        system
+        {
+            fvSchemes
+            {
+                gradSchemes
+                {
+                    grad(p)         Gauss linear;
+                }
+                divSchemes
+                {
+                    div(phi,k)      bounded Gauss limitedLinear 1;
+                    div(phi,omega)  bounded Gauss limitedLinear 1;
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type            potentialFlow;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type            potentialFlow;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type            Prandtl;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type            Prandtl;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            domain_outlet
+            {
+                p
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+            }
+            domain_inlet
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform ( 0 0 0.02 );
+                }
+            }
+            movingPatch
+            {
+                U
+                {
+                    type            movingWallVelocity;
+                    value           uniform ( 0 0 0 );
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

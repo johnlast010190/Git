@@ -1,0 +1,40 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxMapDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+sourceCase   "../";
+
+sourceTime    latestTime;////<scalar>|latestTime //optional, default latestTime
+targetTime    0; //optional, default 0
+
+fields        (p U p_rgh T);
+
+fieldTypes
+(
+    p   pressure 
+    U   velocity
+);
+
+mapBoundary      true; // optional, default true
+interpolation    false; // optional, default false
+                        // true: use two closest points to interpolate based on coordinate-distance
+                        // false: use closest point
+
+allRegions       true;
+
+//sourceRegion    heater;
+//targetRegion    heater;
+
+//regionMaps      ((bottomAir bottomAir) (heater heater));
+

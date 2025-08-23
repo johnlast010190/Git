@@ -1,0 +1,10 @@
+{
+    global: *;
+    local:
+        extern "C++" {
+            Foam::add*ConstructorTo*Table*;
+            Foam::*::add*ConstructorTo*Table*;
+            Foam::*::add*ToDebug*;
+            Foam::add*ToDebug*;
+        };
+};

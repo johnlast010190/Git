@@ -1,0 +1,37 @@
+#!/bin/bash
+cd ${0%/*} || exit 1    # Run from this directory
+
+# Source tutorial run functions
+. $HELYX_PROJECT_DIR/bin/tools/RunFunctions
+
+# copy DTC hull surface from resources folder
+cp $HELYX_TUTORIALS/resources/geometry/DTC-scaled.stl.gz constant/triSurface/
+
+runApplication surfaceFeatureExtract
+
+runApplication blockMesh
+
+for i in 1 2 3 4 5 6
+do
+    runApplication -s $i \
+        topoSet -dict system/topoSetDict.${i}
+
+    runApplication -s $i \
+        refineMesh -dict system/refineMeshDict -overwrite
+done
+
+runApplication helyxHexMesh -overwrite
+
+restore0Dir
+
+runApplication setFields
+
+runApplication decomposePar
+
+runParallel renumberMesh -overwrite
+
+runParallel $(getApplication)
+
+runApplication reconstructPar
+
+#------------------------------------------------------------------------------

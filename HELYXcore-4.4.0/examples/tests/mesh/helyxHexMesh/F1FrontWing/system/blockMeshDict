@@ -1,0 +1,51 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+convertToMeters 1;
+
+vertices
+(
+    ( -1500 -1500    0 )
+    (  0    -1500    0 )
+    (  0        0    0 )
+    ( -1500     0    0 )
+    ( -1500 -1500 1000 )
+    (  0    -1500 1000 )
+    (  0        0 1000 )
+    ( -1500     0 1000 )
+);
+
+blocks
+(
+    hex ( 0 1 2 3 4 5 6 7 ) ( 3 3 2 ) simpleGrading ( 1 1 1 )
+);
+
+edges ();
+
+patches
+(
+    wall     WT_inlet    ( ( 0 4 7 3 ) )
+    wall     WT_outlet   ( ( 1 2 6 5 ) )
+    wall     WT_side     ( ( 0 1 5 4 ) )
+    wall     WT_symmetry ( ( 3 7 6 2 ) )
+    wall     WT_ground   ( ( 0 3 2 1 ) )
+    wall     WT_top      ( ( 4 5 6 7 ) )
+);
+
+mergePatchPairs ();
+
+
+// ************************************************************************* //

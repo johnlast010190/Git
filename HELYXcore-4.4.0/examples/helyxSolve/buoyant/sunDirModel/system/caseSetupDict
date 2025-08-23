@@ -1,0 +1,531 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    system
+    {
+        controlDict
+        {
+            startFrom latestTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 14400.0;
+            deltaT constant 5.0;
+            writeControl runTime;
+            writeInterval 1800.0;
+            adjustTimeStep false;
+        }
+    }
+    functions
+    {
+        SR
+        {
+            type surfaceReport;
+            regions ( region0 );
+            fields ( T );
+            weighting area;
+            fluxName phi;
+            homogeneity false;
+            surfaces
+            (
+                {
+                    type patch;
+                    name building;
+                }
+            );
+            constraints
+            (
+                {
+                    type boundBox;
+                    min ( -1000.0 -1000.0 -1000.0 );
+                    max ( 1000.0 1000.0 1000.0 );
+                    keepInside true;
+                }
+            );
+            writeControl timeStep;
+            writeInterval 1;
+            executeControl timeStep;
+            executeInterval 1;
+            functionObjectLibs ("libreport.so" );
+        }
+        VR
+        {
+            type volumeReport;
+            regions ( region0 );
+            fields ( U );
+            writeControl timeStep;
+            writeInterval 1;
+            executeControl timeStep;
+            executeInterval 1;
+            functionObjectLibs ("libreport.so" );
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (transient ras radiation energy);
+        boundaryMesh
+        {
+            s1
+            {
+                type patch;
+            }
+            s2
+            {
+                type patch;
+            }
+            s3
+            {
+                type patch;
+            }
+            s4
+            {
+                type patch;
+            }
+            ground
+            {
+                type wall;
+            }
+            sky
+            {
+                type patch;
+            }
+            building
+            {
+                type wall;
+            }
+        }
+        turbulenceModel kOmegaSST;
+        materials (air);
+        materialProperties
+        {
+            air
+            {
+
+                materialName    air;
+                materialType    fluid;
+
+                energy sensibleEnthalpy;
+
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho         1.205;
+                }
+
+                molWeight       28.9;
+
+                buoyancyModel   Boussinesq;
+                buoyancyModelCoeffs
+                {
+                    rho0        1.205;
+                    beta        0.00333;
+                    T0          300;
+                }
+
+                thermodynamics  hConst;
+                thermodynamicsCoeffs
+                {
+                    Cp  1006.0;
+                    Hf  0.0;
+                }
+
+                muModel         scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          1.9137E-5;
+                }
+
+                kappaModel      kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr          0.85;
+                }
+
+                referenceFields
+                {
+                    p [ 1 -1 -2 0 0 0 0 ] 101325.0;
+                }
+            }
+        }
+        system
+        {
+            fvSolution
+            {
+                PIMPLE
+                {
+                    consistent yes;
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p 1;
+                    }
+                    equations
+                    {
+                        U 0.8;
+                    }
+                }
+            }
+        }
+        constant
+        {
+            g
+            {
+                value ( 0.0 0.0 -9.81 );
+            }
+            radiationProperties
+            {
+               solarLoadMode DOM;
+                domSolarCoeffs
+                {
+                    sources
+                    (
+                        solar
+                        {
+                            // //opt 1 - fixed pos specified
+                            // radiantInputType solarCalculator;
+                            // sunDirectionModel sunDirConstant;
+                            // sunDirection ( -1 1 -1 );
+                            // sunLoadModel    sunLoadConstant;
+                            // directSolarRad  constant 500;
+                            // diffuseSolarRad constant 40;
+                            // gridUp          ( 0 0 1 );
+                            // gridEast        ( 1 0 0 );
+                            // C               0.058;
+
+                            // //opt 2 - fixed pos solar calc
+                            // radiantInputType solarCalculator;
+                            // sunDirectionModel sunDirConstant;
+                            // localStandardMeridian 9;
+                            // startDay        204;
+                            // startTime       15;
+                            // longitude       139.74;
+                            // latitude        35.658;
+                            // gridUp          ( 0 0 1 );
+                            // gridEast        ( 1 0 0 );
+                            // sunLoadModel    sunLoadFairWeatherConditions;
+                            // A               300;
+                            // B               0.142;
+                            // groundReflectivity 0.2;
+                            // C               0.058;
+
+                            // //opt 3 - solar tracking
+                            radiantInputType solarCalculator;
+                            solve true;
+                            nSolutions 20000;
+                            sunDirectionModel sunDirTracking;
+                            sunTrackingUpdateInterval 5;
+                            localStandardMeridian 9;
+                            startDay        204;
+                            startTime       15;
+                            longitude       139.74;
+                            latitude        35.658;
+                            gridUp          ( 0 0 1 );
+                            gridEast        ( 1 0 0 );
+                            sunLoadModel    sunLoadFairWeatherConditions;
+                            A               300;
+                            B               0.142;
+                            groundReflectivity 0.2;
+                            C               0.058;
+                        }
+                    );
+                    sourcePatches   ( s1 s2 s3 s4 sky );
+                }
+            }
+            boundaryRadiationProperties
+            {
+                s1
+                {
+                    mode lookup;
+                    emissivity 0.0;
+                    transmissivity 1.0;
+                    Ta constant 300.0;
+                }
+                s2
+                {
+                    mode lookup;
+                    emissivity 0.0;
+                    transmissivity 1.0;
+                    Ta constant 300.0;
+                }
+                s3
+                {
+                    mode lookup;
+                    emissivity 0.0;
+                    transmissivity 1.0;
+                    Ta constant 300.0;
+                }
+                s4
+                {
+                    mode lookup;
+                    emissivity 0.0;
+                    transmissivity 1.0;
+                    Ta constant 300.0;
+                }
+                ground
+                {
+                    mode lookup;
+                    emissivity 1.0;
+                    transmissivity 0.0;
+                    Ta constant 300.0;
+                }
+                sky
+                {
+                    mode lookup;
+                    emissivity 0.0;
+                    transmissivity 1.0;
+                    Ta constant 300.0;
+                }
+                building
+                {
+                    mode lookup;
+                    emissivity 1.0;
+                    transmissivity 0.0;
+                    Ta constant 300.0;
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type buoyantPressure;
+                    initialValue uniform 0.0;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type turbulentIL;
+                    I 0.05;
+                    L 0.01;
+                    Uref 1.0;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type turbulentIL;
+                    I 0.05;
+                    L 0.01;
+                    Uref 1.0;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 300.0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            s1
+            {
+                U
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type totalPressure;
+                    p0 uniform 0;
+                    addStaticHead   true;
+                    rhoRef 1.205;
+                    value uniform 0;
+                }
+                T
+                {
+                    type inletOutlet;
+                    value uniform 300.0;
+                    inletValue uniform 300.0;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    value uniform 0.1;
+                    intensity 0.05;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    value uniform 0.01;
+                    mixingLength 0.01;
+                }
+            }
+            s2
+            {
+                U
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type totalPressure;
+                    p0 uniform 0;
+                    addStaticHead   true;
+                    rhoRef 1.205;
+                    value uniform 0;
+                }
+                T
+                {
+                    type inletOutlet;
+                    value uniform 300.0;
+                    inletValue uniform 300.0;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    value uniform 0.1;
+                    intensity 0.05;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    value uniform 0.01;
+                    mixingLength 0.01;
+                }
+            }
+            s3
+            {
+                U
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type totalPressure;
+                    p0 uniform 0;
+                    addStaticHead   true;
+                    rhoRef 1.205;
+                    value uniform 0;
+                }
+                T
+                {
+                    type inletOutlet;
+                    value uniform 300.0;
+                    inletValue uniform 300.0;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    value uniform 0.1;
+                    intensity 0.05;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    value uniform 0.01;
+                    mixingLength 0.01;
+                }
+            }
+            s4
+            {
+                U
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type totalPressure;
+                    p0 uniform 0;
+                    addStaticHead   true;
+                    rhoRef 1.205;
+                    value uniform 0;
+                }
+                T
+                {
+                    type inletOutlet;
+                    value uniform 300.0;
+                    inletValue uniform 300.0;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    value uniform 0.1;
+                    intensity 0.05;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    value uniform 0.01;
+                    mixingLength 0.01;
+                }
+            }
+            sky
+            {
+                U
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type totalPressure;
+                    p0 uniform 0;
+                    addStaticHead   true;
+                    rhoRef 1.205;
+                    value uniform 0;
+                }
+                T
+                {
+                    type inletOutlet;
+                    value uniform 300.0;
+                    inletValue uniform 300.0;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    value uniform 0.1;
+                    intensity 0.05;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    value uniform 0.01;
+                    mixingLength 0.01;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

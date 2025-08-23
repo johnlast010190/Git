@@ -1,0 +1,263 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+meshAlgorithm standard;
+
+castellatedMesh true;
+snap true;
+addLayers true;
+
+blockType block;
+
+geometry
+{
+    coolingDuct.stl
+    {
+        type triSurfaceMesh;
+        name coolingDuct;
+        appendRegionName false;
+    }
+    inlet.stl
+    {
+        type triSurfaceMesh;
+        name inlet;
+        appendRegionName false;
+    }
+    disk.stl
+    {
+        type triSurfaceMesh;
+        name disk;
+        appendRegionName false;
+    }
+    pad1.stl
+    {
+        type triSurfaceMesh;
+        name pad1;
+        appendRegionName false;
+    }
+    pad2.stl
+    {
+        type triSurfaceMesh;
+        name pad2;
+        appendRegionName false;
+    }
+}
+
+castellatedMeshControls
+{
+    features ( );
+    refinementSurfaces
+    {
+        coolingDuct
+        {
+            level ( 3 3 );
+            faceType baffle;
+            faceZone coolingDuct;
+            cellZoneInside inside;
+            baffleChecks true;
+            allowFreeStandingZoneFaces true;
+        }
+        inlet
+        {
+            level ( 2 2 );
+            faceType baffle;
+            faceZone inlet;
+            cellZoneInside inside;
+            baffleChecks true;
+            allowFreeStandingZoneFaces true;
+        }
+        disk
+        {
+            level ( 3 3 );
+            faceType internal;
+            faceZone disk;
+            cellZoneInside inside;
+            cellZone disk;
+            baffleChecks false;
+            allowFreeStandingZoneFaces false;
+        }
+        pad1
+        {
+            level ( 4 4 );
+            faceType internal;
+            faceZone pad1;
+            cellZoneInside inside;
+            cellZone pad1;
+            baffleChecks false;
+            allowFreeStandingZoneFaces false;
+        }
+        pad2
+        {
+            level ( 4 4 );
+            faceType internal;
+            faceZone pad2;
+            cellZoneInside inside;
+            cellZone pad2;
+            baffleChecks false;
+            allowFreeStandingZoneFaces false;
+        }
+    }
+    refinementRegions
+    {
+        disk
+        {
+            mode inside;
+            levels ( ( 100000.0 3 ) );
+        }
+        pad1
+        {
+            mode inside;
+            levels ( ( 100000.0 4 ) );
+        }
+        pad2
+        {
+            mode inside;
+            levels ( ( 100000.0 4 ) );
+        }
+    }
+    locationsInMesh ( ( ( 0.0 0.0 0.0 ) none ) );
+}
+
+snapControls
+{
+}
+
+addLayersControls
+{
+    layers
+    {
+        ffminx
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        ffmaxx
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        ffminy
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        ffmaxy
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        ffminz
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        ffmaxz
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        coolingDuct
+        {
+            nSurfaceLayers 3;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        coolingDuct_slave
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        inlet
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        inlet_slave
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        disk
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        disk_slave
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        pad1
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        pad1_slave
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        pad2
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        pad2_slave
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+    }
+}
+
+meshQualityControls
+{
+}
+
+// ************************************************************************* //

@@ -1,0 +1,31 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Convert chemkin files
+helyxRun chemkinToFoam \
+         chemkin/grimech30.dat chemkin/thermo30.dat chemkin/transportProperties \
+         system/reactionsGRI system/compressibleGasGRI
+
+# Create mesh
+helyxRun blockMesh
+
+# Setup
+helyxRun caseSetup
+
+rm 0/H 0/O 0/H2O2 0/C 0/CH 0/CH2 "0/CH2(S)" 0/CH3 0/CO 0/CO2 0/HCO 0/CH2O \
+   0/CH2OH 0/CH3O 0/CH3OH 0/C2H 0/C2H2 0/C2H3 0/C2H4 0/C2H5 0/C2H6 0/HCCO \
+   0/CH2CO 0/HCCOH 0/AR 0/C3H7 0/C3H8 0/CH2CHO 0/CH3CHO
+
+# Decompose the case
+helyxRun decomposePar -force
+
+# Run
+helyxRun helyxSolve
+
+# Reconstruct the case
+helyxRun reconstructPar
+
+#------------------------------------------------------------------------------

@@ -1,0 +1,3485 @@
+/*
+The thermophysical properties of a liquid
+Notes on the liquid properties data:
+    - molWeight Molecular weight [kg/kmol]
+    - Tc        Critical temperature [K]
+    - Pc        Critical pressure [Pa]
+    - Vc        Critical volume [m^3/kmol]
+    - Zc        Critical compressibility factor []
+    - Tt        Triple point temperature [K]
+    - Pt        Triple point pressure [Pa]
+    - Tb        Normal boiling temperature [K]
+    - dipm      Dipole moment []
+    - omega     Pitzer's accentric factor []
+    - delta     Solubility parameter [(J/m^3)^0.5]
+
+// Polynomial properties:
+    - rho       Liquid density [kg/m^3]
+    - pv        Vapour pressure [Pa]
+    - hl        Heat of vapourisation [J/kg]
+    - Cp        Liquid heat capacity [J/kg/K]
+    - h         Liquid enthalpy [J/(kg)]
+    - Cpg       Ideal gas heat capacity [J/kg/K]
+    - B         Second Virial Coefficient [m^3/kg]
+    - mu        Liquid viscosity [Pa s]
+    - mug       Vapour viscosity [Pa s]
+    - kappa     Liquid thermal conductivity  [W/(m K)]
+    - kappag    Vapour thermal conductivity  [W/(m K)]
+    - sigma     Surface tension [N/m]
+    - D         Vapour diffussivity [m2/s]
+
+
+// Polynomials
+APIdiffCoeff:
+API function for vapour mass diffusivity
+Source:
+        API (American Petroleum Institute)
+                Technical Data Book
+
+*/
+
+NH3
+{
+    molWeight   17.030;
+    Tc          405.65;
+    Pc          1.1278e+07;
+    Vc          0.07247;
+    Zc          0.242;
+    Tt          195.41;
+    Pt          6.1177e+03;
+    Tb          239.72;
+    dipm        4.9034e-30;
+    omega       0.2520;
+    delta       2.9217e+04;
+
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 60.33729, 0.25471, 405.65, 0.2887 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 9.0451e+01, -4.6690e+03, -1.1601e+01, 1.7183e-02, 1);
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 405.65 ( 1851027.598, 3.9140e-01, -2.2890e-01, 2.3090e-01, 0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0
+        (
+            63576.04,
+            -912.5661,
+            5.226718,
+            -0.1321961,
+            1.252848e-05,
+            0
+        );
+        Hf          0;
+        Sf          0;
+    }
+    // Should be checked
+    // h_(Cp_.integral("h", - Cp_.integral("", 0).value(Tstd) - 46190000/W()))
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0
+        (
+            227968857.121984,
+            63576.040000,
+            -456.283050,
+            1.742239,
+            -0.033049,
+            0.000003,
+        );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS3 (1.948914e+03, 4.358779e+03, 540.4, 0.8895 );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4 ( 0.0156, -19.9, -5.05e+06, -2.533e+18, 3.87e+20 );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( -1.6430, 4.5560e+02, -1.5637, 0, 0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 4.1855e-08, 0.9806, 30.8, 0 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 1.1606, -0.002284, 0, 0, 0, 0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 (-0.0459, 0.1652, -1707.8, 0 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 0.091200 ( 1.1028, 0, 0, 0, 0 );
+    }
+    D (14.9, 20.1, 17.030, 28 ); // note: Same as nHeptane
+}
+
+
+aC10H7CH3
+{
+    // alphaMethylNaphthalene
+    molWeight 142.2;
+    Tc        772.04;
+    Pc        3.66e+6;
+    Vc        0.523;
+    Zc        0.298;
+    Tt        242.67;
+    Pt        3.4929e-2;
+    Tb        517.83;
+    dipm      1.7012e-30;
+    omega     0.3478;
+    delta     2.0176e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 60.92559 0.22408 772.04 0.25709 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 73.716 -9103.2 -7.2253 2.062e-06 2 );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 772.04 ( 511744.022503516 0.4164 0 0 0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0
+        (
+            965.893108298172
+            1.16216596343179
+            0.00298523206751055
+            0
+            0
+            0
+        );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0
+        (
+            38161.6838138517
+            965.893108298172
+            0.581082981715893
+            0.00099507735583685
+            0
+            0
+        );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            743.389592123769
+            2703.5864978903
+            1548.5
+            2031.64556962025
+            722.06
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            0.00205555555555556
+            -3.34423347398031
+            -931153.305203938
+            1.87601969057665e+18
+            -2.06448663853727e+21
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( -93.6 5784 12 0 0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 2.5672e-06 0.3566 825.54 0 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 0.19758 -0.0001796 0 0 0 0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( 0.3911 -0.1051 -213.52 2318300 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 772.04 ( 0.076 1.33 0 0 0 );
+    }
+    D (147.18 20.1 142.2 28 ); // note: Same as nHeptane
+}
+
+
+Ar
+{
+    // Liquid Argon
+    molWeight39.948;
+    Tc       150.86;
+    Pc       4.8981e+6;
+    Vc       0.07459;
+    Zc       0.291;
+    Tt       83.78;
+    Pt       6.88e+4;
+    Tb       87.28;
+    dipm     0.0;
+    omega    0.0;
+    delta    1.4138e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 151.922244 0.286 150.86 0.2984 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 39.233 -1051.7 -3.5895 5.0444e-05 2 );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 150.86 ( 218509.061780314 0.352 0.0 0.0 0.0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0
+        (
+            4562.43116050866
+            -70.7770101131471
+            0.367477721037349
+            0.0
+            0.0
+            0.0
+        );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0
+        (
+            -1460974.49982473
+            4562.43116050866
+            -35.3885050565735
+            0.122492573679116
+            0.0
+            0.0
+        );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS0 ( 520.326424351657 0.0 0.0 0.0 0.0 0.0 );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            0.000952488234705117
+            -0.379993992189847
+            -2022.62941824372
+            4633523580654.85
+            -302893761890458.0
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( -8.868 204.3 -0.3831 -1.3e-22 10.0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 8.386e-07 0.6175 75.377 -432.5 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 0.1819 -0.0003176 -4.11e-06 0.0 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( 0.0001236 0.8262 -132.8 16000 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 150.86 ( 0.03823 1.2927 0.0 0.0 0.0 );
+    }
+    D ( 147.18 20.1 39.948 28 );
+}
+
+
+bC10H7CH3
+{
+    // betaMethylNaphthalene
+    molWeight    142.2;
+    Tc           761.0;
+    Pc           3.25e+6;
+    Vc           0.507;
+    Zc           0.260;
+    Tt           307.73;
+    Pt           1.7374e+1;
+    Tb           514.20;
+    dipm         1.4010e-30;
+    omega        0.3459;
+    delta        1.987e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 67.36014 0.23843 761 0.2559 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 134.31 -12103 -16.195 6.9659e-06 2 );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 761.0 ( 513150.492264416 0.4044 0.0 0.0 0.0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0
+        (
+            811.322081575246
+            2.30225035161744
+            0.0008628691983122
+            0.0
+            0.0
+            0.0
+        );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0
+        (
+            45001.2311880177
+            811.322081575246
+            1.15112517580872
+            0.000287623066104079
+            0.0
+            0.0
+        );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            760.126582278481
+            2699.08579465542
+            1564.1
+            1994.51476793249
+            727.49
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            0.00229430379746835
+            -3.53720112517581
+            -1067158.93108298
+            2.29746835443038e+18
+            -2.68438818565401e+21
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( -63.276 4219 7.5549 0.0 0.0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 2.1791e-06 0.3717 712.53 0.0 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 0.1962 -0.00018414 0.0 0.0 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( 0.4477 -0.1282 -345.89 2340100 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 761.0 ( 0.066442 1.2634 0.0 0.0 0.0 );
+    }
+    D ( 147.18 20.1 142.2 28 );
+}
+
+
+C10H22
+{
+    // nDecane
+    molWeight    142.285;
+    Tc           617.70;
+    Pc           2.11e+6;
+    Vc           0.6;
+    Zc           0.247;
+    Tt           243.51;
+    Pt           1.393;
+    Tb           447.30;
+    dipm         0.0;
+    omega        0.4923;
+    delta        1.57e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 60.94208835 0.25745 617.7 0.28912 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 112.73 -9749.6 -13.245 7.1266e-06 2.0 );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 617.70 ( 464743.296904101 0.39797 0.0 0.0 0.0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0
+        (
+            1958.18252099659
+            -1.39094071757388
+            0.00754612221948905 0.0 0.0 0.0 );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0
+        (
+            -2699436.15229142
+            1958.18252099659
+            -0.695470358786942
+            0.00251537407316302
+            0.0
+            0.0
+        );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            1175.10630073444
+            3762.16748076045
+            1614.1
+            2658.04547211582
+            742
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            0.00337351091119935
+            -4.13606494008504
+            -534560.916470464
+            -1.13364022911762e+19
+            2.80704220402713e+21
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( -16.468 1533.5 0.7511 0.0 0.0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 2.64e-08 0.9487 71.0 0.0 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 0.2063 -0.000254 0.0 0.0 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( -668.4 0.9323 -4071000000.0 0.0 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 617.70 ( 0.055435 1.3095 0.0 0.0 0.0 );
+    }
+    D (147.18 20.1 142.285 28.0); // note: Same as nHeptane
+}
+
+
+C12H26
+{
+    // nDodecane
+    molWeight    170.338;
+    Tc           658.0;
+    Pc           1.82e+6;
+    Vc           0.716;
+    Zc           0.238;
+    Tt           263.57;
+    Pt           6.152e-1;
+    Tb           489.47;
+    dipm         0.0;
+    omega        0.5764;
+    delta        1.59e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 60.53982858 0.25511 658.0 0.29368 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 (137.47 -11976.0 -16.698 8.0906e-06 2.0);
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 658.0 ( 454020.829174935 0.40681 0.0 0.0 0.0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0
+        (
+            2983.53861146661
+            -8.0352006011577
+            0.018207916025784
+            0.0
+            0.0
+            0.0
+        );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0
+        (
+            -2755166.83820769
+            2983.53861146661
+            -4.01760030057885
+            0.00606930534192801
+            0.0
+            0.0
+        );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            1250.16144371778
+            3894.02247296552
+            1715.5
+            2650.67101879792
+            777.5
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            0.00516619896910848
+            -6.40491258556517
+            -295295.236529723
+            -3.22147729807794e+19
+            8.78195117941974e+21
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( -20.607 1943 1.3205 0.0 0.0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 6.344e-08 0.8287 219.5 0.0 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 0.2047 -0.0002326 0.0 0.0 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( 5.719e-06 1.4699 579.4 0.0 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 658.0 ( 0.055493 1.3262 0.0 0.0 0.0 );
+    }
+    D ( 147.18 20.1 170.338 28.0 );
+}
+
+
+C13H28
+{
+    // nTriDecane
+    molWeight    184.365;
+    Tc           675.80;
+    Pc           1.7225e+6;
+    Vc           0.77;
+    Zc           0.236;
+    Tt           267.76;
+    Pt           3.801e-1;
+    Tb           508.62;
+    dipm         0.0;
+    omega        0.6186;
+    delta        1.5901e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 59.513022 0.2504 675.8 0.312 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 118.27 -11432 -13.769 5.9641e-06 2.0 );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 675.80 ( 444227.48352453 0.4162 0.0 0.0 0.0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0
+        (
+            4275.05220622135
+            -16.6539202126217
+            0.0325755973205326
+            0.0
+            0.0
+            0.0
+        );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0
+        (
+            -2860442.0545124
+            4275.05220622135
+            -8.32696010631085
+            0.0108585324401775
+            0.0
+            0.0
+        );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            1136.87522035093
+            3641.14663846175
+            -1443
+            2277.00485450058
+            -683.0
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            0.00246321156401703
+            -2.66601578390692
+            -1249532.17801643
+            -1.0460770753668e+19
+            1.90117430097904e+21
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( -23.341 2121.9 1.7208 0.0 0.0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 3.5585e-08 0.8987 165.3 0.0 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 0.1981 -0.0002046 0.0 0.0 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( 5.3701e-06 1.4751 599.09 0.0 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 675.80 ( 0.05561 1.3361 0.0 0.0 0.0 );
+    }
+    D ( 147.18 20.1 184.365 28.0 );
+}
+
+
+C14H30
+{
+    // nTetraDecane
+    molWeight    198.392;
+    Tc           692.40;
+    Pc           1.6212e+6;
+    Vc           0.8428;
+    Zc           0.237;
+    Tt           279.01;
+    Pt           1.8849e-1;
+    Tb           526.73;
+    dipm         0.0;
+    omega        0.6617;
+    delta        1.6173e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 60.92023144 0.2582 692.4 0.26628 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 249.21 -16915 -35.195 0.028451 1.0 );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 692.40 ( 455764.345336506 0.428 0.0 0.0 0.0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0
+        (
+            2565.72845679261
+            -4.78114036856325
+            0.0120362716238558
+            0.0
+            0.0
+            0.0
+        );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0
+        (
+            -2690601.01887934
+            2565.72845679261
+            -2.39057018428162
+            0.00401209054128527
+            0.0
+            0.0
+        );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            1134.11831122223
+            3629.17859591113
+            -1440.3
+            2275.29335860317
+            -682
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            0.00247837614419936
+            -2.62692044034034
+            -1427174.48284205
+            -1.68288035807895e+19
+            3.48854792531957e+21
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( -18.964 2010.9 1.0648 0.0 0.0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 4.4565e-08 0.8684 228.16 -4347.2 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 0.1957 -0.0001993 0.0 0.0 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( -0.000628 0.944 -5490 0.0 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 692.40 ( 0.056436 1.3658 0.0 0.0 0.0 );
+    }
+    D ( 147.18 20.1 198.392 28.0 );
+}
+
+
+C16H34
+{
+    // nHexaDecane
+    molWeight    226.446;
+    Tc           720.60;
+    Pc           1.4186e+6;
+    Vc           0.93;
+    Zc           0.22;
+    Tt           291.32;
+    Pt           8.7467e-2;
+    Tb           560.01;
+    dipm         0.0;
+    omega        0.7471;
+    delta        1.6052e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 61.94656776 0.25442 720.6 0.3238 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 233.1 -17346 -32.251 0.02407 1.0 );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 720.60 ( 430654.548987397 0.4122 0.0 0.0 0.0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0
+        (
+            3769.90540791182
+            -12.5871068599136
+            0.0247211255663602
+            0.0
+            0.0
+            0.0
+        );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0
+        (
+            -2777201.30410301
+            3769.90540791182
+            -6.29355342995681
+            0.00824037518878673
+            0.0
+            0.0
+        );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            1128.74592618108
+            3600.8584828171
+            -1429.7
+            2259.69988429913
+            679.0
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            0.0025091191718997
+            -2.46668079807106
+            -1704070.72767901
+            -3.00623548219001e+19
+            7.07320950690231e+21
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( -18.388 2056.8 0.98681 0.0 0.0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 1.2463e-07 0.7322 395.0 6000.0 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 0.1963 -0.00019 0.0 0.0 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( 3.075e-06 1.552 678.0 0.0 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 720.60 ( 0.05699 1.3929 0.0 0.0 0.0 );
+    }
+    D ( 147.18 20.1 226.446 28.0 );
+}
+
+
+C2H5OH
+{
+    // ethanol
+    molWeight    46.069;
+    Tc           516.25;
+    Pc           6.3835e+6;
+    Vc           0.16692;
+    Zc           0.248;
+    Tt           159.05;
+    Pt           7.1775e-5;
+    Tb           351.44;
+    dipm         5.6372e-30;
+    omega        0.6371;
+    delta        2.6421e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 70.1308387 0.26395 516.25 0.2367 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 59.796 -6595 -5.0474 6.3e-07 2 );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 516.25 ( 958345.091059064 -0.4134 0.75362 0.0 0.0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0
+        (
+            2052.57331394213
+            -0.121990926653498
+            -0.00714146172046278
+            5.20523562482363e-05
+            0.0
+            0.0
+        );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0
+        (
+            -6752827.25039109
+            2052.57331394213
+            -0.060995463326749
+            -0.00238048724015426
+            1.30130890620591e-05
+            0.0
+        );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            909.505307256507
+            3358.00646855803
+            1530
+            2029.56434912848
+            640
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            -0.00358158414552085
+            3.90718270420456
+            -1180837.43949293
+            9.81136990166923e+18
+            -3.58592545963663e+21
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( 8.049 776 -3.068 0.0 0.0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 1.0613e-07 0.8066 52.7 0.0 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 0.253 -0.000281 0.0 0.0 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( -3.12 0.7152 -3550000.0 0.0 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS0 (3.7640e-02 -2.1570e-05 -1.025e-07 0.0 0.0 0.0);
+    }
+    D ( 147.18 20.1 46.069 28 );
+}
+
+
+C2H6
+{
+    // ethane
+    molWeight    30.070;
+    Tc           305.32;
+    Pc           4.872e+6;
+    Vc           0.14550;
+    Zc           0.279;
+    Tt           90.35;
+    Pt           1.13;
+    Tb           184.55;
+    dipm         0.0;
+    omega        0.0995;
+    delta        1.24e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 57.499854 0.27937 305.32 0.29187 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 51.857 -2598.7 -5.1283 1.4913e-05 2.0 );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 305.32 ( 701396.740937812 0.60646 -0.55492 0.32799 0.0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS14 305.32
+        (
+            8.02554965861611
+            2983.63817758563
+            167.548325566287
+            -343.93389207094
+        );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0 ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            1341.07083471899
+            4463.58496840705
+            1655.5
+            2435.08480212837
+            752.87
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            0.00269205187894912
+            -2.05221150648487
+            -47721.9820419022
+            2.24808779514466e+15
+            -3.23910874625873e+17
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( -3.4134 197.05 -1.2193 -9.2023e-26 10.0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 2.5906e-07 0.67988 98.902 0.0 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 0.35758 -0.0011458 6.1866e-07 0.0 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( 7.3869e-05 1.1689 500.73 0.0 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 305.32 ( 0.048643 1.1981 0.0 0.0 0.0 );
+    }
+    D ( 147.18 20.1 30.070 28 );
+}
+
+
+C2H6O
+{
+    // diMethylEther
+    molWeight    46.069;
+    Tc           400.10;
+    Pc           5.3702e+6;
+    Vc           0.17;
+    Zc           0.274;
+    Tt           131.65;
+    Pt           3.0849;
+    Tb           248.31;
+    dipm         4.3363e-30;
+    omega        0.2036;
+    delta        1.7572e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 69.472052 0.26325 400.1 0.2806 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 51.566 -3664.4 -4.653 5.9e-06 2 );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 400.10 ( 608435.173326966 0.2477 -0.089 0.203 0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0
+        (
+            1491.24139877141
+            11.3099915344375
+            -0.067273003538171
+            0.000136556035511949
+            0.0
+            0.0
+        );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0
+        (
+            -5024829.22619402
+            1491.24139877141
+            5.65499576721874
+            -0.0224243345127237
+            3.41390088779874e-05
+            0.0
+        );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            950.747791356443
+            3160.47667628991
+            1284
+            1291.5409494454
+            520
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            0.00235082159369641
+            -2.26616596843865
+            -123293.320888233
+            -8.87364605266014e+16
+            1.46389111984198e+19
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( -10.62 448.99 8.3967e-05 0.0 0.0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 7.27 0.1091 440600000 0.0 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 0.31276 -0.0005677 0.0 0.0 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( 0.2247 0.1026 997.06 1762900 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 400.10 ( 0.06096 1.2286 0 0 0 );
+    }
+    D ( 147.18 20.1 46.069 28 );
+}
+
+
+C3H6O
+{
+    // acetone
+    molWeight    58.08;
+    Tc           508.20;
+    Pc           4.7015e+6;
+    Vc           0.209;
+    Zc           0.233;
+    Tt           178.45;
+    Pt           2.5938;
+    Tb           329.44;
+    dipm         9.6066e-30;
+    omega        0.3064;
+    delta        1.9774e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 71.426784 0.2576 508.2 0.29903 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 70.72 -5685 -7.351 6.3e-06 2.0 );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 508.20 ( 846590.909090909 1.036 -1.294 0.672 0.0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0
+        (
+            2334.71074380165
+            -3.04752066115702
+            0.00488464187327824
+            1.18629476584022e-05
+            0.0
+            0.0
+        );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0
+        (
+            -4.905296049462618e06
+            2334.71074380165
+            -1.52376033057851
+            0.00162821395775941
+            2.96573691460055e-06
+            0.0
+        );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            828.512396694215
+            2830.57851239669
+            1250.0
+            1234.50413223141
+            -524.4
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            0.00190599173553719
+            -1.70798898071625
+            -525826.446280992
+            1.70282369146006e+17
+            -2.83298898071625e+20
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( -14.918 1023.4 0.5961 0.0 0.0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 3.1005e-08 0.9762 23.139 0.0 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 0.2502 -0.000298 0.0 0.0 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( -26.8 0.9098 -126500000 0.0 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 508.20 ( 0.0622 1.124 0.0 0.0 0.0 );
+    }
+    D ( 147.18 20.1 58.08 28 );
+}
+
+
+C3H8
+{
+    // propane
+    molWeight    44.096;
+    Tc           369.83;
+    Pc           4.248e+6;
+    Vc           0.2;
+    Zc           0.276;
+    Tt           85.47;
+    Pt           1.685e-4;
+    Tb           231.11;
+    dipm         0.0;
+    omega        0.1523;
+    delta        1.31e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 60.6628672 0.27453 369.83 0.29359 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 59.078 -3492.6 -6.0669 1.0919e-05 2.0 );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 369.83 ( 662395.682148041 0.78237 -0.77319 0.39246 0.0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS14 369.83
+        (
+            9.48470319647089
+            2576.87772133527
+            95.3560311677331
+            -131.535634282099
+        );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0 ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            1177.43105950653
+            4364.34143686502
+            1626.5
+            2648.76632801161
+            723.6
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            0.00255578737300435
+            -2.24963715529753
+            -102276.850507983
+            7.00743831640058e+15
+            -1.59878447024673e+18
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( -6.9281 420.76 -0.63276 -1.713e-26 10.0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 2.4993e-07 0.68612 179.34 -8254.6 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 0.26755 -0.00066457 2.774e-07 0.0 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( -1.12 0.10972 -9834.6 -7535800 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 369.83 ( 0.05092 1.2197 0.0 0.0 0.0 );
+    }
+    D ( 147.18 20.1 44.096 28 );
+}
+
+
+C4H10O
+{
+    // diEthylEther
+    molWeight    74.123;
+    Tc           466.70;
+    Pc           3.6376e+6;
+    Vc           0.28;
+    Zc           0.262;
+    Tt           156.85;
+    Pt           4.0709e-1;
+    Tb           307.58;
+    dipm         3.836e-30;
+    omega        0.2846;
+    delta        1.5532e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 75.2793188 0.27608 466.7 0.29358 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 101.03 -6311.5 -12.27 1.377e-05 2 );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 466.70 ( 566355.921913576 0.40717 0 0 0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0
+        (
+            599.004357621791
+            17.5519069654493
+            -0.0742009902459426
+            0.00011822241409549
+            0.0
+            0.0
+        );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0
+        (
+            -4312350.92187216
+            599.004357621791
+            8.77595348272466
+            -0.0247336634153142
+            2.95556035238725e-05
+            0.0
+        );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            1163.06679438231
+            3441.57683849817
+            1541.3 1938.66950878944
+            -688.9
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            0.00215992337061371
+            -1.810504162001
+            -276972.0599544
+            -2.12349742994752e+17
+            3.1016013922804e+19
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( 10.197 -63.8 -3.226 0.0 0.0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 1.948e-06 0.41 495.8 0.0 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 0.249 -0.0004005 0.0 0.0 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( -0.0044894 0.6155 -3266.3 0.0 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 466.70 ( 0.057356 1.288 0.0 0.0 0.0 );
+    }
+    D ( 147.18 20.1 74.123 28 );
+}
+
+
+C6H14
+{
+    // benzene
+    molWeight    86.177;
+    Tc           507.60;
+    Pc           3.025e+6;
+    Vc           0.371;
+    Zc           0.266;
+    Tt           177.83;
+    Pt           9.017e-1;
+    Tb           341.88;
+    dipm         0.0;
+    omega        0.3013;
+    delta        1.49e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 61.03399848 0.26411 507.6 0.27537 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 104.65 -6995.5 -12.702 1.2381e-05 2.0 );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 507.60 ( 527286.863084118 0.39002 0.0 0.0 0.0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0
+        (
+            1997.28465831951
+            -2.13258758137322
+            0.0102964828202421
+            0.0
+            0.0
+            0.0
+        );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0
+        (
+            -2902186.5403246
+            1997.28465831951
+            -1.06629379068661
+            0.00343216094008069
+            0.0
+            0.0
+        );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            1211.4601343746
+            4088.0977523005
+            1694.6
+            2748.99335089409
+            761.6
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            0.0022859927822969
+            -2.32080485512376
+            -430509.300625457
+            1.93787205402834e+17
+            -7.17128700233241e+19
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( -20.715 1207.5 1.4993 0.0 0.0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 1.7514e-07 0.70737 157.14 0.0 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 0.22492 -0.0003533 0.0 0.0 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( -650.5 0.8053 -1412100000 0.0 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 507.60 ( 0.055003 1.2674 0.0 0.0 0.0 );
+    }
+    D ( 147.18 20.1 86.177 28 );
+}
+
+
+C6H6
+{
+    // nHexane
+    molWeight    78.114;
+    Tc           562.16;
+    Pc           4.898e+6;
+    Vc           0.25894;
+    Zc           0.271;
+    Tt           278.68;
+    Pt           4.7961e+3;
+    Tb           353.24;
+    dipm         0.0;
+    omega        0.2108;
+    delta        1.8706e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 80.5511568 0.2667 562.16 0.2818 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 78.05 -6275.5 -8.4443 6.26e-06 2 );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 562.16 ( 649435.440510024 0.7616 -0.5052 0.1564 0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0
+        (
+            1386.69124612745
+            -0.416058581048212
+            0.00542796425736744
+            0.0
+            0.0
+            0.0
+        );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0
+        (
+            186141.395065592
+            1386.69124612745
+            -0.208029290524106
+            0.00180932141912248
+            0.0
+            0.0
+        );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            568.656066774202
+            2970.65826868423
+            1494.6
+            2203.57426325627
+            -678.15
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            0.00184089919860716
+            -2.30176408838364
+            -309176.332027549
+            -5.12072099751645e+15
+            -2.90216862534245e+19
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( 6.764 336.4 -2.687 0.0 0.0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 3.134e-08 0.9676 7.9 0.0 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 0.2407 -0.0003202 0.0 0.0 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( 1.652e-05 1.3117 491 0.0 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 562.16 ( 0.07195 1.2389 0.0 0.0 0.0 );
+    }
+    D ( 147.18 20.1 78.114 28 );
+}
+
+
+C7H16
+{
+    // nHeptane
+    molWeight    100.204;
+    Tc           540.20;
+    Pc           2.74e+6;
+    Vc           0.428;
+    Zc           0.261;
+    Tt           182.57;
+    Pt           1.8269e-1;
+    Tb           371.58;
+    dipm         0.0;
+    omega        0.3495;
+    delta        1.52e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 61.38396836 0.26211 540.2 0.28141 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 87.829 -6996.4 -9.8802 7.2099e-06 2.0 );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 540.20 ( 499121.791545248 0.38795 0.0 0.0 0.0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS14 540.20
+        (
+            6.11976102401216
+            3137.69909384855
+            182.274175063868
+            -254.530511150515
+        );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0
+        (
+            -3.1469964e+6
+            7.3072e+3
+            -3.52884e+1
+            1.10637e-1
+            -1.634831e-4
+            9.64941e-8
+        );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            1199.05392998284
+            3992.85457666361
+            1676.6
+            2734.42177956968
+            756.4
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            0.00274040956448844
+            -2.90407568560137
+            -440900.562851782
+            -8.78208454752305e+17
+            1.28238393676899e+20
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( -24.451 1533.1 2.0087 0.0 0.0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 6.672e-08 0.82837 85.752 0.0 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 0.215 -0.000303 0.0 0.0 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( -0.070028 0.38068 -7049.9 -2400500.0 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 540.20 ( 0.054143 1.2512 0.0 0.0 0.0 );
+    }
+    D ( 147.18 20.1 100.204 28.0 );
+}
+
+
+C7H8
+{
+    // nHeptane
+    molWeight    92.141;
+    Tc           591.79;
+    Pc           4.1086e+6;
+    Vc           0.31579;
+    Zc           0.264;
+    Tt           178.18;
+    Pt           4.1009e-2;
+    Tb           383.78;
+    dipm         1.2008e-30;
+    omega        0.2641;
+    delta        1.8346e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 81.32088237 0.27108 591.79 0.29889 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 83.359 -6995 -9.1635 6.225e-06 2.0 );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 591.79 ( 544383.065085033 0.3834 0.0 0.0 0.0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0
+        (
+            2066.83235476064
+            -8.14664481609707
+            0.0322581695445024
+            -3.01223125427334e-05
+            0.0
+            0.0
+        );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0
+        (
+            -353094.830249075
+            2066.83235476064
+            -4.07332240804853
+            0.0107527231815008
+            -7.53057813568336e-06
+            0.0
+        );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            630.989461803106
+            3107.19440856947
+            1440.6 2059.88647833212
+            -650.43
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            0.00191120131103418
+            -2.24970425760519
+            -482293.441573241
+            -7.62309938029759e+17
+            1.00986531511488e+20
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( -13.362 1183 0.333 0.0 0.0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 2.919e-08 0.9648 0.0 0.0 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 0.2043 -0.000239 0.0 0.0 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( 2.392e-05 1.2694 537 0.0 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 591.79 ( 0.06685 1.2456 0.0 0.0 0.0 );
+    }
+    D ( 147.18 20.1 92.141 28 );
+}
+
+
+C8H10
+{
+    // ethylBenzene
+    molWeight    106.167;
+    Tc           617.17;
+    Pc           3.6094e+6;
+    Vc           0.37381;
+    Zc           0.263;
+    Tt           178.15;
+    Pt           4.038e-3;
+    Tb           409.35;
+    dipm         1.9680e-30;
+    omega        0.3036;
+    delta        1.8043e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 76.3765398 0.26438 617.17 0.2921 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 88.246 -7691.1 -9.797 5.931e-06 2.0 );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 617.17 ( 516167.924119547 0.3882 0.0 0.0 0.0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0
+        (
+            818.521762883005
+            6.66873887366131
+            -0.0248005500767658
+            4.23860521631015e-05
+            0.0
+            0.0
+        );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0
+        (
+            -524002.612929508
+            818.521762883005
+            3.33436943683065
+            -0.00826685002558862
+            1.05965130407754e-05
+            0.0
+        );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            738.835984816374
+            3201.5598067196
+            1559
+            2285.07916772632
+            -702.0
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            0.00165776559571242
+            -2.77958310962917
+            -388067.855359952
+            -5.86905535618412e+18
+            1.58052878954854e+21
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( -10.452 1048.4 -0.0715 0.0 0.0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 1.2e-06 0.4518 439.0 0.0 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 0.20149 -0.00023988 0.0 0.0 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( 1.708e-05 1.319 565.6 0.0 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 617.17 ( 0.066 1.268 0.0 0.0 0.0 );
+    }
+    D ( 147.18 20.1 106.167 28.0 );
+}
+
+
+C8H18
+{
+    // nOctane
+    molWeight    114.231;
+    Tc           568.70;
+    Pc           2.49e+6;
+    Vc           0.486;
+    Zc           0.256;
+    Tt           216.38;
+    Pt           2.1083;
+    Tb           398.83;
+    dipm         0.0;
+    omega        0.3996;
+    delta        1.54e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 61.37745861 0.26115 568.7 0.28034 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 96.084 -7900.2 -11.003 7.1802e-06 2.0 );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 568.70 ( 483056.263186 0.38467 0.0 0.0 0.0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0
+        (
+            1968.20477803749
+            -1.63379467920267
+            0.00839448135795012
+            0.0
+            0.0
+            0.0
+        );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0
+        (
+            -2778787.734126
+            1968.20477803749
+            -0.816897339601334
+            0.00279816045265004
+            0.0
+            0.0
+        );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            1186.54305748877
+            3878.9820626625
+            1635.6
+            2673.52995246474
+            746.4
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            0.00239777293379205
+            -2.81394717721109
+            -585042.589139551
+            -1.11265768486663e+18
+            1.40968738783693e+20
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( -20.463 1497.4 1.379 0.0 0.0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 3.1191e-08 0.92925 55.092 0.0 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 0.2156 -0.00029483 0.0 0.0 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( -8758 0.8448 -27121000000.0 0.0 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 568.70 ( 0.052789 1.2323 0.0 0.0 0.0 );
+    }
+    D ( 147.18 20.1 114.231 28.0 );
+}
+
+
+C9H20
+{
+    // nNonane
+    molWeight    128.258;
+    Tc           594.60;
+    Pc           2.29e+6;
+    Vc           0.544;
+    Zc           0.252;
+    Tt           219.66;
+    Pt           4.3058e-1;
+    Tb           423.97;
+    dipm         0.0;
+    omega        0.4435;
+    delta        1.56e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 62.06019846 0.26147 594.6 0.28281 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 109.35 -90304.0 -12.882 7.8544e-06 2.0 );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 594.60 ( 470691.886665939 0.38522 0.0 0.0 0.0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0
+        (
+            2986.79224687739
+            -8.88677509395125
+            0.0211300659607978
+            0.0
+            0.0
+            0.0
+        );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0
+        (
+            -2825628.50868792
+            2986.79224687739
+            -4.44338754697563
+            0.00704335532026592
+            0.0
+            0.0
+        );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            1183.16206396482
+            3832.11963386299
+            1644.8
+            2705.48425829188
+            749.6
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            0.00304542406711472
+            -3.65357326638494
+            -520825.211682702
+            -6.15400208953827e+18
+            1.41901479829718e+21
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( -21.149 1658 1.454 0.0 0.0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 1.0344e-07 0.77301 220.47 0.0 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 0.209 -0.000264 0.0 0.0 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( -0.065771 0.27198 -3482.3 -1580300.0 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 594.60 ( 0.054975 1.2897 0.0 0.0 0.0 );
+    }
+    D ( 147.18 20.1 128.258 28.0 );
+}
+
+
+CH3OH
+{
+    // methanol
+    molWeight    32.042;
+    Tc           512.58;
+    Pc           8.0959e+6;
+    Vc           0.1178;
+    Zc           0.224;
+    Tt           175.47;
+    Pt           1.054e-1;
+    Tb           337.85;
+    dipm         5.6706e-30;
+    omega        0.5656;
+    delta        2.9523e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 73.952936 0.27192 512.58 0.2331 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 109.93 -7471.3 -13.988 0.015281 1.0 );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 512.58 ( 1644716.30984333 0.3766 0.0 0.0 0.0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0
+        (
+            3358.09250358904
+            -11.8781599151114
+            0.0305536483365583
+            0.0
+            0.0
+            0.0
+        );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0
+        (
+            -8190474.32066862
+            3358.09250358904
+            -5.93907995755571
+            0.0101845494455194
+            0.0
+            0.0
+        );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            1226.9521253355
+            2772.92303851195
+            1963
+            1733.66206853505
+            909.6
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            -0.0199737844079645
+            19.3496036452157
+            -3342487.98452032
+            2.40808938268523e+19
+            -6.85787404032208e+21
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( -7.288 1065.3 -0.6657 0.0 0.0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 3.0663e-07 0.69655 205.0 0.0 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 0.2837 -0.000281 0.0 0.0 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( -7.763 1.0279 -74360000.0 6770000000.0 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 512.58 ( 0.056 -0.00014583 1.08e-07 0.0 0.0 );
+    }
+    D (147.18 20.1 32.042 28.0);
+}
+
+
+CH4N2O
+{
+    // Urea, note that some of the properties are unavailable in the literature
+    // and have been copied from water.
+    molWeight    60.056;
+    Tc           705.0;
+    Pc           9.050e+6;
+    Vc           0.218;
+    Zc           0.337;
+    Tt           405.85;
+    Pt           9.3131e+1;
+    Tb           465.0;
+    dipm         1.52e-29;
+    omega        0.3449;
+    delta        4.7813e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS0 ( 1230.006936 0.0 0.0 0.0 0.0 0.0 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1
+        (
+            3015.15611544
+            -185497.059684
+            -430.223621983
+            0.00017405122622
+            2.0
+        );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 705.0 ( 2534249.0 0.5 0.0 0.0 0.0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0 ( 2006.46063673904 0.0 0.0 0.0 0.0 0.0 );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0 ( -6154107.41641135 2006.46063673904 0.0 0.0 0.0 0.0 );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            811.875582789397
+            2099.04089516451
+            1627.3
+            1603.63660583455
+            724.41
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            -0.000383641934194752
+            0.447249234048222
+            -469062.208605302
+            5.5628080458239e+18
+            -2.3040162514986e+21
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( -51.964 3670.6 5.7331 -5.3495e-29 10.0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 2.6986e-06 0.498 1257.7 -19570.0 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( -0.4267 0.0056903 -8.0065e-06 1.815e-09 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( 6.977e-05 1.1243 844.9 -148850.0 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 705.0 ( 1.0 0.0 0.0 0.0 0.0 );
+    }
+    D ( 147.18 20.1 60.056 28.0 );
+}
+
+
+H2O
+{
+    // water
+    molWeight    18.015;
+    Tc           647.13;
+    Pc           2.2055e+7;
+    Vc           0.05595;
+    Zc           0.229;
+    Tt           273.16;
+    Pt           6.113e+2;
+    Tb           373.15;
+    dipm         6.1709e-30;
+    omega        0.3449;
+    delta        4.7813e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 98.343885 0.30542 647.13 0.081 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 73.649 -7258.2 -7.3037 4.1653e-06 2 );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 647.13 ( 2889425.47876769 0.3199 -0.212 0.25795 0.0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0
+        (
+            15341.1046350264
+            -116.019983347211
+            0.451013044684985
+            -0.000783569247849015
+            5.20127671384957e-07
+            0
+        );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0
+        (
+            -17957283.7993676
+            15341.1046350264
+            -58.0099916736053
+            0.150337681561662
+            -0.000195892311962254
+            1.04025534276991e-07
+        );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            1851.73466555648
+            1487.53816264224
+            2609.3
+            493.366638912018
+            1167.6
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            -0.0012789342214821
+            1.4909797391063
+            -1563696.91923397
+            1.85445462114904e+19
+            -7.68082153760755e+21
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( -51.964 3670.6 5.7331 -5.3495e-29 10 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 2.6986e-06 0.498 1257.7 -19570 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( -0.4267 0.0056903 -8.0065e-06 1.815e-09 0 0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( 6.977e-05 1.1243 844.9 -148850 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 647.13 ( 0.18548 2.717 -3.554 2.047 0 );
+    }
+    D ( 15.0 15.0 18.015 28 );
+}
+
+
+iC3H8O
+{
+    // iso-propanol
+    molWeight    60.096;
+    Tc           508.31;
+    Pc           4.7643e+6;
+    Vc           0.22013;
+    Zc           0.248;
+    Tt           185.28;
+    Pt           3.20e-2;
+    Tb           355.41;
+    dipm         5.5372e-30;
+    omega        0.6689;
+    delta        2.3575e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 70.91328 0.26475 508.31 0.243 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 92.935 -8177.1 -10.031 3.9988e-06 2.0 );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 508.31 ( 948149.627263046 0.087 0.3007 0.0 0.0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0
+        (
+            7760.91586794462
+            -68.3672790202343
+            0.241380457933972
+            -0.000235057241746539
+            0.0
+            0.0
+        );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0
+        (
+            -6227786.27583977
+            7760.91586794462
+            -34.1836395101172
+            0.0804601526446574
+            -5.87643104366347e-05
+            0.0
+        );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            789.73642172524
+            3219.8482428115
+            1124
+            1560.83599574015
+            460.0
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            0.000502529286474973
+            -0.104665867944622
+            -717185.83599574
+            3.3047124600639e+18
+            -1.43270766773163e+21
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( -8.23 2282.2 -0.98495 0.0 0.0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 1.993e-07 0.7233 178.0 0.0 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 0.2029 -0.0002278 0.0 0.0 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( -80.642 -1.4549 -604.42 0.0 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS0 ( 0.03818 -3.818e-05 -6.51e-08 0.0 0.0 0.0 );
+    }
+    // NSRDS1 instead of APIdiffCoef
+    Dfunc1 NSRDS1 ( 4.75e-10 1.75 0.0 0.0 0.0 );
+}
+
+
+IC8H18
+{
+    // iso-Octane
+    molWeight    114.231;
+    Tc           543.96;
+    Pc           2.5676e+6;
+    Vc           0.468;
+    Zc           0.266;
+    Tt           165.78;
+    Pt           1.4464e-2;
+    Tb           372.39;
+    dipm         0.0;
+    omega        0.3031;
+    delta        1.4051e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 67.2363666 0.27373 543.96 0.2846 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 120.81 -7550 -16.111 0.017099 1.0 );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 543.96 ( 375379.713037617 0.1549 0.138 0.0666 0.0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0
+        (
+            1219.89652546156
+            1.67205049417409
+            0.00414073237562483
+            0.0
+            0.0
+            0.0
+        );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0
+        (
+            -2743275.10767575
+            1219.89652546156
+            0.836025247087043
+            0.00138024412520828
+            0.0
+            0.0
+        );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            997.10236275617
+            4627.4653990598
+            1594
+            2933.52942721328
+            677.94
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            0.00234936225718063
+            -2.83381919093766
+            -413154.047500241
+            -3.49703670632315e+17
+            3.13750207912038e+19
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( -15.811 1282.5 0.67791 -3.8617e-28 10.0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 1.107e-07 0.746 72.4 0.0 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 0.1508 -0.0001712 0.0 0.0 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( 1.758e-05 1.3114 392.9 0.0 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 543.96 ( 0.047434 1.1975 0.0 0.0 0.0 );
+    }
+    D ( 147.18 20.1 114.231 28.0 );
+}
+
+
+
+IDEA
+{
+    /*
+    The IDEA fuel is constructed by adding 30% alphaMethylNaphthalene
+    with 70% n-decane.
+
+    The new properties have been calculated by adding the values in these
+    proportions and making a least square fit using the same NSRDS-eq.
+    so that Y = 0.3*Y_naphthalene + 0.7*Y_decane
+
+    The valid Temperature range for n-decane is normally 243.51 - 617.70 K
+    and for the naphthalene it is 242.67 - 772.04 K
+    The least square fit was done in the interval 244 - 617 K
+
+    The critical temperature was taken to be 618.074 K since this
+    is the 'c'-value in the rho-equation which corresponds to Tcrit,
+    This value was then used in the fit for the NSRDS6-eq which uses Tcrit.
+    (important for the latent heat and surface tension)
+
+    The molecular weights are 142.20 and 142.285 and for the IDEA fuel
+    it is thus 142.26 ( approximately 0.3*142.2 + 0.7*142.285 )
+
+    Critical pressure was set to the lowest one (n-Decane)
+
+    Critical volume... also the lowest one (naphthalene) 0.523 m^3/kmol
+
+    Second Virial Coefficient is n-Decane
+    */
+    molWeight    142.26;
+    Tc           618.074;
+    Pc           2.11e+6;
+    Vc           0.523;
+    Zc           0.247;
+    Tt           242.67;
+    Pt           3.4929e-2;
+    Tb           447.3;
+    dipm         1.7012e-30;
+    omega        0.3478;
+    delta        1.57e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 152.012105 3.87150382e-1 618.073893 4.00790044e-1 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1
+        (
+            8.4817774623e+01
+            -8.6782398353e+03
+            -9.1277694857
+            4.6153144498e-06
+            2.0
+        );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 618.074
+        (
+            2.1671983789e+05
+            -4.2413153435e+00
+            1.1656811532e+01
+            -1.1656446689e+01
+            4.3667661492
+        );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0 ( 1.6604957e+3 -6.250871e-1 6.1778552e-3 0.0 0.0 0.0 );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0 ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            1.0457515243e+03
+            3.4410492875e+03
+            1.5976862298e+03
+            2.4697705752e+03
+            7.3699710536e+02
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            0.00337351091119935
+            -4.13606494008504
+            -534560.916470464
+            -1.13364022911762e+19
+            2.80704220402713e+21
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( -6.9645853822e+01 4.4390635942e+03 8.4680722718e+00 0 0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 4.2629382158e-08 8.8144402122e-01 9.6918097636e+01 0.0 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 2.03684e-01 -2.3168e-04 0.0 0.0 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2
+        (
+            -5.664925956707e+02
+            8.896721676320e-01
+            -2.849783998688e+09
+            6.914935658053e+05
+        );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 618.074
+        (
+            8.3846525429e-03
+            -1.0044759047e+01
+            2.7261918781e+01
+            -2.5529134309e+01
+            8.6488806234
+        );
+    }
+    D ( 147.18 20.1 142.2 28.0 );
+}
+
+
+MB
+{
+    // Liquid nC3H7COOCH3 or (MB) methyl butyrate (used for biodiesel surrogate)
+    molWeight    102.133;
+    Tc           554.5;
+    Pc           3.4734e+6;
+    Vc           0.34;
+    Zc           0.256;
+    Tt           187.35;
+    Pt           1.0102e-1;
+    Tb           375.90;
+    dipm         5.7373e-30;
+    omega        0.3807;
+    delta        1.7713e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 76.6099633 0.257 554.5 0.2772 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 107.51 -8112.9 -12.77 9.2919e-06 2.0 );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 554.5 ( 508307.794738233 0.392 0.0 0.0 0.0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0 ( 1135.77394182096 2.89818178257762 0.0 0.0 0.0 0.0 );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0
+        (
+            -5255966.14542938
+            1135.77394182096
+            1.44909089128881
+            0.0
+            0.0
+            0.0
+        );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            875.329227575808
+            2849.22600922327
+            1570.0
+            2029.70636327142
+            678.3
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            0.00220496803188
+            -2.42184210783978
+            -401045.695318849
+            -2.85079259397061e+17
+            -3.57377145486767e+19
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( -12.206 1141.7 0.15014 0.0 0.0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 3.733e-07 0.6177 256.5 0.0 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 0.2298 -0.0003002 0.0 0.0 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( 1333.1 0.9962 12317000000.0 0.0 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 554.5 ( 0.064084 1.2418 0.0 0.0 0.0 );
+    }
+    D ( 147.18 20.1 102.133 28.0 );
+}
+
+
+N2
+{
+    // Liquid N2
+    molWeight    28.014;
+    Tc           126.10;
+    Pc           3.3944e+6;
+    Vc           0.0901;
+    Zc           0.292;
+    Tt           63.15;
+    Pt           1.2517e+4;
+    Tb           77.35;
+    dipm         0.0;
+    omega        0.0403;
+    delta        9.0819e+3;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 88.8716136 0.28479 126.1 0.2925 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 59.826 -1097.6 -8.6689 0.046346 1.0 );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 126.10 ( 336617.405582923 1.201 -1.4811 0.7085 0.0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0
+        (
+            -1192.26101235097
+            125.187406296852
+            -1.66702363104162
+            0.00759263225530092
+            0.0
+            0.0
+        );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0
+        (
+            -5480656.55276541
+            -1192.26101235097
+            62.5937031484258
+            -0.555674543680541
+            0.00189815806382523
+            0.0
+        );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            1038.94481330763
+            307.52123938031
+            1701.6
+            3.69351038766331
+            909.79
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            0.00166702363104162
+            -0.533661740558292
+            -2182.12322410223
+            2873563218390.8
+            -165274505604341.0
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( -32.165 496.9 3.9069 -1.08e-21 10.0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 7.632e-07 0.58823 67.75 0.0 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 0.7259 -0.016728 0.00016215 -5.7605e-07 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( 0.000351 0.7652 25.767 0.0 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS6 126.10 ( 0.02898 1.2457 0.0 0.0 0.0 );
+    }
+    D ( 147.18 20.1 28.014 28.0 );
+}
+
+
+nC3H8O
+{
+    // Propanol
+    molWeight    60.096;
+    Tc           536.71;
+    Pc           5.1696e+6;
+    Vc           0.21853;
+    Zc           0.253;
+    Tt           146.95;
+    Pt           6.5112e-7;
+    Tb           370.35;
+    dipm         5.6039e-30;
+    omega        0.6279;
+    delta        2.4557e+4;
+
+    // Polynomial properties
+    equationOfState rhoFunction1;
+    equationOfStateCoeffs
+    {
+        rho NSRDS5 ( 75.300288 0.272 536.71 0.2494 );
+    }
+    pvModel scalarFunction1;
+    pvModelCoeffs
+    {
+        pv NSRDS1 ( 77.46 -7960 -7.5235 3e-07 2.0 );
+    }
+    hlModel scalarFunction1;
+    hlModelCoeffs
+    {
+        hl NSRDS6 536.71 ( 1098242.8115016 0.647 -0.783 0.613 0.0 );
+    }
+    thermodynamics hFunctionT;
+    thermodynamicsCoeffs
+    {
+        Cp NSRDS0
+        (
+            216.320553780618
+            18.5203674121406
+            -0.0751797124600639
+            0.000126464323748669
+            0.0
+            0.0
+        );
+        Hf          0;
+        Sf          0;
+    }
+    hModel scalarFunction1;
+    hModelCoeffs
+    {
+        h NSRDS0
+        (
+            -5533091.96851587
+            216.320553780618
+            9.26018370607029
+            -0.0250599041533546
+            3.16160809371672e-05
+            0.0
+        );
+    }
+    CpgModel scalarFunction1;
+    CpgModelCoeffs
+    {
+        Cpg NSRDS7
+        (
+            961.794462193823
+            3467.78487752929
+            1542 2046.72523961661
+            649
+        );
+    }
+    BModel scalarFunction1;
+    BModelCoeffs
+    {
+        B NSRDS4
+        (
+            0.000933506389776358
+            -1.09325079872204
+            -531649.361022364
+            -2.32627795527157e+17
+            -3.81888977635783e+20
+        );
+    }
+    muModel scalarFunction1;
+    muModelCoeffs
+    {
+        mu NSRDS1 ( 0.571 1521 -2.0894 0.0 0.0 );
+    }
+    mugModel scalarFunction1;
+    mugModelCoeffs
+    {
+        mug NSRDS2 ( 7.942e-07 0.5491 415.8 0.0 );
+    }
+    kappaModel scalarFunction1;
+    kappaModelCoeffs
+    {
+        kappa NSRDS0 ( 0.204 -0.000169 0.0 0.0 0.0 0.0 );
+    }
+    kappagModel scalarFunction1;
+    kappagModelCoeffs
+    {
+        kappag NSRDS2 ( -613.84 0.7927 -1157400000.0 0.0 );
+    }
+    sigmaModel scalarFunction1;
+    sigmaModelCoeffs
+    {
+        sigma NSRDS0 ( 0.04533 -6.88e-05 -1.6e-08 0.0 0.0 0.0 );
+    }
+    // NSRDS1 instead off APIdiffCoef
+    Dfunc1 NSRDS1 ( 4.75e-10 1.75 0.0 0.0 0.0 );
+}

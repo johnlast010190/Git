@@ -1,0 +1,53 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/SR/0/surfaceReport.dat";
+                reference "verification/short/SR/0/surfaceReport.dat";
+                variables "Tmean";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/VR_mesh/0/volumeReport.tsv";
+                reference "verification/short/VR_mesh/0/volumeReport.tsv";
+                variables "aspectRatiomean" "determinantmean" "nonOrthogonalitymean" "skewnessmean" "volumeRatiomean";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/VR/0/volumeReport.dat";
+                reference "verification/short/VR/0/volumeReport.dat";
+                variables "Umean" "Umax" "Umin";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/SR/0/surfaceReport.dat";
+                reference "verification/long/SR/0/surfaceReport.dat";
+                variables "Tmean";
+            }
+            {
+                result "postProcessing/VR_mesh/0/volumeReport.tsv";
+                reference "verification/long/VR_mesh/0/volumeReport.tsv";
+                variables "aspectRatiomean" "determinantmean" "nonOrthogonalitymean" "skewnessmean" "volumeRatiomean";
+            }
+            {
+                result "postProcessing/VR/0/volumeReport.dat";
+                reference "verification/long/VR/0/volumeReport.dat";
+                variables "Umean" "Umax" "Umin";
+            }
+        );
+    }
+);

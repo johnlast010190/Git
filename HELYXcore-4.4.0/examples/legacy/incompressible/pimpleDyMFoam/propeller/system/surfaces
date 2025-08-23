@@ -1,0 +1,52 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+
+surfaces
+{
+    type            surfaces;
+    libs            ("libsampling.so");
+    writeControl    writeTime;
+
+    surfaceFormat   vtk;
+    fields          (p U Q);
+
+    interpolationScheme cellPoint;
+
+    surfaces
+    (
+        zNormal
+        {
+            type            cuttingPlane;
+            planeType       pointAndNormal;
+            pointAndNormalDict
+            {
+                point   (0 0 0);
+                normal  (0 0 1);
+            }
+            interpolate     true;
+        }
+
+        isoQ
+        {
+            type            isoSurface;
+            isoField        Q;
+            isoValue        1000;
+            interpolate     true;
+        }
+
+        propeller
+        {
+            type            patch;
+            patches         ("propeller.*");
+            interpolate     true;
+        }
+    );
+}
+
+
+// ************************************************************************* //

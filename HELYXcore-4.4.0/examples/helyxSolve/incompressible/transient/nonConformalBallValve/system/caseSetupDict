@@ -1,0 +1,389 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields  true;
+        resetBoundaryFields  true;
+        resetSystemDicts     true;
+        resetConstDicts      true;
+        resetBoundaryMesh    false;
+        deleteUnusedFields   true;
+    }
+    system
+    {
+        controlDict
+        {
+            application    helyxSolve;
+            startFrom      startTime;
+            startTime      0;
+            stopAt         endTime;
+            endTime        1;
+            deltaT         1e-3;
+            writeControl   adjustableRunTime;
+            writeInterval  0.01;
+            writePrecision 6;
+            maxCo          0.5;
+        }
+        nonConformalCouplesDict
+        {
+            nonConformalCyclic
+            {
+                patches          (pipeNonCouple ballNonCouple);
+                transformType    none;
+            }
+        }
+        setFieldsDict
+        {
+            regions
+            (
+                cylinderToFace
+                {
+                    point1 (-0.51 0 0);
+                    point2 (-0.49 0 0);
+                    radius 0.05;
+
+                    fieldValues
+                    (
+                        volScalarFieldValue Cparticulate 1
+                    );
+                }
+            );
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p Cparticulate );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+        inletFlowRate
+        {
+            type             surfaceFieldValue;
+            libs             ( "libfieldFunctionObjects.so" );
+            writeControl     timeStep;
+            writeInterval    1;
+            writeFields      false;
+            log              false;
+            regionType       patch;
+            name             inlet;
+            fields           (phi);
+            operation        sum;
+        }
+        lowerOutletFlowRate
+        {
+            type             surfaceFieldValue;
+            libs             ( "libfieldFunctionObjects.so" );
+            writeControl     timeStep;
+            writeInterval    1;
+            writeFields      false;
+            log              false;
+            regionType       patch;
+            name             lowerOutlet;
+            fields           (phi);
+            operation        sum;
+        }
+        upperOutletFlowRate
+        {
+            type             surfaceFieldValue;
+            libs             ( "libfieldFunctionObjects.so" );
+            writeControl     timeStep;
+            writeInterval    1;
+            writeFields      false;
+            log              false;
+            regionType       patch;
+            name             upperOutlet;
+            fields           (phi);
+            operation        sum;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( transient ras dynamic Cparticulate );
+        turbulenceModel kOmegaSST;
+        materials (water);
+        materialProperties
+        {
+            water
+            {
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho 1000;
+                }
+            }
+            CparticulateconcentrationTransport
+            {
+                D [0 2 -1 0 0 0 0] 1.002e-06;
+                Sct 1;
+                Sc 1;
+            }
+        }
+        system
+        {
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default         backward;
+                }
+                divSchemes
+                {
+                    div(phi,Cparticulate) Gauss limitedLinear 1;
+                }
+                wallDist
+                {
+                    method          meshWave;
+                    correctWalls    false;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    p
+                    {
+                        solver                GAMG;
+                        nCellsInCoarsestLevel 10;
+                        smoother              GaussSeidel;
+                        tolerance             1e-6;
+                        relTol                0;
+                    }
+                    pFinal
+                    {
+                        $p;
+                    }
+                    U
+                    {
+                        solver                PBiCGStab;
+                        preconditioner        DILU;
+                        tolerance             1e-5;
+                        relTol                0;
+                    }
+                    UFinal
+                    {
+                        $U;
+                    }
+                    Cparticulate
+                    {
+                        solver                PBiCGStab;
+                        preconditioner        DILU;
+                        tolerance             1e-5;
+                        relTol                0;
+                    }
+                    CparticulateFinal
+                    {
+                        solver                PBiCGStab;
+                        preconditioner        DILU;
+                        tolerance             1e-5;
+                        relTol                0;
+                    }
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p               1;
+                    }
+                    equations
+                    {
+                        U               1;
+                    }
+                }
+                PIMPLE
+                {
+                    correctMeshPhi      false;
+                    nOuterCorrectors    1;
+                    nCorrectors         3;
+                }
+            }
+            meshObjects
+            {
+                oscillatingRotatingFrame
+                {
+                    type dynamicMotionCoordinateFrame;
+                    motionFunction
+                    {
+                        type       oscillatingRotatingMotion;
+                        omega      6.283185307179586;
+                        amplitude  (0 0 45);
+                    }
+                    coordinateSystem
+                    {
+                        type cartesian;
+                        origin (0 0 0);
+                        e1 (1 0 0);
+                        e3 (0 0 1);
+                    }
+                }
+            }
+            fvOptions
+            {
+                YCparticulate
+                {
+                    noDiffusionBoundaries ("inlet");
+                }
+            }
+        }
+        constant
+        {
+            dynamicMeshDict
+            {
+                mover
+                {
+                    type            motionSolver;
+                    libs            ( "libfvMeshMovers.so" "libfvMotionSolvers.so" );
+                    motionSolver    solidBody;
+                    cellZone        ball;
+                    referenceFrame  oscillatingRotatingFrame;
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform (0 0 0);
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 3.75e-3;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 5.33333;
+                }
+            }
+            Cparticulate
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+        }
+        boundaryTypeDefaults
+        {
+            wall
+            {
+                U
+                {
+                    type movingWallVelocity;
+                    value uniform (0 0 0);
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                }
+                Cparticulate
+                {
+                    type zeroGradient;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform (0 0 0);
+                }
+                p
+                {
+                    type totalPressure;
+                    p0 uniform 1e4;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    intensity 0.05;
+                    value uniform 3.75e-3;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    mixingLength 0.1;
+                    value uniform 5.33333;
+                }
+                Cparticulate
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            "(lowerOutlet|upperOutlet)"
+            {
+                U
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform (0 0 0);
+                }
+                p
+                {
+                    type totalPressure;
+                    p0 uniform 0;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    intensity 0.05;
+                    value uniform 3.75e-3;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    mixingLength 0.1;
+                    value uniform 5.33333;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

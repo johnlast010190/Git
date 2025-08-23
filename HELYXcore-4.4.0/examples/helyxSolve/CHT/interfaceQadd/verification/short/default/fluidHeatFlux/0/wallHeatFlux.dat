@@ -1,0 +1,3 @@
+# Wall heat-flux 
+# Time           	patch            	min              	max              	integral         
+1.0000000000e+01	default_to_solid	-4.2560564915e+02	-5.7988538025e+01	-8.9891336112e+02

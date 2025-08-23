@@ -1,0 +1,557 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom latestTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 500;
+            deltaT 1;
+            writeControl timeStep;
+            writeInterval 100;
+            writeFormat binary;
+            writePrecision 10;
+            timeFormat general;
+            timePrecision 6;
+            runTimeModifiable yes;
+            adjustTimeStep false;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+
+        streamLines
+        {
+            // Where to load it from
+            libs            ("libfieldFunctionObjects.so");
+            type            streamLine;
+
+            // Output every
+            writeControl    writeTime;
+            // writeInterval 10;
+
+            setFormat       vtk; //gnuplot; //xmgr; //raw; //jplot; //csv; //ensight;
+
+            // Tracked forwards (+U) or backwards (-U)
+            trackForward    true;
+
+            // Names of fields to sample. Should contain above velocity field!
+            fields (p U k);
+
+            // Steps particles can travel before being removed
+            lifeTime        10000;
+
+            //- Specify either absolute length of steps (trackLength) or a number
+            //  of subcycling steps per cell (nSubCycle)
+
+                // Size of single track segment [m]
+                //trackLength 1e-3;
+
+                // Number of steps per cell (estimate). Set to 1 to disable subcycling.
+                nSubCycle 5;
+
+
+            // Cloud name to use
+            cloud           particleTracks;
+
+            // Seeding method
+            seedSampleSet
+            {
+                type        uniform;
+                axis        x;  //distance;
+
+                // Note: tracks slightly offset so as not to be on a face
+                start       (-1.001 -0.05 0.0011);
+                end         (-1.001 -0.05 1.0011);
+                nPoints     20;
+            }
+        }
+
+        // Interpolate U to create near-wall UNear
+        near
+        {
+            // Where to load it from
+            libs            ("libfieldFunctionObjects.so");
+
+            type nearWallFields;
+
+            // Output every
+            writeControl    writeTime;
+
+            // Calculate every
+            executeControl  writeTime;
+
+            // Fields to be sampled. Per field original name and mapped field to
+            // create.
+            // Note: fields only get updated when writing!
+            fields
+            (
+                (U UNear)
+            );
+
+            // Patches/groups to sample (regular expressions)
+            patches         (motorBikeGroup);
+
+            // Distance to sample
+            distance        0.001;
+        }
+
+        // Use UNear to track along wall
+        wallBoundedStreamLines
+        {
+            // Where to load it from (if not already in solver)
+            libs            ("libfieldFunctionObjects.so");
+            type            wallBoundedStreamLine;
+
+            // Output every
+            writeControl    writeTime;
+
+            setFormat       vtk; //gnuplot; //xmgr; //raw; //jplot;
+
+            // Velocity field to use for tracking.
+            U               UNear;
+
+            // Interpolation method. Default is cellPoint.
+            // interpolationScheme pointMVC;
+
+            // Tracked forwards (+U) or backwards (-U)
+            trackForward    true;
+
+            interpolationScheme cellPoint;
+
+            // Names of fields to sample. Should contain above velocity field!
+            fields (p U k UNear);
+
+            // Steps particles can travel before being removed
+            lifeTime        100;
+
+            // Cloud name to use
+            cloud           wallBoundedParticleTracks;
+
+            // Seeding method.
+            seedSampleSet
+            {
+                type        patchSeed;
+
+                uniformCoeffs
+                {
+                    axis        x;  // distance;
+
+                    start       (0.0035 0.0999 0.0001);
+                    end         (0.0035 0.0999 0.0099);
+                    nPoints     20;
+                }
+
+                cloudCoeffs
+                {
+                    axis        x;  // distance;
+                    points      ((0.351516548679288 -0.0116085375585099 1.24));
+                }
+
+                patchSeedCoeffs
+                {
+                    patches     (motorBikeGroup);
+                    axis        x;  // distance;
+                    maxPoints   20000;
+                }
+            }
+        }
+
+        cuttingPlane
+        {
+            type            surfaces;
+            libs            ("libsampling.so");
+            writeControl    writeTime;
+
+            surfaceFormat   vtk;
+            fields          ( p U );
+
+            interpolationScheme cellPoint;
+            surfaces
+            (
+                yNormal
+                {
+                    type            cuttingPlane;
+                    planeType       pointAndNormal;
+                    pointAndNormalDict
+                    {
+                        point   (0 0 0);
+                        normal  (0 1 0);
+                    }
+                    interpolate     true;
+                }
+            );
+        }
+
+        forceCoeffs1
+        {
+            type            forceCoeffs;
+
+            libs            ("libforces.so");
+
+            writeControl    timeStep;
+            timeInterval    1;
+
+            log             yes;
+
+            patches         (motorBikeGroup);
+            rho             rhoInf;      // Indicates incompressible
+            rhoInf          1.225;           // Redundant for incompressible
+            liftDir         (0 0 1);
+            dragDir         (1 0 0);
+            CofR            (0.72 0 0);  // Axle midpoint on ground
+            pitchAxis       (0 1 0);
+            magUInf         20;
+            lRef            1.42;        // Wheelbase length
+            Aref            0.75;        // Estimated
+            /*
+            binData
+            {
+                nBin        20;          // output data into 20 bins
+                direction   (1 0 0);     // bin direction
+                cumulative  yes;
+            }
+            */
+            outputFileFormat tsv;
+        }
+
+        ensightWrite
+        {
+            type    ensightWrite;
+            libs    ("libutilityFunctionObjects.so");
+            log     true;
+
+            // Fields to output (words or regex)
+            fields  (U p "(k|epsilon|omega)");
+
+            writeControl  writeTime;
+            writeInterval 1;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (steady ras);
+        boundaryMesh
+        {
+            motorBike
+            {
+                type wall;
+            }
+            frontAndBack
+            {
+                type patch;
+            }
+            inlet
+            {
+                type patch;
+            }
+            outlet
+            {
+                type patch;
+            }
+            lowerWall
+            {
+                type wall;
+            }
+            upperWall
+            {
+                type wall;
+            }
+        }
+        turbulenceModel kOmegaSST;
+        materials (air);
+        materialProperties
+        {
+            air
+            {
+                equationOfStateCoeffs
+                {
+                    rho 1.225;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cp 1004.4;
+                }
+                muModelCoeffs
+                {
+                    mu 6.125e-06;
+                }
+                kappaModelCoeffs
+                {
+                    Pr 1.0;
+                }
+                referenceFields
+                {
+                    p [ 1 -1 -2 0 0 0 0 ] 0;
+                }
+            }
+        }
+        system
+        {
+            fvSolution
+            {
+                solvers
+                {
+                    p
+                    {
+                        solver          PCG;
+                        preconditioner  DIC;
+                        tolerance       1e-06;
+                        relTol          0.05;
+                    }
+                    U
+                    {
+                        solver          PBiCGStab;
+                        preconditioner  DILU;
+                        tolerance       1e-8;
+                        relTol          0.1;
+                    }
+                    k
+                    {
+                        solver          PBiCGStab;
+                        preconditioner  DILU;
+                        tolerance       1e-8;
+                        relTol          0.1;
+                    }
+                    omega
+                    {
+                        solver          PBiCGStab;
+                        preconditioner  DILU;
+                        tolerance       1e-8;
+                        relTol          0.1;
+                    }
+                }
+                SIMPLE
+                {
+                    residualControl
+                    {
+                        p               1e-4;
+                        U               1e-4;
+                        // possibly check turbulence fields
+                        "(k|omega)" 1e-3;
+                    }
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        rho             1.0;
+                        p               0.7;
+                    }
+                    equations
+                    {
+                        U               0.3;
+                        "(k|epsilon|omega)" 0.7;
+                    }
+                }
+            }
+            fvSchemes
+            {
+                gradSchemes
+                {
+                    default         Gauss linear;
+                }
+                laplacianSchemes
+                {
+                    default         Gauss linear corrected;
+                    laplacian((rho*DomegaEff),omega) Gauss linear corrected;
+                    laplacian((rho*DkEff),k) Gauss linear corrected;
+                    laplacian((rho*nuEff),U) Gauss linear corrected;
+                    laplacian(rhorAUf,p) Gauss linear corrected;
+                }
+                snGradSchemes
+                {
+                    default         corrected;
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform (20 0 0);
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.24;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 1.78;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform (20 0 0);
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                k
+                {
+                    type            fixedValue;
+                    value           uniform 0.24;
+                }
+                omega
+                {
+                    type            fixedValue;
+                    value           uniform 1.78;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type            inletOutlet;
+                    inletValue      uniform (0 0 0);
+                    value           uniform (20 0 0);
+                }
+                p
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+                k
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 0.24;
+                    value           uniform 0.24;
+                }
+                omega
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 1.78;
+                    value           uniform 1.78;
+                }
+            }
+            lowerWall
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform (20 0 0);
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                k
+                {
+                    type            kqRWallFunction;
+                    value           uniform 0.24;
+                }
+                omega
+                {
+                    type            omegaWallFunction;
+                    value           uniform 1.78;
+                }
+            }
+            motorBikeGroup
+            {
+                U
+                {
+                    type            noSlip;
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                k
+                {
+                    type            kqRWallFunction;
+                    value           uniform 0.24;
+                }
+                omega
+                {
+                    type            omegaWallFunction;
+                    value           uniform 1.78;
+                }
+            }
+            upperWall
+            {
+                "U|p|k|omega"
+                {
+                    type            slip;
+                }
+            }
+            frontAndBack
+            {
+                "U|p|k|omega"
+                {
+                    type            slip;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

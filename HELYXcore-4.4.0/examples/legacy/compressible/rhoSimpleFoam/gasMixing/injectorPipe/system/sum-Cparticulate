@@ -1,0 +1,49 @@
+// -*- C++ -*-
+
+// ************************************************************************* //
+
+sum-Cparticulate-0.25
+{
+    $settings_stats
+
+    regionType      surface;
+    name            plane-0.25;
+
+    operation       weightedAreaIntegrate;
+    // postOperation   sqrt;
+
+    weightField     rhoU;
+    fields          (Cparticulate);
+}
+
+
+sum-Cparticulate-0.45
+{
+    $settings_stats
+
+    regionType      surface;
+    name            plane-0.45;
+
+    operation       weightedAreaIntegrate;
+    // postOperation   sqrt;
+
+    weightField     rhoU;
+    fields          (Cparticulate);
+}
+
+sum-Cparticulate-0.55
+{
+    $settings_stats
+
+    regionType      surface;
+    name            plane-0.55;
+
+    operation       weightedAreaIntegrate;
+    // postOperation   sqrt;
+
+    weightField     rhoU;
+    fields          (Cparticulate);
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,23 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy Fluent mesh from resources directory
+mkdir -p constant/fluentMesh
+cp "$HELYX_TUTORIALS"/resources/geometry/cavityRoom/mesh2D-bias-allBC.msh constant/fluentMesh/
+
+# Convert mesh
+helyxRun fluent3DMeshToFoam constant/fluentMesh/mesh2D-bias-allBC.msh
+
+# Setup
+helyxRun caseSetup
+
+# Run
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualization
+touch cavityRoom.foam
+
+#------------------------------------------------------------------------------

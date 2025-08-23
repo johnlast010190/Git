@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+# set -x
+
+ROOT_DIR=$(git rev-parse --show-superproject-working-tree)
+if [ -z "$ROOT_DIR" ]; then
+	# silent quit; we don't want to disturb people doing their work
+	# outside the main project.
+	exit 1;
+fi
+
+SUBPROJECT_DIR=$(git rev-parse --show-toplevel)
+SUBPROJECT_NAME=$(realpath -m --relative-to=$ROOT_DIR $SUBPROJECT_DIR)
+SUBPROJECT_COMMIT_MESSAGE=$(git log -1 HEAD --format='%s%n%n%b')
+ROOT_COMMIT_MESSAGE="$SUBPROJECT_COMMIT_MESSAGE ...in $SUBPROJECT_NAME"
+
+# Clean the Git environment before crossing repository boundaries.
+# From https://stackoverflow.com/questions/36196548/cannot-trigger-post-commit-git-hook-on-git-submodule
+while read variable; do
+    unset $variable
+done < <(env | grep "^GIT_" | sed 's/=.*//g')
+
+git -C $ROOT_DIR add "$SUBPROJECT_NAME"
+git -C $ROOT_DIR commit -m "$ROOT_COMMIT_MESSAGE"

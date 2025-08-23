@@ -1,0 +1,47 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/Curle1/0/DavidsonCurle.dat";
+                reference "verification/short/Curle1/0/DavidsonCurle.dat";
+                variables "microphone-A" "microphone-B" "microphone-C";
+            }
+            {
+                result "postProcessing/FfowcsWilliamsHawkings1/0/FfowcsWilliamsHawkings.dat";
+                reference "verification/short/FfowcsWilliamsHawkings1/0/FfowcsWilliamsHawkings.dat";
+                variables "Size         3";
+            }
+            {
+                result "postProcessing/vr1/0/volumeReport.tsv";
+                reference "verification/short/vr1/0/volumeReport.tsv";
+                variables "Umax" "Umean" "pmax" "pmean";
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/Curle1/0/DavidsonCurle.dat";
+                reference "verification/long/Curle1/0/DavidsonCurle.dat";
+                variables "microphone-A" "microphone-B" "microphone-C";
+            }
+            {
+                result "postProcessing/FfowcsWilliamsHawkings1/0/FfowcsWilliamsHawkings.dat";
+                reference "verification/long/FfowcsWilliamsHawkings1/0/FfowcsWilliamsHawkings.dat";
+                variables "Size         3";
+            }
+            {
+                result "postProcessing/vr1/0/volumeReport.tsv";
+                reference "verification/long/vr1/0/volumeReport.tsv";
+                variables "Umax" "Umean" "pmax" "pmean";
+            }
+        );
+    }
+);

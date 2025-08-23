@@ -1,0 +1,480 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        // Don't change boundary mesh (has offsets)
+        resetBoundaryMesh false;
+    }
+    regionGroups
+    (
+        fluids ( region0 wallFilmRegion )
+    );
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       latestTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         1;
+            deltaT          1e-04;
+            writeControl    adjustableRunTime;
+            writeInterval   0.01;
+            purgeWrite      0;
+            writeFormat     ascii;
+            writePrecision  10;
+            writeCompression off;
+            timeFormat      general;
+            timePrecision   6;
+            runTimeModifiable yes;
+            adjustTimeStep  yes;
+            maxCo           0.3;
+            maxDeltaT       1e-03;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            regions          ( region0 );
+            fields           ( T U p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+        }
+    }
+}
+
+regions
+{
+    wallFilmRegion
+    {
+        state ( );
+        turbulenceModel laminar;
+        materials ( liquid );
+        system
+        {
+            materialProperties
+            {
+                materialType fluid;
+                energy sensibleInternalEnergy;
+                evaporationSpecies H2O;
+                molWeight    18.015;
+                equationOfState rhoFunction1;
+                equationOfStateCoeffs
+                {
+                    rho NSRDS5 ( 98.343885 0.30542 647.13 0.081 );
+                }
+                thermodynamics hFunctionT;
+                thermodynamicsCoeffs
+                {
+                    Cp NSRDS0 ( 15341.1046350264 -116.019983347211 0.451013044684985 -0.000783569247849015 5.20127671384957e-07 0 );
+                    h NSRDS0 ( -17957283.7993676 15341.1046350264 -58.0099916736053 0.150337681561662 -0.000195892311962254 1.04025534276991e-07 );
+                    Sf 0;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu NSRDS1 ( -51.964 3670.6 5.7331 -5.3495e-29 10 );
+                }
+                kappaModel scalarFunction1;
+                kappaModelCoeffs
+                {
+                    kappa NSRDS0 ( -0.4267 0.0056903 -8.0065e-06 1.815e-09 0 0 );
+                }
+                referenceFields
+                {
+                    p [ 1 -1 -2 0 0 0 0 ] 101325;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    "alpha.*"
+                    {
+                        solver          PBiCGStab;
+                        preconditioner  DILU;
+                        tolerance       1e-10;
+                        relTol          0;
+                    }
+
+                    "(U|e).*"
+                    {
+                        solver          PBiCGStab;
+                        preconditioner  DILU;
+                        tolerance       1e-10;
+                        relTol          0;
+                        maxIter         20;
+                    }
+                }
+
+                PIMPLE
+                {
+                    momentumPredictor yes;
+                    nCorr 1;
+                    nNonOrthCorr 0;
+                }
+
+                relaxationFactors
+                {
+                    equations
+                    {
+                        ".*"        1;
+                    }
+                }
+            }
+            fvSchemes
+            {
+                ddtSchemes { default Euler; }
+                gradSchemes { default Gauss linear; }
+                divSchemes
+                {
+                    default none;
+                    div(phid,alpha) Gauss upwind;
+                    div(phi,U) Gauss upwind;
+                    div(phi,e) Gauss upwind;
+                    div(nHat) Gauss linear;
+                }
+                laplacianSchemes { default Gauss linear uncorrected; }
+                interpolationSchemes { default linear; }
+                snGradSchemes { default uncorrected; }
+            }
+            fvOptions { turbulenceSolver { type none; } }
+        }
+
+        fieldMaps { delta distance; T T; U U; }
+
+        fields
+        {
+            delta { initialisation { type fixedValue; value uniform 0.00013; } }
+            T { initialisation { type fixedValue; value uniform 300.0; } }
+            U { initialisation { type fixedValue; value uniform (0 0 0); } }
+        }
+        boundaryConditions
+        {
+            wallFilmFaces_top
+            {
+                delta { type zeroGradient; }
+                T { type zeroGradient; }
+                U { type noSlip; }
+            }
+            "side.*"
+            {
+                delta { type zeroGradient; }
+                T { type zeroGradient; }
+                U { type noSlip; }
+            }
+            region0_to_wallFilmRegion_wallFilmFaces
+            {
+                delta { type zeroGradient; }
+                T { type zeroGradient; }
+                U { type noSlip; }
+            }
+        }
+    }
+
+    region0
+    {
+        state ( transient ras energy );
+        turbulenceModel laminar;
+        materials ( O2 H2O N2 );
+
+        materialProperties
+        {
+            materialType fluid;
+            energy sensibleEnthalpy;
+            mixture standardMixture;
+            defaultSpecie N2;
+            liquids { H2O; }
+            solids {}
+            buoyancyModel rhoModel;
+            species (O2 H2O N2);
+            O2
+            {
+                molWeight 31.9988;
+                thermodynamics janaf;
+                equationOfState perfectGas;
+                thermodynamicsCoeffs
+                {
+                    Tlow            200;
+                    Thigh           5000;
+                    Tcommon         1000;
+                    highCpCoeffs    ( 3.69758 0.00061352 -1.25884e-07 1.77528e-11 -1.13644e-15 -1233.93 3.18917 );
+                    lowCpCoeffs     ( 3.21294 0.00112749 -5.75615e-07 1.31388e-09 -8.76855e-13 -1005.25 6.03474 );
+                }
+                kappaModel kappaSutherland;
+                muModel muSutherland;
+                muModelCoeffs { As 1.67212e-06; Ts 170.672; }
+            }
+            H2O
+            {
+                molWeight       18.0153;
+                thermodynamics  janaf;
+                equationOfState perfectGas;
+                thermodynamicsCoeffs
+                {
+                    Tlow            200;
+                    Thigh           5000;
+                    Tcommon         1000;
+                    highCpCoeffs    ( 2.67215 0.00305629 -8.73026e-07 1.201e-10 -6.39162e-15 -29899.2 6.86282 );
+                    lowCpCoeffs     ( 3.38684 0.00347498 -6.3547e-06 6.96858e-09 -2.50659e-12 -30208.1 2.59023 );
+                }
+                kappaModel    kappaSutherland;
+                muModel       muSutherland;
+                muModelCoeffs { As 1.67212e-06; Ts 170.672; }
+            }
+            N2
+            {
+                molWeight 28.0134;
+                thermodynamics  janaf;
+                equationOfState perfectGas;
+                thermodynamicsCoeffs
+                {
+                    Tlow            200;
+                    Thigh           5000;
+                    Tcommon         1000;
+                    highCpCoeffs    ( 2.92664 0.00148798 -5.68476e-07 1.0097e-10 -6.75335e-15 -922.798 5.98053 );
+                    lowCpCoeffs     ( 3.29868 0.00140824 -3.96322e-06 5.64152e-09 -2.44486e-12 -1020.9 3.95037 );
+                }
+
+                kappaModel kappaSutherland;
+                muModel muSutherland;
+                muModelCoeffs { As 1.67212e-06; Ts 170.672; }
+            }
+            referenceFields { p [ 1 -1 -2 0 0 0 0 ] 101325; }
+        }
+        system
+        {
+            fvOptions
+            {
+                surfaceFilmSolver { type surfaceFilmSolver; }
+                lagrangianSolver { type lagrangianSolver; lagrangianType basicReactingMultiphaseCloud;  }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    rho { solver PCG; preconditioner DIC; tolerance 0; relTol 0.1; };
+                    rhoFinal { $rho; tolerance 1e-6; relTol 0; };
+                    G { solver PCG; preconditioner DIC; tolerance 0; relTol 0.1; };
+                    GFinal { $rho; tolerance 1e-6; relTol 0; };
+                    U { solver smoothSolver; smoother symGaussSeidel; tolerance 0; relTol 0.1; maxIter 50; }
+                    UFinal { solver smoothSolver; smoother symGaussSeidel; maxIter 50; relTol 0; tolerance 1e-05; }
+                    p { solver GAMG; tolerance 0; relTol 0.01; smoother GaussSeidel; maxIter 50; }
+                    pFinal { solver GAMG; smoother GaussSeidel; maxIter 50; tolerance 1e-05; relTol 0; }
+                    "(h|Yi|O2|N2|H2O)" { solver PBiCGStab; preconditioner DILU; tolerance 1e-6; relTol 0; }
+                    hFinal { solver PBiCGStab; preconditioner DILU; tolerance 1e-6; relTol 0; }
+                }
+
+                PIMPLE
+                {
+                    nCorrectors     2;
+                    nNonOrthogonalCorrectors 0;
+                    momentumPredictor yes;
+                    nOuterCorrectors 1;
+                }
+                relaxationFactors
+                {
+                    fields { ".*" 1; }
+                    equations { ".*" 1; }
+                }
+            }
+            fvSchemes
+            {
+                ddtSchemes { default Euler; }
+                gradSchemes { default Gauss linear; }
+                divSchemes
+                {
+                    default         none;
+                    div(phi,U)      Gauss upwind;
+                    div(phi,k)      Gauss upwind;
+                    div(phi,K)      Gauss upwind;
+                    div(Ji,hi)      Gauss upwind;
+                    div(phi,Yi)     Gauss upwind;
+                    div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
+                    div(phiU,p)     Gauss linear;
+                    div(Ji,Ii_h)    Gauss upwind;
+                }
+                laplacianSchemes { default Gauss linear uncorrected; }
+                interpolationSchemes { default linear; }
+                snGradSchemes { default uncorrected; }
+            }
+        }
+        constant
+        {
+            surfaceFilmProperties
+            {
+                surfaceFilmModel thermoSingleLayer;
+                active true;
+                region wallFilmRegion;
+                viscosity { model Newtonian; }
+                sigma       0.07;
+                deltaWet    1e-4;
+                hydrophilic no;
+                turbulenceModel { model laminar; Cf 0.005; }
+                forces { thermocapillary; }
+                upperSurfaceModels { heatTransfer { model constant; c0 1e-8; } }
+                lowerSurfaceModels { heatTransfer { model constant; c0 1e-8; } }
+            }
+            reactingCloud1Properties
+            {
+                solution
+                {
+                    active          true;
+                    coupled         no;
+                    transient       yes;
+                    cellValueSourceCorrection no;
+                    maxCo           0.3;
+                    sourceTerms
+                    {
+                        schemes
+                        {
+                            rho explicit 1;
+                            U explicit 1;
+                            Yi explicit 1;
+                            h explicit 1;
+                            radiation explicit 1;
+                        }
+                    }
+
+                    interpolationSchemes
+                    {
+                        rho cell;
+                        U cellPoint;
+                        mu cell;
+                        T cell;
+                        thermo-Cp cell;
+                        kappa cell;
+                        p cell;
+                    }
+                    integrationSchemes { U Euler; T analytical; }
+                }
+
+                constantProperties { rho0 1000; T0 300; Cp0 4187; constantVolume false; }
+
+                subModels
+                {
+                    particleForces { sphereDrag; gravity; }
+                    injectionModels
+                    {
+                        model1
+                        {
+                            type            reactingMultiphaseLookupTableInjection;
+                            massTotal       0.1;
+                            parcelBasisType mass;
+                            SOI             0.01;
+                            inputFile       "parcelInjectionProperties";
+                            duration        10.0;
+                            parcelsPerSecond 200;
+                            randomise       true;
+                        }
+                    }
+                    dispersionModel none;
+                    patchInteractionModel standardWallInteraction;
+                    heatTransferModel none;
+                    compositionModel singleMixtureFraction;
+                    phaseChangeModel none;
+                    devolatilisationModel none;
+                    surfaceReactionModel none;
+                    stochasticCollisionModel none;
+                    surfaceFilmModel thermoSurfaceFilm;
+                    radiation       off;
+                    standardWallInteractionCoeffs { type rebound; }
+                    singleMixtureFractionCoeffs
+                    {
+                        phases ( gas { } liquid { H2O 1; } solid { } );
+                        YGasTot0        0;
+                        YLiquidTot0     1;
+                        YSolidTot0      0;
+                    }
+
+                    thermoSurfaceFilmCoeffs
+                    {
+                        interactionType splashBai;
+                        deltaWet        0.0005;
+                        Adry            2630;
+                        Awet            1320;
+                        Cf              0.6;
+                    }
+                }
+                cloudFunctions
+                {
+                    particleCollector1
+                    {
+                        type            particleCollector;
+                        mode            concentricCircle;
+                        origin          (0.05 0.025 0.005);
+                        radius          (0.01 0.025 0.05);
+                        nSector         10;
+                        refDir          (1 0 0);
+                        normal          (0 0 1);
+                        negateParcelsOppositeNormal no;
+                        removeCollected no;
+                        surfaceFormat   vtk;
+                        resetOnWrite    no;
+                        log             yes;
+                    }
+                }
+            }
+
+            g { value ( 0 0 -9.81 ); }
+        }
+
+        fields
+        {
+            T { initialisation { type fixedValue; value uniform 300.0; } }
+            p { initialisation { type buoyantPressure; initialValue uniform 0; } }
+            U { initialisation { type fixedValue; value uniform (0 0 0); } }
+            H2O { initialisation { type fixedValue; value uniform 0; } }
+            N2 { initialisation { type fixedValue; value uniform 0.79; } }
+            O2 { initialisation { type fixedValue; value uniform 0.21; } }
+        }
+        boundaryConditions
+        {
+            sides
+            {
+                p { type totalPressure; p0 uniform 0; value uniform 0; addStaticHead true; }
+                T { type inletOutlet; inletValue uniform 300; value uniform 300; }
+                U { type pressureInletOutletVelocity; value uniform (0 0 0); }
+                H2O { type inletOutlet; inletValue uniform 0; value uniform 0; }
+                N2 { type inletOutlet; inletValue uniform 0.79; inputValue uniform 0.79; value uniform 0.79; }
+                O2 { type inletOutlet; inletValue uniform 0.21; value uniform 0.21; value uniform 0.21; }
+            }
+            region0_to_wallFilmRegion_wallFilmFaces
+            {
+                p { type fixedFluxPressure; value uniform 0; }
+                T { type fixedValue; value uniform 300; }
+                U { type noSlip; }
+                H2O { type zeroGradient; }
+                O2 { type zeroGradient; }
+                N2 { type zeroGradient; }
+                Ydefault { type zeroGradient; }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,23 @@
+# States in helyxTest
+
+buoyantBousinesqSimpleFoam	(SIMPLE incompressible ras buoyant)
+buoyantBousinesqSimpleFoam	(steady incompressible ras buoyant)
+buoyantMultiComponentRAS	(steady ras compressible buoyant multicomponent	
+densityCoupledS	(steady densityCoupled ras)	
+densityCoupledTRAS	(transient densityCoupled ras)	
+helyxAeroLES	(aero les backwardCompatible)	
+hydroRAS	(PIMPLE incompressible ras multiphaseHydro)	
+LTSInterFoam	(steady incompressible ras multiphaseVOF)	
+pimpleFoamLES	(PIMPLE incompressible les)
+pimpleFoamRAS	(PIMPLE incompressible ras)
+pisoFoamLES	(transient incompressible les)
+pisoFoamRAS	(PISO incompressible ras)
+pressureCoupledS	(steady pressureCoupled ras)	
+pressureCoupledTRAS	(transient pressureCoupled ras)
+segregatedS	(steady ras)
+segregatedTLES	(transient les)
+segregatedTRAS	(transient ras)
+simpleFoam	(SIMPLE incompressible ras)
+simpleFoam	(steady incompressible ras)
+solidS	(steady solid)
+solidT	(transient solid)

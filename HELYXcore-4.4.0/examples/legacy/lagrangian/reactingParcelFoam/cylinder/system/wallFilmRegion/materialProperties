@@ -1,0 +1,68 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      materialProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+materialType fluid;
+energy sensibleInternalEnergy;
+evaporationSpecies H2O;
+
+molWeight    18.015;
+equationOfState rhoFunction1;
+equationOfStateCoeffs
+{
+    rho NSRDS5 ( 98.343885 0.30542 647.13 0.081 );
+}
+thermodynamics hFunctionT;
+thermodynamicsCoeffs
+{
+    Cp NSRDS0
+    (
+        15341.1046350264
+        -116.019983347211
+        0.451013044684985
+        -0.000783569247849015
+        5.20127671384957e-07
+        0
+    );
+    h NSRDS0
+    (
+        -17957283.7993676
+        15341.1046350264
+        -58.0099916736053
+        0.150337681561662
+        -0.000195892311962254
+        1.04025534276991e-07
+    );
+    Sf 0;
+}
+muModel scalarFunction1;
+muModelCoeffs
+{
+    mu NSRDS1 ( -51.964 3670.6 5.7331 -5.3495e-29 10 );
+}
+kappaModel scalarFunction1;
+kappaModelCoeffs
+{
+    kappa NSRDS0 ( -0.4267 0.0056903 -8.0065e-06 1.815e-09 0 0 );
+}
+
+referenceFields
+{
+    p [1 -1 -2 0 0 0 0] 0.0;
+    TRef [0 0 0 1 0 0 0] 0;
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,437 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    regionGroups    1 ( fluid 1 ( region0 ) );
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            stopAt          endTime;
+            endTime         300;
+            startFrom       startTime;
+            writeControl    timeStep;
+            writeInterval   100;
+        }
+    }
+    functions
+    {
+        vr1
+        {
+            type            volumeReport;
+            fields          ( U p omega k );
+            outputFileFormat tsv;
+        }
+        forces1
+        {
+            type forces;
+            log  true;
+            CofR (0 50 0);
+            patches ( "wall.*" );
+            porosity true;
+        }
+        ventilationDrag_RF
+        {
+		    type ventilationDrag;
+		    patches ( "wall_r_rotfr_.*" );
+		    Uinf ( 38.89 0.0 0.0 );
+		    rhoInf 1.293;
+		    referenceArea 1.79296625;
+		    functionObjectLibs ("libforces.so" );
+        }
+        ventilationDrag_LF
+        {
+		    type ventilationDrag;
+		    patches ( "wall_l_rotfr_.*" );
+		    Uinf ( 38.89 0.0 0.0 );
+		    rhoInf 1.293;
+		    referenceArea 1.79296625;
+		    functionObjectLibs ("libforces.so" );
+        }
+        ventilationDrag_RR
+        {
+		    type ventilationDrag;
+		    patches ( "wall_l_rotrr_wheel.*" );
+		    Uinf ( 38.89 0.0 0.0 );
+		    rhoInf 1.293;
+		    referenceArea 1.79296625;
+		    functionObjectLibs ("libforces.so" );
+        }
+        ventilationDrag_LR
+        {
+		    type ventilationDrag;
+		    patches ( "wall_r_rotrr_wheel.*" );
+		    Uinf ( 38.89 0.0 0.0 );
+		    rhoInf 1.293;
+		    referenceArea 1.79296625;
+		    functionObjectLibs ("libforces.so" );
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        boundaryMesh
+        {
+            lateral { type patch; }
+            roof { type patch; }
+        }
+        state ( steady ras );
+        turbulenceModel kOmegaSST;
+        materials ( air );
+        system
+        {
+            meshObjects
+            {
+                radiatorFrame
+                {
+                    parentFrameName allMRF;
+                    type coordinateFrame;
+                    coordinateSystem
+                    {
+                        type  cartesian;
+                        origin ( 0 50 -0.05 );
+                        e1     ( 0.70710678 0.70710678 0 );
+                        e2     ( 0 0 1 );
+                    }
+                }
+
+                allMRF
+                {
+                    type            motionCoordinateFrame;
+                    motionFunction
+                    {
+                        type vehicleMotion;
+                        vehicleMotionCoeffs
+                        {
+                            vehicleSpeed constant 50.0;
+                            invTurnRadius table
+                            (
+                                ( 0 0.02 )
+                                ( 2000 0.02 )
+                                ( 2001 0.01 )
+                                ( 4000 0.01 )
+                                ( 4001 0.02 )
+                            );
+                        }
+                    }
+                    coordinateSystem
+                    {
+                        type   cartesian;
+                        origin ( 0 50 -0.05 );
+                        e1     ( -1 0 0 );
+                        e2     ( 0 -1 0 );
+                    }
+                }
+
+                rightFrontWheel_Frame
+                {
+                    parentFrameName allMRF;
+                    type            motionCoordinateFrame;
+                    motionFunction
+                    {
+                        type rotatingWheelMotion;
+                        contactRadius 0.1765;
+                    }
+                    coordinateSystem
+                    {
+                        type   cartesian;
+                        origin ( 0 50 0.1265 );
+                        e1     (1 0 0);
+                        e2     (0 0 1);
+                    }
+                }
+
+                leftFrontWheel_Frame
+                {
+                    parentFrameName allMRF;
+                    type            motionCoordinateFrame;
+                    motionFunction
+                    {
+                        type rotatingWheelMotion;
+                    }
+                    coordinateSystem
+                    {
+                        type   cartesian;
+                        origin ( 0 50 0.1265 );
+                        e1     (1 0 0);
+                        e2     (0 0 1);
+                    }
+                }
+
+                rightRearWheel_Frame
+                {
+                    parentFrameName allMRF;
+                    type            motionCoordinateFrame;
+                    motionFunction
+                    {
+                        type rotatingWheelMotion;
+                    }
+                    coordinateSystem
+                    {
+                        type   cartesian;
+                        origin ( 0.5 50 0.1265 );
+                        e1     (1 0 0);
+                        e2     (0 0 1);
+                    }
+                }
+
+                leftRearWheel_Frame
+                {
+                    parentFrameName allMRF;
+                    type            motionCoordinateFrame;
+                    motionFunction
+                    {
+                        type rotatingWheelMotion;
+                    }
+                    coordinateSystem
+                    {
+                        type   cartesian;
+                        origin ( 0.5 50 0.1265 );
+                        e1     (1 0 0);
+                        e2     (0 0 1);
+                    }
+                }
+            }
+            fvSchemes
+            {
+                gradSchemes
+                {
+                    turbulence      cellLimited leastSquares 1;
+                    default         taylorGauss linear;
+                    gradU           cellMDLimited taylorGauss linear 1;
+                    grad(p)         taylorGauss linear;
+                }
+
+                divSchemes
+                {
+                    div(phi,k)      bounded Gauss upwind;
+                    div(phi,omega)  bounded Gauss upwind;
+                }
+            }
+            fvOptions
+            {
+                radiatorR
+                {
+                    type            explicitPorositySource;
+                    explicitPorositySourceCoeffs
+                    {
+                        type            DarcyForchheimer;
+                        selectionMode   cellZone;
+                        cellZone        fluid_r_porous_radiator;
+                        d               d [ 0 -2 0 0 0 0 0 ] ( 50000000 5000000000 5000000000 );
+                        f               f [ 0 -1 0 0 0 0 0 ] ( 0 0 0 );
+                        referenceFrame  radiatorFrame;
+                    }
+                }
+                testVehicle
+                {
+                    type MRFSource;
+                    active true;
+                    MRFSourceCoeffs
+                    {
+                        selectionMode  cellZone;
+                        cellZone       allCells;
+                        referenceFrame allMRF;
+                    }
+                }
+                rightFrontWheel
+                {
+                    type MRFSource;
+                    active true;
+                    MRFSourceCoeffs
+                    {
+                        selectionMode  cellZone;
+                        cellZone       fluid_r_mrf_fr_wheel;
+                        referenceFrame rightFrontWheel_Frame;
+                    }
+                }
+                leftFrontWheel
+                {
+                    type MRFSource;
+                    active true;
+                    MRFSourceCoeffs
+                    {
+                        selectionMode  cellZone;
+                        cellZone       fluid_l_mrf_fr_wheel;
+                        referenceFrame leftFrontWheel_Frame;
+                    }
+                }
+                rightRearWheel
+                {
+                    type MRFSource;
+                    active true;
+                    MRFSourceCoeffs
+                    {
+                        selectionMode  cellZone;
+                        cellZone       fluid_r_mrf_rr_wheel;
+                        referenceFrame rightRearWheel_Frame;
+                    }
+                }
+                leftRearWheel
+                {
+                    type MRFSource;
+                    active true;
+                    MRFSourceCoeffs
+                    {
+                        cellZone       fluid_l_mrf_rr_wheel;
+                        selectionMode  cellZone;
+                        referenceFrame leftRearWheel_Frame;
+                    }
+                }
+            }
+        }
+        fields
+        {
+            U { initialisation { type fixedValue; value uniform ( 0 0 0 ); } }
+            p { initialisation { type fixedValue; value uniform 0; } }
+            k { initialisation { type turbulentIL; I 0.02; L 1; Uref 50;} }
+            omega { initialisation { type turbulentIL; I 0.02; L 0.1; Uref 50; } }
+        }
+        boundaryConditions
+        {
+            "wall.*"
+            {
+                U
+                {
+                    type fixedValueVelocity;
+                    value uniform (0 0 0);
+                    inputValue uniform (0 0 0);
+                    referenceFrame allMRF;
+                }
+            }
+            "wall_r_rotfr_.*"
+            {
+                U
+                {
+                    type wallVelocity;
+                    value uniform (0 0 0);
+                    inputValue uniform (0 0 0);
+                    referenceFrame rightFrontWheel_Frame;
+                }
+            }
+            "wall_l_rotfr_.*"
+            {
+                U
+                {
+                    type wallVelocity;
+                    value uniform (0 0 0);
+                    inputValue uniform (0 0 0);
+                    referenceFrame leftFrontWheel_Frame;
+                }
+            }
+            "wall_l_rotrr_wheel.*"
+            {
+                U
+                {
+                    type wallVelocity;
+                    value uniform (0 0 0);
+                    inputValue uniform (0 0 0);
+                    referenceFrame leftRearWheel_Frame;
+                }
+            }
+            "wall_r_rotrr_wheel.*"
+            {
+                U
+                {
+                    type wallVelocity;
+                    value uniform (0 0 0);
+                    inputValue uniform (0 0 0);
+                    referenceFrame rightRearWheel_Frame;
+                }
+            }
+            inlet_l_exhaust
+            {
+                p { type zeroGradient; }
+                U
+                {
+                    type flowRateInletVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    volumetricFlowRate constant 0.1;
+                    inletFlux true;
+                    referenceFrame allMRF;
+                }
+            }
+            inlet_r_exhaust
+            {
+                p { type zeroGradient; }
+                U
+                {
+                    type flowRateInletVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    volumetricFlowRate constant 0.1;
+                    inletFlux true;
+                    referenceFrame allMRF;
+                }
+            }
+            lateral
+            {
+                p { type zeroGradient; }
+                U
+                {
+                    type            inletOutlet;
+                    inletValue      uniform (0 0 0);
+                    value           uniform (0 0 0);
+                }
+                omega
+                {
+                    type            inletOutlet;
+                    value           uniform 0.1;
+                    inletValue      uniform 0.1;
+                }
+                k
+                {
+                    type            inletOutlet;
+                    value           uniform 0.01;
+                    inletValue      uniform 0.01;
+                }
+            }
+            roof
+            {
+                U
+                {
+                    type            pressureInletOutletVelocity;
+                    value           uniform ( 0 0 0 );
+                }
+                p
+                {
+                    type            fixedMean;
+                    meanValue       0;
+                    value           uniform 0;
+                }
+                omega
+                {
+                    type            inletOutlet;
+                    value           uniform 0.1;
+                    inletValue      uniform 0.1;
+                }
+                k
+                {
+                    type            inletOutlet;
+                    value           uniform 0.01;
+                    inletValue      uniform 0.01;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

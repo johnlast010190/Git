@@ -1,0 +1,87 @@
+# States with modules in helyxTest
+
+aero les backwardCompatible
+
+PIMPLE incompressible les
+
+PIMPLE incompressible ras
+PIMPLE incompressible ras buoyant dynamic
+PIMPLE incompressible ras dynamic
+PIMPLE incompressible ras multiphaseHydro
+PIMPLE incompressible ras multiphaseHydro dynamic
+PIMPLE incompressible ras multiphaseVOF dynamic
+
+PISO incompressible ras
+
+SIMPLE incompressible ras
+SIMPLE incompressible ras buoyant
+
+steady compressible ras buoyant multicomponent
+steady densityCoupled ras
+
+steady incompressible ras buoyant
+steady incompressible ras multiphaseVOF
+steady porous multicomponent reacting frozenFlow
+
+steady pressureCoupled ras
+
+steady ras
+steady ras Cparticulate
+steady ras energy
+steady ras energy humidity radiation
+steady ras energy radiation
+
+steady solid
+steady solid electricalConduction
+steady solid radiationSolid
+steady solid radiationSolid electricalConduction
+
+transient densityCoupled ras
+transient incompressible les
+transient les
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+transient pressureCoupled ras
+transient pressureCoupled ras dynamic
+
+
+
+
+
+
+
+transient pressureCoupled ras energy transonic
+transient ras
+transient ras dynamic
+transient ras energy
+transient ras energy dynamic
+transient ras energy humidity
+
+
+
+transient ras energy radiation
+
+transient ras energy transonic
+transient solid
+
+
+
+transient solid radiationSolid
+
+

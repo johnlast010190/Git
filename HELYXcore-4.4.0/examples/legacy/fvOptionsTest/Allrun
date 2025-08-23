@@ -1,0 +1,146 @@
+#!/bin/bash
+# Source tutorial run functions
+. $HELYX_PROJECT_DIR/bin/tools/RunFunctions
+
+# create mesh
+  case="mesh"
+  ( cd $case && runApplication blockMesh )
+  ( cd $case && runApplication helyxHexMesh )
+
+# run simpleFoam
+   case="simpleFoam"
+   solver="simpleFoam"
+   cloneCase mesh $case
+   caseDict="$case/system/caseSetupDict"
+    sed \
+    -e s/"buoyant"/""/g \
+    -e '/startthermal/,/endthermal/d' \
+    $caseDict > temp.$$
+    mv temp.$$ $caseDict
+
+    ( cd $case && runApplication caseSetup ) 
+    ( cd $case && runApplication $solver ) 
+
+# run pisoFoam
+   case="pisoFoam"
+   solver="pisoFoam"
+   cloneCase mesh $case
+   caseDict="$case/system/caseSetupDict"
+    sed \
+    -e s/"steady"/"transient"/g \
+    -e s/"buoyant"/""/g \
+    -e s/"\(endTime[ \t]*\) 100;"/"\1 0.1;"/g \
+    -e s/"\(deltaT[ \t]*\) 1;"/"\1 0.001;"/g \
+    -e s/"\(writeInterval[ \t]*\) 100;"/"\1 0.1;"/g \
+    -e '/startthermal/,/endthermal/d' \
+    $caseDict > temp.$$
+    mv temp.$$ $caseDict
+
+    ( cd $case && runApplication caseSetup ) 
+    ( cd $case && runApplication $solver ) 
+
+# run rhoSimpleFoam
+   case="rhoSimpleFoam"
+   solver="rhoSimpleFoam"
+   cloneCase mesh $case
+   caseDict="$case/system/caseSetupDict"
+    sed \
+    -e s/"incompressible"/"compressible"/g \
+    -e s/"buoyant"/""/g \
+    $caseDict > temp.$$
+    mv temp.$$ $caseDict
+
+    ( cd $case && runApplication caseSetup ) 
+    ( cd $case && runApplication $solver ) 
+
+# run rhoSimpleFoam
+   case="rhoPimpleFoam"
+   solver="rhoPimpleFoam"
+   cloneCase mesh $case
+   caseDict="$case/system/caseSetupDict"
+    sed \
+    -e s/"steady"/"PIMPLE"/g \
+    -e s/"incompressible"/"compressible"/g \
+    -e s/"buoyant"/""/g \
+    -e s/"\(endTime[ \t]*\) 100;"/"\1 0.1;"/g \
+    -e s/"\(deltaT[ \t]*\) 1;"/"\1 0.001;"/g \
+    -e s/"\(writeInterval[ \t]*\) 100;"/"\1 0.1;"/g \
+    $caseDict > temp.$$
+    mv temp.$$ $caseDict
+
+    ( cd $case && runApplication caseSetup ) 
+    ( cd $case && runApplication $solver ) 
+
+# run buoyantSimpleFoam
+   case="buoyantSimpleFoam"
+   solver="buoyantSimpleFoam"
+   cloneCase mesh $case
+
+   caseDict="$case/system/caseSetupDict"
+    sed \
+    -e s/"incompressible"/"compressible"/g \
+    -e '/startinitp/,/endinitp/d' \
+    $caseDict > temp.$$
+    mv temp.$$ $caseDict
+
+    ( cd $case && runApplication caseSetup ) 
+    ( cd $case && runApplication $solver ) 
+
+# run buoyantBoussinesqSimpleFoam
+   case="buoyantBoussinesqSimpleFoam"
+   solver="buoyantBoussinesqSimpleFoam"
+   cloneCase mesh $case
+    ( cd $case && runApplication caseSetup ) 
+    ( cd $case && runApplication $solver ) 
+
+# run buoyantBoussinesqPimpleFoam
+   case="buoyantBoussinesqPimpleFoam"
+   solver="buoyantBoussinesqPimpleFoam"
+   cloneCase mesh $case
+   caseDict="$case/system/caseSetupDict"
+    sed \
+    -e s/"steady"/"transient"/g \
+    -e s/"\(endTime[ \t]*\) 100;"/"\1 0.1;"/g \
+    -e s/"\(deltaT[ \t]*\) 1;"/"\1 0.001;"/g \
+    -e s/"\(writeInterval[ \t]*\) 100;"/"\1 0.1;"/g \
+    $caseDict > temp.$$
+    mv temp.$$ $caseDict
+
+    ( cd $case && runApplication caseSetup ) 
+    ( cd $case && runApplication $solver ) 
+
+# run buoyantBoussinesqPimpleFoam (SpalartAllmaras)
+   case="buoyantBoussinesqPimpleFoamSA"
+   solver="buoyantBoussinesqPimpleFoam"
+   cloneCase mesh $case
+   caseDict="$case/system/caseSetupDict"
+    sed \
+    -e s/"steady"/"transient"/g \
+    -e s/"ras"/"les"/g \
+    -e s/"kOmegaSST"/"SpalartAllmarasDES"/g \
+    -e s/"\(endTime[ \t]*\) 100;"/"\1 0.1;"/g \
+    -e s/"\(deltaT[ \t]*\) 1;"/"\1 0.001;"/g \
+    -e s/"\(writeInterval[ \t]*\) 100;"/"\1 0.1;"/g \
+    $caseDict > temp.$$
+    mv temp.$$ $caseDict
+
+    ( cd $case && runApplication caseSetup ) 
+    ( cd $case && runApplication $solver ) 
+
+# run buoyantBoussinesqPimpleFoam (oneEqEddy)
+   case="buoyantBoussinesqPimpleFoamOneEqEddy"
+   solver="buoyantBoussinesqPimpleFoam"
+   cloneCase mesh $case
+   caseDict="$case/system/caseSetupDict"
+    sed \
+    -e s/"steady"/"transient"/g \
+    -e s/"ras"/"les"/g \
+    -e s/"kOmegaSST"/"kEqn"/g \
+    -e s/"\(endTime[ \t]*\) 100;"/"\1 0.1;"/g \
+    -e s/"\(deltaT[ \t]*\) 1;"/"\1 0.001;"/g \
+    -e s/"\(writeInterval[ \t]*\) 100;"/"\1 0.1;"/g \
+    $caseDict > temp.$$
+    mv temp.$$ $caseDict
+
+    ( cd $case && runApplication caseSetup ) 
+    ( cd $case && runApplication $solver ) 

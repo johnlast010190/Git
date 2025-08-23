@@ -1,0 +1,363 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom latestTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 7200;   // 2 hours
+            deltaT 600;     // 10 minutes
+            writeControl timeStep;
+            writeInterval 1;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p cellMotionU snowDriftDensity );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (steady ras);
+        boundaryMesh
+        {
+            roof { type wall; }
+            cubeX { type wall; }
+            cubeY { type wall; }
+            top { type patch; }
+            bottom.snow { type wall; }
+            sides { type patch; }
+            inlet { type patch; }
+            outlet { type patch; }
+        }
+        turbulenceModel kEpsilon;
+        materials (air);
+        constant
+        {
+            dynamicMeshDict
+            {
+                mover
+                {
+                    type            motionSolver;
+                    libs            ("libfvMeshMovers.so" "libfvMotionSolvers.so");
+                    motionSolver    velocityLaplacian;
+                    diffusivity     quadratic inverseDistance 3 ( bottom.snow roof top );
+                    interpolation   patchCorrected
+                    (
+                        ( bottom.snow cubeX cubeY )
+                        ( inlet outlet top sides )
+                    );
+                }
+            }
+            turbulenceProperties { RAS { Sct 1.0; } }
+            g
+            {
+                value ( 0.0 0.0 -9.81 );
+                dimensions [ 0 1 -2 0 0 0 0 ];
+            }
+        }
+        system
+        {
+            fvSolution
+            {
+                solvers
+                {
+                    snowDriftDensity
+                    {
+                        solver           PBiCGStab;
+                        preconditioner   DILU;
+                        tolerance        1e-6;
+                        relTol           0.01;
+                        minIter 2;
+                    }
+                    cellMotionU
+                    {
+                        solver          PCG;
+                        preconditioner  DIC;
+                        tolerance       1e-08;
+                        relTol          0;
+                        minIter         1;
+                    }
+                }
+
+                SIMPLE { consistent true; }
+
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p               1;
+                        rho             1;
+                    }
+                    equations
+                    {
+                        k               0.9;
+                        epsilon         0.9;
+                        U               0.9;
+                        snowDriftDensity 0.9;
+                    }
+                }
+
+                cache { grad(U); }
+            }
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default             steadyState;
+                }
+                divSchemes
+                {
+                    div(phi,k)      bounded Gauss limitedLinear 1;
+                    div(phi,epsilon) bounded Gauss limitedLinear 1;
+                    div(phiWf,snowDriftDensity) bounded Gauss limitedLinear 1;
+                    div(phi,snowDriftDensity) bounded Gauss limitedLinear 1;
+                }
+                laplacianSchemes
+                {
+                    laplacian((rho*DkEff),k) Gauss linear uncorrected;
+                    laplacian((rho*DepsilonEff),epsilon) Gauss linear uncorrected;
+                    laplacian((rho*nuEff),U) Gauss linear uncorrected;
+                    laplacian(rhorAUf,p) Gauss linear uncorrected;
+                    default         Gauss linear uncorrected;
+                    laplacian(diffusivity,cellDisplacement) Gauss linear uncorrected;
+                    laplacian(diffusivity,cellMotionU) Gauss linear uncorrected;
+                }
+            }
+            fvOptions
+            {
+                snowSolver
+                {
+                    type            driftSedimentationSolver;
+                    fieldName       snowDriftDensity;
+                    wf              ( 0 0 -0.2 );
+                    erosionConstant 7e-4;
+                    rhoSediment     150;
+                    Uthreshold      0.15;
+                    alternativeErosion true;
+                    nMaxSubCycles     800;
+                    nMaxSedimentSubCycles 200;
+                    residuals
+                    {
+                        U               4e-4;
+                        p               7e-4;
+                        snowDriftDensity 5e-05;
+                    }
+                }
+                flowSolver
+                {
+                    type            rhieChowFlowSolver;
+                }
+            }
+        }
+        fields
+        {
+            U { initialisation { type potentialFlow; value uniform ( 0.1 0.0 0.0 ); } }
+            k { initialisation { type fixedValue; value uniform 1.5; } }
+            epsilon { initialisation { type fixedValue; value uniform 0.05; } }
+            nut { initialisation { type fixedValue; value uniform 0; } }
+            p { initialisation { type potentialFlow; value uniform 0; } }
+            alphat { initialisation { type fixedValue; value uniform 0; } }
+            nut { initialisation { type fixedValue; value uniform 0; } }
+            snowDriftDensity { initialisation { type fixedValue; value uniform 0.005; } }
+            pointMotionU { initialisation { type fixedValue; value uniform ( 0.0 0.0 0.0 ); } }
+        }
+        fieldMaps
+        {
+            snowDriftDensity IntensitySolid;
+            pointMotionU motion;
+        }
+        boundaryConditions
+        {
+            bottom.snow
+            {
+                U { type noSlip; }
+                p { type zeroGradient; }
+                k { type kqRWallFunction; value uniform 0.0; }
+                epsilon { type epsilonWallFunction; value uniform 0.05; }
+                nut { type nutkWallFunction; value uniform 0; }
+                alphat { type alphatWallFunction; Prt 1.0; value uniform 0; }
+                pointMotionU
+                {
+                    type sedimentation;
+                    value uniform (0 0 0);
+                    constrainDisplacement true;
+                    surfaceConstrainName surfaceLevel.stl;
+                }
+                snowDriftDensity
+                {
+                    type          sedimentation;
+                    value         uniform 0;
+                    constrainDisplacement true;
+                    surfaceConstrainName surfaceLevel.stl;
+                }
+            }
+
+            inlet
+            {
+                U
+                {
+                    type            atmBoundaryLayerInletVelocity;
+                    kappa           0.40;
+                    Cmu             0.09;
+                    flowDir         (1 0 0);
+                    zDir            (0 0 1);
+                    Uref            3.0;
+                    Zref            1;
+                    z0              uniform 0.0002;
+                    d               uniform 0.0;
+                    zGround         uniform 0.0;
+                    value           uniform (0 0 0);
+                }
+                p { type zeroGradient; }
+                k
+                {
+                    type            atmBoundaryLayerInletK;
+                    kappa           0.40;
+                    Cmu             0.09;
+                    flowDir         (1 0 0);
+                    zDir            (0 0 1);
+                    Uref            3.0;
+                    Zref            1;
+                    z0              uniform 0.0002;
+                    d               uniform 0.0;
+                    zGround         uniform 0.0;
+                    value           0;
+                }
+                epsilon
+                {
+                    type            atmBoundaryLayerInletEpsilon;
+                    kappa           0.40;
+                    Cmu             0.09;
+                    flowDir         (1 0 0);
+                    zDir            (0 0 1);
+                    Uref            3.0;
+                    Zref            1;
+                    z0              uniform 0.0002;
+                    d               uniform 0.0;
+                    zGround         uniform 0.0;
+                    value           0.05;
+                }
+                nut { type calculated; value uniform 0; }
+                pointMotionU { type fixedNormalSlip; n (1 0 0); }
+                snowDriftDensity { type fixedValue; value uniform 0.005; }
+                alphat { type alphatWallFunction; Prt 1.0; value uniform 0; }
+            }
+
+            outlet
+            {
+                U { type inletOutlet; inletValue uniform (0 0 0); value uniform (0 0 0); }
+                p { type fixedValue; value uniform 0; }
+                k { type inletOutlet; inletValue uniform 1.5; value uniform 1.5; }
+                epsilon { type inletOutlet; inletValue uniform 0.05; value uniform 0.05; }
+                nut { type calculated; value uniform 0; }
+                pointMotionU { type fixedNormalSlip; n (1 0 0); }
+                snowDriftDensity { type inletOutlet; inletValue uniform 0; value uniform 0; }
+                alphat { type alphatWallFunction; Prt 1.0; value uniform 0; }
+            }
+
+            sides
+            {
+                U { type slip; }
+                p { type zeroGradient; }
+                k { type slip; }
+                epsilon { type zeroGradient; }
+                nut { type zeroGradient; }
+                pointMotionU { type fixedNormalSlip; n (0 1 0); }
+                snowDriftDensity { type slip; }
+                alphat { type alphatWallFunction; Prt 1.0; value uniform 0; }
+            }
+
+            top
+            {
+                U { type slip; }
+                p { type zeroGradient; }
+                k { type zeroGradient; }
+                epsilon { type zeroGradient; }
+                nut { type zeroGradient; }
+                pointMotionU { type fixedValue; value uniform (0 0 0); }
+                snowDriftDensity { type zeroGradient; }
+                alphat { type alphatWallFunction; Prt 1.0; value uniform 0; }
+            }
+
+            cubeX
+            {
+                U { type noSlip; }
+                p { type zeroGradient; }
+                k { type kqRWallFunction; value uniform 0.0; }
+                epsilon { type epsilonWallFunction; value uniform 0.05; }
+                nut { type nutkWallFunction; value uniform 0; }
+                alphat { type alphatWallFunction; Prt 1.0; value uniform 0; }
+                pointMotionU { type fixedNormalSlip; n (1 0 0); }
+                snowDriftDensity { type zeroGradient; }
+            }
+
+            cubeY
+            {
+                U { type noSlip; }
+                p { type zeroGradient; }
+                k { type kqRWallFunction; value uniform 0.0; }
+                epsilon { type epsilonWallFunction; value uniform 0.05; }
+                nut { type nutkWallFunction; value uniform 0; }
+                alphat { type alphatWallFunction; Prt 1.0; value uniform 0; }
+                pointMotionU { type fixedNormalSlip; n (0 1 0); }
+                snowDriftDensity { type zeroGradient; }
+            }
+
+            roof
+            {
+                U { type noSlip; }
+                p { type zeroGradient; }
+                k { type kqRWallFunction; value uniform 0.0; }
+                epsilon { type epsilonWallFunction; value uniform 0.05; }
+                nut { type nutkWallFunction; value uniform 0; }
+                alphat { type alphatWallFunction; Prt 1.0; value uniform 0; }
+                pointMotionU { type fixedValue; value uniform (0 0 0); }
+                snowDriftDensity { type zeroGradient; }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

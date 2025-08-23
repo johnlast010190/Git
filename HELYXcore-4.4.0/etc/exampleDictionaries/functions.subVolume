@@ -1,0 +1,15 @@
+SV
+{
+    type                subVolume;
+    functionObjectLibs ( "libreport.so" );
+    fieldNames         ( p U );
+    writeInterval      10;
+    regions
+    (
+         boxToCell
+         {
+	     name subVol1;
+	     box (-0.5 -1000 -1000) (0.5 1000 1000);
+	 }
+    );       
+}

@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Define the STL file name
+mkdir -p constant/triSurface
+stl_file="constant/triSurface/surfaceLevel.stl"
+
+# Create the STL file with the specified content
+cat << EOF > $stl_file
+solid surfaceLevel
+  facet normal 0 0 1
+    outer loop
+      vertex -100 -100 0
+      vertex  100 -100 0
+      vertex  100  100 0
+    endloop
+  endfacet
+  facet normal 0 0 1
+    outer loop
+      vertex -100 -100 0
+      vertex  100  100 0
+      vertex -100  100 0
+    endloop
+  endfacet
+endsolid surfaceLevel
+EOF
+
+echo "STL file '$stl_file' created successfully."

@@ -1,0 +1,27 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+# tags: asan
+
+#------------------------------------------------------------------------------
+
+mkdir -p constant/triSurface
+cp $HELYX_TUTORIALS/resources/geometry/ahmed_body.stl.gz constant/triSurface/
+
+# Mesh in parallel
+helyxRun blockMesh
+helyxRun decomposePar
+helyxRun helyxHexMesh
+
+# Setup
+helyxRun caseSetup
+
+# Run
+helyxRun helyxSolve
+
+touch Ahmed25degCoarse.foam
+
+# Map field values to another mesh
+cd helyxMap
+./runMapping ./runMapping 2>&1 | tee error.log

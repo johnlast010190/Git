@@ -1,0 +1,2 @@
+# Time	Umin	Umin location	Umax	Umax location	Umean	UstDev	pmin	pmin location	pmax	pmax location	pmean	pstDev	sigmamin	sigmamin location	sigmamax	sigmamax location	sigmamean	sigmastDev
+0.25	0.039231978	( 1.01569e-18 0.0057533065 0 )	1.2429829	( -6.4231951e-18 0.80535246 0 )	1.0427134	0.30383499	0	( 1.01569e-18 0.0057533065 0 )	4.6044517e-14	( -4.2035524e-18 0.97698677 0 )	3.4331675e-14	1.14817e-14	0.00017287655	( -6.320839e-18 0.76612343 0 )	0.36938483	( 1.01569e-18 0.0057533065 0 )	0.047317334	0.077847251

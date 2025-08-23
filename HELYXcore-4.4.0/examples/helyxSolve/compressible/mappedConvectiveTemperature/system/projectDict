@@ -1,0 +1,29 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | HELYX(R): Open-source CFD for Enterprise                 |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | Engys Ltd. http://www.engys.com                          |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    location system;
+    object projectDict;
+}
+    baseDir "/home/ENGYS/a.krassas/Documents/Development/mapValuesOnWall/testCase";
+    parallel true;
+    processors 6;
+    T kelvin;
+    solverName helyxSolve;
+    topoSet
+    {
+        region ;
+        actions ( );
+    }
+    report false;
+    reportComparison false;
+    reportComparisonPath "";
+    reportComparisonOrientation portrait;

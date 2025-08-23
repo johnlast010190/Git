@@ -1,0 +1,173 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            stopAt          endTime;
+            endTime         1000;
+            deltaT          1;
+            writeControl    timeStep;
+            writeInterval   1000;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (steady ras);
+        boundaryMesh
+        {
+            ffminx { type wall; }
+            ffmaxx { type wall; }
+            inlet { type inlet; }
+            outlet { type outlet; }
+            front { type empty; }
+            back { type empty; }
+            propeller_1 { type wall; }
+            propeller_2 { type wall; }
+        }
+        turbulenceModel kOmegaSST;
+        materials (air);
+        system
+        {
+            meshObjects
+            {
+                prop1
+                {
+                    type            motionCoordinateFrame;
+                    motionFunction
+                    {
+                        type rotatingMotion;
+                        omega 150;
+                    }
+                    coordinateSystem
+                    {
+                        origin (0.1 0.05 0.01);
+                        e3 (0 0 -1);
+                        e1 (1 0 0);
+                    }
+                }
+                prop2
+                {
+                    type            motionCoordinateFrame;
+                    motionFunction
+                    {
+                        type rotatingMotion;
+                        omega 150;
+                    }
+                    coordinateSystem
+                    {
+                        origin (0 -0.05 0.01);
+                        e3 (0 0 -1);
+                        e1 (1 0 0);
+                    }
+                }
+            }
+            fvOptions
+            {
+                propellerMRFs
+                {
+                    type GRFSource;
+                    active true;
+                    referenceFrames
+                    {
+                        propeller_1
+                        {
+                            selectionMode sweptCell;
+                            patches (propeller_1);
+                            referenceFrame prop1;
+                        }
+                        propeller_2
+                        {
+                            selectionMode sweptCell;
+                            patches (propeller_2);
+                            referenceFrame prop2;
+                        }
+                    }
+                    fields  ( U k omega );
+                }
+            }
+        }
+        fields
+        {
+            U { initialisation { type potentialFlow; initialiseUBCs true; } }
+            p { initialisation { type potentialFlow; } }
+            k { initialisation { type Prandtl; } }
+            omega { initialisation { type Prandtl; } }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 5.0 0.0 );
+                }
+            }
+            propeller_1
+            {
+                U
+                {
+                    type fixedValueVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    referenceFrame prop1;
+                }
+            }
+            propeller_2
+            {
+                U
+                {
+                    type fixedValueVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    referenceFrame prop2;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

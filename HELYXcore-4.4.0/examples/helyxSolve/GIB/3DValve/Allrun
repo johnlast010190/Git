@@ -1,0 +1,26 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy STL file
+mkdir -p constant/triSurface
+cp "$HELYX_TUTORIALS"/resources/geometry/GIBgeometries/3Dvalve/* constant/triSurface/
+
+# Mesh in parallel
+helyxRun -parallel helyxHexMesh
+
+# Create GIB interface
+helyxRun modifyGIBBoundary -addGIB
+
+# Setup
+helyxRun caseSetup
+
+# Run
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch 3DValve.foam
+
+#------------------------------------------------------------------------------

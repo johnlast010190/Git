@@ -1,0 +1,35 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      extrudeMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+constructFrom mesh;
+sourceCase "$FOAM_CASE";
+
+sourcePatches (WATER_CIRCUIT_Outlet);
+
+extrudeModel linearNormal;
+linearNormalCoeffs
+{
+    thickness 0.05;
+}
+nLayers 10;
+expansionRatio 1.0;
+mergeTol 0;
+
+flipNormals false;
+mergeFaces false;
+
+
+// ************************************************************************* //

@@ -1,0 +1,675 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    system
+    {
+        controlDict
+        {
+            deltaT          1e-3;
+            endTime         6;
+            writeInterval   0.05;
+            adjustTimeStep  yes;
+            maxCo           0.5;
+        }
+    }
+    functions
+    {
+        VR1
+        {
+            type volumeReport;
+            fields (U.air p T.air);
+            libs ( "libreport.so" );
+            executeControl writeTime;
+            writeControl writeTime;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( transient ras multiphaseEuler );
+
+        materials ( water oil mercury air );
+
+        materialProperties
+        {
+            materialType    multiphase;
+
+            air
+            {
+                materialType    fluid;
+                thermodynamics  hConst;
+                equationOfState perfectGas;
+                molWeight       28.9;
+                thermodynamicsCoeffs
+                {
+                    Cp              1007;
+                    Hf              0;
+                }
+                muModel         scalarFunction1;
+                muModelCoeffs
+                {
+                    mu              1.84e-05;
+                }
+                kappaModel      kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr              0.7;
+                }
+
+                phaseModel pure;
+                phaseModelCoeffs
+                {
+                    diameterModel   isothermal;
+                    diameterModelCoeffs
+                    {
+                        d0              1e-3;
+                        p0              0;
+                    }
+
+                    residualAlpha 1e-3;
+                }
+            }
+
+            mercury
+            {
+                materialType    fluid;
+                thermodynamics  eConst;
+                equationOfState rhoConst;
+                molWeight       200.59;
+
+                equationOfStateCoeffs
+                {
+                    rho         13529;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cv          139;
+                    Hf          0;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          1.522e-3;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr          0.022;
+                }
+
+                phaseModel pure;
+                phaseModelCoeffs
+                {
+                    diameterModel   constant;
+                    diameterModelCoeffs
+                    {
+                        d               1e-3;
+                    }
+
+                    residualAlpha 1e-3;
+                }
+            }
+
+            oil
+            {
+                materialType    fluid;
+                thermodynamics  eConst;
+                equationOfState rhoConst;
+                molWeight       100.21;
+
+                equationOfStateCoeffs
+                {
+                    rho         684;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cv          2240;
+                    Hf          0;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          3.76e-4;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr          6;
+                }
+
+                phaseModel pure;
+                phaseModelCoeffs
+                {
+                    diameterModel   constant;
+                    diameterModelCoeffs
+                    {
+                        d               1e-3;
+                    }
+
+                    residualAlpha 1e-3;
+                }
+            }
+
+            water
+            {
+                materialType    fluid;
+                thermodynamics  eConst;
+                equationOfState rhoConst;
+                molWeight   18.0;
+
+                equationOfStateCoeffs
+                {
+                    rho         1000;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cv          4195;
+                    Hf          0;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          3.645e-4;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr          2.289;
+                }
+
+                phaseModel pure;
+                phaseModelCoeffs
+                {
+                    diameterModel   constant;
+                    diameterModelCoeffs
+                    {
+                        d               1e-3;
+                    }
+
+                    residualAlpha 1e-3;
+                }
+            }
+
+            air_water
+            {
+                dragModel SchillerNaumann;
+                dragModelCoeffs
+                {
+                    residualRe      1e-3;
+                    swarmCorrectionModel none;
+                }
+                heatTransferModel RanzMarshall;
+                heatTransferModelCoeffs
+                {
+                    residualAlpha   1e-3;
+                }
+                virtualMassModel constantCoefficient;
+                virtualMassModelCoeffs
+                {
+                    Cvm             0.5;
+                }
+            }
+            air_oil
+            {
+                dragModel SchillerNaumann;
+                dragModelCoeffs
+                {
+                    residualRe      1e-3;
+                    swarmCorrectionModel none;
+                }
+                heatTransferModel RanzMarshall;
+                heatTransferModelCoeffs
+                {
+                    residualAlpha   1e-3;
+                }
+                virtualMassModel constantCoefficient;
+                virtualMassModelCoeffs
+                {
+                    Cvm             0.5;
+                }
+            }
+            air_mercury
+            {
+                dragModel SchillerNaumann;
+                dragModelCoeffs
+                {
+                    residualRe      1e-3;
+                    swarmCorrectionModel none;
+                }
+                heatTransferModel RanzMarshall;
+                heatTransferModelCoeffs
+                {
+                    residualAlpha   1e-3;
+                }
+                virtualMassModel constantCoefficient;
+                virtualMassModelCoeffs
+                {
+                    Cvm             0.5;
+                }
+            }
+
+            mercury_air
+            {
+                dragModel SchillerNaumann;
+                dragModelCoeffs
+                {
+                    residualRe      1e-3;
+                    swarmCorrectionModel none;
+                }
+                heatTransferModel RanzMarshall;
+                heatTransferModelCoeffs
+                {
+                    residualAlpha   1e-3;
+                }
+            }
+            mercury_oil
+            {
+                dragModel SchillerNaumann;
+                dragModelCoeffs
+                {
+                    residualRe      1e-3;
+                    swarmCorrectionModel none;
+                }
+                heatTransferModel RanzMarshall;
+                heatTransferModelCoeffs
+                {
+                    residualAlpha   1e-3;
+                }
+            }
+            mercury_water
+            {
+                dragModel SchillerNaumann;
+                dragModelCoeffs
+                {
+                    residualRe      1e-3;
+                    swarmCorrectionModel none;
+                }
+                heatTransferModel RanzMarshall;
+                heatTransferModelCoeffs
+                {
+                    residualAlpha   1e-3;
+                }
+            }
+
+            oil_air
+            {
+                dragModel SchillerNaumann;
+                dragModelCoeffs
+                {
+                    residualRe      1e-3;
+                    swarmCorrectionModel none;
+                }
+                heatTransferModel RanzMarshall;
+                heatTransferModelCoeffs
+                {
+                    residualAlpha   1e-3;
+                }
+            }
+            oil_water
+            {
+                dragModel SchillerNaumann;
+                dragModelCoeffs
+                {
+                    residualRe      1e-3;
+                    swarmCorrectionModel none;
+                }
+                heatTransferModel RanzMarshall;
+                heatTransferModelCoeffs
+                {
+                    residualAlpha   1e-3;
+                }
+            }
+            oil_mercury
+            {
+                dragModel SchillerNaumann;
+                dragModelCoeffs
+                {
+                    residualRe      1e-3;
+                    swarmCorrectionModel none;
+                }
+                heatTransferModel RanzMarshall;
+                heatTransferModelCoeffs
+                {
+                    residualAlpha   1e-3;
+                }
+            }
+
+            water_air
+            {
+                dragModel SchillerNaumann;
+                dragModelCoeffs
+                {
+                    residualRe      1e-3;
+                    swarmCorrectionModel none;
+                }
+                heatTransferModel RanzMarshall;
+                heatTransferModelCoeffs
+                {
+                    residualAlpha   1e-3;
+                }
+            }
+            water_oil
+            {
+                dragModel SchillerNaumann;
+                dragModelCoeffs
+                {
+                    residualRe      1e-3;
+                    swarmCorrectionModel none;
+                }
+                heatTransferModel RanzMarshall;
+                heatTransferModelCoeffs
+                {
+                    residualAlpha   1e-3;
+                }
+            }
+            water_mercury
+            {
+                dragModel SchillerNaumann;
+                dragModelCoeffs
+                {
+                    residualRe      1e-3;
+                    swarmCorrectionModel none;
+                }
+                heatTransferModel RanzMarshall;
+                heatTransferModelCoeffs
+                {
+                    residualAlpha   1e-3;
+                }
+            }
+
+            ".*_.*"
+            {
+                dragModelSymmetric segregated;
+                dragModelSymmetricCoeffs
+                {
+                    m               0.5;
+                    n               8;
+                    swarmCorrectionModel none;
+                }
+            }
+
+            referenceFields
+            {
+                p [1 -1 -2 0 0 0 0] 101325;
+                TConst [0 0 0 1 0 0 0] 300;
+            }
+        }
+
+        turbulenceModel laminar;
+
+        constant
+        {
+            g
+            {
+                value           (0 -9.81 0);
+            }
+        }
+
+        system
+        {
+            meshObjects
+            {
+                porousFrame
+                {
+                    type            coordinateFrame;
+                    coordinateSystem
+                    {
+                        type    cartesian;
+                        origin  (0 0 0);
+                        rotation
+                        {
+                            type    axesRotation;
+                            e1  (1 0 0);
+                            e2  (0 1 0);
+                        }
+                    }
+                }
+            }            
+            fvOptions
+            {
+                volumeFractionSolver
+                {
+                    type MULESVolumeFractionSolver;
+                    interfaceCompression
+                    {
+                        air_water 1;
+                        air_oil 1;
+                        air_mercury 1;
+                        water_oil 1;
+                        water_mercury 1;
+                        oil_mercury 1;
+                    }
+                }
+                porosity1
+                {
+                    type            explicitPorositySource;
+
+                    explicitPorositySourceCoeffs
+                    {
+                        type            DarcyForchheimer;
+                        selectionMode   cellZone;
+                        cellZone        porousZone;
+                        UNames ( U.air U.mercury U.oil U.water );
+                        DarcyForchheimerCoeffs
+                        {
+                            d   d [0 -2 0 0 0 0 0] (1e8 1e8 1e8);
+                            f   f [0 -1 0 0 0 0 0] (0 0 0);
+                            rho thermo:rho;
+                            referenceFrame porousFrame;
+                        }
+                    }
+                }
+            }
+        }
+
+        boundaryMesh
+        {
+            defaultFaces
+            {
+                type empty;
+            }
+            leftWall
+            {
+                type wall;
+            }
+            rightWall
+            {
+                type wall;
+            }
+            lowerWall
+            {
+                type wall;
+            }
+            atmosphere
+            {
+                type patch;
+            }
+        }
+
+        fields
+        {
+            "U.*" {initialisation{type fixedValue; value uniform ( 0 0 0 );} }
+            p {initialisation{type fixedValue; value uniform 0;} }
+            alpha.water
+            {
+                initialisation
+                {
+                    type cellSet;
+                    defaultValue uniform 0;
+                    setSources
+                    (
+                        boxToCell
+                        {
+                            box (0 0.1 -1) (0.1461 0.292 1);
+                            value 1;
+                        }
+                    );
+                }
+            }
+            alpha.oil
+            {
+                initialisation
+                {
+                    type cellSet;
+                    defaultValue uniform 0;
+                    setSources
+                    (
+                        boxToCell
+                        {
+                            box (0.1461 0 -1) (0.2922 0.292 1);
+                            value 1;
+                        }
+                    );
+                }
+            }
+            alpha.mercury
+            {
+                initialisation
+                {
+                    type cellSet;
+                    defaultValue uniform 0;
+                    setSources
+                    (
+                        boxToCell
+                        {
+                            box (0 0 -1) (0.1461 0.1 1);
+                            value 1;
+                        }
+                    );
+                }
+            }
+            alpha.air
+            {
+                initialisation
+                {
+                    type cellSet;
+                    defaultValue uniform 1;
+                    setSources
+                    (
+                        boxToCell
+                        {
+                            box (0 0 -1) (0.1461 0.292 1);
+                            value 0;
+                        }
+                        boxToCell
+                        {
+                            box (0.1461 0 -1) (0.2922 0.292 1);
+                            value 0;
+                        }
+                        boxToCell
+                        {
+                            box (0 0 -1) (0.1461 0.1 1);
+                            value 0;
+                        }
+                    );
+                }
+            }
+        }
+
+        boundaryConditions
+        {
+            atmosphere
+            {
+                U.air
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform ( 0 0 0 );
+                }
+                U.water
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform ( 0 0 0 );
+                }
+                U.oil
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform ( 0 0 0 );
+                }
+                U.mercury
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform ( 0 0 0 );
+                }
+                p
+                {
+                    type totalPressure;
+                    p0 uniform 0;
+                    U               U.air;
+                    phi             phiv.air;
+                    value uniform 0;
+                }
+                alpha.air
+                {
+                    type inletOutlet;
+                    inletValue uniform 1;
+                    value $inletValue;
+                }
+                alpha.water
+                {
+                    type inletOutlet;
+                    inletValue uniform 0;
+                    value $inletValue;
+                }
+                alpha.oil
+                {
+                    type inletOutlet;
+                    inletValue uniform 0;
+                    value $inletValue;
+                }
+                alpha.mercury
+                {
+                    type inletOutlet;
+                    inletValue uniform 0;
+                    value $inletValue;
+                }
+            }
+            "(leftWall|rightWall|lowerWall)"
+            {
+                alpha.water
+                {
+                    type alphasContactAngle;
+                    thetaProperties
+                    {
+                        water_air ( 30 0 0 0 );
+                        water_oil ( 90 0 0 0 );
+                        water_mercury ( 90 0 0 0 );
+                    }
+                    value uniform 1;
+                }
+                alpha.mercury
+                {
+                    type alphasContactAngle;
+                    thetaProperties
+                    {
+                        mercury_air ( 130 0 0 0 );
+                        mercury_oil ( 90 0 0 0 );
+                        mercury_water ( 90 0 0 0 );
+                    }
+                    value uniform 1;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //
+

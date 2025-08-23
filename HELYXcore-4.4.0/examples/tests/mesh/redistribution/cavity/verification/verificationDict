@@ -1,0 +1,17 @@
+runs
+(
+    full
+    {
+        restart false;
+        checks
+        (
+            {
+                result "postProcessing/VR/1/volumeReport.tsv";
+                reference "verification/full/VR/1/volumeReport.tsv";
+                variables "Umean" "Pmean" "aspectRatiomean" "determinantmean" "nonOrthogonalitymean" "skewnessmean" "volumeRatiomean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+);

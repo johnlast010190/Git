@@ -1,0 +1,65 @@
+# [---------------------------------------------------------------------------]
+# |       o        |
+# |    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+# |   o   O   o    |  Version : 4.4.0
+# |    o     o     |  ENGYS Ltd. <http://engys.com/>
+# |       o        |
+# [---------------------------------------------------------------------------]
+# License
+#     This file is part of HELYXcore.
+#     HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+#
+#     HELYXcore is free software: you can redistribute it and/or modify it
+#     under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+#
+#     HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+#     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+#     for more details.
+#
+#     You should have received a copy of the GNU General Public License
+#     along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+# Copyright
+#     (C) 2017 OpenCFD Ltd.
+#
+# File
+#     etc/config.csh/csh_completion
+#     - need to be sourced manually
+#
+# Description
+#     Tcsh completions for HELYXcore applications
+#     Using bash completion for the hard work
+#
+# Requires
+#     bash 4.2 or newer
+#
+#------------------------------------------------------------------------------
+
+if ($?tcsh) then  # tcsh only
+
+    # Remove old completions, which look like:
+    #   complete APPNAME 'p,*,`bash $HELYX_PROJECT_DIR/etc/ ...
+    foreach appName (`complete | sed -ne '/HELYX_PROJECT/s/\t.*$//p'`)
+        uncomplete $appName
+    end
+
+    # Generate completions for predefined directories (if support is possible)
+    bash $HELYX_PROJECT_DIR/etc/config.csh/complete-wrapper -test
+    if ($status == 0) then
+        foreach dirName ("$HELYX_RUNTIME_OUTPUT_DIRECTORY")
+            if ( ! -d $dirName ) continue
+            foreach appName (`find $dirName -maxdepth 1 -executable -type f`)
+                # Pass explicitly
+                ## complete $appName:t 'p,*,`bash $HELYX_PROJECT_DIR/etc/config.csh/complete-wrapper '$appName:t' "${COMMAND_LINE}"`,'
+                # Pass via environment
+                complete $appName:t 'p,*,`bash $HELYX_PROJECT_DIR/etc/config.csh/complete-wrapper '$appName:t'`,'
+            end
+        end
+    endif
+
+endif
+
+#------------------------------------------------------------------------------

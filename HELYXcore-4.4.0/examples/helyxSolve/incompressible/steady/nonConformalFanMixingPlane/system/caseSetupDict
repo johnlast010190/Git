@@ -1,0 +1,421 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom latestTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 500.0;
+            deltaT constant 1.0;
+            writeControl timeStep;
+            writeInterval 100;
+        }
+        meshObjects
+        {
+            rotatingFrame
+            {
+                type motionCoordinateFrame;
+                motionFunction
+                {
+                    type rotatingMotion;
+                    omega 366.519;
+                }
+                coordinateSystem
+                {
+                    type cartesian;
+                    origin ( 0.0 0.0 0.0 );
+                    e1 ( 1.0 0.0 0.0 );
+                    e3 ( 0.0 0.0 -1.0 );
+                }
+            }
+        }
+        nonConformalCouplesDict
+        {
+            ncc_Co2
+            {
+                patches         ( Co2_PeriodicPS Co2_PeriodicSS );
+                transformType   rotational;
+                rotationAxis    ( 0 0 1 );
+                rotationCentre  ( 0 0 0 );
+                rotationAngle   27.68117546439789;
+            }
+            ncc_Co3
+            {
+                patches         ( Co3_PeriodicPS Co3_PeriodicSS );
+                transformType   rotational;
+                rotationAxis    ( 0 0 1 );
+                rotationCentre  ( 0 0 0 );
+                rotationAngle   -24.00014252892073;
+            }
+            ncc_discreteMixing
+            {
+                patches         ( Co2_Outflow Co3_Inflow );
+                couplingType    discreteMixing;
+                transformType   rotational;
+                rotationAxis    ( 0 0 1 );
+                rotationCentre  ( 0 0 0 );
+                ownSectorAngle  27.68117546439789;
+                nbrSectorAngle  -24.00014252892073;
+            }
+        }
+    }
+    functions
+    {
+        FP
+        {
+            type fieldProcess;
+            regions ( region0 );
+            executeControl timeStep;
+            executeInterval 1;
+            writeControl outputTimeAndEnd;
+            writeInterval 1;
+            operations
+            (
+                {
+                    operation ptot;
+                    fieldName ptot;
+                    write true;
+                    nearCellValue false;
+                    U U;
+                    p p;
+                }
+            );
+            functionObjectLibs ("libfieldFunctionObjects.so");
+        }
+        FR
+        {
+            type forces;
+            regions ( region0 );
+            patches ( Co2_BladeLE Co2_BladePS Co2_BladeSS Co2_BladeTE );
+            CofR ( 0.0 0.0 0.0 );
+            rhoName rho;
+            pRef 0.0;
+            writeControl timeStep;
+            writeInterval 1;
+            executeControl timeStep;
+            executeInterval 1;
+            functionObjectLibs ("libforces.so" );
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (steady ras);
+        boundaryMesh
+        {
+            Co2_Inflow
+            {
+                type inlet;
+            }
+            Co2_PeriodicPS
+            {
+                type nonConformal;
+            }
+            Co2_PeriodicSS
+            {
+                type nonConformal;
+            }
+            Co2_Outflow
+            {
+                type nonConformal;
+            }
+            Co3_PeriodicPS
+            {
+                type nonConformal;
+            }
+            Co3_PeriodicSS
+            {
+                type nonConformal;
+            }
+            Co3_Inflow
+            {
+                type nonConformal;
+            }
+            Co3_Outflow
+            {
+                type outlet;
+            }
+        }
+        turbulenceModel kOmegaSST;
+        materials (air);
+        materialProperties
+        {
+            air
+            {
+                materialName air;
+                materialType fluid;
+                molWeight 28.96;
+                energy sensibleEnthalpy;
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho 1.177;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu constant 1.846E-5;
+                }
+                thermodynamics hConst;
+                thermodynamicsCoeffs
+                {
+                    Hf 0.0;
+                    Cp 1004.9;
+                }
+                kappaModel scalarFunction1;
+                kappaModelCoeffs
+                {
+                    kappa 0.0262;
+                }
+                referenceFields
+                {
+                    p [1 -1 -2 0 0 0 0] 101325.0;
+                    TConst [0 0 0 1 0 0 0] 300.0;
+                }
+            }
+        }
+        constant
+        {
+            turbulenceProperties
+            {
+                RAS
+                {
+                    kOmegaSSTCoeffs
+                    {
+                        curvature true;
+                    }
+                }
+            }
+        }
+        system
+        {
+            fvSolution
+            {
+                SIMPLE
+                {
+                    nNonOrthogonalCorrectors 1;
+                }
+            }
+            fvOptions
+            {
+                impeller_MRF
+                {
+                    type MRFSource;
+                    MRFSourceCoeffs
+                    {
+                        selectionMode cellZone;
+                        cellZone impeller;
+                        referenceFrame rotatingFrame;
+                    }
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.0;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type turbulentIL;
+                    I 0.05;
+                    L 0.01;
+                    Uref 1.0;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type turbulentIL;
+                    I 0.05;
+                    L 0.01;
+                    Uref 1.0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            Co2_Inflow
+            {
+                U
+                {
+                    type flowRateInletVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    massFlowRate constant 0.066;
+                    units kg_s;
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    value uniform 0.1;
+                    intensity 0.05;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    value uniform 0.01;
+                    mixingLength 0.01;
+                }
+            }
+            Co2_BladeLE
+            {
+                U
+                {
+                    type wallVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    referenceFrame rotatingFrame;
+                }
+            }
+            Co2_BladePS
+            {
+                U
+                {
+                    type wallVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    referenceFrame rotatingFrame;
+                }
+            }
+            Co2_BladeSS
+            {
+                U
+                {
+                    type wallVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    referenceFrame rotatingFrame;
+                }
+            }
+            Co2_BladeTE
+            {
+                U
+                {
+                    type wallVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    referenceFrame rotatingFrame;
+                }
+            }
+            Co2_Hub
+            {
+                U
+                {
+                    type wallVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    referenceFrame rotatingFrame;
+                }
+            }
+            Co2_Shroud
+            {
+                U
+                {
+                    type wallVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    referenceFrame rotatingFrame;
+                }
+            }
+            "(Co2_PeriodicPS|Co2_PeriodicSS)"
+            {
+                U
+                {
+                    type movingWallSlipVelocity;
+                    value uniform (0 0 0);
+                }
+            }
+            "(Co3_PeriodicPS|Co3_PeriodicSS)"
+            {
+                U
+                {
+                    type slip;
+                }
+            }
+            "(Co2_Outflow|Co3_Inflow)"
+            {
+                U
+                {
+                    type movingWallSlipVelocity;
+                    value uniform (0 0 0);
+                }
+            }
+            Co3_Outflow
+            {
+                U
+                {
+                    type pressureVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type fixedValue;
+                    value uniform 0.0;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    intensity 0.05;
+                    value uniform 0.1;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    mixingLength 0.01;
+                    value uniform 0.01;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,45 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------
+# Run full CHT case
+#------------------
+mkdir -p constant/triSurface
+cp "$HELYX_TUTORIALS"/resources/geometry/mappedConvectiveTemperature/*.stl constant/triSurface/
+helyxRun -parallel helyxHexMesh -constant
+helyxRun splitMeshRegions -overwrite -zoneToRegionMap '( (cool_air (cool_air) ) (hot_air (hot_air) ) (pipe (pipe) ) )'
+helyxRun caseSetup
+helyxRun helyxSolve
+touch mappedConvectiveTemperature.foam
+
+#----------------------------------------------
+# Copy to new case and remove previous solution
+#----------------------------------------------
+cd ..
+cp -r mappedConvectiveTemperature mappedConvectiveTemperature_mapped
+cd mappedConvectiveTemperature_mapped
+rm -r processor*/constant/hot_air system/hot_air postProcessing  constant/hot_air processor*/[1-9]*
+rm log.*
+
+#------------------
+# Copy boundaryData
+#------------------
+mkdir constant/boundaryData
+mkdir constant/boundaryData/pipe_to_hot_air
+mkdir constant/boundaryData/pipe_to_hot_air/0.0
+cp ../mappedConvectiveTemperature/postProcessing/hot_air/SU/surfaces0/300/* constant/boundaryData/pipe_to_hot_air/0.0/
+cp ../mappedConvectiveTemperature/postProcessing/hot_air/SU/surfaces0/points constant/boundaryData/pipe_to_hot_air
+mv constant/boundaryData/pipe_to_hot_air/0.0/T constant/boundaryData/pipe_to_hot_air/0.0/Tinf
+mv constant/boundaryData/pipe_to_hot_air/0.0/alphaConv constant/boundaryData/pipe_to_hot_air/0.0/alphaWall
+sed '1,17d' constant/boundaryData/pipe_to_hot_air/points > constant/boundaryData/pipe_to_hot_air/points_new
+rm constant/boundaryData/pipe_to_hot_air/points
+mv constant/boundaryData/pipe_to_hot_air/points_new constant/boundaryData/pipe_to_hot_air/points
+
+#------------------
+# Run new case
+#------------------
+helyxRun caseSetup -dict system/caseSetupDict.second
+helyxRun helyxSolve
+
+#--------#----------------------------------------------------------------------

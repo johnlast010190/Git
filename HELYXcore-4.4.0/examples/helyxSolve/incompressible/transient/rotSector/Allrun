@@ -1,0 +1,39 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy input surfaces from resources directory
+mkdir -p constant/triSurface
+cp "$HELYX_TUTORIALS"/resources/geometry/rotSector/rotor/* constant/triSurface/
+
+mkdir -p stator/constant/triSurface
+cp "$HELYX_TUTORIALS"/resources/geometry/rotSector/stator/* stator/constant/triSurface/
+
+# Mesh
+helyxRun -l log.helyxHexMeshStator helyxHexMesh -case stator
+helyxRun -l log.helyxHexMesh helyxHexMesh
+
+# Check
+helyxRun checkMesh -allRegions -writeAllMetrics -latestTime
+
+# Postprocess field
+helyxRun postProcess -fields '( aspectRatio determinant nonOrthogonality skewness volumeRatio )' -dict system/controlDict.mesh
+
+# Create cell zone for pipe region
+helyxRun topoSet -noFunctionObjects
+
+# Merge the two meshes
+helyxRun mergeMeshes -overwrite -noFunctionObjects -case . . stator
+
+# Setup
+helyxRun caseSetup
+
+# Run
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualization
+touch rotSector.foam
+
+#------------------------------------------------------------------------------

@@ -1,0 +1,1077 @@
+#!/bin/bash
+#---------------------------------------------------------------------------
+#|       o        |
+#|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+#|   o   O   o    |  Version : 4.4.0
+#|    o     o     |  ENGYS Ltd. <http://engys.com/>
+#|       o        |
+#---------------------------------------------------------------------------
+#License
+#    This file is part of HELYXcore.
+#    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+#
+#    HELYXcore is free software: you can redistribute it and/or modify it
+#    under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+#    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+#    for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+#Copyright
+#    (c) 2019-2022 Engys Ltd.
+#
+# Script
+#     emake
+#
+# Description
+#     This script emulates the behaviour of wmake, but uses a CMake backend.
+#------------------------------------------------------------------------------
+
+
+# Exit codes
+# 0:    Everything's fine.
+# 1:    Failed to cd to the build directory when necessary.
+# 2:    Error setting target, e.g. A target that must be there (for example,
+#       "all") was not found.
+# 3:    Run from invalid location (could not determine project root directory,
+#       could not perform the requested operation in the given directory).
+# 4:    Environment improperly configured
+
+
+
+# ============================================================================ #
+# --------------------------------- Variables -------------------------------- #
+# ============================================================================ #
+
+
+# Determine if we're attached to an interactive terminal
+CONNECTED_TO_TERMINAL=OFF
+if [ -t 1 ] ; then
+  CONNECTED_TO_TERMINAL=ON
+fi
+
+# Non-user-settable variables
+emake_location=$(readlink -e "$(dirname "$0")")
+guessed_project_dir=$(readlink -e "$emake_location/..")
+external_build=false
+initial_directory=$(readlink -e "$PWD")
+available_targets=""
+build_dir=""
+CMAKE_EXE=cmake
+
+# User-settable variables and flags
+number_of_processes=""
+target=all  # N.B.  Can be a list
+user_set_target=false
+build=true
+cmake_arguments=""
+generator=""
+clean_flag=false
+active_build_file=$(readlink -m "$emake_location/../platforms/activeBuild.shrc")
+
+thirdParty_flag=false
+thirdParty_cmake_arguments=""
+
+get_verify=false
+
+# Repo/Git flags
+branch_pull_flag=false
+submodules_init_flag=false
+submodules_update_flag=false
+
+
+
+# ============================================================================ #
+# --------------------------------- Functions -------------------------------- #
+# ============================================================================ #
+
+print_help()
+{
+help_string=$(cat <<END
+
+---------------------------------- emake help ----------------------------------
+
+emake provides a wmake-like front-end to the HELYXcore CMake build system.
+
+emake can be used just like wmake, i.e. just cd to the directory you want to
+build, and run emake there.
+
+Allwmake scripts are ignored.  Instead, emake builds all targets in the current
+directory and below.
+
+In addition, extra arguments are available to extend the functionality of this
+script. The following statements are equivalent, and can be run from any
+location:
+
+$ emake fileFormats
+$ cd \$HELYX_PROJECT_DIR/src/fileFormats && emake
+$ cmake --build \$HELYX_PROJECT_DIR/cbuild/\$HELYX_OPTIONS_\$HELYX_MPI_NAME --target fileFormats
+
+Note that emake will use the Ninja build system if available.
+
+
+-----------------------------------  Usage  ------------------------------------
+
+    emake [<flags>] [<target1> [<target2> ...]]
+
+    target
+        Specifying a target is optional.  If a suitable target is set, the
+        corresponding binary file and its dependencies will be built.
+
+        The target name for a library is the base name of the library e.g.
+        "finiteVolume". Executable targets end in "-exe", e.g. simpleFoam-exe.
+
+        Notable targets that don't correspond to a HELYX binary include "all",
+        directory targets ending in "-dir", and "package".
+
+        Multiple targets can be specified, and should be separated by spaces.
+        Some special targets (e.g. packaging targets) cannot be specified as
+        part of a list.
+
+        If no target is specified, all targets in the current directory and
+        below (and their dependencies) are built.
+
+    flags
+        All flags are optional, and the available flags are given below.
+
+
+-----------------------------------  Flags  ------------------------------------
+
+    All flags support both camelCase (like OpenFOAM), and hyphenation (like
+    the CMake CLI).
+
+    --available-targets | -availableTargets
+        Shows all targets recognised by cmake.  This is useful for finding
+        targets with unexpected names, particularly in conjunction with grep.
+
+    -c | -clean <target>
+        Requires argument.
+        Or a list of arguments in the form: "target1 target2 ..."
+        Looks in the build directory for a directory matching the specified
+        argument.  If a such a directory is found, it is recursively removed.
+        This forces a rebuild of that particular target.
+
+    --clean-first | -cleanFirst
+        Cleans the specified target before building.  Uses the cmake
+        --clean-first flag.
+
+    --force-ninja-generator | -forceNinjaGenerator
+        By default, emake try to find Ninja if found, otherwise it automatically
+        rollout to the "Unix Makefiles" generator.
+        This flag forces the Ninja generator and error if it is not found.
+        Implies the "refresh-cache" argument (see below).
+        Note that cache variables are reset when the CMake cache is refreshed.
+
+    --force-default-generator | -forceDefaultGenerator
+        Forces CMake to use the default generator even if Ninja is found.
+        For UNIX systems the default generator is usually the "Unix Makefiles".
+        Implies the "refresh-cache" argument (see below).
+        Note that cache variables are reset when the CMake cache is refreshed.
+
+    -D<cache_variable_name>=<variable_value>
+        Requires argument.
+        Set a CMake cache variable to the given value.  Passes arguments through
+        to CMake using the CMake -D flag.  Implies the "refresh-cache" argument
+        (see below).
+        Note that cache varaibles are reset when the CMake cache is refreshed.
+
+    -g | --generate-sourceable-files | -generateSourceableFiles
+        Generate minimum sourceable bash files in the platforms directory. These
+        files do not contain information about MPI, as this is determined at
+        configuration time. Fully-featured sourceable files are generated by the
+        "-refreshCache" flag (see below).
+        If requested, sourceable files for shells other than bash are generated
+        at configuration time.
+
+    -h | -help
+        Shows this text.
+
+    -j<N>
+        Argument optional.
+        Sets the number of processes to be used in the compilation (E.g. -j8).
+        If no argument is supplied, all available processes will be used.
+
+    -n | -no-build | -noBuild
+        Disables building for this run.  This is useful for debugging.
+
+    -p | --pull
+        Pull the latest commits of the current HELYXcore branch
+
+    -r | --refresh-cache | -refreshCache
+        Manually removes the CMakeCache.txt file from the build directory in
+        order to force re-configuration.  Does not use the cmake built-in
+        rebuild_cache target, because that requires a valid cmake cache.
+        Disables the build (unless a target is explicitly specified by the
+        user).
+
+    -t | --third-party | -thirdParty
+        Instead of building HELYXcore, build the third-party dependencies
+        instead.  A correctly configured third party repository must be
+        available at \$HELYX_THIRDPARTY_DIR.
+
+    --submodules <options>
+        Requires 1 argument: set-url | init-update.
+        Wrapper to deals with HELYX submodules. It sets the remote URL to the
+        Bitbucket repositories, and allows to initialize-update the submodules.
+        Arguments:
+            set-url:
+                Only update the remotes URL to the Bitbucket repository.
+            init-update
+                Set remote URLs, then Initialize and Update HELYX submodules.
+                Equivalent to: "git submodule update --init --recursive"
+        P.S. This is intended for ENGYS' DEVELOPERS ONLY.
+             Other users please refer to the Core Compilation Guide.
+
+
+----------------------------------  Targets  -----------------------------------
+
+    Library targets
+        Library targets are named after the binary they produce.  For example,
+        "emake helyxSolve" builds the "libhelyxSolve.so" library (and its
+        dependencies).
+
+    Executable targets
+        Executable targets follow the same rules as library targets, but with
+        "-exe" appended to the target name.  This is required to differentiate
+        them from library targets with the same name.  For example, "emake
+        helyxSolve-exe" builds the "helyxSolve" executable.
+
+    Directory targets
+        Directory targets are mostly provided to enable users to navigate to a
+        subdirectory and build using "emake".  However, these targets can be
+        used from the command line.  They are named by taking the relative path
+        from \$HELYX_PROJECT_DIR, replacing "/" with "-" and appending -dir.
+        For example, "emake src-dir" builds everything in the src directory, and
+        "emake applications-solvers-dir" builds the solvers (and all their
+        dependencies).
+
+    ThirdParty targets
+        A small number of ThirdParty libraries are supported by emake.  If
+        \$HELYX_THIRDPARTY_DIR is pointing at a suitable directory, these
+        targets can be built with the -t flag.  The targets take the form
+        thirdParty_\${library_name}, where \${library_name} is the capitalised
+        name of the library.  For example, "emake -t thirdParty_MPI" will build
+        the ThirdParty MPI library.
+
+    Meta targets
+        all
+            The "all" target builds everything.
+
+        package
+            The "package" target builds everything and packs it for release.
+            This requires a build that looks very similar to the official HELYX
+            release build.
+END
+)
+
+# Conditional documentation - what fun
+if [[ -d "$emake_location/../unitTests" ]]; then
+help_string="${help_string}
+
+        unitTests
+            This target re-builds all the HELYX unit tests (for internal use
+            only)"
+fi
+
+help_string="${help_string}
+
+--------------------------------------------------------------------------------
+"
+
+echo "$help_string"
+}
+
+
+# Clean list of targets given to emake
+clean_target()
+{
+    # Unlike HELYXcore, we cannot associate 'thirdParty_<target>' with the
+    # actuall third-party package folder
+    if [ "$thirdParty_flag" = true ]; then
+        echo "'emake -c | -clean <target>' works only for HELYXcore, so no " \
+            "cleaning will be carried out on ThirdParty targets."
+        return
+    fi
+    #clean one target each time
+    #for val in $target; do
+    for val in ${target[*]}; do
+        # emake autocompletion for targets include the suffix "-exe" for applications
+        # but "target-exe" is not found by the code below
+        if [[ $val =~ (-exe) ]] ; then
+            val=${val//"-exe"/}
+        fi
+        echo "Target: $val"
+        intermediate_file_location=$(find "$build_dir" -iname "$val" -type d)
+        if [[ -n "$intermediate_file_location" ]]; then
+            echo "Recursively removing everything in: "
+            for file_path in ${intermediate_file_location[*]}; do
+                echo "    $file_path"
+                rm -rf "$file_path"
+            done
+            # Obs.: It doesn't forces a rebuild of that particular target for unity builds
+            echo "For unity builds, please reconfigure your project with 'emake -r' before compiling."
+        else
+            echo "The target to clean ($val) was not found in: '$build_dir', so no " \
+            "cleaning will be carried out"
+        fi
+    done
+}
+
+
+set_available_targets()
+{
+    available_targets=$("${CMAKE_EXE}" --build "$build_dir" --target help)
+    error_code=$?
+    handle_cmake_build_errors
+}
+
+
+# Returns 0 if found target, 1 if anything else.  Sometimes this function is
+# expected to find nothing.
+get_target_from_dir()
+{
+    directory=$1
+
+    # Strip base directory from beginning
+    dir_target=${directory#$project_dir}
+    # Strip leading and trailing slashes
+    dir_target=${dir_target#/}
+    dir_target=${dir_target%/}
+    # Generate target name by changing slashes to dashes
+    dir_target=${dir_target//\//-}-dir
+
+    if [ -z $target ]
+    then
+        target="$dir_target"
+    else
+        target="$target $dir_target"
+    fi
+    error_code=0
+}
+
+
+# Get the name of the initial directory, and set the target accordingly
+set_target()
+{
+    echo No user-specified target:  Building all targets in and below current directory...
+    # Careful that there's no path that leaves the target set at ""...
+    # Probably want a check for this as well
+    target=""
+
+    # If not in source dir, then error
+    if ! grep -q "$project_dir"<<<"$initial_directory"; then
+        echo "Error:  Not in source directory, cannot set target"
+        echo "    Current directory: $initial_directory"
+        echo "    Source directory: $project_dir"
+        exit 2
+    fi
+
+    if [ "$initial_directory" = "$project_dir" ]; then
+        target=all
+        echo "Currently in the top-level directory, so default to building all"
+    else
+        get_target_from_dir "$initial_directory"
+        if [ $error_code != 0 ]; then
+            echo "Warning:  No target was specified, and none could be detected to build $directory"
+            echo "Error:  Target could not be set."
+            exit 2
+        fi
+    fi
+    echo Build target set to \"$target\"
+}
+
+
+handle_cmake_build_errors()
+{
+    if [ $error_code == 0 ]; then
+        # echo No error code reported - everything looks fine
+        :
+    elif [ $error_code == 1 ]; then
+        # Configuring failed - cmake warnings is descriptive enough
+        # Don't need to add extra detail
+        exit 1
+    elif [ $error_code == 2 ]; then
+        echo Error:  A necessary target was not found
+        echo This target exists for all working emake systems
+        if [ -f "$build_dir"/CMakeCache.txt ]; then
+            echo "It looks like you've got a bad CMakeCache file in the
+            following directory:"
+            echo "    $build_dir"
+            echo Please delete it and try again
+            echo N.B.  The CMakeCache.txt file must be generated without errors
+        else
+            echo Error:  CMakeCache.txt not found in "$build_dir"
+        fi
+        exit 2
+    else
+        echo Error:  Unhandled error, error code $error_code
+        exit $error_code
+    fi
+}
+
+
+load_cmake_settings()
+{
+    # N.B.  Settings we get from emakeConfig must be correct and up-to-date,
+    # because when we pass CLI arguments to emake we pass them into the
+    # \$cmake_configuration_arguments variable.  CMake then parses these
+    # variables and gives us something bash-friendly
+    if [[ -r $active_build_file ]]; then
+        # shellcheck disable=SC1090
+        if ! . "$active_build_file"; then
+            echo "Error:  emake did not understand the contents of the following activeBuild.shrc file:"
+            echo "    \"$active_build_file\""
+            exit 4
+        fi
+    else
+        echo "Warning:  Failed to find activeBuild.shrc file on the following path:"
+        echo "    \"$active_build_file\""
+    fi
+
+    if [[ ! -d $HELYX_PROJECT_DIR ]]; then
+        echo "Error:  HELYX_PROJECT_DIR is not a directory!  Failed to load CMake variables"
+        echo "    HELYX_PROJECT_DIR = \"$HELYX_PROJECT_DIR\""
+        exit 1
+    fi
+}
+
+
+generate_active_build_file()
+{
+    echo "Generating emake prerequisites..."
+    active_build_file_dir="$(dirname "${active_build_file}")"
+    active_build_test_file="${active_build_file_dir}/.active_build_test_file"
+    if [[ ! -e "$active_build_file" ]]; then
+        mkdir -p "${active_build_file_dir}"
+        touch -f "${active_build_test_file}"
+    fi
+
+    if [[ -w "$active_build_file" ]] || [[ -w "$active_build_test_file" ]]; then
+        # Remove the test file asap to minimise the chances of something going
+        # wrong and it not getting removed
+        rm -f "$active_build_test_file"
+        # Generate activeBuild.shrc - need to know HELYX_SETTINGS_FILE
+        # shellcheck disable=SC2086
+        "${CMAKE_EXE}" \
+            $cmake_configuration_arguments \
+            -P "$emake_location"/../etc/cmake/scripts/generateEmakePrerequisites.cmake
+        # shellcheck disable=SC2181
+        if [ ! $? -eq 0 ]; then
+            echo Error:  emake received an error when getting CMake variables
+            exit 4
+        else
+            return $?
+        fi
+    elif [[ "$external_build" = false ]]; then
+        echo "Error:  The required file at the following location is not writable:"
+        echo "    $active_build_file"
+        exit 3
+    else
+        echo "Not generating sourceable files because the following file is not writable:"
+        echo "    \"${active_build_file}\""
+    fi
+}
+
+
+# Get the version of any package in the format "Major.minor"
+get_package_version()
+{
+    local version
+    #version=$( "$1" --version | perl -pe '($_)=/([0-9]+([.][0-9]+))/' )
+    version=$( "$1" --version | perl -pe '($_)=/([0-9]+([.][0-9]+[.][0-9]+))/' )
+    echo "$version"
+}
+version_gt() { test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1"; }
+version_ge() { test "$(printf '%s\n' "$@" | sort -rV | head -n 1)" == "$1"; }
+version_lt() { test "$(printf '%s\n' "$@" | sort -rV | head -n 1)" != "$1"; }
+version_le() { test "$(printf '%s\n' "$@" | sort -V | head -n 1)" == "$1"; }
+
+
+# Update submodules URLs to point to Bitbucket
+# ps.: possible bug in case multiple remotes are defined
+initialize_git_submodules()
+{
+    if [ -f "$project_dir"/.git/config ] ; then
+
+        git_version="$(get_package_version "git")"
+        if version_lt "$git_version" "2.25"; then
+            echo "Error:  Submodule require Git version 2.25 or later."
+            exit 4
+        fi
+
+        remote=$(grep url "$project_dir/.git/config" | head -n 1 )
+        if [[ "$remote" == *"bitbucket.org"* ]]; then
+            git submodule set-url --quiet examples ../examples.git
+            git submodule set-url --quiet unitTests ../boost_tests.git
+            git submodule set-url --quiet modules/HELYX-adjoint ../adjoint.git
+            git submodule set-url --quiet modules/HELYX-coupled ../pcs.git
+            git submodule set-url --quiet modules/HELYX-marine ../marine.git
+            git submodule set-url --quiet modules/waves2Foam ../waves2foam.git
+            git submodule set-url --quiet modules/runTimePostProcessing ../runtimepostprocessing.git
+
+            # Run a sync just to make sure that URLs are updated in case
+            # 'git submodule init' was run previously
+            git submodule sync --recursive &> /dev/null
+
+	        # do not display .gitmodules as changed
+	        git update-index --assume-unchanged .gitmodules
+        fi
+
+        echo "Git is now tracking:"
+        cat .git/config
+        echo ""
+
+        # Get all the modules
+        if [[ "$submodules_update_flag" = true ]]; then
+            git submodule update --init --recursive
+        fi
+
+        # Install the pre-commit hook that prevents someone from adding the
+        # .gitmodules back (plus a few reformating things)
+        git_root=$(git rev-parse --show-toplevel)
+        hook_file="$git_root/.git/hooks/pre-commit"
+        if [ -f "$hook_file" ]; then
+            mv -f "$hook_file" "$hook_file.old"
+        fi
+        ln -sf "$git_root/bin/tools/pre-commit" "$hook_file"
+
+        # Install the submodule post-commit hook that also creates commits on
+        # core when someone commits in the submodule.
+        ln -sf "$git_root/bin/tools/post-commit" "$git_root/.git/modules/examples/hooks"
+        ln -sf "$git_root/bin/tools/post-commit" "$git_root/.git/modules/unitTests/hooks"
+        ln -sf "$git_root/bin/tools/post-commit" "$git_root/.git/modules/modules/HELYX-adjoint/hooks"
+        ln -sf "$git_root/bin/tools/post-commit" "$git_root/.git/modules/modules/HELYX-coupled/hooks"
+        ln -sf "$git_root/bin/tools/post-commit" "$git_root/.git/modules/modules/HELYX-marine/hooks"
+        ln -sf "$git_root/bin/tools/post-commit" "$git_root/.git/modules/modules/waves2Foam/hooks"
+        ln -sf "$git_root/bin/tools/post-commit" "$git_root/.git/modules/modules/runTimePostProcessing/hooks"
+    else
+        echo "Error: Request submodules to be initialized. " \
+             "However, no git project was found"
+        exit 3
+    fi
+    exit 0
+}
+
+# retrieve the latest version of helyxVerify
+get_helyx_verify()
+{
+    local_version='0.0.0'
+    remote_version='0.0.0'
+
+    installed=$(which helyxVerify)
+    if [[ $? == 0 ]] ; then
+        local_version=$($installed --version | cut -d\  -f2)
+        echo "Local version: $local_version"
+    else
+        echo "No current version of HelyxVerify found (that's ok)."
+    fi
+
+    remote_version=$(curl -s --header 'PRIVATE-TOKEN: $TOKEN' 'https://gitlab.engys.dev/api/v4/projects/33/packages?order_by=version&sort=desc' | grep -o '"version":[^"]*"[^"]*"' | sort -Vr | head -n1 | cut -d\" -f4)
+    if [[ $? == 0 ]] ; then
+        echo "Latest published version: $remote_version"
+    else
+        echo "Can't get the latest version from repository."
+        echo "Do you have Warp enabled?"
+        exit 5
+    fi
+
+    if [ "$(printf '%s\n' $remote_version $local_version | sort -V | head -n1)" == $remote_version ] ; then
+        echo "Update not needed, your version is recent enough."
+        exit 0
+    fi
+
+    target="$installed"
+    prefix=""
+    if [[ "$local_version" == "0.0.0" ]] || [[ ! -w $installed ]] ; then
+        if [[ ":$PATH:" == *":$HOME/.local/bin:"* ]] ; then
+            # newer distributions have this in the user path by default,
+            # following something akin to what freedesktop have.
+            target="$HOME/.local/bin/helyxVerify"
+        else
+            target="/usr/local/bin/helyxVerify"
+            prefix="sudo"
+        fi
+    fi
+
+    # download over the proper directory
+    $prefix curl -# --header 'PRIVATE-TOKEN: $TOKEN' "https://gitlab.engys.dev/api/v4/projects/33/packages/generic/helyxverify/$remote_version/helyxVerify" > "$target.part"
+    $prefix mv "$target.part" "$target"
+    $prefix chmod +x "$target"
+    echo "New helyxVerify is now installed in $target."
+}
+
+# Pull the latest commits of the current branch
+update_current_branch()
+{
+    branch=$(git rev-parse --abbrev-ref HEAD) || exit 3
+    echo "Pulling the latest commits from HELYXcore \"$branch\" branch"
+
+    if [[ "$project_dir" == "$initial_directory" ]]
+    then
+        # Maybe this could be used: git pull --recurse-submodules
+        git pull && git submodule update
+    else
+        echo "Error: Not running \"emake [-p|--pull]\" from " \
+             "HELYXcore-<version>/ root folder"
+        exit 3
+    fi
+    exit 0
+}
+
+
+# ============================================================================ #
+# ------------------------------------ Main ---------------------------------- #
+# ============================================================================ #
+
+
+# --------------------------- Check CMake version ---------------------------- #
+
+# First check if cmake is available in the system.
+# Then, check for the cmake version
+if ! which cmake &>/dev/null ; then
+    echo "Error:  CMake was not found in your system"
+    echo "CMake is required to generate the HELYX build project"
+    echo "Please install CMake or load its environment-module if available"
+    echo "CMake version 3.13 or above is required"
+    echo "Stopping emake immediately"
+    exit 4
+else
+    # N.B.  Used to resolve symlinks and get the full path to cmake, but that broke
+    # in the case where CMake is supplied by snap
+    if ! "${CMAKE_EXE}" -P "${emake_location}/../etc/cmake/testCMakeVersion.cmake"
+    then
+        echo "Error:  The CMake version on the following path is insufficient:"
+        echo "        \"$(which cmake)\""
+        echo "CMake version 3.13 or above is required"
+        echo "Stopping emake immediately"
+        exit 4
+    fi
+fi
+
+# Store CMake version too variable
+cmake_version="$(get_package_version "cmake")"
+
+
+# ----------------------- Command-line arguemnt parsing ---------------------- #
+
+# Use GNU getopt to parse command-line arguments in a sensible way
+TEMP=$(getopt -a \
+-o r,j::,n,c:,h,D:,t,g,p \
+--long  \
+refresh-cache,\
+refreshCache,\
+no-build,\
+noBuild,\
+clean-first,\
+cleanFirst,\
+clean:,\
+third-party,\
+thirdParty,\
+available-targets,\
+availableTargets,\
+generate-sourceable-files,\
+generateSourceableFiles,\
+force-ninja-generator,\
+forceNinjaGenerator,\
+force-default-generator,\
+forceDefaultGenerator,\
+pull,\
+get-verify,\
+getverify,\
+submodules:,\
+help \
+-n 'emake' -- "$@")
+
+# shellcheck disable=SC2181
+if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+
+eval set -- "$TEMP"
+
+# In order for all arguments to be parsed before functions are run, flags are
+# set here and interrogated later
+while true; do
+    case "$1" in
+    -r | --refresh-cache | --refreshCache )
+        refresh_cache_flag=true
+        shift ;;
+    -j )
+        number_of_processes="$2"
+        shift 2 ;;
+    -n | --no_build | --noBuild )
+        build=false
+        echo Build disabled
+        shift ;;
+    --clean-first | --cleanFirst )
+        cmake_arguments="$cmake_arguments --clean-first"
+        thirdParty_cmake_arguments="$thirdParty_cmake_arguments --clean-first"
+        shift ;;
+    -c | --clean )
+        clean_flag=true
+        build=false
+        target="$2"
+        user_set_target=true
+        shift 2 ;;
+    --available-targets | --availableTargets )
+        build=false
+        available_targets_flag=true
+        shift ;;
+    --force-ninja-generator | --forceNinjaGenerator )
+        force_ninja_generator=true
+        refresh_cache_flag=true
+        shift ;;
+    --force-default-generator | --forceDefaultGenerator )
+        force_default_generator=true
+        refresh_cache_flag=true
+        shift ;;
+    -D )
+        cmake_configuration_arguments="$cmake_configuration_arguments -D$2"
+        refresh_cache_flag=true
+        shift 2 ;;
+    -t | --third-party | --thirdParty )
+        thirdParty_flag=true
+        shift ;;
+    -g | --generate-sourceable-files | --generateSourceableFiles )
+        build=false
+        force_shrc_generation_flag=true
+        shift ;;
+    -p | --pull )
+        build=false
+        branch_pull_flag=true
+        shift ;;
+    --submodules)
+        build=false
+        case "$2" in
+        set-url )
+            submodules_init_flag=true
+            submodules_update_flag=false
+            shift 2 ;;
+        init-update )
+            submodules_init_flag=true
+            submodules_update_flag=true
+            shift 2 ;;
+        * )
+            echo "Error:  Required argument '$2' not recognized."
+            echo "Available options are [set-url] or [init-update]"
+            echo ""
+            exit 4 ;;
+        esac
+        ;;
+    --get-verify | --getverify)
+        build=false
+        get_verify=true
+        shift
+        ;;
+    -h | --help )
+        print_help
+        exit 0
+        ;;
+    -- )
+        if [ $# == 2 ]; then
+            target="$2"
+            user_set_target=true
+            echo "Using the user-set target: $target"
+        elif [[ $# -gt 2 ]]; then
+            if version_lt "$cmake_version" "3.15"; then
+                # If there's a second, it must be the target
+                # If there's more, something is wrong
+                echo "Too many arguments!  Expecting exactly one, received the"\
+                "following: "
+                echo "    \"$*\""
+                echo ""
+                echo "Detected CMake version \"$cmake_version\""
+                echo "Multiple targets can only be specified for CMake"\
+                "version 3.15 or greater"
+                exit 1
+            else
+                target="${*: 2}"
+                user_set_target=true
+                # Remove package* targets from $target and warn about it
+                if [[ $target =~ (package) ]] ; then
+                    echo "Warning:  Package targets are not allowed when"\
+                    "specifying multiple targets"
+                    echo "The package targets will not be built"
+                    echo ""
+                    for val in $target; do
+                        if [[ $val =~ (package) ]] ; then
+                            target=${target//$val/}
+                        fi
+                    done
+                fi
+                echo "Using the user-set targets \"$target\""
+            fi
+        fi
+        break
+        ;;
+    * )
+        break ;;
+    esac
+done
+# We've now set all the user-settable variables and flags
+
+
+# -------------------- Guess if this is an external build -------------------- #
+
+if ! grep -q "$guessed_project_dir" <<< "$initial_directory" ; then
+    # Drill up to the highest dir that contains a CMakeLists.txt, and assume
+    # this is the project root
+    # This isn't completely foolproof of course...
+    project_dir="$initial_directory"
+    if ! [ -f "$project_dir"/CMakeLists.txt ]
+    then
+        echo "Error: CMakeLists.txt not found in current directory."
+        echo "       Unable to determine project root."
+        exit 3
+    fi
+    while [ -f "$project_dir"/../CMakeLists.txt ]
+    do
+        project_dir=$(readlink -e "$project_dir/..")
+    done
+    external_build=true
+    echo "Performing external build - project root detected: $project_dir"
+else
+    # Think this is probably unnecessary, it's reset again later
+    project_dir="$guessed_project_dir"
+fi
+
+
+# ----------------------------- Helyx submodules ----------------------------- #
+
+# Initialize Helyx submodules and Pull from current branch
+if [[ "$external_build" = false ]] && [[ "$submodules_init_flag" = true ]]; then
+    initialize_git_submodules
+elif [[ "$external_build" = false ]] && [[ "$branch_pull_flag" = true ]]; then
+    update_current_branch
+elif [[ "$external_build" = true ]] && [[ "$submodules_init_flag" = true ]]; then
+    echo ""
+    echo "Error:  The \"--submodules\" or the \"--pull\" flag was set."
+    echo "Emake also detected that this is an external build."
+    echo "These flags should be called from the parent HELYXcore directory."
+    exit 3
+fi
+
+
+# -------------------------------- HelyxVerify ------------------------------- #
+# Retrieve the latest version of helyxVerify
+if [[ $get_verify == true ]]; then
+    get_helyx_verify
+    exit 0
+fi
+
+# ---------------------------- Set up environment ---------------------------- #
+
+if [[ "$external_build" = false ]]; then
+    generate_active_build_file
+elif [[ "$force_shrc_generation_flag" == "true" ]]; then
+    echo ""
+    echo "Error:  The \"-g\" flag was set, indicating that shrc files should be generated."
+    echo "Emake also detected that this is an external build."
+    echo "External builds do not touch shrc files from the parent HELYX installation."
+    exit 3
+fi
+
+if [[ "$force_shrc_generation_flag" = true ]]; then
+    if [[ ! -f "$active_build_file" ]]; then
+        echo "Warning:  The following required file failed to generate:"
+        echo "    \"$active_build_file\""
+
+        exit 4
+    else
+        exit 0
+    fi
+fi
+
+# Now load CMake variables (which will be up-to-date for normal builds, and
+# untouched for external builds)
+load_cmake_settings
+
+# Pass information from activeBuild to CMake as configuration arguments.
+# This ensures that these variables are calculated only once by CMake.
+cmake_configuration_arguments="$cmake_configuration_arguments -DHELYX_SETTINGS_FILE:INTERNAL=${HELYX_SETTINGS_FILE}"
+cmake_configuration_arguments="$cmake_configuration_arguments -DEMAKE_BUILD:INTERNAL=TRUE"
+cmake_configuration_arguments="$cmake_configuration_arguments -DCONNECTED_TO_TERMINAL:INTERNAL=${CONNECTED_TO_TERMINAL}"
+
+
+# ----------------------------- ThirdParty Builds ---------------------------- #
+
+real_thirdParty_dir="$(readlink -e "$HELYX_THIRDPARTY_DIR")"
+# ThirdParty builds are a special case - they're external builds, but we want to
+# update activeBuild.shrc
+if [ "$thirdParty_flag" = true ] || [ "$real_thirdParty_dir" == "$project_dir" ]
+then
+    # ThirdParty builds are a special case - they're external builds, but we
+    # want to update activeBuild.shrc.  Must therefore also re-load settings.
+    generate_active_build_file
+    load_cmake_settings
+    if [ "$HELYX_SYSTEM_NAME" = MSwindows ]; then
+        echo "Error:  The thirdParty flag was set, but\$HELYX_SYSTEM_NAME set"
+        echo "to \"MSwindows\".  Pre-compiled Third Party must be used when"
+        echo "building for Windows."
+        exit 4
+    elif [[ ! -d "$HELYX_THIRDPARTY_DIR" ]]; then
+        echo "Error: The thirdParty flag was set, but HELYX_THIRDPARTY_DIR"
+        echo "takes the following value, which does not exist:"
+        echo "  \"$HELYX_THIRDPARTY_DIR\""
+        exit 4
+    fi
+    project_dir=$(readlink -e "$HELYX_THIRDPARTY_DIR")
+    echo "Building third party libraries"
+elif [[ "$external_build" == false ]]; then
+    # Guessed project dir should be the same as the loaded project dir
+    project_dir="$HELYX_PROJECT_DIR"
+    if [ "$guessed_project_dir" != "$project_dir" ]; then
+        echo "Warning:  Emake guessed the following project directory:"
+        echo "    $guessed_project_dir"
+        echo "CMake derived the following HELYX_PROJECT_DIR:"
+        echo "    $project_dir"
+        echo "Detection of external builds may be broken."
+    fi
+fi
+
+
+# --------------------------- Detect Ninja backend --------------------------- #
+
+# Use Ninja if available, otherwise system default
+if [[ ! $(readlink -e "$project_dir") = $(readlink -e "$HELYX_THIRDPARTY_DIR") ]]; then
+    if [ "$force_ninja_generator" = true ]; then
+        echo "Using the Ninja CMake Generator"
+        generator="-GNinja"
+    elif [ "$force_default_generator" = true ]; then
+        echo "Using the default CMake Generator"
+        generator=""
+    else
+        if command -v ninja &> /dev/null; then
+            echo "Ninja build system detected - defaulting to Ninja"
+            generator="-GNinja"
+        else
+            echo "Using the default CMake generator"
+            generator=""
+        fi
+    fi
+else
+    echo "Building in ThirdParty directory, not using ninja"
+fi
+
+
+# ---------------------------- Refresh the cache ----------------------------- #
+
+build_dir="$project_dir/cbuild/${HELYX_OPTIONS}_${HELYX_MPI_NAME}"
+
+if [ "$refresh_cache_flag" = true ]; then
+    # Remove the cache file manually to force re-configuration
+    if [ -f "$build_dir/CMakeCache.txt" ]; then
+        rm -v "$build_dir/CMakeCache.txt"
+    else
+        echo "No CMakeCache.txt file present in $build_dir"
+    fi
+
+    # If refresh-cache is called, but no user-set target is available, disable
+    # the build.  Still build if refresh called, and user has set a target.
+    if [[ "$user_set_target" != true ]]; then
+        build=false
+    fi
+fi
+
+# If the cache file isn't present, then re-generate it.
+# This MUST be run in $build_dir
+mkdir -p "$build_dir"
+if ! cd "$build_dir"; then
+    echo "Error:  Failed to cd to the build directory"
+    exit 1
+fi
+if [ ! -f "$build_dir"/CMakeCache.txt ]; then
+    echo "CMakeCache.txt not found in the current working directory." \
+         "Running CMake configuration..."
+
+    # shellcheck disable=SC2086
+    #echo "    ${CMAKE_EXE} $cmake_configuration_arguments -C $HELYX_SETTINGS_FILE $generator $project_dir"
+    "${CMAKE_EXE}" \
+        $cmake_configuration_arguments \
+        -C "$HELYX_SETTINGS_FILE" \
+        $generator \
+        "$project_dir"
+
+    error_code=$?
+    handle_cmake_build_errors $error_code
+
+    # For newer cmake versions, we can use the -B flag to specify the build
+    # directory.  This could then be run from anywhere.  However, we need to
+    # maintain backwards-compatability with older cmake versions.
+    # cmake -B $build_dir $project_dir
+fi
+
+
+# ---------------------------------- Build ----------------------------------- #
+
+if [ "$available_targets_flag" = true ]; then
+    set_available_targets
+    echo "$available_targets"
+fi
+
+if [ "$clean_flag" = true ]; then
+    clean_target
+fi
+
+if [ "$build" = true ]; then
+
+    # Early error if cache file doesn't exist
+    # Very unlikely that you'll hit this, I think
+    if [ ! -f "$build_dir"/CMakeCache.txt ]; then
+        echo "Error:  CMake cache file not found"
+        echo "Please refresh the cache (\"emake -r\")"
+        exit 4
+    elif [ "-GNinja" = "$generator" ] && [ ! -f "$build_dir/build.ninja" ]; then
+        echo ""
+        echo "Warning:  Could not find the following necessary file:"
+        echo "    $build_dir/build.ninja"
+        echo "The cache may not have refreshed correctly.  Please run"\
+        "\"emake -r\" and check that it completes correctly."
+        echo ""
+    elif [ "" = "$generator" ] && [ ! -f "$build_dir/Makefile" ]; then
+        echo ""
+        echo "Warning:  Could not find the following necessary file:"
+        echo "    $build_dir/Makefile"
+        echo "The cache may not have refreshed correctly.  Please run"\
+        "\"emake -r\" and check that it completes correctly."
+        echo ""
+    fi
+
+    # get_target uses $initial_directory, so can be called after changing
+    # working directory
+    if [ "$user_set_target" != true ]; then
+        if [ "$thirdParty_flag" = true ]; then
+            target="all"
+        else
+            set_target
+        fi
+    fi
+
+    temp=$number_of_processes
+    if [[ -z "$number_of_processes" ]]; then
+        number_of_processes=$(( $(nproc) + 2 ))
+        temp="all available ($number_of_processes)"  # For nicer message below
+    fi
+
+    # Get 'time' full path and print the build time
+    time_app=$(which time 2>/dev/null)
+    time_command=()
+    if [ -n "$time_app" ]; then
+        time_command=("$time_app" "-f" "Elapsed time (sec):\n\treal: %e\tsys: %S")
+    fi
+
+    echo "Building target \"$target\" with $temp processes..."
+    #echo "   "${time_command[@]}" ${CMAKE_EXE} --build $build_dir --target $target $cmake_arguments -- -j $number_of_processes"
+    # shellcheck disable=SC2086
+    "${time_command[@]}" \
+    "${CMAKE_EXE}" \
+        --build "$build_dir" \
+        --target $target \
+        $cmake_arguments \
+        -- -j $number_of_processes
+
+fi

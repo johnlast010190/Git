@@ -1,0 +1,165 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom latestTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 0.01;
+            deltaT 1e-5;
+            writeControl timeStep;
+            writeInterval 100;
+            purgeWrite 0;
+            writeFormat ascii;
+            writePrecision 10;
+            writeCompression uncompressed;
+            timePrecision 6;
+            runTimeModifiable yes;
+        }
+    }
+    functions
+    {
+        fieldAverage1
+        {
+            type             fieldAverage;
+            libs             ("libfieldFunctionObjects.so");
+            writeControl     writeTime;
+            fields
+            (
+                U
+                {
+                    mean        on;
+                    prime2Mean  on;
+                    base        time;
+                }
+                p
+                {
+                    mean        on;
+                    prime2Mean  on;
+                    base        time;
+                }
+            );
+        }
+        VR
+        {
+            type             volumeReport;
+            fields           ( UMean pMean );
+            timeStart        0.005;
+            executeControl   timeStep;
+            executeInterval  1;
+            writeControl     timeStep;
+            writeInterval    1;
+            outputFileFormat tsv;
+        }
+        WSS
+        {
+            type             wallShearStress;
+            libs             ("libfieldFunctionObjects.so");
+            executeControl   onEnd;
+            writeControl     onEnd;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (aero les);
+        boundaryMesh
+        {
+            inlet
+            {
+                type inlet;
+            }
+            outlet
+            {
+                type outlet;
+            }
+            "(upperWall|lowerWall)"
+            {
+                type wall;
+            }
+            frontAndBack
+            {
+                type empty;
+            }
+        }
+        turbulenceModel kOmegaSSTIDDES;
+        materials (air);
+        materialProperties
+        {
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform (10 0 0);
+                }
+            }
+            outlet
+            {
+                p
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

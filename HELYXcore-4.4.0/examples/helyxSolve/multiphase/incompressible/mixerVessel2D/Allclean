@@ -1,0 +1,11 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+
+#------------------------------------------------------------------------------
+
+# Avoid auto-removal of the blockMeshDict
+mv system/blockMeshDict system/blockMeshDict.keep
+helyxClean
+mv system/blockMeshDict.keep system/blockMeshDict
+
+#------------------------------------------------------------------------------

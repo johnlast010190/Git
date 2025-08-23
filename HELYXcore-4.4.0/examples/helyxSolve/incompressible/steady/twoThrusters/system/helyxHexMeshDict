@@ -1,0 +1,128 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+// Which of the steps to run
+castellatedMesh true;
+snap            true;
+addLayers       true;
+
+// For meshing internal geometry, autoBlockMesh can be set to true.
+autoBlockMesh false;
+blockData (0.01 0);
+
+// Try and close small holes in geometry
+crackDetection false;
+
+geometry
+{
+    thrusterA
+    {
+        type  searchableRing;
+        point1 (-4.05 0.75 0);
+        point2 (-4.00 0.75 0);
+        innerRadius 0.025;
+        outerRadius 0.25;
+    }
+    thrusterB
+    {
+        type  searchableRing;
+        point1 (4.04698 -0.75 0);
+        point2 (4.00 -0.7671 0);
+        innerRadius 0.025;
+        outerRadius 0.25;
+    }
+    // User defined refinement bounding box
+    boxA
+    {
+        type searchableBox;
+        min (-5 -0.25 -1);
+        max (-3 1.75 1);
+    }
+    boxB
+    {
+        type searchableBox;
+        min (3 -1.75 -1);
+        max (5 0.25 1);
+    }
+}
+
+castellatedMeshControls
+{
+    features ();
+
+    refinementSurfaces
+    {
+       thrusterA
+       {
+            // Surface-wise min and max refinement level
+            level (3 3);
+            zoneInside true;
+            faceZone thrusterA;
+            cellZone thrusterA;
+            regions {}
+        }
+       thrusterB
+       {
+            // Surface-wise min and max refinement level
+            level (3 3);
+            zoneInside true;
+            faceZone thrusterB;
+            cellZone thrusterB;
+            regions {}
+        }
+    }
+
+    refinementRegions
+    {
+        boxA
+        {
+            mode inside;
+            levels ((1E15 1));
+        }
+        boxB
+        {
+            mode inside;
+            levels ((1E15 1));
+        }
+        thrusterA
+        {
+            mode inside;
+            levels ((1E15 3));
+        }
+        thrusterB
+        {
+            mode inside;
+            levels ((1E15 3));
+        }
+    }
+
+    locationInMesh (0 0 0);
+}
+
+snapControls
+{
+    featureEdges {}
+}
+
+addLayersControls
+{
+    layers {}
+}
+
+
+// ************************************************************************* //

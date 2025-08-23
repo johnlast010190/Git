@@ -1,0 +1,14 @@
+runs
+(
+    full
+    {
+        checks
+        (
+            {
+                result "postProcessing/VR/0/volumeReport.dat";
+                reference "verification/full/VR/0/volumeReport.dat";
+                variables "Umax";
+            }
+        );
+    }
+);

@@ -1,0 +1,213 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+    }
+    regionGroups    1 ( fluid 1 ( region0 ) );
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            stopAt          endTime;
+            endTime         1000;
+            deltaT          1;
+            writeControl    timeStep;
+            writeInterval   100;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type volumeReport;
+            regions ( region0 );
+            fields ( U p );
+            writeControl timeStep;
+            writeInterval 1;
+            executeControl timeStep;
+            executeInterval 1;
+            functionObjectLibs ( "libreport.so" );
+            outputFileFormat tsv;
+        }
+        streamLines
+        {
+            type            streamLine;
+            libs            ("libfieldFunctionObjects.so");
+
+            executeControl  writeTime;
+            writeControl    writeTime;
+
+            setFormat       vtk;
+            trackForward    true;
+
+            lifeTime        10000;
+            nSubCycle       5;
+
+            cloudName       particleTracks;
+            nLines  10;
+            start   (-0.0205 0.001  0.00001);
+            end     (-0.0205 0.0251 0.00001);
+            fields  (p k U);
+            U       U;
+
+            seedSampleSet
+            {
+                type            uniform;
+                axis            x;
+                start           $start;
+                end             $end;
+                nPoints         $nLines;
+            }
+        }
+        WSS
+        {
+            type            wallShearStress;
+            libs            ("libfieldFunctionObjects.so");
+            executeControl  onEnd;
+            writeControl    onEnd;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state           ( steady ras );
+        turbulenceModel kEpsilon;
+        materials       ( air );
+        materialProperties
+        {
+            air
+            {
+                muModelCoeffs
+                {
+                    mu 1.205e-5;
+                }
+            }
+        }
+        system
+        {
+            fvSolution
+            {
+                SIMPLE
+                {
+                    nNonOrthogonalCorrectors 0;
+                    consistent      true;
+                    residualControl
+                    {
+                        p               1e-2;
+                        U               1e-3;
+                        "(k|epsilon)"   1e-3;
+                    }
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p               1;
+                    }
+                    equations
+                    {
+                        U               0.9;
+                        k               0.9;
+                        epsilon         0.9;
+                    }
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform ( 0 0 0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 0.375;
+                }
+            }
+            epsilon
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 14.855;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform (10 0 0);
+                }
+                k
+                {
+                    type            fixedValue;
+                    value           uniform 0.375;
+                }
+                epsilon
+                {
+                    type            fixedValue;
+                    value           uniform 14.855;
+                }
+            }
+            outlet
+            {
+                k
+                {
+                    type            zeroGradient;
+                }
+                epsilon
+                {
+                    type            zeroGradient;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

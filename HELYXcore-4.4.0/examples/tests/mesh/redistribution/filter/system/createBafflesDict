@@ -1,0 +1,64 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      createBafflesDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+internalFacesOnly true;
+
+baffles
+{
+    cycLeft
+    {
+        type            faceZone;
+        zoneName        cycLeft;
+        patches
+        {
+            master
+            {
+                name            cycLeft_half0;
+                type            cyclic;
+                neighbourPatch  cycLeft_half1;
+            }
+            slave
+            {
+                name            cycLeft_half1;
+                type            cyclic;
+                neighbourPatch  cycLeft_half0;
+            }
+        }
+    }
+    cycRight
+    {
+        type            faceZone;
+        zoneName        cycRight;
+        patches
+        {
+            master
+            {
+                name            cycRight_half0;
+                type            cyclic;
+                neighbourPatch  cycRight_half1;
+            }
+            slave
+            {
+                name            cycRight_half1;
+                type            cyclic;
+                neighbourPatch  cycRight_half0;
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

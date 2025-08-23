@@ -1,0 +1,19 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/short/VR/0/volumeReport.tsv";
+                variables "Umean" "pmean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+
+    // No long run, case too lengthy.
+);

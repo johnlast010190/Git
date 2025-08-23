@@ -1,0 +1,23 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Make 3D mesh in slab of cells
+helyxRun blockMesh
+helyxRun helyxHexMesh -overwrite
+helyxRun createPatch -overwrite
+
+# Make a 2D mesh by extruding a patch
+helyxRun extrudeMesh -overwrite
+
+# Move the mesh
+mkdir 0/
+cp 0.orig/* 0/
+helyxRun moveDynamicMesh -checkAMI
+
+# Create dummy file for ParaView visualisation
+touch relativeMotion.foam
+
+#------------------------------------------------------------------------------

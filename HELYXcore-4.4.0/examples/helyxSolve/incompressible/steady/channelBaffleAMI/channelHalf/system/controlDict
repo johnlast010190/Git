@@ -1,0 +1,80 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | HELYX(R) Core: Open-source CFD for Enterprise            |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | ENGYS Ltd. <http://engys.com/>                           |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     simpleFoam;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         500;
+
+deltaT          constant 1;
+
+writeControl    timeStep;
+
+writeInterval   100;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  10;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   6;
+
+graphFormat     raw;
+
+runTimeModifiable yes;
+
+libs            ( "" );
+
+adjustTimeStep  false;
+
+maxCo           0;
+
+maxAlphaCo      0;
+
+maxDeltaT       0;
+
+functions
+{
+    fp1
+    {
+        functionObjectLibs ( "libfieldFunctionObjects.so" );
+        operations      ( { operation Urel ; write true ; } );
+        executeControl  timeStep;
+        writeControl    outputTime;
+        type            fieldProcess;
+        calculationControl continuous;
+    }
+    residuals
+    {
+        type            residuals;
+        libs            ( "libutilityFunctionObjects.so" );
+        fields          ( U p k omega );
+    }
+}
+
+
+// ************************************************************************* //

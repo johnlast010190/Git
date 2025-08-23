@@ -1,0 +1,182 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | HELYX®: Open-source CFD for Enterprise                   |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | ENGYS Ltd. <http://engys.com/>                           |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "../system";
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+    k
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        minIter         1;
+        tolerance       1e-06;
+        relTol          0.1;
+    }
+    kFinal
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        minIter         1;
+        tolerance       1e-06;
+        relTol          0;
+    }
+    omega
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        minIter         1;
+        tolerance       1e-06;
+        relTol          0.1;
+    }
+    omegaFinal
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        minIter         1;
+        tolerance       1e-06;
+        relTol          0;
+    }
+    p
+    {
+        solver          GAMG;
+        agglomerator    faceAreaPair;
+        mergeLevels     1;
+        cacheAgglomeration true;
+        nCellsInCoarsestLevel 200;
+        smoother        symGaussSeidel;
+        minIter         1;
+        scaleCorrection true;
+        tolerance       1e-10;
+        relTol          0.01;
+    }
+    U
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        minIter         1;
+        tolerance       1e-06;
+        relTol          0.1;
+    }
+    pFinal
+    {
+        solver          GAMG;
+        agglomerator    faceAreaPair;
+        mergeLevels     1;
+        cacheAgglomeration true;
+        nCellsInCoarsestLevel 200;
+        smoother        symGaussSeidel;
+        minIter         1;
+        scaleCorrection true;
+        tolerance       1e-06;
+        relTol          0;
+    }
+    UFinal
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        minIter         1;
+        tolerance       1e-06;
+        relTol          0;
+    }
+    pcorr
+    {
+        solver          GAMG;
+        agglomerator    faceAreaPair;
+        mergeLevels     1;
+        cacheAgglomeration true;
+        nCellsInCoarsestLevel 200;
+        tolerance       1e-10;
+        relTol          0.01;
+        smoother        DICGaussSeidel;
+        nPreSweeps      0;
+        nPostSweeps     2;
+        nFinestSweeps   2;
+        minIter         1;
+    }
+    cellMotionU
+    {
+        solver          PCG;
+        preconditioner  DIC;
+        tolerance       1e-08;
+        relTol          0;
+        minIter         1;
+    }
+    cellDisplacement
+    {
+        solver          GAMG;
+        tolerance       1e-08;
+        relTol          0;
+        smoother        GaussSeidel;
+        cacheAgglomeration true;
+        nCellsInCoarsestLevel 10;
+        agglomerator    faceAreaPair;
+        mergeLevels     1;
+        minIter         1;
+    }
+}
+
+relaxationFactors
+{
+    fields
+    {
+        p               0.3;
+        pFinal          1;
+    }
+    equations
+    {
+        k               1;
+        kFinal          1;
+        omega           1;
+        omegaFinal      1;
+        U               0.7;
+        UFinal          0.7;
+    }
+}
+
+cache
+{
+    grad(U)         ;
+}
+
+PIMPLE
+{
+    turbOnFinalIterOnly false;
+    ddtPhiCorr      false;
+    momentumPredictor yes;
+    nOuterCorrectors 5;
+    nCorrectors     1;
+    nNonOrthogonalCorrectors 0;
+    pRefCell        0;
+    pRefValue       0;
+    rhoMin          rhoMin [ 1 -3 0 0 0 ] 1e-10;
+    rhoMax          rhoMax [ 1 -3 0 0 0 ] 1e+10;
+    residualControl
+    {
+        "(U|k|epsilon|omega|nuTilda|T)"
+        {
+            relTol          0;
+            tolerance       0;
+        }
+    }
+    correctPhi      true;
+    helyxRemesh     true;
+    maxTranslation  ( 10000 10000 10000 );
+    maxVelocity     40;
+    allowErrors     20;
+}
+
+
+// ************************************************************************* //

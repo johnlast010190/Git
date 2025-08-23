@@ -1,0 +1,165 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : 4.4.0
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) 2017 OpenCFD Ltd.
+    (c) 2024 Engys Ltd.
+
+Class
+    Foam::cellCellStencils::trackingInverseDistance
+
+Description
+    Inverse-distance-weighted interpolation stencil.
+
+SourceFiles
+    trackingInverseDistanceCellCellStencil.C
+
+\*---------------------------------------------------------------------------*/
+
+#ifndef cellCellStencils_trackingInverseDistance_H
+#define cellCellStencils_trackingInverseDistance_H
+
+#include "cellCellStencil/inverseDistance/inverseDistanceCellCellStencil.H"
+#include "meshes/polyMesh/globalMeshData/globalIndex.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+class voxelMeshSearch;
+
+namespace cellCellStencils
+{
+
+/*---------------------------------------------------------------------------*\
+                   Class trackingInverseDistance Declaration
+\*---------------------------------------------------------------------------*/
+
+class trackingInverseDistance
+:
+    public inverseDistance
+{
+protected:
+
+    // Protected data
+
+        //- Global indexing for cells
+        globalIndex globalCells_;
+
+        //- Current (global) donor cell
+        labelList globalDonor_;
+
+        //- Subset according to zone
+        PtrList<fvMeshSubset> meshParts_;
+
+
+
+    // Protected Member Functions
+
+        //- Mark voxels of patchTypes with type of patch face
+        static void markBoundaries
+        (
+            const fvMesh& mesh,
+
+            const boundBox& bb,
+            const labelVector& nDivs,
+            PackedList<2>& patchTypes,
+
+            const labelList& cellMap,
+            labelList& patchCellTypes
+        );
+
+        //- Mark all cells overlapping (a voxel covered by) a src patch
+        //  with type HOLE
+        void markPatchesAsHoles
+        (
+            PstreamBuffers& pBufs,
+
+            // Voxel mesh for patches
+            const List<treeBoundBoxList>& patchBb,
+            const List<labelVector>& patchDivisions,
+            const PtrList<PackedList<2>>& patchParts,
+
+            const label srcI,
+            const label tgtI,
+            labelList& allCellTypes
+        ) const;
+
+        void markDonors
+        (
+            PstreamBuffers& pBufs,
+            const List<treeBoundBoxList>& meshBb,
+            const PtrList<voxelMeshSearch>& meshSearches,
+
+            const label srcI,
+            const label tgtI,
+            labelListList& allStencil,
+            labelList& allDonor
+        ) const;
+
+
+public:
+
+    //- Runtime type information
+    TypeName("trackingInverseDistance");
+
+
+    // Constructors
+
+        //- Construct from fvMesh
+        trackingInverseDistance(const fvMesh&, const dictionary&, const bool);
+
+        //- Disallow default bitwise copy construction
+        trackingInverseDistance(const trackingInverseDistance&) = delete;
+
+
+    //- Destructor
+    virtual ~trackingInverseDistance();
+
+
+    // Member Functions
+
+        //- Update stencils. Return false if nothing changed.
+        virtual bool update();
+
+
+    // Member Operators
+
+        //- Disallow default bitwise assignment
+        void operator=(const trackingInverseDistance&) = delete;
+
+};
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace cellCellStencils
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

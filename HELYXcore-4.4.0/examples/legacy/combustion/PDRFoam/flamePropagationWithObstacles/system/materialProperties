@@ -1,0 +1,94 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      materialProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+materialType    premixed;
+mixture         inhomogeneousThermoMixture;
+energy          absoluteEnthalpy;
+
+stoichiometricAirFuelMassRatio 15.5776;
+
+species (ft b);
+components ( fuel oxidant burntProducts );
+
+fuel
+{
+    muModel         muSutherland;
+    kappaModel      kappaSutherland;
+    thermodynamics  janaf;
+    equationOfState perfectGas;
+    molWeight       44.0962;
+    thermodynamicsCoeffs
+    {
+        Tlow            200;
+        Thigh           5000;
+        Tcommon         1000;
+        highCpCoeffs    ( 7.53414 0.0188722 -6.27185e-06 9.14756e-10 -4.78381e-14 -16467.5 -17.8923 );
+        lowCpCoeffs     ( 0.933554 0.0264246 6.10597e-06 -2.19775e-08 9.51493e-12 -13958.5 19.2017  );
+    }
+    muModelCoeffs
+    {
+        As              1.67212e-06;
+        Ts              170.672;
+    }
+}
+
+
+oxidant
+{
+    muModel         muSutherland;
+    kappaModel      kappaSutherland;
+    thermodynamics  janaf;
+    equationOfState perfectGas;
+    molWeight       28.8504;
+    thermodynamicsCoeffs
+    {
+        Tlow            200;
+        Thigh           6000;
+        Tcommon         1000;
+        highCpCoeffs    ( 3.10131 0.00124137 -4.18816e-07 6.64158e-11 -3.91274e-15 -985.266 5.35597 );
+        lowCpCoeffs     ( 3.58378 -0.000727005 1.67057e-06 -1.09203e-10 -4.31765e-13 -1050.53 3.11239 );
+    }
+    muModelCoeffs
+    {
+        As              1.67212e-06;
+        Ts              170.672;
+    }
+}
+
+burntProducts
+{
+    muModel         muSutherland;
+    kappaModel      kappaSutherland;
+    thermodynamics  janaf;
+    equationOfState perfectGas;
+    molWeight       28.3233;
+    thermodynamicsCoeffs
+    {
+        Tlow           200;
+        Thigh          6000;
+        Tcommon        1000;
+        highCpCoeffs   ( 3.10558 0.00179747 -5.94696e-07 9.05605e-11 -5.08443e-15 -11003.6 5.12104 );
+        lowCpCoeffs    ( 3.49796 0.000638555 -1.83881e-07 1.20989e-09 -7.68691e-13 -11080.5 3.18188 );
+    }
+    muModelCoeffs
+    {
+        As             1.67212e-06;
+        Ts             170.672;
+    }
+}
+
+// ************************************************************************* //

@@ -1,0 +1,225 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    regionGroups ( fluids ( ) solids ( coil stator ) );
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+	system
+	{
+		controlDict
+		{
+            application     helyxSolve;
+		    startFrom       startTime;
+		    startTime       0;
+		    stopAt          endTime;
+		    endTime         100;
+		    deltaT          1;
+		    writeControl    timeStep;
+		    writeInterval   1; //100;
+		    purgeWrite      0;
+		    writeFormat     ascii;
+		    writePrecision  8;
+		    writeCompression uncompressed;
+		    timeFormat      general;
+		    timePrecision   6;
+		    runTimeModifiable yes;
+		}
+        fvSolution
+        {
+            solvers
+            {
+                "(e|h|T|e_h|T_h|T_e|T_e_h)"
+                {
+                    nCellsInCoarsestLevel 10;
+                }
+            }
+        }
+        meshObjects
+        {
+            coilFrame
+            {
+                type coordinateFrame;
+                coordinateSystem
+                {
+                    type    cartesian;
+                    origin  (0 0 0);
+                    e1      (0.7 -0.35 0);
+                    e3      (0 0 1);
+                }
+            }
+            statorFrame
+            {
+                type coordinateFrame;
+                coordinateSystem
+                {
+                    type    cartesian;
+                    origin  (0 0 0);
+                    //e1      (-0.7 -0.35 0);
+                    e1      (-0.5 0.5 0);
+                    e3      (0 0 1);
+                }
+            }
+        }
+	}
+	functions
+    {
+	    vr1-coil
+	    {
+            functionObjectLibs ( "libreport.so" );
+            logToFile       yes;
+            fields          ( T );
+            region          coil;
+            type            volumeReport;
+	    }
+	    vr1-stator
+	    {
+            functionObjectLibs ( "libreport.so" );
+            logToFile       yes;
+            fields          ( T );
+            region          stator;
+            type            volumeReport;
+	    }
+	}
+}
+
+regions
+{
+    solids
+    {
+	    state ( steady solid );
+        materialProperties
+        {
+            statorMaterial
+            {
+                materialName statorMaterial;
+                materialType    solid;
+                thermodynamics  hConst;
+                equationOfState rhoConst;
+                energy          sensibleEnthalpy;
+                kappaModel      functionTAnIso;
+
+                molWeight 63.546;
+
+                thermodynamicsCoeffs
+                {
+                    Cp  418.4;
+                    Hf 0.0;
+                }
+                kappaModelCoeffs
+                {
+                    kappa   ( 38 1e-4 1e-4 );
+                    referenceFrame statorFrame;
+                }
+                equationOfStateCoeffs
+                {
+                    rho 8900;
+                }
+            }
+            coilMaterial
+            {
+                materialName coilMaterial;
+                materialType    solid;
+                thermodynamics  hConst;
+                equationOfState rhoConst;
+                energy          sensibleEnthalpy;
+                kappaModel      functionTAnIso;
+
+                molWeight 63.546;
+
+                thermodynamicsCoeffs
+                {
+                    Cp  418.4;
+                    Hf 0.0;
+                }
+                kappaModelCoeffs
+                {
+                    kappa   ( 380 1e-3 1e-3 );
+                    referenceFrame coilFrame;
+                }
+                equationOfStateCoeffs
+                {
+                    rho 8900;
+                }
+            }
+        }
+        system
+        {
+            fvSolution
+            {
+                relaxationFactors
+                {
+                    equations
+                    {
+                        h 1;
+                    }
+                }
+            }
+        }
+        boundaryConditions
+        {
+            fixedWalls
+            {
+                T
+                {
+                    type            fixedValue;
+                    value           uniform 300;
+                }
+            }
+        }
+    }
+    coil
+    {
+		materials ( coilMaterial );
+		system
+	    {
+        	fvOptions
+	        {
+        	    heatSource
+        	    {
+                    type scalarSemiImplicitSource;
+                    scalarSemiImplicitSourceCoeffs
+                    {
+                        active          true;
+                        selectionMode   all;
+                        volumeMode      absolute;
+                        injectionRateSuSp
+                        {
+                            T     (60 0);
+                        }
+                    }
+        	    }
+        	}
+        }
+    }
+	stator
+	{
+		materials ( statorMaterial );
+	}
+}
+
+
+// ************************************************************************* //

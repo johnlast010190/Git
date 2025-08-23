@@ -1,0 +1,124 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      dynamicMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+mover
+{
+    type            motionSolver;
+    libs            ("libfvMeshMovers.so" "librigidBodyMeshMotion.so");
+    motionSolver    rigidBodyMotion;
+    rigidBodyMotionCoeffs
+    {
+        report          on;
+        solver
+        {
+            type Newmark;
+        }
+        accelerationRelaxation 0.7;
+        bodies
+        {
+            floatingObject
+            {
+                type            cuboid;
+                parent          root;
+
+                // Cuboid dimensions
+                Lx              0.3;
+                Ly              0.2;
+                Lz              0.5;
+                //L               (0.3 0.2 0.5);
+
+                // Density of the cuboid
+                rho             500;
+
+                // Cuboid mass
+                mass            #calc "$rho*$Lx*$Ly*$Lz";
+                L               ($Lx $Ly $Lz);
+                //mass            #calc "$rho*cmptProduct($<vector>L)";
+                centreOfMass    (0 0 0.25);
+                transform       (1 0 0 0 1 0 0 0 1) (0.5 0.45 0.1);
+
+                joint
+                {
+                    type            composite;
+                    joints
+                    (
+                        {
+                            type Py;
+                        }
+                        {
+                            type Ry;
+                        }
+                    );
+                }
+
+                patches         (floatingObject);
+                innerDistance   0.05;
+                outerDistance   0.35;
+            }
+        }
+    }
+}
+
+topoChanger
+{
+    type    refiner;
+    libs    ("libfvMeshTopoChangers.so");
+
+    // How often to refine
+    refineInterval  1;
+
+    // Field to be refinement on
+    field           alpha.water;
+
+    // Refine field in between lower..upper
+    lowerRefineLevel 0.001;
+    upperRefineLevel 0.999;
+
+    unrefineLevel   10;
+
+    // Have slower than 2:1 refinement
+    nBufferLayers   1;
+
+    // Refine cells only up to maxRefinement levels
+    maxRefinement   1;
+
+    correctFluxes
+    (
+        (phi U)
+        (nHatf none)
+        (rhoPhi none)
+        (alphaPhi none)
+        (ghf none)
+    );
+
+    // Stop refinement if maxCells reached
+    maxCells        200000;
+
+    // Write the refinement level as a volScalarField
+    dumpLevel       true;
+
+    protectLayers   false;
+}
+
+distributor
+{
+    type            distributor;
+    libs            ("libfvMeshDistributors.so");
+    redistributionInterval  2;
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,18 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Setup and run case with 'f4st' writer
+helyxRun blockMesh
+helyxRun topoSet
+helyxRun subsetMesh -overwrite c0 -patch ffminy
+helyxRun decomposePar
+helyxRun caseSetup
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch case1.foam
+
+#------------------------------------------------------------------------------

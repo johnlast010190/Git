@@ -1,0 +1,26 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Create background mesh in series
+helyxRun blockMesh
+
+# Create porous zone
+helyxRun topoSet
+
+# Setup
+helyxRun caseSetup
+
+# Run
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch simpleCar.foam
+
+# Map field values to another mesh
+cd helyxMap
+./runMapping
+
+#------------------------------------------------------------------------------

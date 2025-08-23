@@ -1,0 +1,24 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy input surface from resources directory
+mkdir -p constant/triSurface
+cp "$HELYX_TUTORIALS"/resources/geometry/iglooFridge/* constant/triSurface/
+
+# Mesh
+helyxRun blockMesh
+helyxRun helyxHexMesh
+
+# Check
+helyxRun checkMesh -writeAllMetrics -latestTime
+
+# Run post-processing
+helyxRun postProcess -constant -fields '( aspectRatio determinant nonOrthogonality skewness volumeRatio )'
+
+# Create dummy file for ParaView visualisation
+touch iglooFridges.foam
+
+#------------------------------------------------------------------------------

@@ -1,0 +1,27 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/short/VR/0/volumeReport.tsv";
+                variables "Time" "Umin" "Umin location" "Umax" "Umax location" "Umean" "UstDev" "pmin" "pmin location" "pmax" "pmax location" "pmean" "pstDev";
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/long/VR/0/volumeReport.tsv";
+                variables "Time" "Umin" "Umin location" "Umax" "Umax location" "Umean" "UstDev" "pmin" "pmin location" "pmax" "pmax location" "pmean" "pstDev";
+            }
+        );
+    }
+);

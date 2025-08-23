@@ -1,0 +1,31 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/wallShearStress/0/wallShearStress.dat";
+                reference "verification/short/wallShearStress/0/wallShearStress.dat";
+                variables "min" "max";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/wallShearStress/0/wallShearStress.dat";
+                reference "verification/long/wallShearStress/0/wallShearStress.dat";
+                variables "min" "max";
+            }
+        );
+    }
+);
+
+tags asan;

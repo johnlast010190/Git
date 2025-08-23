@@ -1,0 +1,20 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+mkdir -p constant/triSurface
+cp "$HELYX_TUTORIALS"/resources/geometry/mixerVessel2D/* constant/triSurface/
+
+m4 system/blockMeshDict.m4 > system/blockMeshDict
+
+helyxRun blockMesh
+helyxRun topoSet
+helyxRun caseSetup
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch mixerVesselMPAMI2D.foam
+
+#------------------------------------------------------------------------------

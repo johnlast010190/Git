@@ -1,0 +1,29 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/disc/VR/0/volumeReport.tsv";
+                reference "verification/short/disc/VR/0/volumeReport.tsv";
+                variables "Tmax";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/disc/VR/0/volumeReport.tsv";
+                reference "verification/long/disc/VR/0/volumeReport.tsv";
+                variables "Tmax";
+            }
+        );
+    }
+);

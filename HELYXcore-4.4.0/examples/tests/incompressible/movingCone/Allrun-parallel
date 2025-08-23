@@ -1,0 +1,41 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Create mapping meshes
+mapTimes="0.0015 0.003"
+for mapTime in $mapTimes; do
+    helyxRun -log log.blockMesh_$mapTime blockMesh -dict system/blockMeshDict_$mapTime
+    helyxRun -log log.decomposePar_$mapTime decomposePar -force -noFields -decomposeParDict system/decomposeParDict_$mapTime
+
+    mkdir constant/meshToMesh_$mapTime
+
+    for procI in processor*
+    do
+        mv $procI/constant/polyMesh constant/meshToMesh_$mapTime/$procI
+    done
+
+    mv constant/polyMesh constant/meshToMesh_$mapTime
+done
+
+# Create starting mesh
+helyxRun blockMesh
+helyxRun decomposePar -force
+
+for mapTime in $mapTimes; do
+    for procI in processor*
+    do
+        mkdir $procI/constant/meshToMesh_$mapTime
+        mv constant/meshToMesh_$mapTime/$procI $procI/constant/meshToMesh_$mapTime/polyMesh
+    done
+done
+
+helyxRun pimpleDyMFoam
+helyxRun reconstructPar
+
+# Create dummy file for ParaView visualisation
+touch movingCone.foam
+
+#------------------------------------------------------------------------------

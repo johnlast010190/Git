@@ -1,0 +1,84 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     postProcess;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         1;
+
+deltaT          1;
+
+writeControl    timeStep;
+
+writeInterval   500;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  6;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   6;
+
+graphFormat     raw;
+
+runTimeModifiable yes;
+
+libs            2 ( "libutilityFunctionObjects.so" "" );
+
+functions
+{
+    RAStat
+    {
+        timeStart       0;
+        executeControl  timeStep;
+        executeInterval 1;
+        writeControl    writeTime;
+        writeToFile true;
+        writeInterval   1;
+        type            runTimeControl;
+        conditionLogicalOperator and;
+        postProcessMode true;
+        conditions
+        {
+            RASCC
+            {
+                type            confidenceInterval;
+                field          drag;
+                minTransientTime 0;
+                confidence 0.99;
+                targetInterval 0.001;
+                minSamples 100;
+                intervalType absolute;
+                filterRadius 0;
+                slopeTolerance 1e-02;
+                dataFile signal.dat;
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,53 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/fluidHeight/0/fluidHeight.tsv";
+                reference "verification/short/fluidHeight/0/fluidHeight.tsv";
+                variables "region0";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/short/VR/0/volumeReport.tsv";
+                variables "Umin" "Umax" "Umean" "UstDev" "pmin" "pmax" "pmean" "pstDev";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/VR_mesh/0/volumeReport.tsv";
+                reference "verification/short/VR_mesh/0/volumeReport.tsv";
+                variables "aspectRatiomin" "aspectRatiomax" "aspectRatiomean" "aspectRatiostDev" "determinantmin" "determinantmax" "determinantmean" "determinantstDev" "nonOrthogonalitymin" "nonOrthogonalitymax" "nonOrthogonalitymean" "nonOrthogonalitystDev" "skewnessmin" "skewnessmax" "skewnessmean" "skewnessstDev" "volumeRatiomin" "volumeRatiomax" "volumeRatiomean" "volumeRatiostDev";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/fluidHeight/0/fluidHeight.tsv";
+                reference "verification/long/fluidHeight/0/fluidHeight.tsv";
+                variables "region0";
+            }
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/long/VR/0/volumeReport.tsv";
+                variables "Umin" "Umax" "Umean" "UstDev" "pmin" "pmax" "pmean" "pstDev";
+            }
+            {
+                result "postProcessing/VR_mesh/0/volumeReport.tsv";
+                reference "verification/long/VR_mesh/0/volumeReport.tsv";
+                variables "aspectRatiomin" "aspectRatiomax" "aspectRatiomean" "aspectRatiostDev" "determinantmin" "determinantmax" "determinantmean" "determinantstDev" "nonOrthogonalitymin" "nonOrthogonalitymax" "nonOrthogonalitymean" "nonOrthogonalitystDev" "skewnessmin" "skewnessmax" "skewnessmean" "skewnessstDev" "volumeRatiomin" "volumeRatiomax" "volumeRatiomean" "volumeRatiostDev";
+            }
+        );
+    }
+);

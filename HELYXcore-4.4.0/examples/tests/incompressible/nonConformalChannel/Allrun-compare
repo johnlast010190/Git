@@ -1,0 +1,57 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Setup function
+setup()
+{
+    cp -f system/caseSetupDict.$1 system/caseSetupDict
+    helyxRun -log log.caseSetup.$1 caseSetup
+}
+
+# Run function
+run()
+{
+    helyxRun -log log.pimpleFoam.$1 pimpleFoam
+    mv postProcessing/inletFlowRate postProcessing/inletFlowRate.$1
+    mv postProcessing/outletFlowRate postProcessing/outletFlowRate.$1
+}
+
+# Create mesh to be reused by both setups
+helyxRun blockMesh
+
+# Run case using non-conformal coupling
+printf "\nRunning case with NCC patches:\n"
+setup NCC
+run NCC
+
+# Run case using cyclicAMI patches
+printf "\nRunning case with AMI patches:\n"
+mv system/nonConformalCouplesDict system/nonConformalCouplesDict.bkp
+setup AMI
+run AMI
+mv system/nonConformalCouplesDict.bkp system/nonConformalCouplesDict
+cp -f system/caseSetupDict.NCC system/caseSetupDict
+
+# Inflow/outflow rate data
+inletFlowRateAMI=postProcessing/inletFlowRate.AMI/0/surfaceFieldValue.dat
+outletFlowRateAMI=postProcessing/outletFlowRate.AMI/0/surfaceFieldValue.dat
+inletFlowRateNonConformalCyclic=postProcessing/inletFlowRate.NCC/0/surfaceFieldValue.dat
+outletFlowRateNonConformalCyclic=postProcessing/outletFlowRate.NCC/0/surfaceFieldValue.dat
+
+# Plot
+gnuplot << EOF
+set terminal postscript eps color enhanced
+set output "NCC_cyclicAMI_error.eps"
+set xlabel "Time (s)"
+set ylabel "Inlet/outlet conservation error (%)"
+plot \
+    "< paste $inletFlowRateAMI $outletFlowRateAMI" \
+    us 1:(100*(\$4+\$2)/\$2) every ::1 w l t "cyclicAMI" , \
+    "< paste $inletFlowRateNonConformalCyclic $outletFlowRateNonConformalCyclic" \
+    us 1:(100*(\$4+\$2)/\$2) every ::1 w l t "nonConformalCyclic"
+EOF
+
+#------------------------------------------------------------------------------

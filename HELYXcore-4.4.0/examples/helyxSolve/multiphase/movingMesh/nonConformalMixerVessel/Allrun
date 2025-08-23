@@ -1,0 +1,29 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy input surfaces from resources directory
+mkdir -p constant/triSurface
+cp "$HELYX_TUTORIALS"/resources/geometry/mixerVessel/* constant/triSurface/
+
+# Mesh in parallel
+helyxRun -p helyxHexMesh
+
+# Generate the sliding patches
+helyxRun createBaffles -overwrite
+helyxRun mergeOrSplitBaffles -split -overwrite
+
+# Setup and run
+helyxRun caseSetup
+helyxRun helyxSolve
+
+# Reconstruct
+helyxRun reconstructParMesh -constant
+helyxRun reconstructPar
+
+# Create dummy file for ParaView visualisation
+touch nonConformalMixerVessel.foam
+
+#------------------------------------------------------------------------------

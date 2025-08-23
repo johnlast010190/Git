@@ -1,0 +1,179 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+convertToMeters 1; // Value has to be 1 for use with parallelBlockMesh (probably)
+
+nX	20;
+nY	20;
+nZ	1;
+
+vertices
+(
+    (0   0   0)
+    (0.1 0   0)
+    (0.1 0.1 0)
+    (0   0.1 0)
+    (0   0   0.01)
+    (0.1 0   0.01)
+    (0.1 0.1 0.01)
+    (0   0.1 0.01)
+);
+
+/*	Currently only simpleGrading is supported 
+	For each direction, even if the grading is a single number, it must be specified within ()
+	In the example below, the usual simpleGrading would have read: simpleGrading (1 1 1)
+	However, for parallelBlockMesh, to cater for grading in all directions, it has to be written as:
+		simpleGrading
+		(
+			(
+				(length_in_X1_direction number_of_cells_in_X1_direction grading_in_X1_direction)
+			)
+
+			(
+				(length_in_X2_direction number_of_cells_in_X2_direction grading_in_X2_direction)
+			)
+
+			(
+				(length_in_X3_direction number_of_cells_in_X3_direction grading_in_X3_direction)
+			)
+		)
+	If you have multi-grading, then it will look like:
+		simpleGrading
+		(
+			(
+				(length_in_X1_direction_1 number_of_cells_in_X1_direction_1 grading_in_X1_direction_1)
+				(length_in_X1_direction_2 number_of_cells_in_X1_direction_2 grading_in_X1_direction_2)
+				(length_in_X1_direction_3 number_of_cells_in_X1_direction_3 grading_in_X1_direction_3)
+			)
+
+			(
+				(length_in_X2_direction number_of_cells_in_X2_direction grading_in_X2_direction)
+			)
+
+			(
+				(length_in_X3_direction number_of_cells_in_X3_direction grading_in_X3_direction)
+			)
+		)
+			Where: length_in_X1_direction_1 + length_in_X1_direction_2 + length_in_X1_direction_3 = length_in_X1_direction
+*/
+
+// With regular blockMesh this block would be defined as:
+/*blocks
+(
+    hex (0 1 2 3 4 5 6 7) (20 20 10) simpleGrading (1 1 1)
+);*/
+
+
+// parallelBlockMesh definition of the same block
+
+blocks
+(
+	hex (0 1 2 3 4 5 6 7) ($nX $nY $nZ) simpleGrading
+	(
+		(
+			(0.1 $nX 1)	//length in X1 as calculated from the vertices is 0.1 - 0 = 0.1; number of cells in X1 direction = 20
+		)
+		(
+			(0.1 $nY 1)	//length in X2 as calculated from the vertices is 0.1 - 0 = 0.1; number of cells in X2 direction = 20
+		)
+		(
+			(0.01 $nZ 1)//length in X3 as calculated from the vertices is 0.01 - 0 = 0.01; number of cells in X3 direction = 10
+		)
+	)
+);
+
+
+/*	
+	In this implementation, only straight edges are supported 
+*/
+edges ();
+
+
+/*
+	For the current version of parallelBlockMeshDict, the last two patches specified in boundary should have normal in same direction as which mesh is being sliced
+	E.g., in this example, "front" and "back" both have normals as (0 0 1) [ignore sign]
+	The direction in which the mesh is sliced will be X3 direction 
+*/
+boundary
+(
+    movingWall
+    {
+        type wall;
+        faces
+        (
+            (3 7 6 2)
+        );
+    }
+    fixedWalls
+    {
+        type wall;
+        faces
+        (
+            //(0 4 7 3)
+            //(2 6 5 1)
+            (1 5 4 0)
+        );
+    }
+    // For use with parallelBlockMesh the last two patches also indicate the direction the mesh will be sliced in for parallel meshing. These two patches have to be defined separately (not as a group) for parallelBlockMesh.
+    // With regular blockMesh the last two patches can be defined together in a group as:
+    /*frontAndBack
+    {
+        type empty;
+        faces
+        (
+            (0 3 2 1)
+            (4 5 6 7)
+        );
+    }*/
+    // parallelBlockMesh definition of the same last two patches has to be separate:
+    front
+    {
+        type empty;
+        faces
+        (
+            (0 3 2 1)
+        );
+    }
+    back
+    {
+        type empty;
+        faces
+        (
+            (4 5 6 7)
+        );
+    }
+    fixedWallOriginX
+    {
+        type wall;
+        faces
+        (
+            (0 4 7 3)
+        );
+    }
+    fixedWallInfX
+    {
+        type wall;
+        faces
+        (
+            (2 6 5 1)
+        );
+    }
+);
+
+mergePatchPairs ();
+
+
+// ************************************************************************* //

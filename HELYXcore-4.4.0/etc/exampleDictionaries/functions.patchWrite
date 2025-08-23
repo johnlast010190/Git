@@ -1,0 +1,22 @@
+wallPresureNoise
+{
+    type patchWrite;
+    functionObjectLibs ( "libreport.so" );
+
+    region region0;
+
+    name noiseWalls;
+
+    patches
+    (
+        s_duct
+        straight_duct
+    );
+
+    fields
+    (
+        p
+    );
+
+    //nearCellValues off;
+}

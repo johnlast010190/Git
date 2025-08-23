@@ -1,0 +1,41 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/SR-in/0/surfaceReport.dat";
+                reference "verification/short/SR-in/0/surfaceReport.dat";
+                variables "massFlux" "Umin" "Umax" "Umean" "UstDev" "pmin" "pmax" "pmean" "pstDev";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/SR-out/0/surfaceReport.dat";
+                reference "verification/short/SR-out/0/surfaceReport.dat";
+                variables "massFlux" "Umin" "Umax" "Umean" "UstDev" "pmin" "pmax" "pmean" "pstDev";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/SR-in/0/surfaceReport.dat";
+                reference "verification/long/SR-in/0/surfaceReport.dat";
+                variables "massFlux" "Umin" "Umax" "Umean" "UstDev" "pmin" "pmax" "pmean" "pstDev";
+            }
+            {
+                result "postProcessing/SR-out/0/surfaceReport.dat";
+                reference "verification/long/SR-out/0/surfaceReport.dat";
+                variables "massFlux" "Umin" "Umax" "Umean" "UstDev" "pmin" "pmax" "pmean" "pstDev";
+            }
+        );
+    }
+);

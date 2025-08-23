@@ -1,0 +1,597 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+castellatedMesh true;
+
+snap true;
+
+addLayers true;
+
+autoBlockMesh false;
+
+blockData ( 0.01 0 );
+
+crackDetection false;
+
+crackTol 0.05;
+
+allowTopoChanges true;
+
+finalDecomposition ptscotch;
+
+meshMode quality;
+
+geometry
+{
+    corner
+    {
+        type searchableBox;
+        min ( -2.1488272697 -1.417877837 -1.7825542901 );
+        max ( 23.0841133923 16.9199438494 7.5686997158 );
+    }
+    gate.stl
+    {
+        type triSurfaceMesh;
+        name gate;
+        appendRegionName false;
+    }
+    car
+    {
+        type searchableBox;
+        min ( 20.0 35.0 0.0 );
+        max ( 21.5 37.5 1.0 );
+    }
+    open1.stl
+    {
+        type triSurfaceMesh;
+        name open1;
+        appendRegionName false;
+    }
+    open2.stl
+    {
+        type triSurfaceMesh;
+        name open2;
+        appendRegionName false;
+    }
+    fan2.stl
+    {
+        type triSurfaceMesh;
+        name fan2;
+        appendRegionName false;
+    }
+    fan3.stl
+    {
+        type triSurfaceMesh;
+        name fan3;
+        appendRegionName false;
+    }
+    fan1.stl
+    {
+        type triSurfaceMesh;
+        name fan1;
+        appendRegionName false;
+    }
+    fan1s1.stl
+    {
+        type triSurfaceMesh;
+        name fan1s1;
+        appendRegionName false;
+    }
+    fan2s1.stl
+    {
+        type triSurfaceMesh;
+        name fan2s1;
+        appendRegionName false;
+    }
+    fan3s1.stl
+    {
+        type triSurfaceMesh;
+        name fan3s1;
+        appendRegionName false;
+    }
+    fan1s2.stl
+    {
+        type triSurfaceMesh;
+        name fan1s2;
+        appendRegionName false;
+    }
+    fan2s2.stl
+    {
+        type triSurfaceMesh;
+        name fan2s2;
+        appendRegionName false;
+    }
+    fan3s2.stl
+    {
+        type triSurfaceMesh;
+        name fan3s2;
+        appendRegionName false;
+    }
+    ref1
+    {
+        type searchableBox;
+        min ( 11.7551682884 24.4451069816 -1.0280172565 );
+        max ( 37.901525726 40.2039102732 6.8237732804 );
+    }
+    ref2
+    {
+        type searchableBox;
+        min ( 13.5457864387 28.8561761968 3.8893250638 );
+        max ( 36.5675987917 33.4198921461 5.7536470325 );
+    }
+}
+
+castellatedMeshControls
+{
+    features ( );
+    refinementSurfaces
+    {
+        corner
+        {
+            level ( 0 0 );
+        }
+        gate
+        {
+            level ( 0 0 );
+        }
+        car
+        {
+            level ( 0 0 );
+            faceType internal;
+            faceZone car;
+            cellZoneInside inside;
+            cellZone car;
+            baffleChecks true;
+            allowFreeStandingZoneFaces false;
+        }
+        open1
+        {
+            level ( 0 0 );
+        }
+        open2
+        {
+            level ( 0 0 );
+        }
+        fan2
+        {
+            level ( 0 0 );
+        }
+        fan3
+        {
+            level ( 0 0 );
+        }
+        fan1
+        {
+            level ( 0 0 );
+        }
+        fan1s1
+        {
+            level ( 0 0 );
+            faceType internal;
+            faceZone fan1s1;
+            cellZoneInside inside;
+            cellZone fan1;
+            baffleChecks true;
+            allowFreeStandingZoneFaces false;
+        }
+        fan2s1
+        {
+            level ( 0 0 );
+            faceType internal;
+            faceZone fan2s1;
+            cellZoneInside inside;
+            cellZone fan2;
+            baffleChecks true;
+            allowFreeStandingZoneFaces false;
+        }
+        fan3s1
+        {
+            level ( 0 0 );
+            faceType internal;
+            faceZone fan3s1;
+            cellZoneInside inside;
+            cellZone fan3;
+            baffleChecks true;
+            allowFreeStandingZoneFaces false;
+        }
+        fan1s2
+        {
+            level ( 0 0 );
+            faceType internal;
+            faceZone fan1s2;
+            cellZoneInside inside;
+            baffleChecks true;
+            allowFreeStandingZoneFaces false;
+        }
+        fan2s2
+        {
+            level ( 0 0 );
+            faceType internal;
+            faceZone fan2s2;
+            cellZoneInside inside;
+            baffleChecks true;
+            allowFreeStandingZoneFaces false;
+        }
+        fan3s2
+        {
+            level ( 0 0 );
+            faceType internal;
+            faceZone fan3s2;
+            cellZoneInside inside;
+            baffleChecks true;
+            allowFreeStandingZoneFaces false;
+        }
+    }
+    refinementRegions
+    {
+        car
+        {
+            mode inside;
+            levels ( ( 100000.0 1 ) );
+        }
+        ref1
+        {
+            mode inside;
+            levels ( ( 100000.0 1 ) );
+        }
+        ref2
+        {
+            mode inside;
+            levels ( ( 100000.0 2 ) );
+        }
+    }
+    maxLocalCells 250000000;
+    maxGlobalCells 250000000;
+    minRefinementCells 100;
+    maxLoadUnbalance 0.1;
+    nCellsBetweenLevels 2;
+    resolveFeatureAngle -60.0;
+    featureRefineAngle 20.0;
+    refineSurfaceBoundary false;
+    minBaffleAngle -60.0;
+    allowFreeStandingZoneFaces false;
+    balanceThenRefine true;
+    nGapRefinements 0;
+    minZoneRegionSize 1;
+    additionalInsideCheck false;
+    moveCentroidsTol -1.0;
+    wrapper
+    {
+        wrap false;
+        volSources true;
+        volDistance 1.0;
+        meshInMM false;
+        maxIter 200;
+        writeFields false;
+        invert false;
+        sigma 3.0;
+        cutoff 1000.0;
+    }
+    locationsInMesh ( ( ( 12.737325605821024 41.926553984991806 3.7790974681871643 ) none ) );
+    singleCellGapClosure false;
+}
+
+snapControls
+{
+    featureEdges
+    {
+    }
+    nOuterIter 1;
+    nPreFeatureIter 0;
+    nSolveIter 10;
+    nFeatureIter 60;
+    globalFeatureEdges true;
+    globalRegionSnap true;
+    nSmoothPatch 2;
+    tolerance 4.0;
+    nRelaxIter 5;
+    zoneFeatureSnapping true;
+    directFeatureSnapping true;
+    geometryFeatureLines true;
+    snapSurfBoundary true;
+    collapseTol 0.25;
+    enlargeStencil true;
+    smoothSnappedSurface true;
+    featureSnapChecks true;
+    concaveTol 0.3;
+    nSliverSmooths 10;
+    mergeBoundaryFaces true;
+    averageSurfaceNormal true;
+}
+
+addLayersControls
+{
+    layers
+    {
+        side1
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        side2
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        side3
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        side4
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        ground
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        top
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        corner
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        gate
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        car
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        car_slave
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        open1
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        open2
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        fan2
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        fan3
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        fan1
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        fan1s1
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        fan1s1_slave
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        fan2s1
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        fan2s1_slave
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        fan3s1
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        fan3s1_slave
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        fan1s2
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        fan1s2_slave
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        fan2s2
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        fan2s2_slave
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        fan3s2
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        fan3s2_slave
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+    }
+    relativeSizes true;
+    expansionRatio 1.25;
+    finalLayerThickness 0.4;
+    minThickness 0.2;
+    featureAngleMerge 45;
+    featureAngleTerminate 80.0;
+    nRelaxIter 5;
+    maxFaceThicknessRatio 2.0;
+    maxThicknessToMedialRatio 0.3;
+    minMedialAxisAngle 90;
+    maxLayerIter 30;
+    growConvexEdge true;
+    growConcaveEdge true;
+    growUpPatches true;
+    rebalance false;
+    layerRecovery 1;
+    nSmoothThickness 10;
+    nSmoothSurfaceNormals 6;
+    nSmoothNormals 3;
+    maxProjectionDistance 10000.0;
+    maxCellDistortion 50.0;
+    medialRatioExp 1;
+    growZoneLayers false;
+    writeVTK true;
+    fixedFCH false;
+    dualConcaveCollapse 0;
+    dualZoneLayersScaling 1.0;
+    dualLayerInterfaceWeights 0.5;
+    dualMaxOrtho 180;
+    dualReSnapZones false;
+}
+
+meshQualityControls
+{
+    maxNonOrtho 70.0;
+    maxBoundarySkewness 20;
+    maxInternalSkewness 6;
+    maxConcave 80.0;
+    minFlatness 0.5;
+    minVol 1.0E-14;
+    minTetQuality -1.0E30;
+    minArea 1.0E-13;
+    minTwist 0.05;
+    minDeterminant 1.0E-4;
+    minFaceWeight 0.08;
+    minVolRatio 0.02;
+    minTriangleTwist -0.99;
+    errorReduction 0.75;
+    nSmoothScale 10;
+    minVolCollapseRatio -1.0;
+    faceFaceCells false;
+    minSnapRelativeVolume -1;
+    smoothAlignedEdges false;
+    minSnapRelativeTetVolume -1;
+    maxGaussGreenCentroid -1;
+    nVolSmoothIter 8;
+    maxCellAspectRatio -1.0;
+    maxFaceCentreNonOrtho 180.0;
+    minEdgeLength -1.0;
+}
+
+debug 0;
+
+mergeTolerance 1.0E-6;
+
+dualMesh false;
+
+meshOptimization
+{
+    type cfMeshOptimize;
+    cfMeshOptimizeCoeffs
+    {
+        qualityThreshold 0.0;
+        numLaplaceIterations 0;
+        maxNumGlobalIterations 10;
+        maxNumIterations 50;
+        maxNumSurfaceIterations 2;
+        relaxedCheck false;
+    }
+}
+
+cellRemoval
+{
+    checks ( );
+    patch oldInternalFaces;
+}
+
+
+// ************************************************************************* //

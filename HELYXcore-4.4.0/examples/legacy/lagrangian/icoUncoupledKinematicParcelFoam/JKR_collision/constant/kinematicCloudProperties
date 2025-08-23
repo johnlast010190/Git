@@ -1,0 +1,269 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      reactingCloud1Properties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solution
+{
+    active          true;
+    coupled         false;
+    transient       yes;
+    cellValueSourceCorrection off;
+
+    interpolationSchemes
+    {
+        rho             cell;
+        U               cellPoint;
+        mu              cell;
+        E               cellPoint;
+    }
+
+    integrationSchemes
+    {
+        U               Euler;
+    }
+}
+
+constantProperties
+{
+    parcelTypeId    1;
+
+    rhoMin          1e-15;
+    minParticleMass 1e-15;
+
+    rho0            10660;
+    youngsModulus   6e8;
+    poissonsRatio   0.35;
+
+    constantVolume  false;
+}
+
+subModels
+{
+    particleForces
+    {
+		//gravity;
+    }
+	
+	injectionModels
+	{
+		Model1
+		{
+			type manualInjection;
+		    massTotal       0;
+		    parcelBasisType fixed;
+		    nParticle       1;
+		    SOI             0;
+			parcelID 		1;
+		    positionsFile   "kinematicCloudPosition1";
+		    U0              ( 0 -10.0 0 );
+			injectionInterval	0.00100;
+		    sizeDistribution
+		    {
+		        type        fixedValue;
+		        fixedValueDistribution
+		        {
+		            value   0.03;
+		        }
+		    }
+		}
+
+		Model2
+		{
+			type manualInjection;
+		    massTotal       0;
+		    parcelBasisType fixed;
+		    nParticle       1;
+		    SOI             0;
+			parcelID 		2;
+		    positionsFile   "kinematicCloudPosition2";
+		    U0              ( 0 0 0 );
+			injectionInterval	0.00100;
+		    sizeDistribution
+		    {
+		        type        fixedValue;
+		        fixedValueDistribution
+		        {
+		            value   0.03;
+		        }
+		    }
+		}
+	}
+
+	stochasticCollisionModel none;
+
+    dispersionModel none;
+
+    patchInteractionModel none;
+
+    heatTransferModel none;
+
+    surfaceFilmModel none;
+
+    collisionModel pairCollision;
+
+    radiation off;
+
+    pairCollisionCoeffs
+    {
+        // Maximum possible particle diameter expected at any time
+        maxInteractionDistance  0.03;
+
+        writeReferredParticleCloud no;
+
+        pairModel pairJKR;//pairJKRSSD;
+
+        pairJKRCoeffs
+        {
+            useEquivalentSize   		no;
+            gamma               		0.3;
+            collisionResolutionSteps 	12;
+			verbose						true;
+        };
+
+        pairJKRSSDCoeffs
+        {
+            useEquivalentSize  		 	no;
+            gamma               		0.3;
+			alpha 						1;
+            mu              			0.1;
+            collisionResolutionSteps 	12;
+			verbose						true;
+        };
+
+        wallModel    wallLocalJKR;//wallLocalJKRSSD;
+
+        wallLocalJKRCoeffs
+        {
+			top
+			{
+		        patchGamma 					1e-6;
+		        parcelGamma					0.3;
+            	poissonsRatio  				0.23;
+            	youngsModulus   			1e10;
+				verbose						false;
+			}
+
+			left
+			{
+		        patchGamma 					1e-6;
+		        parcelGamma					0.3;
+            	poissonsRatio  				0.23;
+            	youngsModulus   			1e10;
+				verbose						false;
+			}
+
+			right
+			{
+		        patchGamma 					1e-6;
+		        parcelGamma					0.3;
+            	poissonsRatio  				0.23;
+            	youngsModulus   			1e10;
+				verbose						false;
+			}
+
+			bottom
+			{
+		        patchGamma 					1e-6;
+		        parcelGamma					0.3;
+            	poissonsRatio  				0.23;
+            	youngsModulus   			1e10;
+				verbose						true;
+			}
+
+			frontAndBack
+			{
+		        patchGamma 					1e-6;
+		        parcelGamma					0.3;
+            	poissonsRatio  				0.23;
+            	youngsModulus   			1e10;
+				verbose						false;
+			}
+
+	        useEquivalentSize 			no;
+	        collisionResolutionSteps 	12;
+        };
+
+        wallLocalJKRSSDCoeffs
+        {
+			top
+			{
+	            alpha			            1.0;
+            	mu              			0.1;
+		        patchGamma 					1e-6;
+		        parcelGamma					0.3;
+            	poissonsRatio  				0.23;
+            	youngsModulus   			1e10;
+			}
+
+			left
+			{
+	            alpha			            1.0;
+            	mu              			0.1;
+		        patchGamma 					1e-6;
+		        parcelGamma					0.3;
+            	poissonsRatio  				0.23;
+            	youngsModulus   			1e10;
+			}
+
+			right
+			{
+	            alpha			            1.0;
+            	mu              			0.1;
+		        patchGamma 					1e-6;
+		        parcelGamma					0.3;
+            	poissonsRatio  				0.23;
+            	youngsModulus   			1e10;
+			}
+
+			bottom
+			{
+	            alpha			            1.0;
+            	mu              			0.1;
+		        patchGamma 					1e-6;
+		        parcelGamma					0.3;
+            	poissonsRatio  				0.23;
+            	youngsModulus   			1e10;
+			}
+
+			frontAndBack
+			{
+	            alpha			            1.0;
+            	mu              			0.1;
+		        patchGamma 					1e-6;
+		        parcelGamma					0.3;
+            	poissonsRatio  				0.23;
+            	youngsModulus   			1e10;
+			}
+
+	        useEquivalentSize 			no;
+	        collisionResolutionSteps 	12;
+        };
+    }
+
+    standardWallInteractionCoeffs
+    {
+        type            rebound;
+    }
+}
+
+
+cloudFunctions
+{
+
+}
+
+
+// ************************************************************************* //

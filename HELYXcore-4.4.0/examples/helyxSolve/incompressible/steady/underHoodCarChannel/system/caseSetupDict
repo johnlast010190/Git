@@ -1,0 +1,1486 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom latestTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 50.0;
+            deltaT constant 1.0;
+            writeControl timeStep;
+            writeInterval 50.0;
+            purgeWrite 2;
+            writeFormat ascii;
+            writePrecision 10;
+            writeCompression uncompressed;
+            timeFormat general;
+            timePrecision 6;
+            graphFormat raw;
+            runTimeModifiable true;
+            adjustTimeStep false;
+            maxCo 0;
+            maxAlphaCo 0;
+            maxDeltaT 0;
+        }
+    }
+    functions
+    {
+        ZF
+        {
+            type            zoneForces;
+            regions         ( region0 );
+            functionObjectLibs ( "libforces.so" );
+            nAveragingSteps 1;
+            verbose         true;
+            logToFile       true;
+            writeControl    onEnd;
+            executeControl  onEnd;
+            writeInterval   1;
+        }
+        VR
+        {
+            type volumeReport;
+            regions ( region0 );
+            fields ( U T );
+            writeControl onEnd;
+            executeControl onEnd;
+            functionObjectLibs ( "libreport.so" );
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        boundaryMesh
+        {
+            outlet
+            {
+                type outlet;
+            }
+            inlet
+            {
+                type inlet;
+            }
+            side1
+            {
+                type symmetry;
+            }
+            side2
+            {
+                type symmetry;
+            }
+            ground
+            {
+                type wall;
+            }
+            top
+            {
+                type symmetry;
+            }
+        }
+        state (steady ras energy);
+        turbulenceModel kOmegaSST;
+        materials (air);
+        materialProperties
+        {
+            air
+            {
+                materialName air;
+                materialType fluid;
+                molWeight 28.96;
+                energy sensibleEnthalpy;
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho 1.205;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu constant 1.9137E-5;
+                }
+                thermodynamics hConst;
+                thermodynamicsCoeffs
+                {
+                    Hf 0.0;
+                    Cp 1006.0;
+                }
+                kappaModel scalarFunction1;
+                kappaModelCoeffs
+                {
+                    kappa 0.0262;
+                }
+                wconcentrationTransport
+                {
+                    D [0 2 -1 0 0 0 0] 2.0E-5;
+                    Sct 0.6;
+                    Cp [0 2 -2 -1 0 0 0] 1930.0;
+                }
+                buoyancyModelCoeffs
+                {
+                    beta 0.0034;
+                    rho0 1.0;
+                    T0 300.0;
+                }
+                referenceFields
+                {
+                    p [1 -1 -2 0 0 0 0] 101325.0;
+                    T [0 0 0 1 0 0 0] 300.0;
+                    Beta [0 0 0 -1 0 0 0] 0.00333;
+                }
+                buoyancyModel Boussinesq;
+            }
+        }
+        system
+        {
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default steadyState;
+                }
+                gradSchemes
+                {
+                    default cellLimited Gauss linear 1.0;
+                    turbulence cellLimited Gauss linear 1.0;
+                    gradU cellLimited Gauss linear 1.0;
+                    grad(p) taylorGauss linear;
+                    grad(k) cellLimited leastSquares 1.0;
+                    grad(omega) cellLimited leastSquares 1.0;
+                    gradT cellLimited Gauss linear 1.0;
+                }
+                divSchemes
+                {
+                    div(phi,U) bounded Gauss linearUpwindV gradU;
+                    default none;
+                    div(R) Gauss linear;
+                    div(nonlinearStress) Gauss linear;
+                    div((muEff*dev2(grad(U).T()))) Gauss linear;
+                    div((nuEff*dev2(T(grad(U))))) Gauss linear;
+                    div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
+                    div((nu*dev2(T(grad(U))))) Gauss linear;
+                    div(phi,T) bounded Gauss upwind;
+                    div(phi,k) bounded Gauss upwind;
+                    div(phi,omega) bounded Gauss upwind;
+                }
+                laplacianSchemes
+                {
+                    default Gauss linear limited 0.333;
+                    laplacian(DkEff,k) Gauss linear limited 0.333;
+                    laplacian(DomegaEff,omega) Gauss linear limited 0.333;
+                }
+                interpolationSchemes
+                {
+                    default linear;
+                    interpolate(HbyA) linear;
+                }
+                snGradSchemes
+                {
+                    default limited 0.333;
+                }
+                wallDist
+                {
+                    method meshWave;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    p
+                    {
+                        solver GAMG;
+                        agglomerator faceAreaPair;
+                        mergeLevels 1;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 200;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        scaleCorrection true;
+                        tolerance 1e-06;
+                        relTol 0.0;
+                    }
+                    U
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-06;
+                        relTol 0.0;
+                    }
+                    T
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-06;
+                        relTol 0.0;
+                    }
+                    k
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-06;
+                        relTol 0.1;
+                    }
+                    omega
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-06;
+                        relTol 0.1;
+                    }
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p 0.3;
+                        p_rgh 0.3;
+                    }
+                    equations
+                    {
+                        U 0.7;
+                        T 0.9;
+                        k 0.7;
+                        omega 0.7;
+                    }
+                }
+                SIMPLE
+                {
+                    nNonOrthogonalCorrectors 0;
+                    pRefCell 0;
+                    pRefValue 0.0;
+                    pMin -1e-10;
+                    pMax 1e10;
+                    modifiedMomentumInterp true;
+                    residualControl
+                    {
+                        U 1.0E-5;
+                        p_rgh 1.0E-5;
+                        k 1.0E-5;
+                        omega 1.0E-5;
+                        T 1.0E-5;
+                    }
+                }
+                cache
+                {
+                    grad(U) ;
+                }
+            }
+            meshObjects
+            {
+                rightFrontWheelFrame
+                {
+                    type motionCoordinateFrame;
+                    motionFunction
+                    {
+                        type rotatingMotion;
+                        omega constant 87.758;
+                    }
+                    coordinateSystem
+                    {
+                        type            cartesian;
+                        origin          ( -5.67E-4 51.3 0.115 );
+                        rotation
+                        {
+                            type cylindrical;
+                            axis ( 0.0 -1.0 0.0 );
+                        }
+                    }
+                }
+                leftRearWheelFrame
+                {
+                    type motionCoordinateFrame;
+                    motionFunction
+                    {
+                        type rotatingMotion;
+                        omega constant 87.758;
+                    }
+                    coordinateSystem
+                    {
+                        type            cartesian;
+                        origin ( 0.493 48.7 0.123 );
+                        rotation
+                        {
+                            type cylindrical;
+                            axis ( 0.0 -1.0 0.0 );
+                        }
+                    }
+                }
+                rightRearWheelFrame
+                {
+                    type motionCoordinateFrame;
+                    motionFunction
+                    {
+                        type rotatingMotion;
+                        omega constant 87.758;
+                    }
+                    coordinateSystem
+                    {
+                        type            cartesian;
+                        origin ( 0.493 51.3 0.123 );
+                        rotation
+                        {
+                            type cylindrical;
+                            axis ( 0.0 -1.0 0.0 );
+                        }
+                    }
+                }
+                leftFrontWheelFrame
+                {
+                    type motionCoordinateFrame;
+                    motionFunction
+                    {
+                        type rotatingMotion;
+                        omega constant 87.758;
+                    }
+                    coordinateSystem
+                    {
+                        type            cartesian;
+                        origin ( -5.67E-4 48.7 0.115 );
+                        rotation
+                        {
+                            type cylindrical;
+                            axis ( 0.0 -1.0 0.0 );
+                        }
+                    }
+                }
+                porousFrame
+                {
+                    type coordinateFrame;
+                    coordinateSystem
+                    {
+                        type cartesian;
+                        origin ( 0.206 50.0 0.263 );
+                        rotation
+                        {
+                            type axesRotation;
+                            e1 ( 0.3373 0.0 0.941386 );
+                            e2 ( 0.0 1.0 0.0 );
+                        }
+                    }
+                }
+            }
+            fvOptions
+            {
+                fluid_r_mrf_fr_wheel_MRF
+                {
+                    type MRFSource;
+                    active true;
+                    MRFSourceCoeffs
+                    {
+                        selectionMode cellZone;
+                        cellZone fluid_r_mrf_fr_wheel;
+                        referenceFrame rightFrontWheelFrame;
+                    }
+                }
+                fluid_l_mrf_rr_wheel_MRF
+                {
+                    type MRFSource;
+                    active true;
+                    MRFSourceCoeffs
+                    {
+                        selectionMode cellZone;
+                        cellZone fluid_l_mrf_rr_wheel;
+                        referenceFrame leftRearWheelFrame;
+                    }
+                }
+                fluid_r_mrf_rr_wheel_MRF
+                {
+                    type MRFSource;
+                    active true;
+                    MRFSourceCoeffs
+                    {
+                        selectionMode cellZone;
+                        cellZone fluid_r_mrf_rr_wheel;
+                        referenceFrame rightRearWheelFrame;
+                    }
+                }
+                fluid_l_mrf_fr_wheel_MRF
+                {
+                    type MRFSource;
+                    active true;
+                    MRFSourceCoeffs
+                    {
+                        selectionMode cellZone;
+                        cellZone fluid_l_mrf_fr_wheel;
+                        referenceFrame leftFrontWheelFrame;
+                    }
+                }
+                internal_porous_radiator_PO
+                {
+                    type explicitPorositySource;
+                    active true;
+                    explicitPorositySourceCoeffs
+                    {
+                        selectionMode cellZone;
+                        cellZone internal_porous_radiator;
+                        type DarcyForchheimer;
+                        DarcyForchheimerCoeffs
+                        {
+                            d [0 -2 0 0 0 0 0] ( 0.0 0.0 0.0 );
+                            f [0 -1 0 0 0 0 0] ( 100.0 10000.0 10000.0 );
+                            referenceFrame porousFrame;
+                        }
+                    }
+                }
+                internal_porous_radiator_HE
+                {
+                    type effectivenessHeatExchangerSource;
+                    active true;
+                    effectivenessHeatExchangerSourceCoeffs
+                    {
+                        selectionMode cellZone;
+                        cellZone internal_porous_radiator;
+                        fieldNames ( T );
+                        secondaryCp 4186.0;
+                        secondaryInletT 330.15;
+                        secondaryMassFlowRate 0.5;
+                        faceZone HE_inlet;
+                        outOfBounds clamp;
+                        file "constant/heatExchangerTable-internal-porous-radiator";
+                    }
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type potentialFlow;
+                    initialiseUBCs true;
+                    rhoRef 1.205;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.0;
+                }
+            }
+            p_rgh
+            {
+                initialisation
+                {
+                    type potentialFlow;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type Prandtl;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type Prandtl;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 300.0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            outlet
+            {
+                U
+                {
+                    type pressureVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    inletValue uniform ( 0.0 0.0 0.0 );
+                }
+                p_rgh
+                {
+                    type fixedMean;
+                    meanValue 0;
+                    value uniform 0.0;
+                }
+                p
+                {
+                    type fixedValue;
+                    value uniform 0.0;
+                }
+                nut
+                {
+                    type calculated;
+                    value uniform 0.0;
+                }
+                T
+                {
+                    type inletOutlet;
+                    value uniform 300.0;
+                    inletValue uniform 300.0;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    intensity 0.05;
+                    value uniform 0.1;
+                }
+                omega
+                {
+                    type inletOutlet;
+                    inletValue uniform 0.01;
+                    k k;
+                    value uniform 0.01;
+                }
+            }
+            inlet
+            {
+                U
+                {
+                    type surfaceNormalFixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                    refValue uniform -10.0;
+                    profile constant -10.0;
+                }
+                p_rgh
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                    rho rhok;
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                    rho rhok;
+                }
+                nut
+                {
+                    type calculated;
+                    value uniform 0.0;
+                }
+                T
+                {
+                    type fixedValue;
+                    value uniform 300.0;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    value uniform 0.1;
+                    intensity 0.05;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    value uniform 0.01;
+                    mixingLength 0.01;
+                }
+            }
+            ground
+            {
+                U
+                {
+                    type translatingWallVelocity;
+                    U ( 10.0 0.0 0.0 );
+                    value uniform ( 10.0 0.0 0.0 );
+                }
+                p_rgh
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                    rho rhok;
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                    rho rhok;
+                }
+                nut
+                {
+                    type nutUSpaldingWallFunction;
+                    value uniform 0.0;
+                }
+                T
+                {
+                    type turbulentHeatFluxTemperature;
+                    value uniform 300.0;
+                    kappaMethod fluidThermo;
+                    q uniform 0.0;
+                    heatSource flux;
+                    alphaEff kappaEff;
+                    Cp Cp0;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 1e-20;
+                }
+                omega
+                {
+                    type omegaWallFunction;
+                    value uniform 1;
+                }
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_L_ROTFR_wheel_4_8
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                    referenceFrame leftFrontWheelFrame;
+                }
+                p_rgh
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                    rho rhok;
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                    rho rhok;
+                }
+                nut
+                {
+                    type nutUSpaldingWallFunction;
+                    value uniform 0.001;
+                }
+                T
+                {
+                    type turbulentHeatFluxTemperature;
+                    value uniform 300.0;
+                    kappaMethod fluidThermo;
+                    q uniform 0.0;
+                    heatSource flux;
+                    alphaEff kappaEff;
+                    Cp Cp0;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 1e-20;
+                }
+                omega
+                {
+                    type omegaWallFunction;
+                    value uniform 1;
+                }
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_L_body_8_8
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p_rgh
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                    rho rhok;
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                    rho rhok;
+                }
+                nut
+                {
+                    type nutUSpaldingWallFunction;
+                    value uniform 0.001;
+                }
+                T
+                {
+                    type turbulentHeatFluxTemperature;
+                    value uniform 300.0;
+                    kappaMethod fluidThermo;
+                    q uniform 0.0;
+                    heatSource flux;
+                    alphaEff kappaEff;
+                    Cp Cp0;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 1e-20;
+                }
+                omega
+                {
+                    type omegaWallFunction;
+                    value uniform 1;
+                }
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_L_DY_Suspension_4_4
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p_rgh
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                    rho rhok;
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                    rho rhok;
+                }
+                nut
+                {
+                    type nutUSpaldingWallFunction;
+                    value uniform 0.001;
+                }
+                T
+                {
+                    type turbulentHeatFluxTemperature;
+                    value uniform 300.0;
+                    kappaMethod fluidThermo;
+                    q uniform 0.0;
+                    heatSource flux;
+                    alphaEff kappaEff;
+                    Cp Cp0;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 1e-20;
+                }
+                omega
+                {
+                    type omegaWallFunction;
+                    value uniform 1;
+                }
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_L_ROTFR_front_wheel_4_8
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p_rgh
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                    rho rhok;
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                    rho rhok;
+                }
+                nut
+                {
+                    type nutUSpaldingWallFunction;
+                    value uniform 0.001;
+                }
+                T
+                {
+                    type turbulentHeatFluxTemperature;
+                    value uniform 300.0;
+                    kappaMethod fluidThermo;
+                    q uniform 0.0;
+                    heatSource flux;
+                    alphaEff kappaEff;
+                    Cp Cp0;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 1e-20;
+                }
+                omega
+                {
+                    type omegaWallFunction;
+                    value uniform 1;
+                }
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_L_POROUS_Radiator_8_8
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p_rgh
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                    rho rhok;
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                    rho rhok;
+                }
+                nut
+                {
+                    type nutUSpaldingWallFunction;
+                    value uniform 0.001;
+                }
+                T
+                {
+                    type turbulentHeatFluxTemperature;
+                    value uniform 300.0;
+                    kappaMethod fluidThermo;
+                    q uniform 0.0;
+                    heatSource flux;
+                    alphaEff kappaEff;
+                    Cp Cp0;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 1e-20;
+                }
+                omega
+                {
+                    type omegaWallFunction;
+                    value uniform 1;
+                }
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_L_ROTRR_wheel_4_8
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                    referenceFrame leftRearWheelFrame;
+                }
+                p_rgh
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                    rho rhok;
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                    rho rhok;
+                }
+                nut
+                {
+                    type nutUSpaldingWallFunction;
+                    value uniform 0.001;
+                }
+                T
+                {
+                    type turbulentHeatFluxTemperature;
+                    value uniform 300.0;
+                    kappaMethod fluidThermo;
+                    q uniform 0.0;
+                    heatSource flux;
+                    alphaEff kappaEff;
+                    Cp Cp0;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 1e-20;
+                }
+                omega
+                {
+                    type omegaWallFunction;
+                    value uniform 1;
+                }
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_L_ROTRR_wheel_spokes_4_8
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p_rgh
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                    rho rhok;
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                    rho rhok;
+                }
+                nut
+                {
+                    type nutUSpaldingWallFunction;
+                    value uniform 0.001;
+                }
+                T
+                {
+                    type turbulentHeatFluxTemperature;
+                    value uniform 300.0;
+                    kappaMethod fluidThermo;
+                    q uniform 0.0;
+                    heatSource flux;
+                    alphaEff kappaEff;
+                    Cp Cp0;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 1e-20;
+                }
+                omega
+                {
+                    type omegaWallFunction;
+                    value uniform 1;
+                }
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_L_Barge_Board_fine_4_4
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p_rgh
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                    rho rhok;
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                    rho rhok;
+                }
+                nut
+                {
+                    type nutUSpaldingWallFunction;
+                    value uniform 0.001;
+                }
+                T
+                {
+                    type turbulentHeatFluxTemperature;
+                    value uniform 300.0;
+                    kappaMethod fluidThermo;
+                    q uniform 0.0;
+                    heatSource flux;
+                    alphaEff kappaEff;
+                    Cp Cp0;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 1e-20;
+                }
+                omega
+                {
+                    type omegaWallFunction;
+                    value uniform 1;
+                }
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_L_Barge_Board_8_8
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p_rgh
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                    rho rhok;
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                    rho rhok;
+                }
+                nut
+                {
+                    type nutUSpaldingWallFunction;
+                    value uniform 0.001;
+                }
+                T
+                {
+                    type turbulentHeatFluxTemperature;
+                    value uniform 300.0;
+                    kappaMethod fluidThermo;
+                    q uniform 0.0;
+                    heatSource flux;
+                    alphaEff kappaEff;
+                    Cp Cp0;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 1e-20;
+                }
+                omega
+                {
+                    type omegaWallFunction;
+                    value uniform 1;
+                }
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_R_ROTFR_wheel_4_8
+            {
+                U
+                {
+                    type fixedValue;
+                    referenceFrame rightFrontWheelFrame;
+                    value uniform (0 0 0);
+                }
+                p_rgh
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                    rho rhok;
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                    rho rhok;
+                }
+                nut
+                {
+                    type nutUSpaldingWallFunction;
+                    value uniform 0.001;
+                }
+                T
+                {
+                    type turbulentHeatFluxTemperature;
+                    value uniform 300.0;
+                    kappaMethod fluidThermo;
+                    q uniform 0.0;
+                    heatSource flux;
+                    alphaEff kappaEff;
+                    Cp Cp0;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 1e-20;
+                }
+                omega
+                {
+                    type omegaWallFunction;
+                    value uniform 1;
+                }
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_R_body_8_8
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p_rgh
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                    rho rhok;
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                    rho rhok;
+                }
+                nut
+                {
+                    type nutUSpaldingWallFunction;
+                    value uniform 0.001;
+                }
+                T
+                {
+                    type turbulentHeatFluxTemperature;
+                    value uniform 300.0;
+                    kappaMethod fluidThermo;
+                    q uniform 0.0;
+                    heatSource flux;
+                    alphaEff kappaEff;
+                    Cp Cp0;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 1e-20;
+                }
+                omega
+                {
+                    type omegaWallFunction;
+                    value uniform 1;
+                }
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_R_DY_Suspension_4_4
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p_rgh
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                    rho rhok;
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                    rho rhok;
+                }
+                nut
+                {
+                    type nutUSpaldingWallFunction;
+                    value uniform 0.001;
+                }
+                T
+                {
+                    type turbulentHeatFluxTemperature;
+                    value uniform 300.0;
+                    kappaMethod fluidThermo;
+                    q uniform 0.0;
+                    heatSource flux;
+                    alphaEff kappaEff;
+                    Cp Cp0;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 1e-20;
+                }
+                omega
+                {
+                    type omegaWallFunction;
+                    value uniform 1;
+                }
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_R_ROTFR_front_wheel_4_8
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p_rgh
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                    rho rhok;
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                    rho rhok;
+                }
+                nut
+                {
+                    type nutUSpaldingWallFunction;
+                    value uniform 0.001;
+                }
+                T
+                {
+                    type turbulentHeatFluxTemperature;
+                    value uniform 300.0;
+                    kappaMethod fluidThermo;
+                    q uniform 0.0;
+                    heatSource flux;
+                    alphaEff kappaEff;
+                    Cp Cp0;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 1e-20;
+                }
+                omega
+                {
+                    type omegaWallFunction;
+                    value uniform 1;
+                }
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_R_POROUS_Radiator_8_8
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p_rgh
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                    rho rhok;
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                    rho rhok;
+                }
+                nut
+                {
+                    type nutUSpaldingWallFunction;
+                    value uniform 0.001;
+                }
+                T
+                {
+                    type turbulentHeatFluxTemperature;
+                    value uniform 300.0;
+                    kappaMethod fluidThermo;
+                    q uniform 0.0;
+                    heatSource flux;
+                    alphaEff kappaEff;
+                    Cp Cp0;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 1e-20;
+                }
+                omega
+                {
+                    type omegaWallFunction;
+                    value uniform 1;
+                }
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_R_ROTRR_wheel_4_8
+            {
+                U
+                {
+                    type fixedValue;
+                    referenceFrame rightRearWheelFrame;
+                    value uniform (0 0 0);
+                }
+                p_rgh
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                    rho rhok;
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                    rho rhok;
+                }
+                nut
+                {
+                    type nutUSpaldingWallFunction;
+                    value uniform 0.001;
+                }
+                T
+                {
+                    type turbulentHeatFluxTemperature;
+                    value uniform 300.0;
+                    kappaMethod fluidThermo;
+                    q uniform 0.0;
+                    heatSource flux;
+                    alphaEff kappaEff;
+                    Cp Cp0;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 1e-20;
+                }
+                omega
+                {
+                    type omegaWallFunction;
+                    value uniform 1;
+                }
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_R_ROTRR_wheel_spokes_4_8
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p_rgh
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                    rho rhok;
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                    rho rhok;
+                }
+                nut
+                {
+                    type nutUSpaldingWallFunction;
+                    value uniform 0.001;
+                }
+                T
+                {
+                    type turbulentHeatFluxTemperature;
+                    value uniform 300.0;
+                    kappaMethod fluidThermo;
+                    q uniform 0.0;
+                    heatSource flux;
+                    alphaEff kappaEff;
+                    Cp Cp0;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 1e-20;
+                }
+                omega
+                {
+                    type omegaWallFunction;
+                    value uniform 1;
+                }
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_R_Barge_Board_fine_4_4
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p_rgh
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                    rho rhok;
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                    rho rhok;
+                }
+                nut
+                {
+                    type nutUSpaldingWallFunction;
+                    value uniform 0.001;
+                }
+                T
+                {
+                    type turbulentHeatFluxTemperature;
+                    value uniform 300.0;
+                    kappaMethod fluidThermo;
+                    q uniform 0.0;
+                    heatSource flux;
+                    alphaEff kappaEff;
+                    Cp Cp0;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 1e-20;
+                }
+                omega
+                {
+                    type omegaWallFunction;
+                    value uniform 1;
+                }
+            }
+            A_44444_testcar_5050_Y0.00_R0.01_WALL_R_Barge_Board_8_8
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p_rgh
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                    rho rhok;
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                    rho rhok;
+                }
+                nut
+                {
+                    type nutUSpaldingWallFunction;
+                    value uniform 0.001;
+                }
+                T
+                {
+                    type turbulentHeatFluxTemperature;
+                    value uniform 300.0;
+                    kappaMethod fluidThermo;
+                    q uniform 0.0;
+                    heatSource flux;
+                    alphaEff kappaEff;
+                    Cp Cp0;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 1e-20;
+                }
+                omega
+                {
+                    type omegaWallFunction;
+                    value uniform 1;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

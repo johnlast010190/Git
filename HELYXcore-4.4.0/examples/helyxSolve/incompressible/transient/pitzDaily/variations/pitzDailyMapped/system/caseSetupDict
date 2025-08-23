@@ -1,0 +1,347 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom latestTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 0.1;
+            deltaT 1e-5;
+            writeControl timeStep;
+            writeInterval 1000;
+            purgeWrite 0;
+            writeFormat ascii;
+            writePrecision 10;
+            writeCompression uncompressed;
+            timeFormat general;
+            timePrecision 6;
+            runTimeModifiable yes;
+            adjustTimeStep no;
+            maxCo 0.5;
+        }
+    }
+    functions
+    {
+        fieldAverage1
+        {
+            type            fieldAverage;
+            libs            ("libfieldFunctionObjects.so");
+            writeControl    writeTime;
+            fields
+            (
+                U
+                {
+                    mean        on;
+                    prime2Mean  on;
+                    base        time;
+                }
+                p
+                {
+                    mean        on;
+                    prime2Mean  on;
+                    base        time;
+                }
+            );
+        }
+        VR
+        {
+            type             volumeReport;
+            fields           ( UMean pMean );
+            timeStart        0.05;
+            executeControl   timeStep;
+            executeInterval  1;
+            writeControl     timeStep;
+            writeInterval    1;
+            outputFileFormat tsv;
+        }
+        WSS
+        {
+            type             wallShearStress;
+            libs             ("libfieldFunctionObjects.so");
+            executeControl   onEnd;
+            writeControl     onEnd;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (transient les);
+        boundaryMesh
+        {
+            inlet
+            {
+                type mappedPatch;
+                offset          (0.0495 0 0);
+                sampleRegion    region0;
+                sampleMode      nearestCell;
+                samplePatch     none;
+            }
+            outlet
+            {
+                type patch;
+            }
+            "(upperWall|lowerWall)"
+            {
+                type wall;
+            }
+            frontAndBack
+            {
+                type empty;
+            }
+        }
+        turbulenceModel dynamicKEqn;
+        materials (air);
+        constant
+        {
+            turbulenceProperties
+            {
+                simulationType  LES;
+                LES
+                {
+                    LESModel        kEqn;
+                    turbulence      on;
+                    printCoeffs     on;
+                    delta           cubeRootVol;
+                    cubeRootVolCoeffs
+                    {
+                        deltaCoeff      1;
+                    }
+                    PrandtlCoeffs
+                    {
+                        delta           cubeRootVol;
+                        cubeRootVolCoeffs
+                        {
+                            deltaCoeff      1;
+                        }
+                        smoothCoeffs
+                        {
+                            delta           cubeRootVol;
+                            cubeRootVolCoeffs
+                            {
+                                deltaCoeff      1;
+                            }
+
+                            maxDeltaRatio   1.1;
+                        }
+                        Cdelta          0.158;
+                    }
+                    vanDriestCoeffs
+                    {
+                        delta           cubeRootVol;
+                        cubeRootVolCoeffs
+                        {
+                            deltaCoeff      1;
+                        }
+                        smoothCoeffs
+                        {
+                            delta           cubeRootVol;
+                            cubeRootVolCoeffs
+                            {
+                                deltaCoeff      1;
+                            }
+                            maxDeltaRatio   1.1;
+                        }
+                        Aplus           26;
+                        Cdelta          0.158;
+                    }
+                    smoothCoeffs
+                    {
+                        delta           cubeRootVol;
+                        cubeRootVolCoeffs
+                        {
+                            deltaCoeff      1;
+                        }
+                        maxDeltaRatio   1.1;
+                    }
+                }
+            }
+        }
+        system
+        {
+            fvSolution
+            {
+                PIMPLE
+                {
+                    nOuterCorrectors 3;
+                    nCorrectors 1;
+                    nNonOrthogonalCorrectors 0;
+                    pMinFactor 0.5;
+                    pMaxFactor 2.0;
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            nut
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            nuTilda
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type                mapped;
+                    value               uniform (10 0 0);
+                    interpolationScheme cell;
+                    setAverage          true;
+                    average             (10 0 0);
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type                mapped;
+                    value               uniform 2e-05;
+                    interpolationScheme cell;
+                    setAverage          false;
+                    average             2e-05;
+                }
+                nut
+                {
+                    type                zeroGradient;
+                }
+                nuTilda
+                {
+                    type                mapped;
+                    value               uniform 0;
+                    interpolationScheme cell;
+                    setAverage          false;
+                    average             0;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type            inletOutlet;
+                    inletValue      uniform (0 0 0);
+                    value           uniform (0 0 0);
+                }
+                p
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+                k
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 0;
+                    value           uniform 0;
+                }
+                nut
+                {
+                    type            zeroGradient;
+                }
+                nuTilda
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 0;
+                    value           uniform 0;
+                }
+            }
+            "(upperWall|lowerWall)"
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform (0 0 0);
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                k
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+                nut
+                {
+                    type            zeroGradient;
+                }
+                nuTilda
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

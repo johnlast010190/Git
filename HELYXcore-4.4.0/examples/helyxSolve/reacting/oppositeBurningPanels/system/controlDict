@@ -1,0 +1,125 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      binary;
+    class       dictionary;
+    arch        "LSB;label=32;scalar=64";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     helyxSolve;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         5;
+
+deltaT          0.03;
+
+writeControl    adjustableRunTime;
+
+writeInterval   0.1;
+
+purgeWrite      0;
+
+writeFormat     binary;
+
+writePrecision  12;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   6;
+
+graphFormat     raw;
+
+runTimeModifiable yes;
+
+adjustTimeStep  yes;
+
+maxCo           0.5;
+
+maxDeltaT       0.02;
+
+libs            1 ( "" );
+
+maxDi           0.25;
+
+functions
+{
+    VR
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( T U p );
+        executeControl  onEnd;
+        type            volumeReport;
+        regions         ( region0 );
+        writeControl    onEnd;
+    }
+    fieldBlending
+    {
+        functionObjectLibs ( "libfieldFunctionObjects.so" );
+        executeControl  timeStep;
+        writeControl    writeTime;
+        type            fieldBlendingFactor;
+        blendingSources 
+        (
+            zonalDES
+            {
+                type            zonalDES;
+                CDES            1;
+                minValue        0;
+                maxValue        1;
+                minCoeff        0;
+                maxCoeff        1;
+                functionType    cubic;
+                write           false;
+            }
+
+        )
+;
+        fieldBlending   
+        (
+            U
+            {
+                stabilise       10;
+                blendingSources 
+                (
+                    cfl1
+                    {
+                        type            cfl;
+                        minValue        2;
+                        maxValue        4;
+                        minCoeff        1;
+                        maxCoeff        0;
+                        functionType    cubic;
+                        phi             phi;
+                        rho             rho;
+                        write           false;
+                    }
+
+                )
+;
+            }
+
+        )
+;
+        regions         1 ( region0 );
+    }
+}
+
+
+// ************************************************************************* //

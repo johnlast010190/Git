@@ -1,0 +1,158 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+// Which of the steps to run
+castellatedMesh true;
+snap            true;
+addLayers       true;
+
+blockType auto;
+blockData       ( 0.125 0 );
+meshAlgorithm extrude;
+
+geometry
+{
+    boundaries.stl
+    {
+        type triSurfaceMesh;
+        name boundaries;
+        regions
+        {
+            inletSleeve
+            {
+                name inletSleeve;
+            }
+            inletPipe
+            {
+                name inletPipe;
+            }
+            outletSleeve
+            {
+                name outletSleeve;
+            }
+            outletPipe
+            {
+                name outletPipe;
+            }
+            wallSleeve
+            {
+                name wallSleeve;
+            }
+            wallPipe
+            {
+                name wallPipe;
+            }
+        }
+    }
+    membrane.stl
+    {
+        type triSurfaceMesh;
+        name membrane;
+        appendRegionName false;
+    }
+};
+
+castellatedMeshControls
+{
+    features ();
+    refinementSurfaces
+    {
+        boundaries
+        {
+            level ( 0 1 );
+            curvature 5.0;
+        }
+        membrane
+        {
+            level ( 0 0 );
+            cellZone pipe;
+            faceZone membrane;
+            faceType boundary;
+        }
+    }
+    refinementRegions {}
+    locationsInMesh ( ( ( 0.0 0.0 0.0 ) none ) );
+    minRefinementCells 0;
+}
+
+snapControls
+{
+    featureEdges {}
+    directSnapRepartition true;
+    globalRegionSnap true;
+    excludedRegionPatchPairs ((membrane wall_sleeve));
+}
+
+addLayersControls
+{
+    layers
+    {
+        inletSleeve
+        {
+            nSurfaceLayers -1;
+            grownUp true;
+            reSnap true;
+        }
+        outletSleeve
+        {
+            nSurfaceLayers -1;
+            grownUp true;
+            reSnap true;
+        }
+        inletPipe
+        {
+            nSurfaceLayers -1;
+            grownUp true;
+            reSnap true;
+        }
+        outletPipe
+        {
+            nSurfaceLayers -1;
+            grownUp true;
+            reSnap true;
+        }
+        membrane
+        {
+            nSurfaceLayers -1;
+            grownUp true;
+            reSnap true;
+        }
+        membrane_slave
+        {
+            nSurfaceLayers 5;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        wallPipe
+        {
+            nSurfaceLayers 5;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+        wallSleeve
+        {
+            nSurfaceLayers 5;
+            expansionRatio 1.25;
+            grownUp false;
+        }
+    }
+    writeVTK false;
+}
+
+
+// ************************************************************************* //

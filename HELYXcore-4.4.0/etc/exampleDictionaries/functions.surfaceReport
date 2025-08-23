@@ -1,0 +1,69 @@
+    surfaceReport1
+    {
+        type surfaceReport;
+        functionObjectLibs ( "libreport.so" );
+
+        region region0;
+        
+        name SR1;
+        
+        logToFile yes;
+        
+        weighting flux; //area
+        fluxName phi;
+        
+        //note zero flux on walls and symmetryPlanes - use area weighting
+        //face interpolation on internal faces
+        //boundary value on boundary faces
+        
+        fields
+        (
+            U //valid vol fields
+            p
+        );
+        
+        surfaces
+        (
+            //boundary between cell zones (output from star)
+            //faces are reoriented to point from zone1 to zone2
+            {
+                type cellZonePair;
+                zone1 cellZone_0;
+                zone2 cellZone_1;
+            }
+            
+            //face zone must be defined previously
+            //uses faceZone flipMap to determine face orientation
+            {
+                type faceZone;
+                name faceZone_0;
+            }
+
+            //boundary region name
+            {
+                type patch;
+                name outlet;
+            }
+            
+            //faces for which the cell-Centre vector intersects the plane
+            //faces reoriented to point along plane normal
+            {
+                type plane;
+                basePoint (1000 1000 1000);
+                normal (1 0 0);
+            }
+            
+        );
+        
+        //only boundBox available for now
+        //subsets face selection
+        constraints
+        (
+            {
+                type boundBox;
+                min (-1000 -1000 -1000); 
+                max (1000 1000 1000);
+                keepInside yes;
+            }
+        );
+    }

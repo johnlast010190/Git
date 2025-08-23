@@ -1,0 +1,19 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+helyxRun blockMesh
+helyxRun decomposePar
+helyxRun topoSet
+helyxRun setsToZones
+helyxRun splitMeshRegions -cellZonesOnly -overwrite
+helyxRun redistributePar -overwrite
+helyxRun caseSetup
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch twoRegionAnisoSolid.foam
+
+#------------------------------------------------------------------------------

@@ -1,0 +1,57 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxMapDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+sourceCase      "../";
+
+sourceTime      latestTime; //<scalar>|latestTime //optional, default latestTime
+targetTime		0; //optional, default 0
+
+// Optional, by default will read all fields in source mesh
+// and map only those present also in the target mesh.
+// If source mesh contains way more fields than those in target mesh
+// it is recommended to specify which fields to map to avoid
+// unnecessary reading of unique source fields.
+fields          (nuSgs nuTilda p U); //(p k nut U);
+
+// Optional, used to calculate the scaling factor for the source field.
+// By default, fields are not scaled. If source and target have different
+// inlet velocity, or the domain sizes are different, or density is different
+// scaling is required
+//fieldTypes
+//(
+//    p   pressure
+//    k   turbEnergy
+//    U   velocity
+//);
+
+// Optional, calculates wall distance only for specified patches.
+// default calculates wall distance for all boundary patches
+// Required by helyxSample, by can be omitted in helyxMap as
+// wall distance for all patches is required anyways
+//patches         (body); //accepts regEx and patchGroups
+
+mapBoundary      true; // optional, default true
+
+// Optional, specify the fixedValue patches to map from.
+// Default behaviour: skip all boundaries from mapping.
+// mapFixedBCs      (outlet inlet); //now noSlip patches are skipped
+
+interpolation    false; // optional, default false
+                        // true: use two closest points to interpolate based on coordinate-distance
+                        // false: use closest point
+
+
+// ************************************************************************* //

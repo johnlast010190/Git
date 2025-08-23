@@ -1,0 +1,45 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/WSS/0/wallShearStress.dat";
+                reference "verification/short/WSS/0/wallShearStress.dat";
+                variables "min" "max";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/VR_tracer/10/volumeReport.tsv";
+                reference "verification/short/VR_tracer/10/volumeReport.tsv";
+                variables "Cparticulatemin" "Cparticulatemax" "Cparticulatemean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/WSS/0/wallShearStress.dat";
+                reference "verification/long/WSS/0/wallShearStress.dat";
+                variables "min" "max";
+            }
+            {   
+                result "postProcessing/VR_tracer/50/volumeReport.tsv";
+                reference "verification/long/VR_tracer/50/volumeReport.tsv";
+                variables "Cparticulatemin" "Cparticulatemax" "Cparticulatemean";
+            }
+        );
+    }
+);
+
+// This case is currently unstable on the Asan build
+// tags asan;
+

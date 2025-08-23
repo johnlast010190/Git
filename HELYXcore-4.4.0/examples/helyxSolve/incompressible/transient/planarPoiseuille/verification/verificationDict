@@ -1,0 +1,36 @@
+runs
+(
+    short
+    {
+        steps 10;
+        restart false;
+        checks
+        (
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/short/VR/0/volumeReport.tsv";
+                variables "Umean" "pmean" "sigmamean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/long/VR/0/volumeReport.tsv";
+                variables "Umean" "pmean" "sigmamean";
+            }
+        );
+    }
+);
+
+tags asan;
+
+unstable true;
+operatingSystem windows;
+reason "This example has a Bash script, which is not available on Windows";

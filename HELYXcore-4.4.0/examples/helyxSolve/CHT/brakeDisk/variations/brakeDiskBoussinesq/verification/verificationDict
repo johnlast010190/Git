@@ -1,0 +1,77 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/default/wallHeatFlux-fluid/0/wallHeatFlux.dat";
+                reference "verification/short/default/wallHeatFlux-fluid/0/wallHeatFlux.dat";
+                variables "integral";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/disk/VR/0/volumeReport.tsv";
+                reference "verification/short/disk/VR/0/volumeReport.tsv";
+                variables "Tmin" "Tmax" "Tmean" "TstDev";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/disk/wallHeatFlux-disk/0/wallHeatFlux.dat";
+                reference "verification/short/disk/wallHeatFlux-disk/0/wallHeatFlux.dat";
+                variables "integral";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/pad1/wallHeatFlux-pad1/0/wallHeatFlux.dat";
+                reference "verification/short/pad1/wallHeatFlux-pad1/0/wallHeatFlux.dat";
+                variables "integral";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/pad2/wallHeatFlux-pad2/0/wallHeatFlux.dat";
+                reference "verification/short/pad2/wallHeatFlux-pad2/0/wallHeatFlux.dat";
+                variables "integral";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/default/wallHeatFlux-fluid/0/wallHeatFlux.dat";
+                reference "verification/long/default/wallHeatFlux-fluid/0/wallHeatFlux.dat";
+                variables "integral";
+            }
+            {
+                result "postProcessing/disk/VR/0/volumeReport.tsv";
+                reference "verification/long/disk/VR/0/volumeReport.tsv";
+                variables "Tmin" "Tmax" "Tmean" "TstDev";
+            }
+            {
+                result "postProcessing/disk/wallHeatFlux-disk/0/wallHeatFlux.dat";
+                reference "verification/long/disk/wallHeatFlux-disk/0/wallHeatFlux.dat";
+                variables "integral";
+            }
+            {
+                result "postProcessing/pad1/wallHeatFlux-pad1/0/wallHeatFlux.dat";
+                reference "verification/long/pad1/wallHeatFlux-pad1/0/wallHeatFlux.dat";
+                variables "integral";
+            }
+            {
+                result "postProcessing/pad2/wallHeatFlux-pad2/0/wallHeatFlux.dat";
+                reference "verification/long/pad2/wallHeatFlux-pad2/0/wallHeatFlux.dat";
+                variables "integral";
+            }
+        );
+    }
+);

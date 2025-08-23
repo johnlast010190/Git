@@ -1,0 +1,97 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : 4.4.0
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) 2019-2024 Engys Ltd.
+
+\*---------------------------------------------------------------------------*/
+
+#include "patchSwitch/switches/openPatch/openPatch.H"
+#include "fields/surfaceFields/surfaceFields.H"
+#include "fields/volFields/volFields.H"
+#include "db/runTimeSelection/construction/addToRunTimeSelectionTable.H"
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+namespace Foam
+{
+namespace fvMeshGIBChangers
+{
+    defineTypeNameAndDebug(openPatch, 0);
+    addToRunTimeSelectionTable(GIBSwitch, openPatch, dictionary);
+}
+}
+
+
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+bool Foam::fvMeshGIBChangers::openPatch::disableCondition()
+{
+    const volScalarField& field =
+        mesh_.lookupObject<volScalarField>(fieldName_);
+    const surfaceScalarField& magSf = mesh_.magSf();
+
+    const scalarField& magSfm = magSf.boundaryField()[patchID_];
+    const scalarField& fieldpm = field.boundaryField()[patchID_];
+
+    scalar meanFieldpm = gSum(fieldpm*magSfm)/gSum(magSfm);
+
+    Info<< this->type() << " for GIB faceZone "
+         << mesh_.faceZones()[zoneID_].name()
+         << ": closed, enableCondition - field "
+         << fieldName_ << " greater than : " << meanFieldpm << endl;
+
+    return (meanFieldpm > fieldLim_);
+}
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+Foam::fvMeshGIBChangers::openPatch::openPatch(const fvMesh& mesh, const dictionary& dict)
+:
+    GIBSwitch(mesh, dict),
+    fieldLim_(dict.lookup<scalar>("triggerValue")),
+    fieldName_(dict.lookupOrDefault<word>("fieldName", "T")),
+    side_(dict.lookupOrDefault<word>("side", "master")),
+    patchID_(-1)
+{
+    if (side_ == "master")
+    {
+        patchID_ = masterID_;
+    }
+    else if (side_ == "slave")
+    {
+        patchID_ = slaveID_;
+    }
+    else
+    {
+        FatalError
+            << "side value of " << side_ << "is not valid." << endl
+            << "Only master or slave is allowed"
+            << exit(FatalError);
+    }
+}
+
+
+// ************************************************************************* //

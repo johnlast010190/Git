@@ -1,0 +1,246 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    regionGroups ( fluids ( default ) solids ( disc ) );
+
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         0.1;
+            deltaT          0.001;
+            writeControl    adjustableRunTime;
+            writeInterval   0.01;
+            purgeWrite      0;
+            writeFormat     ascii;
+            writePrecision  8;
+            writeCompression uncompressed;
+            adjustTimeStep  no;
+            maxCo           1;
+        }
+    }
+
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            regions          ( disc );
+            fields           ( T );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    solids
+    {
+        materialProperties
+        {
+            discMaterial
+            {
+                materialName    discMaterial;
+
+                materialType    solid;
+                thermodynamics  hConst;
+                equationOfState rhoConst;
+                energy          sensibleEnthalpy;
+
+                molWeight       50;
+
+                kappaModel       constSolid;
+                kappaModelCoeffs
+                {
+                    kappa   0.44;
+                }
+
+                thermodynamicsCoeffs
+                {
+                    Hf      0;
+                    Cp      2569.613;
+                }
+
+                equationOfStateCoeffs
+                {
+                    rho     1037;
+                }
+            }
+        }
+        constant
+        {
+            dynamicMeshDict
+            {
+                mover
+                {
+                    type            motionSolver;
+                    libs            ("libfvMeshMovers.so" "libfvMotionSolvers.so");
+                    motionSolver    solidBody;
+                    referenceFrame  rotatingFrame;
+                }
+            }
+        }
+        system
+        {
+            meshObjects
+            {
+                rotatingFrame
+                {
+                    type dynamicMotionCoordinateFrame;
+                    motionFunction
+                    {
+                        type rotatingMotion;
+                        omega 35;
+                    }
+                    coordinateSystem
+                    {
+                        type cartesian;
+                        origin ( 0 0 0 );
+                        e1 (1 0 0);
+                        e3 (0 0 1);
+                    }
+                }
+            }
+        }
+    }
+
+    fluids
+    {
+        materialProperties
+        {
+            air
+            {
+                materialName    air;
+                materialType    fluid;
+                thermodynamics  hConst;
+                equationOfState perfectGas;
+                energy          sensibleEnthalpy;
+                buoyancyModel   rhoModel;
+                molWeight 28.9;
+
+                thermodynamicsCoeffs
+                {
+                            Cp 1007;
+                    Hf 0;
+                }
+                muModel       scalarFunction1;
+                muModelCoeffs
+                {
+                            mu 1.84e-05;
+                }
+                kappaModel       kappaPrandtl;
+                kappaModelCoeffs
+                {
+                            Pr 0.7;
+                }
+            }
+        }
+    }
+
+    default
+    {
+        state (transient ras energy dynamic);
+
+        materials (air);
+
+        turbulenceModel laminar;
+
+        constant
+        {
+            g
+            {
+                value           ( 0 0 -9.81);
+            }
+        }
+
+        boundaryMesh
+        {
+            chamber{type patch;}
+        }
+
+        fields
+        {
+            U { initialisation{type fixedValue; value uniform (0.0 0.0 0.0);} }
+            p { initialisation{type buoyantPressure;} }
+        }
+
+        boundaryConditions
+        {
+            default_to_disc
+            {
+                U
+                {
+                    type            rotatingWallVelocity;
+                    origin          (0 0 0);
+                    axis            (0 0 1);
+                    omega           35;
+                }
+            }
+        }
+    }
+
+    disc
+    {
+        state ( transient solid );
+
+        materials ( discMaterial );
+
+        system
+        {
+            fvOptions
+            {
+                heatSource
+                {
+                    type scalarSemiImplicitSource;
+                    active true;
+                    scalarSemiImplicitSourceCoeffs
+                    {
+                        selectionMode cellZone;
+                        cellZone heatedRegion;  //name of cellSet
+                        volumeMode absolute; // Values are given as <quantity>
+                        injectionRateSuSp // Semi-implicit source term S(x) = S_u + S_p x
+                        {
+                            T (1e6 0); // Heating in W
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

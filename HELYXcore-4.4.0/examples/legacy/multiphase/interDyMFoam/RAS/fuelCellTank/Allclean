@@ -1,0 +1,12 @@
+#!/bin/bash
+cd ${0%/*} || exit 1    # Run from this directory
+
+# Source tutorial clean functions
+. $HELYX_PROJECT_DIR/bin/tools/CleanFunctions
+
+rm -rf [0-9]* constant
+rm -rf case.foam postProcessing *vtk
+cleanCase
+(cd system; rm -f fv* material*; rm -r boundaryConditions)
+
+#------------------------------------------------------------------------------

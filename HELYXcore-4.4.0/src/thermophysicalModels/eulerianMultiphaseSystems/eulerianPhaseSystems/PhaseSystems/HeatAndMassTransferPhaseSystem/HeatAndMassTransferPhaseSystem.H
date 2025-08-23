@@ -1,0 +1,170 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : 4.4.0
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) 2015-2016 OpenFOAM Foundation
+
+Class
+    Foam::HeatAndMassTransferPhaseSystem
+
+Description
+    Base class to support interfacial heat and mass transfer between a number
+    of phases.
+
+SourceFiles
+    HeatAndMassTransferPhaseSystem.C
+
+\*---------------------------------------------------------------------------*/
+
+#ifndef HeatAndMassTransferPhaseSystem_H
+#define HeatAndMassTransferPhaseSystem_H
+
+#include "../../eulerianPhaseSystem/eulerianPhaseSystem.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+template<class modelType>
+class EulerianBlendedInterfacialModel;
+
+class eulerianBlendingMethod;
+class eulerianHeatTransferModel;
+class eulerianMassTransferModel;
+
+/*---------------------------------------------------------------------------*\
+                 Class HeatAndMassTransferPhaseSystem Declaration
+\*---------------------------------------------------------------------------*/
+
+template<class BasePhaseSystem>
+class HeatAndMassTransferPhaseSystem
+:
+    public BasePhaseSystem
+{
+protected:
+
+    // Protected typedefs
+
+        typedef HashTable
+        <
+            HashTable
+            <
+                autoPtr<EulerianBlendedInterfacialModel<eulerianHeatTransferModel>>
+            >,
+            phasePairKey,
+            phasePairKey::hash
+        > heatTransferModelTable;
+
+        typedef HashTable
+        <
+            HashTable
+            <
+                autoPtr<EulerianBlendedInterfacialModel<eulerianMassTransferModel>>
+            >,
+            phasePairKey,
+            phasePairKey::hash
+        > massTransferModelTable;
+
+
+    // Protected data
+
+        //- Mass transfer rate
+        HashPtrTable<volScalarField, phasePairKey, phasePairKey::hash>
+            dmdt_;
+
+        //- Explicit part of the mass transfer rate
+        HashPtrTable<volScalarField, phasePairKey, phasePairKey::hash>
+            dmdtExplicit_;
+
+        //- Interface temperatures
+        HashPtrTable<volScalarField, phasePairKey, phasePairKey::hash> Tf_;
+
+        // Sub Models
+
+            //- Heat transfer models
+            heatTransferModelTable heatTransferModels_;
+
+            //- Mass transfer models
+            massTransferModelTable massTransferModels_;
+
+
+public:
+
+    // Constructors
+
+        //- Construct from fvMesh
+        HeatAndMassTransferPhaseSystem(const fvMesh&, const dictionary& coeffs);
+
+
+    //- Destructor
+    virtual ~HeatAndMassTransferPhaseSystem();
+
+
+    // Member Functions
+
+        //- Return true if there is mass transfer for phase
+        virtual bool transfersMass(const eulerianPhaseModel& phase) const;
+
+        //- Return the interfacial mass flow rate
+        virtual tmp<volScalarField> dmdt(const phasePairKey& key) const;
+
+        //- Return the total interfacial mass transfer rate for phase
+        virtual tmp<volScalarField> dmdt(const eulerianPhaseModel& phase) const;
+
+        //- Return the momentum transfer matrices
+        virtual autoPtr<eulerianPhaseSystem::momentumTransferTable>
+            momentumTransfer() const;
+
+        //- Return the heat transfer matrices
+        virtual autoPtr<eulerianPhaseSystem::heatTransferTable>
+            heatTransfer() const;
+
+        //- Return the mass transfer matrices
+        virtual autoPtr<eulerianPhaseSystem::massTransferTable>
+            massTransfer() const = 0;
+
+        //- Correct the thermodynamics
+        virtual void correctThermo() = 0;
+
+        //- Read base phaseProperties dictionary
+        virtual bool read();
+};
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#ifdef NoRepository
+    #include "HeatAndMassTransferPhaseSystem.C"
+#endif
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

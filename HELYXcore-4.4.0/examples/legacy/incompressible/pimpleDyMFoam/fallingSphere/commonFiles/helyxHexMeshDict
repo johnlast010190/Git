@@ -1,0 +1,139 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | HELYX(R): Open-source CFD for Enterprise                 |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | ENGYS Ltd. <http://engys.com/>                           |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+castellatedMesh true;
+
+snap            true;
+
+addLayers       true;
+
+autoBlockMesh   true;
+
+blockData       ( 0.1 0 );
+
+crackDetection  false;
+
+geometry
+{
+    box.stl
+    {
+        type            triSurfaceMesh;
+        name            box;
+    }
+    sphere
+    {
+        type searchableSphere;
+        centre (0 0 9.0);
+        radius 0.1;
+        transforms      
+        ( 
+            { 
+                motionFile "$FOAM_CASE/sphere_motion" ; 
+                type translate ; 
+                translateVec ( 0 0 0 ) ; 
+            } 
+         );
+    }
+    ring
+    {
+        type  searchableRing;
+        point1 (0.0 0 2.0);
+        point2 (0.0 0 2.2);
+        innerRadius 0.2;
+        outerRadius 0.3;
+    }
+}
+
+castellatedMeshControls
+{
+    features        ( );
+    refinementSurfaces
+    {
+        box
+        {
+            level           ( 0 0 );
+            regions
+            {
+            }
+        }
+        sphere
+        {
+            level           ( 4 4 );
+            regions
+            {
+            }
+        }
+        ring
+        {
+            level           ( 4 4 );
+            regions
+            {
+            }
+        }
+    }
+
+    refinementRegions
+    {
+        sphere
+        {
+            mode distance;
+            levels ((0.2 3));
+        }
+    }
+
+    locationInMesh (0 0.5 9.5);
+}
+
+snapControls
+{
+    featureEdges
+    {
+    }
+}
+
+addLayersControls
+{
+    layers
+    {
+        "sphere.*"
+        {
+            nSurfaceLayers  5;
+        }
+    }
+}
+    
+
+relaxed
+{
+    maxNonOrtho 72;
+    maxBoundarySkewness 22;
+    maxInternalSkewness 7;
+    maxConcave 82;
+    minArea 1e-14;
+    minDeterminant 0.00008;
+    minFaceWeight 0.07;
+    minVolRatio 0.020;
+}
+
+critical
+{
+    minVol 1e-14;
+}
+
+// ************************************************************************* //

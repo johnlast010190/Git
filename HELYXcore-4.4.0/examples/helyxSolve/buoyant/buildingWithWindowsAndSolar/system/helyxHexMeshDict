@@ -1,0 +1,275 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+castellatedMesh true;
+
+snap            true;
+
+addLayers       true;
+
+autoBlockMesh   true;
+
+blockData       ( 1 0 );
+
+crackDetection  false;
+
+geometry
+{
+    wall_window.stl
+    {
+        type            triSurfaceMesh;
+        name            wall_window;
+    }
+    ff_maxy.stl
+    {
+        type            triSurfaceMesh;
+        name            ff_maxy;
+    }
+    ff_miny.stl
+    {
+        type            triSurfaceMesh;
+        name            ff_miny;
+    }
+    inlet.stl
+    {
+        type            triSurfaceMesh;
+        name            inlet;
+    }
+    outlet.stl
+    {
+        type            triSurfaceMesh;
+        name            outlet;
+    }
+    porous_trees.stl
+    {
+        type            triSurfaceMesh;
+        name            porous_trees;
+    }
+    sky.stl
+    {
+        type            triSurfaceMesh;
+        name            sky;
+    }
+    wall_dummies.stl
+    {
+        type            triSurfaceMesh;
+        name            wall_dummies;
+    }
+    wall_flap.stl
+    {
+        type            triSurfaceMesh;
+        name            wall_flap;
+    }
+    wall_ground.stl
+    {
+        type            triSurfaceMesh;
+        name            wall_ground;
+    }
+    wall_house.stl
+    {
+        type            triSurfaceMesh;
+        name            wall_house;
+    }
+    wall_house_roof.stl
+    {
+        type            triSurfaceMesh;
+        name            wall_roof;
+    }
+}
+
+castellatedMeshControls
+{
+    maxLocalCells   10000000;
+    maxGlobalCells  100000000;
+    minRefinementCells 20;
+    nCellsBetweenLevels 3;
+    features        ( );
+    refinementSurfaces
+    {
+        wall_window
+        {
+            faceType     baffle;
+		    faceZone	 windows_zone;
+		    cellZoneInside none;
+
+            allowFreeStandingZoneFaces true;
+            refineSurfaceBoundary true;
+            level           ( 3 3 );
+            regions
+            {
+            }
+        }
+        ff_maxy
+        {
+            level           ( 0 0 );
+            regions
+            {
+            }
+        }
+        ff_miny
+        {
+            level           ( 0 0 );
+            regions
+            {
+            }
+        }
+        inlet
+        {
+            level           ( 0 0 );
+            regions
+            {
+            }
+        }
+        outlet
+        {
+            level           ( 0 0 );
+            regions
+            {
+            }
+        }
+        porous_trees
+        {
+            level           ( 2 2 );
+			faceType	internal;
+		    faceZone	porous_zone1;
+		    cellZone	porous_zone1;
+		    zoneInside 	true;
+
+            regions
+            {
+            }
+        }
+        sky
+        {
+            level           ( 0 0 );
+            regions
+            {
+            }
+        }
+        wall_dummies
+        {
+            level           ( 4 4);
+            regions
+            {
+            }
+        }
+        wall_flap
+        {
+            level           ( 4 4 );
+            regions
+            {
+            }
+        }
+        wall_ground
+        {
+            level           ( 2 2 );
+            regions
+            {
+            }
+        }
+        wall_house
+        {
+            level           ( 3 3 );
+            regions
+            {
+            }
+        }
+        wall_roof
+        {
+            level           ( 3 3 );
+            regions
+            {
+            }
+        }
+    }
+    resolveFeatureAngle -40;
+    featureRefineAngle 15;
+    refinementRegions
+    {
+    }
+    locationInMesh ( 0 0 5 );
+    allowFreeStandingZoneFaces false;
+    wrapper
+    {
+        wrap            false;
+        outlets         ( inlet outlet ffmaxy ffminy ffmaxz ffminz );
+        cutoff          0.02;
+        volSources      true;
+        volDistance     1;
+        meshInMM        false;
+        maxIter         400;
+        writeFields     false;
+    }
+}
+
+addLayersControls
+{
+      layers
+      {
+          "wall_window.*"
+          {
+              nSurfaceLayers  8;
+          }
+          "ff_maxy.*"
+          {
+              nSurfaceLayers  0;
+          }
+          "ff_miny.*"
+          {
+              nSurfaceLayers  0;
+          }
+          "inlet.*"
+          {
+              nSurfaceLayers  0;
+          }
+          "outlet.*"
+          {
+              nSurfaceLayers  0;
+          }
+          "porous_trees.*"
+          {
+              nSurfaceLayers  0;
+          }
+          "sky.*"
+          {
+              nSurfaceLayers  0;
+          }
+          "wall_dummies.*"
+          {
+              nSurfaceLayers  8;
+          }
+          "wall_flap.*"
+          {
+              nSurfaceLayers  8;
+          }
+          "wall_ground.*"
+          {
+              nSurfaceLayers  8;
+          }
+          "wall_house.*"
+          {
+              nSurfaceLayers  8;
+          }
+          "wall_roof.*"
+          {
+              nSurfaceLayers  8; 
+          }
+      }
+}
+
+// ************************************************************************* //

@@ -1,0 +1,23 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy mesh from resources directory
+# printf "Copying mesh from resources\n"
+mkdir -p constant/polyMesh
+cp -r "$HELYX_TUTORIALS"/resources/geometry/rotatingCube/* constant/polyMesh
+
+# Decompose the mesh
+helyxRun decomposePar -cellDist
+
+# Setup, set initial phase fraction field and run
+helyxRun caseSetup
+helyxRun setFields
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch nonConformalRotatingCube.foam
+
+#------------------------------------------------------------------------------

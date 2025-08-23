@@ -1,0 +1,17 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Create blockMesh dict
+
+# Avoid re-running m4 to ensure a consistent blockMeshDict for
+# verification purposes. Delete blockMeshDict to re-generate
+if [ ! -f system/blockMeshDict ]
+then
+    echo "Running m4 to re-generate blockMeshDict"
+    m4 system/blockMeshDict.m4 > system/blockMeshDict
+fi
+
+#------------------------------------------------------------------------------

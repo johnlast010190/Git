@@ -1,0 +1,265 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields  true;
+        resetBoundaryFields  true;
+        resetSystemDicts     true;
+        resetConstDicts      true;
+        resetBoundaryMesh    false;
+        deleteUnusedFields   true;
+    }
+    system
+    {
+        controlDict
+        {
+            application    helyxSolve;
+            startFrom      startTime;
+            startTime      0;
+            stopAt         endTime;
+            endTime        0.04;
+            deltaT         1e-4;
+            writeControl   adjustableRunTime;
+            writeInterval  1e-3;
+            writePrecision 10;
+            maxCo          1.0;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+        SR_inlet
+        {
+            type surfaceReport;
+            regions ( region0 );
+            fields ( U p );
+            writeControl timeStep;
+            writeInterval 1;
+            weighting flux;
+            fluxName phi;
+            homogeneity false;
+            surfaces
+            (
+                {
+                    type patch;
+                    name inlet;
+                }
+            );
+            constraints
+            (
+                {
+                    type boundBox;
+                    min ( -1000.0 -1000.0 -1000.0 );
+                    max ( 1000.0 1000.0 1000.0 );
+                    keepInside true;
+                }
+            );
+            functionObjectLibs ( "libreport.so" );
+        }
+        SR_outlet
+        {
+            type surfaceReport;
+            regions ( region0 );
+            fields ( U p );
+            writeControl timeStep;
+            writeInterval 1;
+            weighting flux;
+            fluxName phi;
+            homogeneity false;
+            surfaces
+            (
+                {
+                    type patch;
+                    name outlet;
+                }
+            );
+            constraints
+            (
+                {
+                    type boundBox;
+                    min ( -1000.0 -1000.0 -1000.0 );
+                    max ( 1000.0 1000.0 1000.0 );
+                    keepInside true;
+                }
+            );
+            functionObjectLibs ( "libreport.so" );
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( transient ras );
+        turbulenceModel laminar;
+        materials (water);
+        materialProperties
+        {
+            water
+            {
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho 998.2;
+                }
+            }
+        }
+        system
+        {
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default         Euler;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    p
+                    {
+                        solver                PCG;
+                        preconditioner        DIC;
+                        tolerance             1e-6;
+                        relTol                0.05;
+                    }
+                    pFinal
+                    {
+                        $p;
+                        relTol                0;
+                    }
+                    U
+                    {
+                        solver                smoothSolver;
+                        smoother              GaussSeidel;
+                        minIter               1;
+                        tolerance             1e-6;
+                        relTol                0.1;
+                        vTol                  1e-6;
+                        vRelTol               0.1;
+                    }
+                    UFinal
+                    {
+                        $U;
+                        relTol                0;
+                    }
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p                     0.3;
+                        pFinal                1;
+                    }
+                    equations
+                    {
+                        U                     0.7;
+                        UFinal                0.7;
+                    }
+                }
+                PIMPLE
+                {
+                    ddtPhiCorr                false;
+                    nOuterCorrectors          100;
+                    nCorrectors               2;
+                    residualControl
+                    {
+                        U
+                        {
+                            tolerance    1e-5;
+                            relTol       0;
+                        }
+                        p
+                        {
+                            tolerance    1e-5;
+                            relTol       0;
+                        }
+                    }
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform (0 0 0);
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type flowRateInletVelocity;
+                    value uniform (0 0 0);
+                    outOfBounds repeat;
+                    volumetricFlowRate table (( 0.0 1.0 ) ( 0.00999 1.0 ) ( 0.01001 2.0 ) ( 0.01999 2.0 ) ( 0.02001 -1.0 ) ( 0.02999 -1.0 ) ( 0.03001 1.0 ) ( 0.04 1.0 ));
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type  pressureInletOutletVelocity;
+                    value uniform (0 0 0);
+                }
+                p
+                {
+                    type  windkesselPressure;
+                    value uniform 0;
+                    Rp    0;
+                    Rd    1e3;
+                    C     5e-6;
+                    Qold  0;
+                    pOld  0;
+                    alpha 5.0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

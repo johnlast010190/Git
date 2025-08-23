@@ -1,0 +1,1036 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | HELYX(R): Open-source CFD for Enterprise                 |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | Engys Ltd. http://www.engys.com                          |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    location system;
+    object postDict;
+}
+    visualisations
+    {
+        baseMesh
+        {
+        }
+        geometry
+        {
+            pipe
+            {
+                visible false;
+                representation SURFACE_WITH_EDGES;
+                opacity 0.3;
+                showActiveColor false;
+                showSurfaceLIC false;
+                vectorArray U;
+                dataSetInfo
+                {
+                    numberOfPoints 400;
+                    numberOfLines 0;
+                    numberOfCells 400;
+                    originalBounds ( 0.0 1.0 -0.19960534572601318 0.19960534572601318 -0.20000000298023224 0.20000000298023224 );
+                    transformedBounds ( 0.0 1.0 -0.19960534572601318 0.19960534572601318 -0.20000000298023224 0.20000000298023224 );
+                }
+            }
+            inlet
+            {
+                visible false;
+                representation SURFACE_WITH_EDGES;
+                opacity 0.3;
+                showActiveColor false;
+                showSurfaceLIC false;
+                vectorArray U;
+                dataSetInfo
+                {
+                    numberOfPoints 50;
+                    numberOfLines 0;
+                    numberOfCells 48;
+                    originalBounds ( 0.0 0.0 -0.0998026729 0.0998026729 -0.100000001 0.100000001 );
+                    transformedBounds ( 0.0 0.0 -0.0998026729 0.0998026729 -0.100000001 0.100000001 );
+                }
+            }
+            inside
+            {
+                visible false;
+                representation SURFACE_WITH_EDGES;
+                opacity 0.3;
+                showActiveColor false;
+                showSurfaceLIC false;
+                vectorArray U;
+                dataSetInfo
+                {
+                    numberOfPoints 100;
+                    numberOfLines 0;
+                    numberOfCells 100;
+                    originalBounds ( 0.0 1.0 -0.0998026729 0.0998026729 -0.100000001 0.100000001 );
+                    transformedBounds ( 0.0 1.0 -0.0998026729 0.0998026729 -0.100000001 0.100000001 );
+                }
+            }
+            outlet
+            {
+                visible false;
+                representation SURFACE_WITH_EDGES;
+                opacity 0.3;
+                showActiveColor false;
+                showSurfaceLIC false;
+                vectorArray U;
+                dataSetInfo
+                {
+                    numberOfPoints 50;
+                    numberOfLines 0;
+                    numberOfCells 48;
+                    originalBounds ( 1.0 1.0 -0.0998026729 0.0998026729 -0.100000001 0.100000001 );
+                    transformedBounds ( 1.0 1.0 -0.0998026729 0.0998026729 -0.100000001 0.100000001 );
+                }
+            }
+            opening
+            {
+                visible false;
+                representation SURFACE_WITH_EDGES;
+                showActiveColor false;
+                showSurfaceLIC false;
+                vectorArray U;
+                dataSetInfo
+                {
+                    numberOfPoints 100;
+                    numberOfLines 0;
+                    numberOfCells 100;
+                    originalBounds ( 0.0 1.0 -0.399210691 0.399210691 -0.400000006 0.400000006 );
+                    transformedBounds ( 0.0 1.0 -0.399210691 0.399210691 -0.400000006 0.400000006 );
+                }
+            }
+            outside
+            {
+                visible false;
+                representation SURFACE_WITH_EDGES;
+                showActiveColor false;
+                showSurfaceLIC false;
+                vectorArray U;
+                dataSetInfo
+                {
+                    numberOfPoints 200;
+                    numberOfLines 0;
+                    numberOfCells 300;
+                    originalBounds ( 0.0 1.0 -0.399210691 0.399210691 -0.400000006 0.400000006 );
+                    transformedBounds ( 0.0 1.0 -0.399210691 0.399210691 -0.400000006 0.400000006 );
+                }
+            }
+        }
+        regions
+        {
+            air
+            {
+                volumeMesh
+                {
+                    visible false;
+                    representation SURFACE_WITH_EDGES;
+                    showActiveColor false;
+                    showSurfaceLIC false;
+                    vectorArray U;
+                    dataSetInfo
+                    {
+                        numberOfPoints 0;
+                        numberOfLines 0;
+                        numberOfCells 0;
+                        originalBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                        transformedBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                    }
+                }
+                air
+                {
+                    visible false;
+                    representation SURFACE_WITH_EDGES;
+                    showActiveColor false;
+                    showSurfaceLIC false;
+                    vectorArray U;
+                    dataSetInfo
+                    {
+                        numberOfPoints 7720;
+                        numberOfLines 0;
+                        numberOfCells 7520;
+                        originalBounds ( -1.4243301649230489E-8 1.0 -0.39921069145202637 0.39921069145202637 -0.3999999463558197 0.3999999463558197 );
+                        transformedBounds ( -1.4243301649230489E-8 1.0 -0.39921069145202637 0.39921069145202637 -0.3999999463558197 0.3999999463558197 );
+                    }
+                }
+                opening
+                {
+                    visible false;
+                    representation SURFACE_WITH_EDGES;
+                    showActiveColor false;
+                    showSurfaceLIC false;
+                    vectorArray U;
+                    dataSetInfo
+                    {
+                        numberOfPoints 22624;
+                        numberOfLines 0;
+                        numberOfCells 22400;
+                        originalBounds ( 0.0 1.0 -0.39921069145202637 0.39921069145202637 -0.4000000059604645 0.4000000059604645 );
+                        transformedBounds ( 0.0 1.0 -0.39921069145202637 0.39921069145202637 -0.4000000059604645 0.4000000059604645 );
+                    }
+                }
+                air_to_pipe
+                {
+                    visible false;
+                    representation SURFACE_WITH_EDGES;
+                    showActiveColor false;
+                    showSurfaceLIC false;
+                    vectorArray U;
+                    dataSetInfo
+                    {
+                        numberOfPoints 16072;
+                        numberOfLines 0;
+                        numberOfCells 16000;
+                        originalBounds ( -1.4243301649230489E-8 1.0 -0.19963636994361877 0.19963636994361877 -0.20000000298023224 0.20000000298023224 );
+                        transformedBounds ( -1.4243301649230489E-8 1.0 -0.19963636994361877 0.19963636994361877 -0.20000000298023224 0.20000000298023224 );
+                    }
+                }
+                internalBoundaries
+                {
+                }
+                cellZones
+                {
+                    air
+                    {
+                        visible false;
+                        representation SURFACE_WITH_EDGES;
+                        showActiveColor false;
+                        showSurfaceLIC false;
+                        vectorArray U;
+                        dataSetInfo
+                        {
+                            numberOfPoints 0;
+                            numberOfLines 0;
+                            numberOfCells 0;
+                            originalBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                            transformedBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                        }
+                    }
+                }
+                faceZones
+                {
+                    pipe_to_air
+                    {
+                        visible false;
+                        representation SURFACE_WITH_EDGES;
+                        showActiveColor false;
+                        showSurfaceLIC false;
+                        vectorArray U;
+                        dataSetInfo
+                        {
+                            numberOfPoints 0;
+                            numberOfLines 0;
+                            numberOfCells 0;
+                            originalBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                            transformedBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                        }
+                    }
+                }
+            }
+            water
+            {
+                volumeMesh
+                {
+                    visible false;
+                    representation SURFACE_WITH_EDGES;
+                    showActiveColor false;
+                    showSurfaceLIC false;
+                    vectorArray U;
+                    dataSetInfo
+                    {
+                        numberOfPoints 0;
+                        numberOfLines 0;
+                        numberOfCells 0;
+                        originalBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                        transformedBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                    }
+                }
+                inlet
+                {
+                    visible false;
+                    showActiveColor false;
+                    showSurfaceLIC false;
+                    dataSetInfo
+                    {
+                        numberOfPoints 0;
+                        numberOfLines 0;
+                        numberOfCells 0;
+                        originalBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                        transformedBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                    }
+                }
+                outlet
+                {
+                    visible false;
+                    showActiveColor false;
+                    showSurfaceLIC false;
+                    dataSetInfo
+                    {
+                        numberOfPoints 0;
+                        numberOfLines 0;
+                        numberOfCells 0;
+                        originalBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                        transformedBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                    }
+                }
+                water_to_pipe
+                {
+                    visible false;
+                    showActiveColor false;
+                    showSurfaceLIC false;
+                    dataSetInfo
+                    {
+                        numberOfPoints 0;
+                        numberOfLines 0;
+                        numberOfCells 0;
+                        originalBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                        transformedBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                    }
+                }
+                internalBoundaries
+                {
+                }
+                cellZones
+                {
+                    water
+                    {
+                        visible false;
+                        representation SURFACE_WITH_EDGES;
+                        showActiveColor false;
+                        showSurfaceLIC false;
+                        vectorArray U;
+                        dataSetInfo
+                        {
+                            numberOfPoints 0;
+                            numberOfLines 0;
+                            numberOfCells 0;
+                            originalBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                            transformedBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                        }
+                    }
+                }
+                faceZones
+                {
+                    water_to_pipe
+                    {
+                        visible false;
+                        representation SURFACE_WITH_EDGES;
+                        showActiveColor false;
+                        showSurfaceLIC false;
+                        vectorArray U;
+                        dataSetInfo
+                        {
+                            numberOfPoints 0;
+                            numberOfLines 0;
+                            numberOfCells 0;
+                            originalBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                            transformedBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                        }
+                    }
+                }
+            }
+            region0
+            {
+                volumeMesh
+                {
+                    visible false;
+                    representation SURFACE_WITH_EDGES;
+                    showActiveColor false;
+                    showSurfaceLIC false;
+                    vectorArray U;
+                    dataSetInfo
+                    {
+                        numberOfPoints 0;
+                        numberOfLines 0;
+                        numberOfCells 0;
+                        originalBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                        transformedBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                    }
+                }
+                pipe
+                {
+                    visible true;
+                    representation SURFACE_WITH_EDGES;
+                    showActiveColor false;
+                    showSurfaceLIC false;
+                    vectorArray U;
+                    dataSetInfo
+                    {
+                        numberOfPoints 1392;
+                        numberOfLines 0;
+                        numberOfCells 1312;
+                        originalBounds ( -2.128835149051156E-6 1.000002145767212 -0.19972273707389832 0.19972273707389832 -0.1997973769903183 0.19979740679264069 );
+                        transformedBounds ( -2.128835149051156E-6 1.000002145767212 -0.19972273707389832 0.19972273707389832 -0.1997973769903183 0.19979740679264069 );
+                    }
+                }
+                outside
+                {
+                    visible true;
+                    representation SURFACE_WITH_EDGES;
+                    showActiveColor false;
+                    showSurfaceLIC false;
+                    vectorArray U;
+                    dataSetInfo
+                    {
+                        numberOfPoints 3752;
+                        numberOfLines 0;
+                        numberOfCells 3624;
+                        originalBounds ( -9.006647019305092E-7 1.0000009536743164 -0.39921069145202637 0.39921069145202637 -0.3995346128940582 0.3995353579521179 );
+                        transformedBounds ( -9.006647019305092E-7 1.0000009536743164 -0.39921069145202637 0.39921069145202637 -0.3995346128940582 0.3995353579521179 );
+                    }
+                }
+                inlet
+                {
+                    visible true;
+                    representation SURFACE_WITH_EDGES;
+                    showActiveColor false;
+                    showSurfaceLIC false;
+                    vectorArray U;
+                    dataSetInfo
+                    {
+                        numberOfPoints 244;
+                        numberOfLines 0;
+                        numberOfCells 225;
+                        originalBounds ( -2.362877239647787E-6 8.059617357503157E-6 -0.0997023656964302 0.0997023656964302 -0.09993354231119156 0.09993354231119156 );
+                        transformedBounds ( -2.362877239647787E-6 8.059617357503157E-6 -0.0997023656964302 0.0997023656964302 -0.09993354231119156 0.09993354231119156 );
+                    }
+                }
+                opening
+                {
+                    visible true;
+                    representation SURFACE_WITH_EDGES;
+                    showActiveColor false;
+                    showSurfaceLIC false;
+                    vectorArray U;
+                    dataSetInfo
+                    {
+                        numberOfPoints 10064;
+                        numberOfLines 0;
+                        numberOfCells 9916;
+                        originalBounds ( 0.0 1.0 -0.39921069145202637 0.39921069145202637 -0.3995458483695984 0.3995456099510193 );
+                        transformedBounds ( 0.0 1.0 -0.39921069145202637 0.39921069145202637 -0.3995458483695984 0.3995456099510193 );
+                    }
+                }
+                outlet
+                {
+                    visible true;
+                    representation SURFACE_WITH_EDGES;
+                    showActiveColor false;
+                    showSurfaceLIC false;
+                    vectorArray U;
+                    dataSetInfo
+                    {
+                        numberOfPoints 244;
+                        numberOfLines 0;
+                        numberOfCells 225;
+                        originalBounds ( 0.9999916553497314 1.000002384185791 -0.0997023656964302 0.0997023656964302 -0.09992901980876923 0.09992898255586624 );
+                        transformedBounds ( 0.9999916553497314 1.000002384185791 -0.0997023656964302 0.0997023656964302 -0.09992901980876923 0.09992898255586624 );
+                    }
+                }
+                internalBoundaries
+                {
+                }
+                cellZones
+                {
+                    cool_air
+                    {
+                        visible false;
+                        representation SURFACE_WITH_EDGES;
+                        showActiveColor false;
+                        showSurfaceLIC false;
+                        vectorArray U;
+                        dataSetInfo
+                        {
+                            numberOfPoints 0;
+                            numberOfLines 0;
+                            numberOfCells 0;
+                            originalBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                            transformedBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                        }
+                    }
+                    hot_air
+                    {
+                        visible false;
+                        representation SURFACE_WITH_EDGES;
+                        showActiveColor false;
+                        showSurfaceLIC false;
+                        vectorArray U;
+                        dataSetInfo
+                        {
+                            numberOfPoints 0;
+                            numberOfLines 0;
+                            numberOfCells 0;
+                            originalBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                            transformedBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                        }
+                    }
+                    pipe
+                    {
+                        visible false;
+                        representation SURFACE_WITH_EDGES;
+                        showActiveColor false;
+                        showSurfaceLIC false;
+                        vectorArray U;
+                        dataSetInfo
+                        {
+                            numberOfPoints 0;
+                            numberOfLines 0;
+                            numberOfCells 0;
+                            originalBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                            transformedBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                        }
+                    }
+                }
+                faceZones
+                {
+                    pipe_to_cool_air
+                    {
+                        visible false;
+                        representation SURFACE_WITH_EDGES;
+                        showActiveColor false;
+                        showSurfaceLIC false;
+                        vectorArray U;
+                        dataSetInfo
+                        {
+                            numberOfPoints 0;
+                            numberOfLines 0;
+                            numberOfCells 0;
+                            originalBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                            transformedBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                        }
+                    }
+                    hot_air_to_pipe
+                    {
+                        visible false;
+                        representation SURFACE_WITH_EDGES;
+                        showActiveColor false;
+                        showSurfaceLIC false;
+                        vectorArray U;
+                        dataSetInfo
+                        {
+                            numberOfPoints 0;
+                            numberOfLines 0;
+                            numberOfCells 0;
+                            originalBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                            transformedBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                        }
+                    }
+                }
+            }
+            cool_air
+            {
+                volumeMesh
+                {
+                    visible false;
+                    colorField "T.CELL";
+                    showActiveColor false;
+                    showSurfaceLIC false;
+                    vectorArray U;
+                    dataSetInfo
+                    {
+                        numberOfPoints 0;
+                        numberOfLines 0;
+                        numberOfCells 0;
+                        originalBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                        transformedBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                    }
+                }
+                outside
+                {
+                    visible false;
+                    colorField "T.CELL";
+                    showActiveColor false;
+                    showSurfaceLIC false;
+                    vectorArray U;
+                    dataSetInfo
+                    {
+                        numberOfPoints 3752;
+                        numberOfLines 0;
+                        numberOfCells 3624;
+                        originalBounds ( -9.006647019305092E-7 1.0000009536743164 -0.39921069145202637 0.39921069145202637 -0.3995346128940582 0.3995353579521179 );
+                        transformedBounds ( -9.006647019305092E-7 1.0000009536743164 -0.39921069145202637 0.39921069145202637 -0.3995346128940582 0.3995353579521179 );
+                    }
+                }
+                opening
+                {
+                    visible false;
+                    colorField "T.CELL";
+                    showActiveColor false;
+                    showSurfaceLIC false;
+                    vectorArray U;
+                    dataSetInfo
+                    {
+                        numberOfPoints 10064;
+                        numberOfLines 0;
+                        numberOfCells 9916;
+                        originalBounds ( 0.0 1.0 -0.39921069145202637 0.39921069145202637 -0.3995458483695984 0.3995456099510193 );
+                        transformedBounds ( 0.0 1.0 -0.39921069145202637 0.39921069145202637 -0.3995458483695984 0.3995456099510193 );
+                    }
+                }
+                cool_air_to_pipe
+                {
+                    visible false;
+                    colorField "T.CELL";
+                    showActiveColor false;
+                    showSurfaceLIC false;
+                    vectorArray U;
+                    dataSetInfo
+                    {
+                        numberOfPoints 7280;
+                        numberOfLines 0;
+                        numberOfCells 7236;
+                        originalBounds ( -8.2783788712959E-9 1.0 -0.19972273707389832 0.19972273707389832 -0.1997973769903183 0.19979740679264069 );
+                        transformedBounds ( -8.2783788712959E-9 1.0 -0.19972273707389832 0.19972273707389832 -0.1997973769903183 0.19979740679264069 );
+                    }
+                }
+                internalBoundaries
+                {
+                }
+                cellZones
+                {
+                    cool_air
+                    {
+                        visible false;
+                        colorField "T.CELL";
+                        showActiveColor false;
+                        showSurfaceLIC false;
+                        vectorArray U;
+                        dataSetInfo
+                        {
+                            numberOfPoints 0;
+                            numberOfLines 0;
+                            numberOfCells 0;
+                            originalBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                            transformedBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                        }
+                    }
+                }
+                faceZones
+                {
+                    pipe_to_cool_air
+                    {
+                        visible false;
+                        colorField "T.CELL";
+                        showActiveColor false;
+                        showSurfaceLIC false;
+                        vectorArray U;
+                        dataSetInfo
+                        {
+                            numberOfPoints 0;
+                            numberOfLines 0;
+                            numberOfCells 0;
+                            originalBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                            transformedBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                        }
+                    }
+                }
+            }
+            hot_air
+            {
+                volumeMesh
+                {
+                    visible false;
+                    colorField "T.CELL";
+                    showActiveColor false;
+                    showSurfaceLIC false;
+                    vectorArray U;
+                    dataSetInfo
+                    {
+                        numberOfPoints 0;
+                        numberOfLines 0;
+                        numberOfCells 0;
+                        originalBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                        transformedBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                    }
+                }
+                inlet
+                {
+                    visible false;
+                    colorField "T.CELL";
+                    showActiveColor false;
+                    showSurfaceLIC false;
+                    vectorArray U;
+                    dataSetInfo
+                    {
+                        numberOfPoints 244;
+                        numberOfLines 0;
+                        numberOfCells 225;
+                        originalBounds ( -2.362877239647787E-6 8.059617357503157E-6 -0.0997023656964302 0.0997023656964302 -0.09993354231119156 0.09993354231119156 );
+                        transformedBounds ( -2.362877239647787E-6 8.059617357503157E-6 -0.0997023656964302 0.0997023656964302 -0.09993354231119156 0.09993354231119156 );
+                    }
+                }
+                outlet
+                {
+                    visible false;
+                    colorField "T.CELL";
+                    showActiveColor false;
+                    showSurfaceLIC false;
+                    vectorArray U;
+                    dataSetInfo
+                    {
+                        numberOfPoints 244;
+                        numberOfLines 0;
+                        numberOfCells 225;
+                        originalBounds ( 0.9999916553497314 1.000002384185791 -0.0997023656964302 0.0997023656964302 -0.09992901980876923 0.09992898255586624 );
+                        transformedBounds ( 0.9999916553497314 1.000002384185791 -0.0997023656964302 0.0997023656964302 -0.09992901980876923 0.09992898255586624 );
+                    }
+                }
+                hot_air_to_pipe
+                {
+                    visible true;
+                    colorField "T.CELL";
+                    showActiveColor false;
+                    showSurfaceLIC false;
+                    vectorArray U;
+                    dataSetInfo
+                    {
+                        numberOfPoints 3520;
+                        numberOfLines 0;
+                        numberOfCells 3484;
+                        originalBounds ( -3.343864918292638E-8 1.0 -0.09976322948932648 0.09976322948932648 -0.09993354231119156 0.09993354231119156 );
+                        transformedBounds ( -3.343864918292638E-8 1.0 -0.09976322948932648 0.09976322948932648 -0.09993354231119156 0.09993354231119156 );
+                    }
+                }
+                internalBoundaries
+                {
+                }
+                cellZones
+                {
+                    hot_air
+                    {
+                        visible false;
+                        colorField "T.CELL";
+                        showActiveColor false;
+                        showSurfaceLIC false;
+                        vectorArray U;
+                        dataSetInfo
+                        {
+                            numberOfPoints 0;
+                            numberOfLines 0;
+                            numberOfCells 0;
+                            originalBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                            transformedBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                        }
+                    }
+                }
+                faceZones
+                {
+                    hot_air_to_pipe
+                    {
+                        visible false;
+                        colorField "T.CELL";
+                        showActiveColor false;
+                        showSurfaceLIC false;
+                        vectorArray U;
+                        dataSetInfo
+                        {
+                            numberOfPoints 0;
+                            numberOfLines 0;
+                            numberOfCells 0;
+                            originalBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                            transformedBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                        }
+                    }
+                }
+            }
+            pipe
+            {
+                volumeMesh
+                {
+                    visible false;
+                    colorField "T.CELL";
+                    showActiveColor false;
+                    showSurfaceLIC false;
+                    vectorArray U;
+                    dataSetInfo
+                    {
+                        numberOfPoints 0;
+                        numberOfLines 0;
+                        numberOfCells 0;
+                        originalBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                        transformedBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                    }
+                }
+                pipe
+                {
+                    visible false;
+                    colorField "T.CELL";
+                    showActiveColor false;
+                    showSurfaceLIC false;
+                    vectorArray U;
+                    dataSetInfo
+                    {
+                        numberOfPoints 1392;
+                        numberOfLines 0;
+                        numberOfCells 1312;
+                        originalBounds ( -2.128835149051156E-6 1.000002145767212 -0.19972273707389832 0.19972273707389832 -0.1997973769903183 0.19979740679264069 );
+                        transformedBounds ( -2.128835149051156E-6 1.000002145767212 -0.19972273707389832 0.19972273707389832 -0.1997973769903183 0.19979740679264069 );
+                    }
+                }
+                pipe_to_hot_air
+                {
+                    visible false;
+                    colorField "T.CELL";
+                    showActiveColor false;
+                    showSurfaceLIC false;
+                    vectorArray U;
+                    dataSetInfo
+                    {
+                        numberOfPoints 3520;
+                        numberOfLines 0;
+                        numberOfCells 3484;
+                        originalBounds ( -3.343864918292638E-8 1.0 -0.09976322948932648 0.09976322948932648 -0.09993354231119156 0.09993354231119156 );
+                        transformedBounds ( -3.343864918292638E-8 1.0 -0.09976322948932648 0.09976322948932648 -0.09993354231119156 0.09993354231119156 );
+                    }
+                }
+                pipe_to_cool_air
+                {
+                    visible false;
+                    colorField "T.CELL";
+                    showActiveColor false;
+                    showSurfaceLIC false;
+                    vectorArray U;
+                    dataSetInfo
+                    {
+                        numberOfPoints 7280;
+                        numberOfLines 0;
+                        numberOfCells 7236;
+                        originalBounds ( -8.2783788712959E-9 1.0 -0.19972273707389832 0.19972273707389832 -0.1997973769903183 0.19979740679264069 );
+                        transformedBounds ( -8.2783788712959E-9 1.0 -0.19972273707389832 0.19972273707389832 -0.1997973769903183 0.19979740679264069 );
+                    }
+                }
+                internalBoundaries
+                {
+                }
+                cellZones
+                {
+                    pipe
+                    {
+                        visible false;
+                        colorField "T.CELL";
+                        showActiveColor false;
+                        showSurfaceLIC false;
+                        vectorArray U;
+                        dataSetInfo
+                        {
+                            numberOfPoints 0;
+                            numberOfLines 0;
+                            numberOfCells 0;
+                            originalBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                            transformedBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                        }
+                    }
+                }
+                faceZones
+                {
+                    pipe_to_cool_air
+                    {
+                        visible false;
+                        colorField "T.CELL";
+                        showActiveColor false;
+                        showSurfaceLIC false;
+                        vectorArray U;
+                        dataSetInfo
+                        {
+                            numberOfPoints 0;
+                            numberOfLines 0;
+                            numberOfCells 0;
+                            originalBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                            transformedBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                        }
+                    }
+                    hot_air_to_pipe
+                    {
+                        visible false;
+                        colorField "T.CELL";
+                        showActiveColor false;
+                        showSurfaceLIC false;
+                        vectorArray U;
+                        dataSetInfo
+                        {
+                            numberOfPoints 0;
+                            numberOfLines 0;
+                            numberOfCells 0;
+                            originalBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                            transformedBounds ( 0.0 0.0 0.0 0.0 0.0 0.0 );
+                        }
+                    }
+                }
+            }
+        }
+        objects
+        {
+        }
+        groups
+        {
+        }
+    }
+    groups
+    {
+    }
+    objects
+    {
+    }
+    colorLegends
+    {
+        p
+        {
+            title "p [Pa]";
+        }
+        U-Y
+        {
+            title "U-Y [m/s]";
+        }
+        U-X
+        {
+            title "U-X [m/s]";
+            position LEFT;
+        }
+        U-Z
+        {
+            title "U-Z [m/s]";
+        }
+        U-Mag
+        {
+            title "U-Mag [m/s]";
+        }
+        rho
+        {
+            title "rho [kg/m³]";
+        }
+        alphat
+        {
+            title "alphat [kg/m·s]";
+        }
+        k
+        {
+            title "k [m²/s²]";
+        }
+        nut
+        {
+            title "nut [m²/s]";
+        }
+        omega
+        {
+            title "omega [1/s]";
+        }
+        T
+        {
+            title "T [K]";
+            position LEFT;
+            colorMap
+            {
+                automaticRange false;
+                range ( 380.0 390.0 );
+            }
+        }
+        alphaConv
+        {
+            title "alphaConv [W/m²·K]";
+            position LEFT;
+        }
+        buoyantRho
+        {
+            title "buoyantRho";
+        }
+        phi
+        {
+            title "phi [kg/s]";
+        }
+    }
+    scenes
+    {
+    }
+    charts
+    {
+    }
+    displayOptions
+    {
+        background1 ( 1.0 1.0 1.0 );
+        background2 ( 1.0 1.0 1.0 );
+        widgetsColor ( 1.0 1.0 1.0 );
+        showAxes true;
+        showLogo true;
+        cubeAxesOptions
+        {
+            showAxesGrid false;
+            axesGridColor ( 1.0 1.0 1.0 );
+            axesGridLabelColor ( 0.5019607843137255 0.5019607843137255 0.5019607843137255 );
+            showAxesGridTitle false;
+            XAxisTitle "X Axis";
+            YAxisTitle "Y Axis";
+            ZAxisTitle "Z Axis";
+            manualFaceSelect false;
+            showXYmin false;
+            showXYmax false;
+            showYZmin false;
+            showYZmax false;
+            showZXmin false;
+            showZXmax false;
+            useCustomBounds false;
+            XBounds ( 0.0 1.0 );
+            YBounds ( 0.0 1.0 );
+            ZBounds ( 0.0 1.0 );
+            useCustomLabels false;
+            useXDistanceLabel false;
+            useYDistanceLabel false;
+            useZDistanceLabel false;
+            useXDistance 0.0;
+            useYDistance 0.0;
+            useZDistance 0.0;
+        }
+        showTimestep false;
+        timestepLabelFormat "%6.2f [s]";
+        position TOP_RIGHT;
+        vectorWidget
+        {
+            showVectorWidget false;
+            vector bodyAcceleration;
+            vector3DRepOptions
+            {
+                showVector3DRep false;
+                showArrow true;
+                showComponents false;
+                scale 1.0;
+                showTitle false;
+                coordinates ( 0.0 0.7 );
+            }
+            vectorTextRepOptions
+            {
+                showVectorTextRep true;
+                labelFormat "%.2f";
+                fontSize 12;
+                showTextBox false;
+                showTitle true;
+                coordinates ( 0.125 0.7 );
+            }
+        }
+    }
+    colorLegendOptions
+    {
+        visible true;
+        position RIGHT;
+        labelFormat "%6.2f";
+        numberOfLabels 5;
+        thickness 16;
+        height 0.5;
+        vertical true;
+        resolution 256;
+        colorLegendType engys;
+        automaticLabels true;
+        showTicks false;
+        legendLabelFont
+        {
+            font ARIAL;
+            fontSize 16;
+            textColor ( 0.0 0.0 0.0 );
+            textOpacity 1.0;
+            bold false;
+            italics false;
+            shadow false;
+        }
+    }

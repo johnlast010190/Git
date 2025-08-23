@@ -1,0 +1,165 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : 4.4.0
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) 2011-2014 OpenFOAM Foundation
+
+InNamespace
+    Foam::fac
+
+Description
+    Calculate the mesh motion flux and convert fluxes from absolute to relative
+    and back.
+
+SourceFiles
+    facMeshPhi.C
+
+\*---------------------------------------------------------------------------*/
+
+#ifndef facMeshPhi_H
+#define facMeshPhi_H
+
+#include "fields/areaFields/areaFieldsFwd.H"
+#include "fields/edgeFields/edgeFieldsFwd.H"
+#include "dimensionedTypes/dimensionedTypes.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+/*---------------------------------------------------------------------------*\
+                     Namespace fac functions Declaration
+\*---------------------------------------------------------------------------*/
+
+namespace fac
+{
+    tmp<edgeScalarField> meshPhi
+    (
+        const areaVectorField& U
+    );
+
+    tmp<edgeScalarField> meshPhi
+    (
+        const dimensionedScalar& rho,
+        const areaVectorField& U
+    );
+
+    tmp<edgeScalarField> meshPhi
+    (
+        const areaScalarField& rho,
+        const areaVectorField& U
+    );
+
+
+    //- Make the given flux relative
+    void makeRelative
+    (
+        edgeScalarField& phi,
+        const areaVectorField& U
+    );
+
+    //- Make the given flux relative
+    void makeRelative
+    (
+        edgeScalarField& phi,
+        const dimensionedScalar& rho,
+        const areaVectorField& U
+    );
+
+    //- Make the given flux relative
+    void makeRelative
+    (
+        edgeScalarField& phi,
+        const areaScalarField& rho,
+        const areaVectorField& U
+    );
+
+
+    //- Make the given flux absolute
+    void makeAbsolute
+    (
+        edgeScalarField& phi,
+        const areaVectorField& U
+    );
+
+    //- Make the given flux absolute
+    void makeAbsolute
+    (
+        edgeScalarField& phi,
+        const dimensionedScalar& rho,
+        const areaVectorField& U
+    );
+
+    //- Make the given flux absolute
+    void makeAbsolute
+    (
+        edgeScalarField& phi,
+        const areaScalarField& rho,
+        const areaVectorField& U
+    );
+
+
+    //- Return the given absolute flux in relative form
+    tmp<edgeScalarField> relative
+    (
+        const tmp<edgeScalarField>& tphi,
+        const areaVectorField& U
+    );
+
+    //- Return the given absolute flux in relative form
+    tmp<edgeScalarField> relative
+    (
+        const tmp<edgeScalarField>& tphi,
+        const areaScalarField& rho,
+        const areaVectorField& U
+    );
+
+
+    //- Return the given relative flux in absolute form
+    tmp<edgeScalarField> absolute
+    (
+        const tmp<edgeScalarField>& tphi,
+        const areaVectorField& U
+    );
+
+    //- Return the given relative flux in absolute form
+    tmp<edgeScalarField> absolute
+    (
+        const tmp<edgeScalarField>& tphi,
+        const areaScalarField& rho,
+        const areaVectorField& U
+    );
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

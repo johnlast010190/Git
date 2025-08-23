@@ -1,0 +1,23 @@
+#!/bin/bash
+cd ${0%/*} || exit 1    # Run from this directory
+set -e                  # Exit immediately if a command fails
+
+# tags: asan
+
+#------------------------------------------------------------------------------
+
+./Allrun.pre
+
+# Create mesh
+helyxRun blockMesh -dict system/blockMeshDict.keep
+
+# Setup
+helyxRun caseSetup
+
+# Create dummy file for ParaView visualisation
+touch angledDuct.foam
+
+# Run
+helyxRun helyxSolve
+
+#------------------------------------------------------------------------------

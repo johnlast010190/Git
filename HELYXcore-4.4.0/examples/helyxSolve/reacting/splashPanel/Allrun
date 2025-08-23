@@ -1,0 +1,31 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+helyxRun blockMesh
+
+# If using dictionary mode
+helyxRun topoSet -dict system/wallFilmRegion.topoSet
+
+helyxRun extrudeToRegionMesh -overwrite
+
+# If using dictionary mode
+helyxRun -append topoSet -region wallFilmRegion \
+            -dict system/createWallFilmRegionPatches.topoSet
+
+helyxRun createPatch -region wallFilmRegion -overwrite
+
+# Create dummy file for paraview
+touch splashPanel.foam
+
+# Setup the case
+helyxRun caseSetup
+
+cp system/parcelInjectionProperties constant/parcelInjectionProperties
+
+# Run the case
+helyxRun
+
+#------------------------------------------------------------------------------

@@ -1,0 +1,22 @@
+#!/bin/bash
+cd ${0%/*} || exit 1    # Run from this directory
+
+# Source tutorial run functions
+. $HELYX_PROJECT_DIR/bin/tools/RunFunctions
+
+#------------------------------------------------------------------------------
+
+cd stator
+runApplication helyxHexMesh -constant
+cd ../
+
+runApplication helyxHexMesh -constant
+runApplication topoSet -noFunctionObjects
+runApplication mergeMeshes -overwrite -noFunctionObjects -case . . stator
+runApplication decomposePar
+runParallel caseSetup
+runParallel pimpleDyMFoam
+runApplication reconstructParMesh -constant
+runApplication reconstructPar -withZero
+
+#------------------------------------------------------------------------------

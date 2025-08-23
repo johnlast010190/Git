@@ -1,0 +1,18 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+mkdir -p constant/triSurface
+cp "$HELYX_TUTORIALS"/resources/geometry/fireGrowth/triSurface/* constant/triSurface/
+
+helyxRun helyxHexMesh
+helyxRun decomposePar
+helyxRun caseSetup
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualization
+touch fireGrowth.foam
+
+#------------------------------------------------------------------------------

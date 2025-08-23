@@ -1,0 +1,31 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/LD/0/liftDrag.tsv";
+                reference "verification/short/LD/0/liftDrag.tsv";
+                variables "totalLift" "drag";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/LD/0/liftDrag.tsv";
+                reference "verification/long/LD/0/liftDrag.tsv";
+                variables "totalLift" "drag";
+            }
+        );
+    }
+);
+
+tags asan;

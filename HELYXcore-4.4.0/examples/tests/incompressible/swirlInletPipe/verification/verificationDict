@@ -1,0 +1,31 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/SR_in/0/surfaceReport.dat";
+                reference "verification/short/SR_in/0/surfaceReport.dat";
+                variables "massFlux" "Umin" "Umax" "Umean" "UstDev" "pmin" "pmax" "pmean" "pstDev";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/SR_in/0/surfaceReport.dat";
+                reference "verification/long/SR_in/0/surfaceReport.dat";
+                variables "massFlux" "Umin" "Umax" "Umean" "UstDev" "pmin" "pmax" "pmean" "pstDev";
+            }
+        );
+    }
+);
+
+tags asan;

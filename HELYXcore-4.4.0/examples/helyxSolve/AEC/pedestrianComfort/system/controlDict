@@ -1,0 +1,539 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      binary;
+    class       dictionary;
+    arch        "LSB;label=32;scalar=64";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     helyxSolve;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         400;
+
+deltaT          constant 1;
+
+writeControl    timeStep;
+
+writeInterval   400;
+
+purgeWrite      0;
+
+writeFormat     binary;
+
+writePrecision  10;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   6;
+
+graphFormat     raw;
+
+runTimeModifiable yes;
+
+libs            1 ( "" );
+
+functions
+{
+    Lawson
+    {
+        type            pedestrianComfort;
+        instances       ( d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 );
+        functionObjectLibs ( "libutilityFunctionObjects.so" );
+        writeControl    writeTime;
+        UName           U;
+        gust            true;
+        windDirections  ( d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 );
+        WeibullParameters ( ( 6.13 5.59 3.23 ) ( 15.03 5.41 3.16 ) ( 9.28 4.54 2.63 ) ( 0.44 4.47 4.46 ) ( 0 5.91 3.87 ) ( 0 4.73 2.72 ) ( 6.05 5.91 3.87 ) ( 5.09 4.73 2.72 ) ( 2.55 4.05 4.58 ) ( 2.93 4.24 4.17 ) ( 3.81 5.95 2.54 ) ( 11.03 7.8 3.72 ) ( 14.82 8.34 3.38 ) ( 7.04 7.86 3.15 ) ( 8.4 8.01 3.23 ) ( 6.65 6.81 3.2 ) );
+        referenceHeight ( 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 );
+        referenceVelocity ( 7.8 7.8 7.8 7.8 7.8 7.8 7.8 7.8 7.8 7.8 7.8 7.8 7.8 7.8 7.8 7.8 );
+        scaleFactor     table ( ( 100 0.96 ) ( 120 1 ) ( 160 1.07 ) ( 200 1.13 ) ( 250 1.19 ) ( 300 1.24 ) ( 450 1.37 ) ( 600 1.48 ) );
+        criteriaThresholds ( 2.5 4 6 8 );
+        criteriaExceedance ( 5 5 5 5 );
+    }
+    Safety
+    {
+        type            pedestrianComfort;
+        instances       ( d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 );
+        functionObjectLibs ( "libutilityFunctionObjects.so" );
+        writeControl    writeTime;
+        UName           U;
+        gust            true;
+        windDirections  ( d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 );
+        WeibullParameters ( ( 6.13 5.59 3.23 ) ( 15.03 5.41 3.16 ) ( 9.28 4.54 2.63 ) ( 0.44 4.47 4.46 ) ( 0 5.91 3.87 ) ( 0 4.73 2.72 ) ( 6.05 5.91 3.87 ) ( 5.09 4.73 2.72 ) ( 2.55 4.05 4.58 ) ( 2.93 4.24 4.17 ) ( 3.81 5.95 2.54 ) ( 11.03 7.8 3.72 ) ( 14.82 8.34 3.38 ) ( 7.04 7.86 3.15 ) ( 8.4 8.01 3.23 ) ( 6.65 6.81 3.2 ) );
+        referenceHeight ( 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 );
+        referenceVelocity ( 7.8 7.8 7.8 7.8 7.8 7.8 7.8 7.8 7.8 7.8 7.8 7.8 7.8 7.8 7.8 7.8 );
+        scaleFactor     table ( ( 100 0.96 ) ( 120 1 ) ( 160 1.07 ) ( 200 1.13 ) ( 250 1.19 ) ( 300 1.24 ) ( 450 1.37 ) ( 600 1.48 ) );
+        criteriaThresholds ( 15 );
+        criteriaExceedance ( 0.022 );
+    }
+    PCVR
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( PC-Lawson PC-Safety );
+        executeControl  onEnd;
+        type            volumeReport;
+        writeControl    onEnd;
+        region          region0;
+    }
+    VR1
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U k epsilon p );
+        executeControl  onEnd;
+        type            volumeReport;
+        instance        d1;
+        writeControl    onEnd;
+        regions         1 ( d1 );
+    }
+    FP1
+    {
+        functionObjectLibs ( "libfieldFunctionObjects.so" );
+        operations      ( { operation mag ; fieldName magU ; write true ; nearCellValue false ; inField U ; } );
+        executeControl  timeStep;
+        writeControl    outputTimeAndEnd;
+        type            fieldProcess;
+        instance        d1;
+        executeInterval 1;
+        writeInterval   1;
+        regions         1 ( d1 );
+    }
+    probes1
+    {
+        functionObjectLibs ( "libsampling.so" );
+        enabled         true;
+        probeLocations  ( ( 0 -20 4 ) ( 0 -40 2 ) );
+        fields          ( magU p );
+        executeControl  timeStep;
+        type            probes;
+        name            probes;
+        instance        d1;
+        writeControl    writeTime;
+        writeInterval   1;
+        libs            ( "libsampling.so" );
+        regions         1 ( d1 );
+    }
+    VR2
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U k epsilon p );
+        executeControl  timeStep;
+        type            volumeReport;
+        instance        d2;
+        writeControl    timeStep;
+        regions         1 ( d2 );
+    }
+    FP2
+    {
+        functionObjectLibs ( "libfieldFunctionObjects.so" );
+        operations      ( { operation mag ; fieldName magU ; write true ; nearCellValue false ; inField U ; } );
+        executeControl  timeStep;
+        writeControl    outputTimeAndEnd;
+        type            fieldProcess;
+        instance        d2;
+        executeInterval 1;
+        writeInterval   1;
+        regions         1 ( d2 );
+    }
+    probes2
+    {
+        functionObjectLibs ( "libsampling.so" );
+        enabled         true;
+        probeLocations  ( ( -10 -20 4 ) ( -15 -30 2 ) );
+        fields          ( magU p );
+        executeControl  timeStep;
+        type            probes;
+        name            probes;
+        instance        d2;
+        writeControl    writeTime;
+        writeInterval   1;
+        libs            ( "libsampling.so" );
+        regions         1 ( d2 );
+    }
+    VR3
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U k epsilon p );
+        executeControl  timeStep;
+        type            volumeReport;
+        instance        d3;
+        writeControl    timeStep;
+        regions         1 ( d3 );
+    }
+    probes3
+    {
+        functionObjectLibs ( "libsampling.so" );
+        enabled         true;
+        probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+        fields          ( U p );
+        executeControl  timeStep;
+        type            probes;
+        name            probes;
+        instance        d3;
+        writeControl    writeTime;
+        writeInterval   1;
+        libs            ( "libsampling.so" );
+        regions         1 ( d3 );
+    }
+    VR4
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U k epsilon p );
+        executeControl  timeStep;
+        type            volumeReport;
+        instance        d4;
+        writeControl    timeStep;
+        regions         1 ( d4 );
+    }
+    probes4
+    {
+        functionObjectLibs ( "libsampling.so" );
+        enabled         true;
+        probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+        fields          ( U p );
+        executeControl  timeStep;
+        type            probes;
+        name            probes;
+        instance        d4;
+        writeControl    writeTime;
+        writeInterval   1;
+        libs            ( "libsampling.so" );
+        regions         1 ( d4 );
+    }
+    VR5
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U k epsilon p );
+        executeControl  timeStep;
+        type            volumeReport;
+        instance        d5;
+        writeControl    timeStep;
+        regions         1 ( d5 );
+    }
+    probes5
+    {
+        functionObjectLibs ( "libsampling.so" );
+        enabled         true;
+        probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+        fields          ( U p );
+        executeControl  timeStep;
+        type            probes;
+        name            probes;
+        instance        d5;
+        writeControl    writeTime;
+        writeInterval   1;
+        libs            ( "libsampling.so" );
+        regions         1 ( d5 );
+    }
+    VR6
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U k epsilon p );
+        executeControl  timeStep;
+        type            volumeReport;
+        instance        d6;
+        writeControl    timeStep;
+        regions         1 ( d6 );
+    }
+    probes6
+    {
+        functionObjectLibs ( "libsampling.so" );
+        enabled         true;
+        probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+        fields          ( U p );
+        executeControl  timeStep;
+        type            probes;
+        name            probes;
+        instance        d6;
+        writeControl    writeTime;
+        writeInterval   1;
+        libs            ( "libsampling.so" );
+        regions         1 ( d6 );
+    }
+    VR7
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U k epsilon p );
+        executeControl  timeStep;
+        type            volumeReport;
+        instance        d7;
+        writeControl    timeStep;
+        regions         1 ( d7 );
+    }
+    probes7
+    {
+        functionObjectLibs ( "libsampling.so" );
+        enabled         true;
+        probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+        fields          ( U p );
+        executeControl  timeStep;
+        type            probes;
+        name            probes;
+        instance        d7;
+        writeControl    writeTime;
+        writeInterval   1;
+        libs            ( "libsampling.so" );
+        regions         1 ( d7 );
+    }
+    VR8
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U k epsilon p );
+        executeControl  timeStep;
+        type            volumeReport;
+        instance        d8;
+        writeControl    timeStep;
+        regions         1 ( d8 );
+    }
+    probes8
+    {
+        functionObjectLibs ( "libsampling.so" );
+        enabled         true;
+        probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+        fields          ( U p );
+        executeControl  timeStep;
+        type            probes;
+        name            probes;
+        instance        d8;
+        writeControl    writeTime;
+        writeInterval   1;
+        libs            ( "libsampling.so" );
+        regions         1 ( d8 );
+    }
+    VR9
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U k epsilon p );
+        executeControl  timeStep;
+        type            volumeReport;
+        instance        d9;
+        writeControl    timeStep;
+        regions         1 ( d9 );
+    }
+    probes9
+    {
+        functionObjectLibs ( "libsampling.so" );
+        enabled         true;
+        probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+        fields          ( U p );
+        executeControl  timeStep;
+        type            probes;
+        name            probes;
+        instance        d9;
+        writeControl    writeTime;
+        writeInterval   1;
+        libs            ( "libsampling.so" );
+        regions         1 ( d9 );
+    }
+    VR10
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U k epsilon p );
+        executeControl  timeStep;
+        type            volumeReport;
+        instance        d10;
+        writeControl    timeStep;
+        regions         1 ( d10 );
+    }
+    probes10
+    {
+        functionObjectLibs ( "libsampling.so" );
+        enabled         true;
+        probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+        fields          ( U p );
+        executeControl  timeStep;
+        type            probes;
+        name            probes;
+        instance        d10;
+        writeControl    writeTime;
+        writeInterval   1;
+        libs            ( "libsampling.so" );
+        regions         1 ( d10 );
+    }
+    VR11
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U k epsilon p );
+        executeControl  timeStep;
+        type            volumeReport;
+        instance        d11;
+        writeControl    timeStep;
+        regions         1 ( d11 );
+    }
+    probes11
+    {
+        functionObjectLibs ( "libsampling.so" );
+        enabled         true;
+        probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+        fields          ( U p );
+        executeControl  timeStep;
+        type            probes;
+        name            probes;
+        instance        d11;
+        writeControl    writeTime;
+        writeInterval   1;
+        libs            ( "libsampling.so" );
+        regions         1 ( d11 );
+    }
+    VR12
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U k epsilon p );
+        executeControl  timeStep;
+        type            volumeReport;
+        instance        d12;
+        writeControl    timeStep;
+        regions         1 ( d12 );
+    }
+    probes12
+    {
+        functionObjectLibs ( "libsampling.so" );
+        enabled         true;
+        probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+        fields          ( U p );
+        executeControl  timeStep;
+        type            probes;
+        name            probes;
+        instance        d12;
+        writeControl    writeTime;
+        writeInterval   1;
+        libs            ( "libsampling.so" );
+        regions         1 ( d12 );
+    }
+    VR13
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U k epsilon p );
+        executeControl  timeStep;
+        type            volumeReport;
+        instance        d13;
+        writeControl    timeStep;
+        regions         1 ( d13 );
+    }
+    probes13
+    {
+        functionObjectLibs ( "libsampling.so" );
+        enabled         true;
+        probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+        fields          ( U p );
+        executeControl  timeStep;
+        type            probes;
+        name            probes;
+        instance        d13;
+        writeControl    writeTime;
+        writeInterval   1;
+        libs            ( "libsampling.so" );
+        regions         1 ( d13 );
+    }
+    VR14
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U k epsilon p );
+        executeControl  timeStep;
+        type            volumeReport;
+        instance        d14;
+        writeControl    timeStep;
+        regions         1 ( d14 );
+    }
+    probes14
+    {
+        functionObjectLibs ( "libsampling.so" );
+        enabled         true;
+        probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+        fields          ( U p );
+        executeControl  timeStep;
+        type            probes;
+        name            probes;
+        instance        d14;
+        writeControl    writeTime;
+        writeInterval   1;
+        libs            ( "libsampling.so" );
+        regions         1 ( d14 );
+    }
+    VR15
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U k epsilon p );
+        executeControl  timeStep;
+        type            volumeReport;
+        instance        d15;
+        writeControl    timeStep;
+        regions         1 ( d15 );
+    }
+    probes15
+    {
+        functionObjectLibs ( "libsampling.so" );
+        enabled         true;
+        probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+        fields          ( U p );
+        executeControl  timeStep;
+        type            probes;
+        name            probes;
+        instance        d15;
+        writeControl    writeTime;
+        writeInterval   1;
+        libs            ( "libsampling.so" );
+        regions         1 ( d15 );
+    }
+    VR16
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U k epsilon p );
+        executeControl  onEnd;
+        type            volumeReport;
+        instance        d16;
+        writeControl    onEnd;
+        regions         1 ( d16 );
+    }
+    probes16
+    {
+        functionObjectLibs ( "libsampling.so" );
+        enabled         true;
+        probeLocations  ( ( 15 0 2 ) ( 15 20 2 ) );
+        fields          ( U p );
+        executeControl  timeStep;
+        type            probes;
+        name            probes;
+        instance        d16;
+        writeControl    writeTime;
+        writeInterval   1;
+        libs            ( "libsampling.so" );
+        regions         1 ( d16 );
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,190 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields yes;
+        resetBoundaryFields yes;
+        resetSystemDicts yes;
+        resetConstDicts yes;
+        resetBoundaryMesh yes;
+        deleteUnusedFields no;
+    }
+    regionGroups    1 ( fluid 1 ( region0 ) );
+    system
+    {
+        controlDict
+        {
+            stopAt          endTime;
+            writeControl    adjustableRunTime;
+            writeInterval   0.1;
+            deltaT          0.01;
+            endTime         10;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+        forces
+        {
+            type                forces;
+            functionObjectLibs  ("libforces.so");
+            writeControl        timeStep;
+            writeInterval       1;
+            patches             (ib1);
+            rhoName             rho;
+            log                 true;
+            CofR                (0.25 0.007 0.125);
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state           ( transient ras dynamic );
+        turbulenceModel kOmegaSST;
+        materials       ( air );
+        constant
+        {
+            dynamicMeshDict
+            {
+                GIBChanger
+                {
+                    type            solidBody;
+                    libs            ("libfvMeshGIBChangers.so");
+
+                    solidBodyCoeffs
+                    {
+                        triSurfaceName  mixer.stl;
+                        region0Patch    ( bottom );
+                        solverMotionFunctions
+                        {
+                            motionSolver    multiSolidBodyGIBMotionSolver;
+                            triSurfaceName  mixer.stl;
+                            regionNames     ( Paddle1 Paddle2 );
+                            referenceFrames ( rotatingFrame1 rotatingFrame2 );
+                        }
+                    }
+                }
+            }
+        }
+        system
+        {
+            fvSolution
+            {
+                PIMPLE
+                {
+                    nCorrectors     2;
+                    nOuterCorrectors 3;
+                    correctPhi      true;
+                    checkMeshCourantNo true;
+                }
+            }
+            meshObjects
+            {
+                rotatingFrame1
+                {
+                    type            dynamicMotionCoordinateFrame;
+                    motionFunction
+                    {
+                        type  rotatingMotion;
+                        omega 0.25132;
+                    }
+                    coordinateSystem
+                    {
+                        type            cartesian;
+                        origin          ( 0.03 0.05 0 );
+                        e1              ( 1 0 0 );
+                        e2              ( 0 1 0 );
+                    }
+                }
+
+                rotatingFrame2
+                {
+                    type            dynamicMotionCoordinateFrame;
+                    motionFunction
+                    {
+                        type  rotatingMotion;
+                        omega 0.25132;
+                    }
+                    coordinateSystem
+                    {
+                        type            cartesian;
+                        origin          ( 0.07 0.05 0 );
+                        e1              ( 1 0 0 );
+                        e3              ( 0 0 -1 );
+                    }
+                }
+            }
+        }
+        boundaryConditions
+        {
+            top
+            {
+                p
+                {
+                    type            totalPressure;
+                    p0              uniform 0;
+                    value           uniform 0;
+                }
+                U
+                {
+                    type            pressureInletOutletVelocity;
+                    value           uniform ( 0 0 0 );
+                }
+            }
+            ib1
+            {
+                U
+                {
+                    type            movingWallVelocity;
+                    value           uniform ( 0 0 0 );
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+            }
+            ib2
+            {
+                U
+                {
+                    type            fixedValueZone;
+                    value           uniform ( 0 0 0 );
+                }
+                p
+                {
+                    type            fixedValueZone;
+                    value           uniform 0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

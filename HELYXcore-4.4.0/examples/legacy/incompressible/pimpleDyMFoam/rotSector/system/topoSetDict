@@ -1,0 +1,29 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | HELYX(R): Open-source CFD for Enterprise                 |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | Engys Ltd. http://www.engys.com                          |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    location system;
+    object topoSetDict;
+}
+    actions
+    (
+        {
+            name rotatingRegion;
+            type cellZoneSet;
+            action new;
+            source boxToCell;
+            sourceInfo
+            {
+                box ( -2.0 -2.0 -2.0 ) ( 2.0 2.0 2.0 );
+            }
+        }
+    );
+

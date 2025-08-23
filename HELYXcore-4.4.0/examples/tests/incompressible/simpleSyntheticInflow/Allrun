@@ -1,0 +1,26 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+helyxRun blockMesh
+
+# Copy Python scripts from resources directory
+mkdir -p scripts
+cp "$HELYX_TUTORIALS"/resources/syntheticInflowScripts/* scripts/
+
+printf "Generating synthetic inflow\n"
+python3 scripts/inflowGeneration.py > log.inflowGeneration
+python3 scripts/inflowCorrection.py > log.inflowCorrection
+sleep 10
+
+mv inflowGenerationDict system/
+mv inflowCorrectionDict system/
+
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch simpleSyntheticInflow.foam
+
+#------------------------------------------------------------------------------

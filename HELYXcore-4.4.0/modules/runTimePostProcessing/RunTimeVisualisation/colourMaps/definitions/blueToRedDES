@@ -1,0 +1,17 @@
+name BLUE_TO_RED_DES;
+colorSpace LAB;
+hsvWrap true;
+points
+(
+);
+colors
+(
+    ( 0 0.375 0.875 )
+    ( 0 0 0.375 )
+    ( 0 1 1 )
+    ( 0 0.5 0 )
+    ( 1 1 0 )
+    ( 1 0.375 0 )
+    ( 0.375 0 0 )
+    ( 0.875 0.375 0.375 )
+);

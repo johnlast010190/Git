@@ -1,0 +1,40 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      materialProperties;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+rhoModel scalarFunction1;
+rhoModelCoeffs { rho 7854; }
+
+nuModel scalarFunction1;
+nuModelCoeffs { nu 0.3 ; }
+
+EModel scalarFunction1;
+EModelCoeffs { E 2e+11; }
+
+CpModel scalarFunction1;
+CpModelCoeffs { Cp 434; }
+
+kappaModel scalarFunction1;
+kappaModelCoeffs { kappa 60.5; }
+
+alphavModel scalarFunction1;
+alphavModelCoeffs { alphav 1.1e-05; }
+
+planeStress     yes;
+thermalStress   no;
+
+
+// ************************************************************************* //

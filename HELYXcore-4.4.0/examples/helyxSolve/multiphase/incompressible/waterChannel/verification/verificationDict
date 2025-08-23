@@ -1,0 +1,57 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/inletFlux/0/surfaceFieldValue.dat";
+                reference "verification/short/inletFlux/0/surfaceFieldValue.dat";
+                variables "sum(phi)";
+            }
+            {
+                result "postProcessing/outletFlux/0/surfaceFieldValue.dat";
+                reference "verification/short/outletFlux/0/surfaceFieldValue.dat";
+                variables "sum(phi)";
+            }
+            {
+                result "postProcessing/atmosphereFlux/0/surfaceFieldValue.dat";
+                reference "verification/short/atmosphereFlux/0/surfaceFieldValue.dat";
+                variables "sum(phi)";
+            }
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/short/VR/0/volumeReport.tsv";
+                variables "Umin" "Umax" "Umean" "UstDev" "pmin" "pmax" "pmean" "pstDev" "AoAmin" "AoAmax" "AoAmean" "AoAstDev";
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/inletFlux/0/surfaceFieldValue.dat";
+                reference "verification/long/inletFlux/0/surfaceFieldValue.dat";
+                variables "sum(phi)";
+            }
+            {
+                result "postProcessing/outletFlux/0/surfaceFieldValue.dat";
+                reference "verification/long/outletFlux/0/surfaceFieldValue.dat";
+                variables "sum(phi)";
+            }
+            {
+                result "postProcessing/atmosphereFlux/0/surfaceFieldValue.dat";
+                reference "verification/long/atmosphereFlux/0/surfaceFieldValue.dat";
+                variables "sum(phi)";
+            }
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/long/VR/0/volumeReport.tsv";
+                variables "Umin" "Umax" "Umean" "UstDev" "pmin" "pmax" "pmean" "pstDev" "AoAmin" "AoAmax" "AoAmean" "AoAstDev";
+            }
+        );
+    }
+);

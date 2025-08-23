@@ -1,0 +1,352 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields yes;
+        resetBoundaryFields yes;
+        resetSystemDicts yes;
+        resetConstDicts yes;
+        resetBoundaryMesh yes;
+    }
+    regionGroups    1 ( fluid 1 ( region0 ) );
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         1000;
+            deltaT          1;
+            writeControl    timeStep;
+            writeInterval   50;
+            purgeWrite      3;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    fluid
+    {
+    }
+    region0
+    {
+        modificationSwitches
+        {
+        }
+        boundaryMesh
+        {
+            frontAndBack
+            {
+                type wall;
+            }
+            topAndBottom
+            {
+                type wall;
+            }
+            hot
+            {
+                type wall;
+            }
+            cold
+            {
+                type wall;
+            }
+        }
+        state           ( steady ras energy );
+        turbulenceModel kOmegaSST;
+        materials       ( air );
+        materialProperties
+        {
+            air
+            {
+                materialType    fluid;
+                thermodynamics  hConst;
+                equationOfState perfectGas;
+                energy          sensibleEnthalpy;
+                muModel         scalarFunction1;
+                buoyancyModel   rhoModel;
+                kappaModel      kappaPrandtl;
+                molWeight       28.9;
+
+                thermodynamicsCoeffs
+                {
+                     Cp 1004.4;
+                     Hf 0;
+                }
+                muModelCoeffs
+                {
+                     mu 1.831e-05;
+                }
+                kappaModelCoeffs
+                {
+                     Pr 0.705;
+                }
+                referenceFields
+                {
+                    p [ 1 -1 -2 0 0 0 0 ] 1e5;
+                }
+            }
+        }
+        fieldMaps
+        {
+        }
+        constant
+        {
+            g
+            {
+                dimensions      [ 0 1 -2 0 0 0 0 ];
+                value           ( 0 -9.81 0 );
+            }
+        }
+        system
+        {
+            fvSchemes
+            {
+                gradSchemes
+                {
+                    default     Gauss linear;
+                    grad(k)     Gauss linear;
+                    grad(omega) Gauss linear;
+                    grad(p)     Gauss linear;
+                    grad(h)     Gauss linear;
+                    grad(e)     Gauss linear;
+                    grad(K)     Gauss linear;
+                    grad(T)     Gauss linear;
+                    turbulence  Gauss linear;
+                    gradU       Gauss linear;
+                }
+                divSchemes
+                {
+                    default         none;
+                    div(phi,U)      bounded Gauss limitedLinear 0.2;
+                    div(phi,K)      bounded Gauss limitedLinear 0.2;
+                    div(phi,h)      bounded Gauss limitedLinear 0.2;
+                    div(phi,k)      bounded Gauss limitedLinear 0.2;
+                    div(phi,omega)  bounded Gauss limitedLinear 0.2;
+                    div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
+                }
+                laplacianSchemes
+                {
+                    default         Gauss linear orthogonal;
+                    laplacian((rho*DomegaEff),omega) Gauss linear orthogonal;
+                    laplacian((rho*DkEff),k)         Gauss linear orthogonal;
+                    laplacian((rho*nuEff),U)         Gauss linear orthogonal;
+                    laplacian(rhorAUf,p)             Gauss linear orthogonal;
+                    laplacian(kappa,T)               Gauss linear orthogonal;
+                }
+                snGradSchemes
+                {
+                    default         orthogonal;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    p
+                    {
+                        solver           GAMG;
+                        tolerance        1e-7;
+                        relTol           0.01;
+                        smoother         DICGaussSeidel;
+                    }
+                    U
+                    {
+                        solver          PBiCGStab;
+                        preconditioner  DILU;
+                        tolerance       1e-8;
+                        relTol          0.1;
+                    }
+                    h
+                    {
+                        solver          PBiCGStab;
+                        preconditioner  DILU;
+                        tolerance       1e-8;
+                        relTol          0.1;
+                    }
+                    k
+                    {
+                        solver          PBiCGStab;
+                        preconditioner  DILU;
+                        tolerance       1e-8;
+                        relTol          0.1;
+                    }
+                    omega
+                    {
+                        solver          PBiCGStab;
+                        preconditioner  DILU;
+                        tolerance       1e-8;
+                        relTol          0.1;
+                    }
+                }
+                SIMPLE
+                {
+                    momentumPredictor no;
+                    residualControl
+                    {
+                        p 1e-4;
+                        U 1e-4;
+                        h 1e-4;
+                        // possibly check turbulence fields
+                        "(k|omega)" 1e-3;
+                    }
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        rho   1.0;
+                        p     0.7;
+                    }
+                    equations
+                    {
+                        U     0.3;
+                        h     0.3;
+                        k     0.7;
+                        omega 0.7;
+                    }
+                }
+
+            }
+        }
+        global
+        {
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.000375;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.12;
+                }
+            }
+            nut
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            alphat
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 293;
+                }
+            }
+        }
+        boundaryTypeDefaults
+        {
+            wall
+            {
+                U
+                {
+                    type noSlip;
+                    value uniform (0.0 0.0 0.0);
+                }
+                T
+                {
+                    type zeroGradient;
+                }
+                omega
+                {
+                    type omegaWallFunction;
+                    value uniform 0.12;
+                }
+                nut
+                {
+                    type nutUWallFunction;
+                    value uniform 0;
+                }
+                alphat
+                {
+                    type alphatWallFunction;
+                    value uniform 0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            hot
+            {
+                T
+                {
+                    type  fixedValue;
+                    value uniform 307.75; // 34.6 degC
+                }
+            }
+            cold
+            {
+                T
+                {
+                    type  fixedValue;
+                    value uniform 288.15; // 15 degC
+                }
+            }
+        }
+        functions
+        {
+        }
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,15 @@
+#!/bin/bash
+cd ${0%/*} || exit 1    # Run from this directory
+set -e                  # Exit immediately if a command fails
+
+# tags: asan
+
+#------------------------------------------------------------------------------
+
+# Re-create blockMeshDict if needed
+if [ ! -f system/blockMeshDict.keep ]
+then
+    m4 system/blockMeshDict.m4 > system/blockMeshDict.keep
+fi
+
+#------------------------------------------------------------------------------

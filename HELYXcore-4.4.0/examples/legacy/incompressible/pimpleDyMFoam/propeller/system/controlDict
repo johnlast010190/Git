@@ -1,0 +1,159 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     pimpleDyMFoam;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         0.1;
+
+deltaT          1e-5;
+writeControl    adjustableRunTime;
+writeInterval   0.001;
+
+////- For testing with moveDynamicMesh
+//deltaT          0.01;
+//writeControl    timeStep;
+//writeInterval   1;
+
+purgeWrite      0;
+
+writeFormat     binary;
+
+writePrecision  6;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable true;
+
+adjustTimeStep  yes;
+
+maxCo           2;
+
+functions
+{
+    #includeFunc Q
+    #include "surfaces"
+    #include "forces"
+     
+     FW-H-all
+     {
+        type           FfowcsWilliamsHawkings ;
+        functionObjectLibs ( "libutilityFunctionObjects.so" );
+        logToFile             true;
+        patches         ( propellerTip );
+        rhoRef          1000;
+        cRef            1500;
+        pName 			p;
+        observers
+        {
+            hydrophones
+            {
+				type set;
+				positions 
+				(         
+                   ( -0.17 0 0 )
+                   ( 0.17 0 0 )   
+                   ( 0.2 -0.3 0)
+                   ( 0.2 0.1  0)       
+                );
+            }
+            
+        }
+        
+        startSimulationTime 3.0e-3;
+        endSimulationTime 0.1;
+        regions         1 ( region0 );
+       
+        dt    2.0e-5;
+        // prefOption	fixloc; //fixed, mean, fixloc
+        //prefLoc         (0 -0.7 0);
+		// writeComponent		true;
+        prefOption     fixed;
+        pref            0;
+      
+       // modelType    full;
+    }
+    
+    KFWH-all
+    {
+        type           kfwhModel ;
+        functionObjectLibs ( "libkfwhModel.so" );
+        logToFile             true;
+        rhoRef          1000;
+        cRef            1500;
+        pName 			p;
+        
+        observers
+        {
+            hydrophones
+            {
+				type set;
+				positions 
+				(         
+                   ( -0.17 0 0 )
+                   ( 0.17 0 0 )   
+                   ( 0.2 -0.3 0)
+                   ( 0.2 0.1  0)       
+                );
+            }
+            
+        }
+        startSimulationTime 3.0e-3;
+        endSimulationTime   0.1;
+        regions         1 ( region0 );
+        boundSurfaceFile sphere.stl;      
+        dt    2.0e-5;
+        // prefOption	fixloc; //fixed, mean, fixloc
+        // prefLoc          (0 -0.7 0);
+		// writeComponent		true;
+        prefOption     fixed;
+        pref            0;    
+       // modelType    full;  
+    }
+    
+    VP
+    {
+        functionObjectLibs ( "libsampling.so" );
+        enabled         true;
+        probeLocations  
+        (
+             ( -0.17 0 0 )
+             ( 0.17 0 0 )   
+             ( 0.2 -0.3 0)
+             ( 0.2 0.1  0)       		
+		);
+		
+        fields          ( p );
+        executeControl  timeStep;
+        type            probes;
+        writeControl    timeStep;
+        writeInterval   1;
+        regions         1 ( region0 );
+    }
+    
+}
+
+// ************************************************************************* //

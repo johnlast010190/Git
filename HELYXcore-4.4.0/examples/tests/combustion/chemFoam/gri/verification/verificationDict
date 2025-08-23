@@ -1,0 +1,20 @@
+runs
+(
+    short
+    {
+        restart false;
+        steps 7000;
+        checks
+        (
+            {
+                result "chemFoam.out";
+                reference "verification/short/chemFoam.out";
+                variables "Time" "Temperature [K]" "Pressure [Pa]";
+            }
+        );
+    }
+);
+
+unstable true;
+operatingSystem windows;
+reason "This example has a Bash script, which is not available on Windows";

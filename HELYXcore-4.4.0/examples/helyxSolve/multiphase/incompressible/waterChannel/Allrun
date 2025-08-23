@@ -1,0 +1,23 @@
+#!/bin/bash
+cd ${0%/*} || exit 1    # Run from this directory
+set -e                  # Exit immediately if a command fails
+
+# tags: asan
+
+#------------------------------------------------------------------------------
+
+# Create mesh
+helyxRun blockMesh
+helyxRun -l log.extrudeMesh.1 extrudeMesh -overwrite -dict system/extrudeMeshDict.1
+helyxRun -l log.extrudeMesh.2 extrudeMesh -overwrite -dict system/extrudeMeshDict.2
+
+# Setup
+helyxRun caseSetup
+
+# Create dummy file for ParaView visualisation
+touch waterChannel.foam
+
+# Run
+helyxRun helyxSolve
+
+#------------------------------------------------------------------------------

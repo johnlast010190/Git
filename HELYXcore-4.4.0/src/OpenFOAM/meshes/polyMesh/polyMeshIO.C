@@ -1,0 +1,583 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : 4.4.0
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) 2015 OpenCFD Ltd.
+    (c) 2011-2022 OpenFOAM Foundation
+    (c) 2022-2025 Engys Ltd.
+
+\*---------------------------------------------------------------------------*/
+
+#include "meshes/polyMesh/polyMesh.H"
+#include "db/Time/Time.H"
+#include "meshes/meshShapes/cell/cellIOList.H"
+#include "meshes/polyMesh/polyPatches/directPolyPatch/directPolyPatch.H"
+#include "meshes/polyMesh/polyPatches/indirectPolyPatch/indirectPolyPatch.H"
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+void Foam::polyMesh::setPointsWrite(const Foam::IOobject::writeOption wo)
+{
+    points_.writeOpt() = wo;
+
+    if (tetBasePtIsPtr_.valid())
+    {
+        tetBasePtIsPtr_->writeOpt() = wo;
+    }
+}
+
+
+void Foam::polyMesh::setTopologyWrite(const Foam::IOobject::writeOption wo)
+{
+    setPointsWrite(wo);
+
+    faces_.writeOpt() = wo;
+    owner_.writeOpt() = wo;
+    neighbour_.writeOpt() = wo;
+    boundary_.writeOpt() = wo;
+    pointZones_.writeOpt() = wo;
+    faceZones_.writeOpt() = wo;
+    cellZones_.writeOpt() = wo;
+}
+
+
+void Foam::polyMesh::setPointsInstance(const fileName& inst)
+{
+    if (debug)
+    {
+        InfoInFunction << "Resetting points instance to " << inst << endl;
+    }
+
+    points_.instance() = inst;
+    points_.eventNo() = getEvent();
+
+    if (tetBasePtIsPtr_.valid())
+    {
+        tetBasePtIsPtr_->instance() = inst;
+        tetBasePtIsPtr_().eventNo() = getEvent();
+    }
+
+    setPointsWrite(IOobject::AUTO_WRITE);
+}
+
+
+void Foam::polyMesh::setInstance(const fileName& inst)
+{
+    if (debug)
+    {
+        InfoInFunction << "Resetting topology instance to " << inst << endl;
+    }
+
+    setPointsInstance(inst);
+
+    faces_.instance() = inst;
+    owner_.instance() = inst;
+    neighbour_.instance() = inst;
+    boundary_.instance() = inst;
+    pointZones_.instance() = inst;
+    faceZones_.instance() = inst;
+    cellZones_.instance() = inst;
+
+    setTopologyWrite(IOobject::AUTO_WRITE);
+}
+
+
+Foam::polyMesh::readUpdateState Foam::polyMesh::readUpdate()
+{
+    if (debug)
+    {
+        InfoInFunction << "Updating mesh based on saved data." << endl;
+    }
+
+    // Find the point and cell instance
+    fileName pointsInst(time().findInstance(meshDir(), "points"));
+    fileName facesInst(time().findInstance(meshDir(), "faces"));
+    fileName faceZonesInst
+    (
+        time().findInstance(meshDir(), "faceZones", NO_READ)
+    );
+
+    if (debug)
+    {
+        Info<< "Faces instance: old = " << facesInstance()
+            << " new = " << facesInst << nl
+            << "Points instance: old = " << pointsInstance()
+            << " new = " << pointsInst << endl;
+    }
+
+    if
+    (
+        (facesInst != facesInstance())
+     || (faceZonesInst != faceZones().instance())
+    )
+    {
+        // Topological change
+        if (debug)
+        {
+            Info<< "Topological change" << endl;
+        }
+
+        clearOut();
+
+        points_ = pointIOField
+        (
+            IOobject
+            (
+                "points",
+                pointsInst,
+                meshSubDir,
+                *this,
+                IOobject::MUST_READ,
+                IOobject::NO_WRITE,
+                false
+            )
+        );
+
+        points_.instance() = pointsInst;
+
+        faces_ = faceCompactIOList
+        (
+            IOobject
+            (
+                "faces",
+                facesInst,
+                meshSubDir,
+                *this,
+                IOobject::MUST_READ,
+                IOobject::NO_WRITE,
+                false
+            )
+        );
+
+        faces_.instance() = facesInst;
+
+        owner_ = labelIOList
+        (
+            IOobject
+            (
+                "owner",
+                facesInst,
+                meshSubDir,
+                *this,
+                IOobject::READ_IF_PRESENT,
+                IOobject::NO_WRITE,
+                false
+            )
+        );
+
+        owner_.instance() = facesInst;
+
+        neighbour_ = labelIOList
+        (
+            IOobject
+            (
+                "neighbour",
+                facesInst,
+                meshSubDir,
+                *this,
+                IOobject::READ_IF_PRESENT,
+                IOobject::NO_WRITE,
+                false
+            )
+        );
+
+        neighbour_.instance() = facesInst;
+
+        faceZoneMesh newFaceZones
+        (
+            IOobject
+            (
+                "faceZones",
+                facesInst,
+                meshSubDir,
+                *this,
+                IOobject::READ_IF_PRESENT,
+                IOobject::NO_WRITE,
+                false
+            ),
+            *this
+        );
+
+        label oldSize = faceZones_.size();
+
+        if (newFaceZones.size() <= faceZones_.size())
+        {
+            faceZones_.setSize(newFaceZones.size());
+        }
+
+        // Reset existing ones
+        forAll(faceZones_, fzI)
+        {
+            faceZones_[fzI].resetAddressing
+            (
+                newFaceZones[fzI],
+                newFaceZones[fzI].flipMap()
+            );
+        }
+
+        // Extend with extra ones
+        faceZones_.setSize(newFaceZones.size());
+
+        for (label fzI = oldSize; fzI < newFaceZones.size(); fzI++)
+        {
+            faceZones_.set(fzI, newFaceZones[fzI].clone(faceZones_));
+        }
+
+        faceZones_.instance() = facesInst;
+
+        // Reset the boundary patches
+        polyBoundaryMesh newBoundary
+        (
+            IOobject
+            (
+                "boundary",
+                facesInst,
+                meshSubDir,
+                *this,
+                IOobject::MUST_READ,
+                IOobject::NO_WRITE,
+                false
+            ),
+            *this
+        );
+
+        // Check that patch types and names are unchanged
+        bool boundaryChanged = false;
+
+        if (newBoundary.size() != boundary_.size())
+        {
+            boundaryChanged = true;
+        }
+        else
+        {
+            wordList newTypes = newBoundary.types();
+            wordList newNames = newBoundary.names();
+
+            wordList oldTypes = boundary_.types();
+            wordList oldNames = boundary_.names();
+
+            forAll(oldTypes, patchi)
+            {
+                if
+                (
+                    oldTypes[patchi] != newTypes[patchi]
+                 || oldNames[patchi] != newNames[patchi]
+                )
+                {
+                    boundaryChanged = true;
+                    break;
+                }
+            }
+        }
+
+        if (boundaryChanged)
+        {
+            WarningInFunction
+                << "boundary changed, proceed with care." << endl;
+
+            boundary_.clear();
+            boundary_.setSize(newBoundary.size());
+
+            forAll(newBoundary, patchi)
+            {
+                boundary_.set(patchi, newBoundary[patchi].clone(boundary_));
+            }
+        }
+        else
+        {
+            forAll(boundary_, patchi)
+            {
+                if (isA<directPolyPatch>(newBoundary[patchi]))
+                {
+                    boundary_[patchi] = directPolyPatch
+                    (
+                        newBoundary[patchi].name(),
+                        newBoundary[patchi].size(),
+                        newBoundary[patchi].start(),
+                        patchi,
+                        boundary_,
+                        newBoundary[patchi].physicalType(),
+                        newBoundary[patchi].inGroups()
+                    );
+                }
+            }
+        }
+
+        boundary_.instance() = facesInst;
+
+
+        // Boundary is set so can use initMesh now (uses boundary_ to
+        // determine internal and active faces)
+
+        if (!owner_.headerClassName().empty())
+        {
+            initMesh();
+        }
+        else
+        {
+            cellCompactIOList cells
+            (
+                IOobject
+                (
+                    "cells",
+                    facesInst,
+                    meshSubDir,
+                    *this,
+                    IOobject::MUST_READ,
+                    IOobject::NO_WRITE,
+                    false
+                )
+            );
+
+            // Recalculate the owner/neighbour addressing and reset the
+            // primitiveMesh
+            initMesh(cells);
+        }
+
+        bool gibBoundary = false;
+
+        if (!boundaryChanged)
+        {
+            forAll(boundary_, patchi)
+            {
+                if (!isA<directPolyPatch>(newBoundary[patchi]))
+                {
+                    const indirectPolyPatch& gibPolyPatch =
+                        refCast<const indirectPolyPatch>(newBoundary[patchi]);
+
+                    boundary_.set
+                    (
+                        patchi,
+                        polyPatch::New
+                        (
+                            newBoundary[patchi].type(),
+                            gibPolyPatch.name(),
+                            gibPolyPatch.size(),
+                            gibPolyPatch.zoneId(),
+                            gibPolyPatch.indirectPolyPatchType(),
+                            patchi,
+                            boundary_
+                        )
+                    );
+                    gibBoundary =true;
+                }
+            }
+        }
+
+        // Even if number of patches stayed same still recalculate boundary
+        // data.
+
+        // Calculate topology for the patches (processor-processor comms etc.)
+        boundary_.topoChange();
+
+        // Calculate the geometry for the patches (transformation tensors etc.)
+        boundary_.calcGeometry();
+
+        // Derived info
+        bounds_ = boundBox(points_);
+        geometricD_ = Zero;
+        solutionD_ = Zero;
+
+        // Zones
+        pointZoneMesh newPointZones
+        (
+            IOobject
+            (
+                "pointZones",
+                facesInst,
+                meshSubDir,
+                *this,
+                IOobject::READ_IF_PRESENT,
+                IOobject::NO_WRITE,
+                false
+            ),
+            *this
+        );
+
+        oldSize = pointZones_.size();
+
+        if (newPointZones.size() <= pointZones_.size())
+        {
+            pointZones_.setSize(newPointZones.size());
+        }
+
+        // Reset existing ones
+        forAll(pointZones_, czI)
+        {
+            pointZones_[czI] = newPointZones[czI];
+        }
+
+        // Extend with extra ones
+        pointZones_.setSize(newPointZones.size());
+
+        for (label czI = oldSize; czI < newPointZones.size(); czI++)
+        {
+            pointZones_.set(czI, newPointZones[czI].clone(pointZones_));
+        }
+
+        pointZones_.instance() = facesInst;
+
+
+        cellZoneMesh newCellZones
+        (
+            IOobject
+            (
+                "cellZones",
+                facesInst,
+                meshSubDir,
+                *this,
+                IOobject::READ_IF_PRESENT,
+                IOobject::NO_WRITE,
+                false
+            ),
+            *this
+        );
+
+        oldSize = cellZones_.size();
+
+        if (newCellZones.size() <= cellZones_.size())
+        {
+            cellZones_.setSize(newCellZones.size());
+        }
+
+        // Reset existing ones
+        forAll(cellZones_, czI)
+        {
+            cellZones_[czI] = newCellZones[czI];
+        }
+
+        // Extend with extra ones
+        cellZones_.setSize(newCellZones.size());
+
+        for (label czI = oldSize; czI < newCellZones.size(); czI++)
+        {
+            cellZones_.set(czI, newCellZones[czI].clone(cellZones_));
+        }
+
+        cellZones_.instance() = facesInst;
+
+
+        // Re-read tet base points
+        tetBasePtIsPtr_ = readTetBasePtIs();
+
+        if (boundaryChanged || gibBoundary)
+        {
+            return polyMesh::TOPO_PATCH_CHANGE;
+        }
+        else
+        {
+            return polyMesh::TOPO_CHANGE;
+        }
+    }
+    else if (pointsInst != pointsInstance())
+    {
+        // Points moved
+        if (debug)
+        {
+            Info<< "Point motion" << endl;
+        }
+
+        clearGeom();
+
+
+        label nOldPoints = points_.size();
+
+        points_.clear();
+
+        pointIOField newPoints
+        (
+            IOobject
+            (
+                "points",
+                pointsInst,
+                meshSubDir,
+                *this,
+                IOobject::MUST_READ,
+                IOobject::NO_WRITE,
+                false
+            )
+        );
+
+        if (nOldPoints != 0 && nOldPoints != newPoints.size())
+        {
+            FatalErrorInFunction
+                << "Point motion detected but number of points "
+                << newPoints.size() << " in "
+                << newPoints.objectPath() << " does not correspond to "
+                << " current " << nOldPoints
+                << exit(FatalError);
+        }
+
+        points_.transfer(newPoints);
+
+        points_.instance() = pointsInst;
+
+        // Re-read tet base points
+        autoPtr<labelIOList> newTetBasePtIsPtr = readTetBasePtIs();
+        if (newTetBasePtIsPtr.valid())
+        {
+            tetBasePtIsPtr_ = newTetBasePtIsPtr;
+        }
+
+        // Calculate the geometry for the patches (transformation tensors etc.)
+        boundary_.calcGeometry();
+
+        // Derived info
+        bounds_ = boundBox(points_);
+
+        // Rotation can cause direction vector to change
+        geometricD_ = Zero;
+        solutionD_ = Zero;
+
+        return polyMesh::POINTS_MOVED;
+    }
+    else
+    {
+        if (debug)
+        {
+            Info<< "No change" << endl;
+        }
+
+        return polyMesh::UNCHANGED;
+    }
+}
+
+
+bool Foam::polyMesh::writeObject
+(
+    IOstream::streamFormat fmt,
+    IOstream::versionNumber ver,
+    IOstream::compressionType cmp,
+    const bool write
+) const
+{
+    const bool written = objectRegistry::writeObject(fmt, ver, cmp, write);
+
+    const_cast<polyMesh&>(*this).setTopologyWrite(IOobject::NO_WRITE);
+
+    return written;
+}
+
+
+// ************************************************************************* //

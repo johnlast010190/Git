@@ -1,0 +1,451 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom startTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 1000;
+            deltaT 1;
+            writeControl timeStep;
+            writeInterval 500;
+            writeFormat ascii;
+            writePrecision 6;
+            timeFormat general;
+            timePrecision 6;
+            runTimeModifiable yes;
+            adjustTimeStep false;
+        }
+    }
+    functions
+    {
+        #includeFunc wallShearStress
+        #includeFunc wallShearStressGraph
+        #includeFunc kGraph
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (steady ras);
+        boundaryMesh
+        {
+            above
+            {
+                type patch;
+            }
+            top
+            {
+                type patch;
+            }
+            inlet
+            {
+                type patch;
+            }
+            outlet
+            {
+                type patch;
+            }
+            plate
+            {
+                type wall;
+            }
+        }
+        turbulenceModel kOmegaSSTLM;
+        materials (air);
+        system
+        {
+            fvSolution
+            {
+                solvers
+                {
+                    p
+                    {
+                        solver          GAMG;
+                        smoother        GaussSeidel;
+                        tolerance       1e-6;
+                        relTol          0.1;
+                    }
+                    U
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        tolerance       1e-8;
+                        relTol          0.1;
+                        maxIter         10;
+                    }
+                    k
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        tolerance       1e-8;
+                        relTol          0.1;
+                        maxIter         10;
+                    }
+                    omega
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        tolerance       1e-8;
+                        relTol          0.1;
+                        maxIter         10;
+                    }
+                    gammaInt
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        tolerance       1e-8;
+                        relTol          0.1;
+                        maxIter         10;
+                    }
+                    ReThetat
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        tolerance       1e-8;
+                        relTol          0.1;
+                        maxIter         10;
+                    }
+                }
+                SIMPLE
+                {
+                    consistent      yes;
+
+                    residualControl
+                    {
+                        p               1e-5;
+                        U               1e-6;
+                        // possibly check turbulence fields
+                        "(k|omega|gammaInt|ReThetat)" 1e-4;
+                    }
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p               1;
+                    }
+                    equations
+                    {
+                        U               0.9;
+                        k               0.9;
+                        omega           0.9;
+                        ReThetat        0.9;
+                        gammaInt        0.9;
+                    }
+                }
+            }
+            fvSchemes
+            {
+                gradSchemes
+                {
+                    default         Gauss linear;
+                    turbulence      Gauss linear;
+                    grad(k)         Gauss linear;
+                    grad(omega)     Gauss linear;
+                    grad(ReThetat)  Gauss linear;
+                    grad(gammaInt)  Gauss linear;
+                    gradU           Gauss linear;
+                }
+                divSchemes
+                {
+                    default         none;
+
+                    div(phi,U)          bounded Gauss linearUpwind grad;
+                    div(phi,k)          bounded Gauss linearUpwind grad;
+                    div(phi,omega)      bounded Gauss linearUpwind grad;
+                    div(phi,gammaInt)   bounded Gauss linearUpwind grad;
+                    div(phi,ReThetat)   bounded Gauss linearUpwind grad;
+                    div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
+                    div((nuEff*dev2(T(grad(U))))) Gauss linear;
+                }
+                laplacianSchemes
+                {
+                    default         Gauss linear corrected;
+                    laplacian((rho*DkEff),k) Gauss linear corrected;
+                    laplacian((rho*DomegaEff),omega) Gauss linear corrected;
+                    laplacian((rho*DReThetatEff),ReThetat) Gauss linear corrected;
+                    laplacian((rho*DgammaIntEff),gammaInt) Gauss linear corrected;
+                    laplacian((rho*nuEff),U) Gauss linear corrected;
+                    laplacian(rhorAUf,p) Gauss linear corrected;
+                }
+                interpolationSchemes
+                {
+                    default         linear;
+                }
+                snGradSchemes
+                {
+                    default         corrected;
+                }
+                wallDist
+                {
+                    method meshWave;
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform (5.4 0 0);
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.047633;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 264.63;
+                }
+            }
+            gammaInt
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 1;
+                }
+            }
+            ReThetat
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 160.99;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform (5.4 0 0);
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                k
+                {
+                    type            fixedValue;
+                    value           uniform 0.047633;
+                }
+                omega
+                {
+                    type            fixedValue;
+                    value           uniform 264.63;
+                }
+                gammaInt
+                {
+                    type            fixedValue;
+                    value           uniform 1;
+                }
+                ReThetat
+                {
+                    type            fixedValue;
+                    value           uniform 160.99;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type            zeroGradient;
+                }
+                p
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+                k
+                {
+                    type            zeroGradient;
+                }
+                omega
+                {
+                    type            zeroGradient;
+                }
+                gammaInt
+                {
+                    type            zeroGradient;
+                }
+                ReThetat
+                {
+                    type            zeroGradient;
+                }
+            }
+            above
+            {
+                U
+                {
+                    type            slip;
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                k
+                {
+                    type            zeroGradient;
+                }
+                omega
+                {
+                    type            zeroGradient;
+                }
+                gammaInt
+                {
+                    type            zeroGradient;
+                }
+                ReThetat
+                {
+                    type            zeroGradient;
+                }
+            }
+            top
+            {
+                U
+                {
+                    type            slip;
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                k
+                {
+                    type            zeroGradient;
+                }
+                omega
+                {
+                    type            zeroGradient;
+                }
+                gammaInt
+                {
+                    type            zeroGradient;
+                }
+                ReThetat
+                {
+                    type            zeroGradient;
+                }
+            }
+            plate
+            {
+                U
+                {
+                    type            noSlip;
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                k
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+                omega
+                {
+                    type            omegaWallFunction;
+                    value           uniform 264.63;
+                }
+                gammaInt
+                {
+                    type            zeroGradient;
+                }
+                ReThetat
+                {
+                    type            zeroGradient;
+                }
+                nut
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+            }
+            frontAndBack
+            {
+                U
+                {
+                    type            empty;
+                }
+                p
+                {
+                    type            empty;
+                }
+                k
+                {
+                    type            empty;
+                }
+                omega
+                {
+                    type            empty;
+                }
+                gammaInt
+                {
+                    type            empty;
+                }
+                ReThetat
+                {
+                    type            empty;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

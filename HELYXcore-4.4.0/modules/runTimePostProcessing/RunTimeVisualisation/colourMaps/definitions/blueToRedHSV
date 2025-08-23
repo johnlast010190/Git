@@ -1,0 +1,11 @@
+name BLUE_TO_RED_HSV;
+colorSpace HSV;
+hsvWrap false;
+points
+(
+);
+colors
+(
+    ( 0 0 1 )
+    ( 1 0 0 )
+);

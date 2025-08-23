@@ -1,0 +1,87 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     helyxSolve;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         50;
+
+deltaT          constant 1;
+
+writeControl    timeStep;
+
+writeInterval   50;
+
+purgeWrite      2;
+
+writeFormat     ascii;
+
+writePrecision  10;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   6;
+
+graphFormat     raw;
+
+runTimeModifiable true;
+
+libs            1 ( "" );
+
+adjustTimeStep  false;
+
+maxCo           0;
+
+maxAlphaCo      0;
+
+maxDeltaT       0;
+
+functions
+{
+    ZF
+    {
+        functionObjectLibs ( "libforces.so" );
+        nAveragingSteps 1;
+        verbose         true;
+        logToFile       true;
+        executeControl  onEnd;
+        type            zoneForces;
+        regions         ( region0 );
+        writeControl    onEnd;
+        writeInterval   1;
+    }
+    VR
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U T );
+        executeControl  onEnd;
+        type            volumeReport;
+        regions         ( region0 );
+        writeControl    onEnd;
+        outputFileFormat tsv;
+    }
+}
+
+
+// ************************************************************************* //

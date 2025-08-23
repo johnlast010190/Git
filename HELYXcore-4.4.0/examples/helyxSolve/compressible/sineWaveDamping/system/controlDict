@@ -1,0 +1,98 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     helyxSolve;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         0.02;
+
+deltaT          2e-06;
+
+writeControl    adjustableRunTime;
+
+writeInterval   0.0002;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  16;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   6;
+
+graphFormat     raw;
+
+runTimeModifiable yes;
+
+libs            1 ( "" );
+
+adjustTimeStep  no;
+
+maxCo           0.3;
+
+maxDeltaT       1;
+
+functions
+{
+    fieldAverage
+    {
+        functionObjectLibs ( "libfieldFunctionObjects.so" );
+        fields          
+        (
+            U
+            {
+                mean            on;
+                prime2Mean      off;
+                base            time;
+            }
+
+            p
+            {
+                mean            on;
+                prime2Mean      off;
+                base            time;
+            }
+
+        )
+;
+        executeControl  timeStep;
+        writeControl    writeTime;
+        type            fieldAverage;
+        libs            ( "libfieldFunctionObjects.so" );
+    }
+    VR
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U p T );
+        executeControl  onEnd;
+        type            volumeReport;
+        writeControl    onEnd;
+        outputFileFormat tsv;
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,20 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy mesh from resources directory
+mkdir -p constant/polyMesh
+cp "$HELYX_TUTORIALS"/resources/geometry/airFoil2D/polyMesh/* constant/polyMesh
+
+# Setup
+helyxRun caseSetup
+
+# Run
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch airFoil2D.foam
+
+#------------------------------------------------------------------------------

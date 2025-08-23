@@ -1,0 +1,485 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom startTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 0.002;
+            deltaT constant 1.0E-5;
+            writeControl timeStep;
+            writeInterval 100.0;
+            purgeWrite 200;
+            writeFormat binary;
+            writePrecision 8;
+            writeCompression uncompressed;
+            timeFormat general;
+            timePrecision 6;
+            graphFormat raw;
+            runTimeModifiable true;
+            adjustTimeStep false;
+            maxCo 0;
+            maxDeltaT 0;
+            maxAlphaCo 0;
+        }
+    }
+    functions
+    {
+        FR
+        {
+            type forces;
+            regions ( region0 );
+            patches ( cylinder );
+            CofR ( 0.2 0.15 -0.01 );
+            rhoName rhoInf;
+            rhoInf 1.205;
+            writeControl onEnd;
+            executeControl onEnd;
+            functionObjectLibs ("libforces.so" );
+        }
+        VR
+        {
+            functionObjectLibs ( "libreport.so" );
+            logToFile       true;
+            fields          ( U p );
+            writeControl    onEnd;
+            executeControl  onEnd;
+            type            volumeReport;
+            outputFileFormat tsv;
+        }
+        FMM0
+        {
+            type            fieldMinMax;
+            libs            ("libfieldFunctionObjects.so");
+            location        true;
+            writeControl    onEnd;
+            executeControl  onEnd;
+            mode            magnitude;
+            fields          (U);
+        }
+        FMM1
+        {
+            type            fieldMinMax;
+            libs            ("libfieldFunctionObjects.so");
+            location        true;
+            writeControl    onEnd;
+            executeControl  onEnd;
+            mode            magnitude;
+            fields          (p);
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (transient les);
+        boundaryMesh
+        {
+            inlet
+            {
+                type inlet;
+            }
+            outlet
+            {
+                type outlet;
+            }
+            cylinder
+            {
+                type wall;
+            }
+            top
+            {
+                type patch;
+            }
+            bottom
+            {
+                type patch;
+            }
+            frontAndBack
+            {
+                type empty;
+            }
+        }
+        turbulenceModel SpalartAllmarasDDES;
+        materials (material);
+        materialProperties
+        {
+            material
+            {
+                materialName material;
+                materialType fluid;
+                equationOfState perfectGas;
+                thermodynamics hConst;
+                energy sensibleInternalEnergy;
+                thermodynamicsCoeffs
+                {
+                    Cp          1006;
+                    Hf          0;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu              1.84e-05;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr              0.7;
+                }
+                molWeight 26.96;
+                referenceFields
+                {
+                    p [ 1 -1 -2 0 0 0 0 ] 100000;
+                    T [ 0 0 0 1 0 0 0 ] 300;
+                }
+            }
+        }
+        constant
+        {
+            turbulenceProperties
+            {
+                simulationType LES;
+                LES
+                {
+                    LESModel            SpalartAllmarasDDES;
+                    turbulence          on;
+                    printCoeffs         on;
+                    delta               vanDriest;
+                    vanDriestCoeffs
+                    {
+                        delta           cubeRootVol;
+                        cubeRootVolCoeffs
+                        {
+                            deltaCoeff      2.0;
+                        }
+                    }
+                }
+            }
+        }
+        system
+        {
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default backward;
+                }
+                gradSchemes
+                {
+                    default cellLimited Gauss linear 1;
+                    turbulence cellLimited Gauss linear 1;
+                    gradU Gauss linear;
+                    grad(p) Gauss linear;
+                    grad(nuTilda) Gauss linear;
+                }
+                divSchemes
+                {
+                    div(phi,U) bounded Gauss localBlended filteredLinear2V 0.5 0 LUSTV gradU;
+                    default none;
+                    div(R) Gauss linear;
+                    div(nonlinearStress) Gauss linear;
+                    div((muEff*dev2(grad(U).T()))) Gauss linear;
+                    div((nuEff*dev2(T(grad(U))))) Gauss linear;
+                    div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
+                    div((nu*dev2(T(grad(U))))) Gauss linear;
+                    div(phi,nuTilda) Gauss limitedLinear 1.000000;
+                }
+                laplacianSchemes
+                {
+                    default Gauss linear corrected;
+                    laplacian((1|A(U)),p) Gauss linear limited 0.2;
+                    laplacian(DnuTildaEff,nuTilda) Gauss linear uncorrected;
+                }
+                interpolationSchemes
+                {
+                    default linear;
+                    interpolate(HbyA) linear;
+                }
+                snGradSchemes
+                {
+                    default corrected;
+                }
+                wallDist
+                {
+                    method meshWave;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    p
+                    {
+                        solver GAMG;
+                        smoother DICGaussSeidel;
+                        tolerance 1e-20;
+                        relTol 0.05;
+                    }
+                    U
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 0;
+                        relTol 0.1;
+                    }
+                    pFinal
+                    {
+                        solver GAMG;
+                        smoother DICGaussSeidel;
+                        tolerance 1e-6;
+                        relTol 0;
+
+                    }
+                    UFinal
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-6;
+                        relTol 0.0;
+                    }
+                    nuTilda
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-06;
+                        relTol 0.1;
+                    }
+                    nuTildaFinal
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-06;
+                        relTol 0.0;
+                    }
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p 0.95;
+                        pFinal 1;
+                    }
+                    equations
+                    {
+                        U 0.95;
+                        nuTilda 0.95;
+                        ".*Final" 1.0;
+                    }
+                }
+                cache
+                {
+                    grad(U) ;
+                }
+                PIMPLE
+                {
+                    turbOnFinalIterOnly false;
+                    ddtPhiCorr true;
+                    momentumPredictor true;
+                    nOuterCorrectors 5;
+                    nCorrectors 2;
+                    nNonOrthogonalCorrectors 0;
+                    transonic       false;
+                    consistent      false;
+                    pRefCell 0;
+                    pRefValue 0;
+                    pMin 1.0E-10;
+                    pMax 1.0E10;
+                    residualControl
+                    {
+                    }
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 40.0 0.0 0.0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.0;
+                }
+            }
+            nuTilda
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 1.51e-05;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 40.0 0.0 0.0 );
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                nuTilda
+                {
+                    type fixedValue;
+                    value uniform 1.51E-5;
+                }
+                nut
+                {
+                    type calculated;
+                    value uniform 1.0e-05;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type inletOutlet;
+                    value uniform ( 0.0 0.0 0.0 );
+                    inletValue uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type totalPressure;
+                    value uniform 0.0;
+                    p0 uniform 0.0;
+                    gamma 1.0;
+                }
+                nuTilda
+                {
+                    type inletOutlet;
+                    value uniform 1.51E-5;
+                    inletValue uniform 1.51E-5;
+                }
+                nut
+                {
+                    type calculated;
+                    value uniform 1.0e-05;
+                }
+            }
+            cylinder
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                nuTilda
+                {
+                    type zeroGradient;
+                }
+                nut
+                {
+                    type nutUSpaldingWallFunction;
+                    value uniform 1.0e-05;
+                }
+            }
+            top
+            {
+                U
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type totalPressure;
+                    value uniform 0.0;
+                    p0 uniform 0.0;
+                    gamma 1.0;
+                }
+                nuTilda
+                {
+                    type inletOutlet;
+                    value uniform 1.51E-5;
+                    inletValue uniform 1.51E-5;
+                }
+                nut
+                {
+                    type calculated;
+                    value uniform 1.0e-05;
+                }
+            }
+            bottom
+            {
+                U
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type totalPressure;
+                    value uniform 0.0;
+                    p0 uniform 0.0;
+                    gamma 1.0;
+                }
+                nuTilda
+                {
+                    type inletOutlet;
+                    value uniform 1.51E-5;
+                    inletValue uniform 1.51E-5;
+                }
+                nut
+                {
+                    type calculated;
+                    value uniform 1.0e-05;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

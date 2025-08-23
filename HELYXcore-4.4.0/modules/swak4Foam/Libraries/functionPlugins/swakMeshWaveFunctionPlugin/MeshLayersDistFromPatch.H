@@ -1,0 +1,153 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : dev
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) ICE Stroemungsfoschungs GmbH
+    (c) 1991-2008 OpenCFD Ltd.
+
+Class
+    Foam::MeshLayersDistFromPatch
+
+Description
+    Records the distance from a specified patch
+
+SourceFiles
+    MeshLayersDistFromPatch.C
+
+Contributors/Copyright:
+    2014, 2016-2017 Bernhard F.W. Gschaider <bgschaid@hfd-research.com>
+
+ SWAK Revision: $Id$
+\*---------------------------------------------------------------------------*/
+
+#ifndef MeshLayersDistFromPatch_H
+#define MeshLayersDistFromPatch_H
+
+#include "helpers/FaceCellWaveData.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+/*---------------------------------------------------------------------------*\
+                           Class FaceCellWave Declaration
+\*---------------------------------------------------------------------------*/
+
+
+class MeshLayersDistFromPatch
+:
+    public FaceCellWaveData
+{
+    label dist_;
+
+    bool blocked_;
+public:
+
+    inline MeshLayersDistFromPatch();
+
+    inline MeshLayersDistFromPatch(label d,bool blocked=false);
+
+    inline label dist() const;
+
+#ifdef FOAM_FACECELLWAVE_HAS_TRACKINGDATA
+    template<class TrackingData>
+#endif
+    inline bool valid(
+#ifdef FOAM_FACECELLWAVE_HAS_TRACKINGDATA
+        TrackingData &td
+#endif
+    ) const;
+
+    inline bool blocked() const;
+
+#ifdef FOAM_FACECELLWAVE_HAS_TRACKINGDATA
+    template<class TrackingData>
+#endif
+    inline bool updateCell
+    (
+        const polyMesh& mesh,
+        const label thisCellI,
+        const label neighbourFaceI,
+        const MeshLayersDistFromPatch& neighbourInfo,
+        const scalar tol
+#ifdef FOAM_FACECELLWAVE_HAS_TRACKINGDATA
+        ,TrackingData &td
+#endif
+    );
+
+#ifdef FOAM_FACECELLWAVE_HAS_TRACKINGDATA
+    template<class TrackingData>
+#endif
+    inline bool updateFace
+    (
+        const polyMesh& mesh,
+        const label thisFaceI,
+        const label neighbourCellI,
+        const MeshLayersDistFromPatch& neighbourInfo,
+        const scalar tol
+#ifdef FOAM_FACECELLWAVE_HAS_TRACKINGDATA
+        ,TrackingData &td
+#endif
+    );
+
+#ifdef FOAM_FACECELLWAVE_HAS_TRACKINGDATA
+    template<class TrackingData>
+#endif
+    inline bool updateFace
+    (
+        const polyMesh&,
+        const label thisFaceI,
+        const MeshLayersDistFromPatch& neighbourInfo,
+        const scalar tol
+#ifdef FOAM_FACECELLWAVE_HAS_TRACKINGDATA
+        ,TrackingData &td
+#endif
+    );
+
+    inline bool operator!=(const MeshLayersDistFromPatch &rhs) const;
+
+    friend inline Ostream& operator<<(Ostream&, const MeshLayersDistFromPatch&);
+    friend inline Istream& operator>>(Istream&, MeshLayersDistFromPatch&);
+
+#ifdef FOAM_FACECELLWAVE_HAS_TRACKINGDATA
+    template<class TrackingData>
+    inline bool equal(const MeshLayersDistFromPatch &rhs,TrackingData &td) const;
+#endif
+
+};
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "MeshLayersDistFromPatch.C"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

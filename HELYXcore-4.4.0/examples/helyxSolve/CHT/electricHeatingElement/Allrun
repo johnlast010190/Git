@@ -1,0 +1,29 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy input surface from resources directory
+mkdir -p constant/triSurface
+cp $HELYX_TUTORIALS/resources/geometry/electricHeatingElement/* constant/triSurface/
+
+# Mesh creation
+helyxRun -parallel helyxHexMesh
+
+# Split mesh
+helyxRun splitMeshRegions -zoneToRegionMap '( (element (element)) (clip1 (clip1)) (clip2 (clip2)) )' -overwrite
+
+# Setup
+helyxRun caseSetup
+
+# Re-balance the mesh
+helyxRun redistributePar -allRegions -overwrite
+
+# Run
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch electricHeatingElement.foam
+
+#------------------------------------------------------------------------------

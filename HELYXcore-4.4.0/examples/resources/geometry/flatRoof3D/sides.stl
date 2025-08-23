@@ -1,0 +1,30 @@
+solid sides
+  facet normal 0 -1 0
+    outer loop
+      vertex 0 0 0
+      vertex 384 0 0
+      vertex 384 0 72
+    endloop
+  endfacet
+  facet normal 0 -1 0
+    outer loop
+      vertex 0 0 0
+      vertex 384 0 72
+      vertex 0 0 72
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 0 144 0
+      vertex 384 144 72
+      vertex 384 144 0
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 0 144 0
+      vertex 0 144 72
+      vertex 384 144 72
+    endloop
+  endfacet
+endsolid sides

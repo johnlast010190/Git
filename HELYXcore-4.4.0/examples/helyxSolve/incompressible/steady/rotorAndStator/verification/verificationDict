@@ -1,0 +1,29 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "mainMesh/postProcessing/SR/0/surfaceReport.tsv";
+                reference "verification/short/mainMesh/SR/0/surfaceReport.tsv";
+                variables "massFlux" "Umean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "mainMesh/postProcessing/SR/0/surfaceReport.tsv";
+                reference "verification/long/mainMesh/SR/0/surfaceReport.tsv";
+                variables "massFlux" "Umean";
+            }
+        );
+    }
+);

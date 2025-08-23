@@ -1,0 +1,68 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      materialProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+referenceFields
+{
+    TConst          [ 0 0 0 1 0 0 0 ] 300;
+    p               [ 1 -1 -2 0 0 0 0 ] 101325;
+}
+
+energy          sensibleEnthalpy;
+
+materialName    air;
+
+materialType    fluid;
+
+molWeight       28.96;
+
+equationOfState rhoConst;
+
+equationOfStateCoeffs
+{
+    rho             1.177;
+    rho0            0;
+}
+
+muModel         scalarFunction1;
+
+muModelCoeffs
+{
+    mu              constant 1.846e-05;
+}
+
+thermodynamics  hConst;
+
+thermodynamicsCoeffs
+{
+    Hf              0;
+    Cp              1004.9;
+}
+
+kappaModel      scalarFunction1;
+
+kappaModelCoeffs
+{
+    kappa           0.0262;
+    Pr              0.7;
+}
+
+buoyancyModelCoeffs
+{
+    beta            0.0034;
+}
+
+
+// ************************************************************************* //

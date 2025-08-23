@@ -1,0 +1,789 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict.restart;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        deleteUnusedFields false;
+        reuseExistingDictionaries true;
+    }
+
+    regionGroups   ( fluidRegions (d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16) );
+    solutionMesh
+    {
+        d1 region0;
+        d2 region0;
+        d3 region0;
+        d4 region0;
+        d5 region0;
+        d6 region0;
+        d7 region0;
+        d8 region0;
+        d9 region0;
+        d10 region0;
+        d11 region0;
+        d12 region0;
+        d13 region0;
+        d14 region0;
+        d15 region0;
+        d16 region0;
+    }
+    solutionSchedule
+    {
+        d1 ( (d1));
+        d2 ( (d2));
+        d3 ( (d3));
+        d4 ( (d4));
+        d5 ( (d5));
+        d6 ( (d6));
+        d7 ( (d7));
+        d8 ( (d8));
+        d9 ( (d9));
+        d10 ( (d10));
+        d11 ( (d11));
+        d12 ( (d12));
+        d13 ( (d13));
+        d14 ( (d14));
+        d15 ( (d15));
+        d16 ( (d16));
+    }
+    system
+    {
+        controlDict
+        {
+            functions
+            {
+                catchRatio1
+                {
+                    region d1;
+                    instance d1;
+                    type catchRatio;
+                    functionObjectLibs ( "libreport.so" );
+                    psd (0.05 0.65 0.01);
+                    Rh 1;
+                    executeControl writeTime;
+                    writeControl writeTime;
+                }
+                catchRatio2
+                {
+                    region d2;
+                    instance d2;
+                    type catchRatio;
+                    functionObjectLibs ( "libreport.so" );
+                    psd (0.05 0.65 0.01);
+                    Rh 1;
+                    executeControl writeTime;
+                    writeControl writeTime;
+                }
+                catchRatio3
+                {
+                    region d3;
+                    instance d3;
+                    type catchRatio;
+                    functionObjectLibs ( "libreport.so" );
+                    psd (0.05 0.65 0.01);
+                    Rh 1;
+                    executeControl writeTime;
+                    writeControl writeTime;
+                }
+                catchRatio4
+                {
+                    region d4;
+                    instance d4;
+                    type catchRatio;
+                    functionObjectLibs ( "libreport.so" );
+                    psd (0.05 0.65 0.01);
+                    Rh 1;
+                    executeControl writeTime;
+                    writeControl writeTime;
+                }
+                catchRatio5
+                {
+                    region d5;
+                    instance d5;
+                    type catchRatio;
+                    functionObjectLibs ( "libreport.so" );
+                    psd (0.05 0.65 0.01);
+                    Rh 1;
+                    executeControl writeTime;
+                    writeControl writeTime;
+                }
+                catchRatio6
+                {
+                    region d6;
+                    instance d6;
+                    type catchRatio;
+                    functionObjectLibs ( "libreport.so" );
+                    psd (0.05 0.65 0.01);
+                    Rh 1;
+                    executeControl writeTime;
+                    writeControl writeTime;
+                }
+                catchRatio7
+                {
+                    region d7;
+                    instance d7;
+                    type catchRatio;
+                    functionObjectLibs ( "libreport.so" );
+                    psd (0.05 0.65 0.01);
+                    Rh 1;
+                    executeControl writeTime;
+                    writeControl writeTime;
+                }
+                catchRatio8
+                {
+                    region d8;
+                    instance d8;
+                    type catchRatio;
+                    functionObjectLibs ( "libreport.so" );
+                    psd (0.05 0.65 0.01);
+                    Rh 1;
+                    executeControl writeTime;
+                    writeControl writeTime;
+                }
+                catchRatio9
+                {
+                    region d9;
+                    instance d9;
+                    type catchRatio;
+                    functionObjectLibs ( "libreport.so" );
+                    psd (0.05 0.65 0.01);
+                    Rh 1;
+                    executeControl writeTime;
+                    writeControl writeTime;
+                }
+                catchRatio10
+                {
+                    region d10;
+                    instance d10;
+                    type catchRatio;
+                    functionObjectLibs ( "libreport.so" );
+                    psd (0.05 0.65 0.01);
+                    Rh 1;
+                    executeControl writeTime;
+                    writeControl writeTime;
+                }
+                catchRatio11
+                {
+                    region d11;
+                    instance d11;
+                    type catchRatio;
+                    functionObjectLibs ( "libreport.so" );
+                    psd (0.05 0.65 0.01);
+                    Rh 1;
+                    executeControl writeTime;
+                    writeControl writeTime;
+                }
+                catchRatio12
+                {
+                    region d12;
+                    instance d12;
+                    type catchRatio;
+                    functionObjectLibs ( "libreport.so" );
+                    psd (0.05 0.65 0.01);
+                    Rh 1;
+                    executeControl writeTime;
+                    writeControl writeTime;
+                }
+                catchRatio13
+                {
+                    region d13;
+                    instance d13;
+                    type catchRatio;
+                    functionObjectLibs ( "libreport.so" );
+                    psd (0.05 0.65 0.01);
+                    Rh 1;
+                    executeControl writeTime;
+                    writeControl writeTime;
+                }
+                catchRatio14
+                {
+                    region d14;
+                    instance d14;
+                    type catchRatio;
+                    functionObjectLibs ( "libreport.so" );
+                    psd (0.05 0.65 0.01);
+                    Rh 1;
+                    executeControl writeTime;
+                    writeControl writeTime;
+                }
+                catchRatio15
+                {
+                    region d15;
+                    instance d15;
+                    type catchRatio;
+                    functionObjectLibs ( "libreport.so" );
+                    psd (0.05 0.65 0.01);
+                    Rh 1;
+                    executeControl writeTime;
+                    writeControl writeTime;
+                }
+                catchRatio16
+                {
+                    region d16;
+                    instance d16;
+                    type catchRatio;
+                    functionObjectLibs ( "libreport.so" );
+                    psd (0.05 0.65 0.01);
+                    Rh 1;
+                    executeControl writeTime;
+                    writeControl writeTime;
+                }
+
+                VR1
+                {
+                    type volumeReport;
+                    region d1;
+                    instance d1;
+                    fields ( U.rain1 U.rain2 U.rain3 alpha.rain1 alpha.rain2 alpha.rain3 );
+                    executeControl onEnd;
+                    writeControl onEnd;
+                }
+                VR2
+                {
+                    type volumeReport;
+                    region d2;
+                    instance d2;
+                    fields ( U.rain1 U.rain2 U.rain3 alpha.rain1 alpha.rain2 alpha.rain3 );
+                }
+                VR3
+                {
+                    type volumeReport;
+                    region d3;
+                    instance d3;
+                    fields ( U.rain1 U.rain2 U.rain3 alpha.rain1 alpha.rain2 alpha.rain3 );
+                }
+                VR4
+                {
+                    type volumeReport;
+                    region d4;
+                    instance d4;
+                    fields ( U.rain1 U.rain2 U.rain3 alpha.rain1 alpha.rain2 alpha.rain3 );
+                }
+                VR5
+                {
+                    type volumeReport;
+                    region d5;
+                    instance d5;
+                    fields ( U.rain1 U.rain2 U.rain3 alpha.rain1 alpha.rain2 alpha.rain3 );
+                }
+                VR6
+                {
+                    type volumeReport;
+                    region d6;
+                    instance d6;
+                    fields ( U.rain1 U.rain2 U.rain3 alpha.rain1 alpha.rain2 alpha.rain3 );
+                }
+                VR7
+                {
+                    type volumeReport;
+                    region d7;
+                    instance d7;
+                    fields ( U.rain1 U.rain2 U.rain3 alpha.rain1 alpha.rain2 alpha.rain3 );
+                }
+                VR8
+                {
+                    type volumeReport;
+                    region d8;
+                    instance d8;
+                    fields ( U.rain1 U.rain2 U.rain3 alpha.rain1 alpha.rain2 alpha.rain3 );
+                }
+                VR9
+                {
+                    type volumeReport;
+                    region d9;
+                    instance d9;
+                    fields ( U.rain1 U.rain2 U.rain3 alpha.rain1 alpha.rain2 alpha.rain3 );
+                }
+                VR10
+                {
+                    type volumeReport;
+                    region d10;
+                    instance d10;
+                    fields ( U.rain1 U.rain2 U.rain3 alpha.rain1 alpha.rain2 alpha.rain3 );
+                }
+                VR11
+                {
+                    type volumeReport;
+                    region d11;
+                    instance d11;
+                    fields ( U.rain1 U.rain2 U.rain3 alpha.rain1 alpha.rain2 alpha.rain3 );
+                }
+                VR12
+                {
+                    type volumeReport;
+                    region d12;
+                    instance d12;
+                    fields ( U.rain1 U.rain2 U.rain3 alpha.rain1 alpha.rain2 alpha.rain3 );
+                }
+                VR13
+                {
+                    type volumeReport;
+                    region d13;
+                    instance d13;
+                    fields ( U.rain1 U.rain2 U.rain3 alpha.rain1 alpha.rain2 alpha.rain3 );
+                }
+                VR14
+                {
+                    type volumeReport;
+                    region d14;
+                    instance d14;
+                    fields ( U.rain1 U.rain2 U.rain3 alpha.rain1 alpha.rain2 alpha.rain3 );
+                }
+                VR15
+                {
+                    type volumeReport;
+                    region d15;
+                    instance d15;
+                    fields ( U.rain1 U.rain2 U.rain3 alpha.rain1 alpha.rain2 alpha.rain3 );
+                }
+                VR16
+                {
+                    type volumeReport;
+                    region d16;
+                    instance d16;
+                    fields ( U.rain1 U.rain2 U.rain3 alpha.rain1 alpha.rain2 alpha.rain3 );
+                    executeControl onEnd;
+                    writeControl onEnd;
+                }
+            }
+        }
+    }
+}
+
+regions
+{
+    fluidRegions
+    {
+        state ();
+
+        fieldMaps
+        {
+            alpha.rain1 phase;
+            U.rain1 UdispersedPhase;
+            alpha.rain2 phase;
+            U.rain2 UdispersedPhase;
+            alpha.rain3 phase;
+            U.rain3 UdispersedPhase;
+        }
+
+        constant
+        {
+            g
+            {
+                dimensions [0  1 -2  0 0 0 0];
+                value ( 0.0 0.0 -9.81 );
+            }
+
+            disperseEulerianProperties
+            {
+                phases
+                (
+                    rain1
+                    {
+                        rhoc   rhoc [1 -3 0 0 0]  1;
+                        rhod   rhod [1 -3 0 0 0]  1000;
+                        muc    muc  [1 -1 -1 0 0] 1.46e-05;
+                        diam   diam [0 1 0 0 0]   0.0003;
+
+                        Td     293.15;
+
+                        dragModel  GunnKinzer;
+                        liftModel  none; //constantCoefficient;
+                        Cl         0.5;
+                        turbulentDispersionModel none; //Gosman;
+                        Sct        1e6;
+                    }
+
+                    rain2
+                    {
+                        rhoc   rhoc [1 -3 0 0 0]  1;
+                        rhod   rhod [1 -3 0 0 0]  1000;
+                        muc    muc  [1 -1 -1 0 0] 1.46e-05;
+                        diam   diam [0 1 0 0 0]   0.001;
+
+                        Td     293.15;
+
+                        dragModel  GunnKinzer;
+                        liftModel  none; //constantCoefficient;
+                        Cl         0.5;
+                        turbulentDispersionModel none; //Gosman;
+                        Sct        1e6;
+                    }
+
+                    rain3
+                    {
+                        rhoc   rhoc [1 -3 0 0 0]  1;
+                        rhod   rhod [1 -3 0 0 0]  1000;
+                        muc    muc  [1 -1 -1 0 0] 1.46e-05;
+                        diam   diam [0 1 0 0 0]   0.003;
+
+                        Td     293.15;
+
+                        dragModel  GunnKinzer;
+                        liftModel  none; //constantCoefficient;
+                        Cl         0.5;
+                        turbulentDispersionModel none; //Gosman;
+                        Sct        1e6;
+                    }
+                );
+            }
+        }
+
+        system
+        {
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default CoEuler phid none 0.5;
+                }
+
+                gradSchemes
+                {
+                    default leastSquares;
+                    grad(U) leastSquares;
+                    grad(U.rain1) leastSquares;
+                    grad(alpha.rain1) leastSquares;
+                    grad(U.rain2) leastSquares;
+                    grad(alpha.rain2) leastSquares;
+                    grad(U.rain3) leastSquares;
+                    grad(alpha.rain3) leastSquares;
+                }
+
+                divSchemes
+                {
+                    default Gauss linear;
+                    "div\(phi.*,alpha.*\)" Gauss upwind;
+                    "div\(phi.*,U.*\)" Gauss linearUpwindV gradU; //Gauss limitWith linearUpwindV grad(U) bjSlopeV; //Gauss upwind;
+                }
+
+                laplacianSchemes
+                {
+                    default         Gauss linear uncorrected;
+                }
+
+                interpolationSchemes
+                {
+                    default         linear;
+                }
+
+                snGradSchemes
+                {
+                    default         uncorrected;
+                }
+            }
+
+            fvSolution
+            {
+                solvers
+                {
+
+                    U.rain1
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-6;
+                        relTol 0.01;
+                    }
+                    U.rain2
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-6;
+                        relTol 0.01;
+                    }
+                    U.rain3
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-6;
+                        relTol 0.01;
+                    }
+                    U.rain1Final
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-6;
+                        relTol 0.01;
+                    }
+                    U.rain2Final
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-6;
+                        relTol 0.01;
+                    }
+                    U.rain3Final
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-6;
+                        relTol 0.01;
+                    }
+                    alpha.rain1
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-6;
+                        relTol 0.01;
+                    }
+                    alpha.rain2
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-6;
+                        relTol 0.01;
+                    }
+                    alpha.rain3
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-6;
+                        relTol 0.01;
+                    }
+                    alpha.rain1Final
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-6;
+                        relTol 0.01;
+                    }
+                    alpha.rain2Final
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-6;
+                        relTol 0.01;
+                    }
+                    alpha.rain3Final
+                    {
+                        solver smoothSolver;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1e-6;
+                        relTol 0.01;
+                    }
+                }
+                SIMPLE
+                {
+                    nNonOrthogonalCorrectors 1;
+                }
+            }
+
+            fvOptions
+            {
+                flowSolver
+                {
+                    type            rhieChowFlowSolver;
+                    solveInterval   0;
+                }
+                turbulenceSolver
+                {
+                    type            turbulenceSolver;
+                    solveInterval   0;
+                }
+                spray
+                {
+                    type            disperseEulerian;
+                    active          true;
+                    hookOp          solve; //correct;
+                    hookField       U;
+                    ReportOn        true;
+                    ReportSumOverTime false;
+                    solveTD         true;
+                    fvOptions       {}
+                }
+            }
+
+            controlDict
+            {
+                application helyxSolve;
+                startFrom latestTime;
+                stopAt endTime;
+                endTime 400;
+                deltaT constant 1;
+                writeControl timeStep;
+                writeInterval 50;
+                writeFormat binary;
+            }
+        }
+
+        fields
+        {
+            U.rain1
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform (0.0 0 0);
+                }
+            }
+            U.rain2
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform (0.0 0 0);
+                }
+            }
+            U.rain3
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform (0.0 0 0);
+                }
+            }
+            alpha.rain1
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.0;
+                }
+            }
+            alpha.rain2
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.0;
+                }
+            }
+            alpha.rain3
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            ffmaxz
+            {
+                alpha.rain1
+                {
+                    type            fixedValue;
+                    value           uniform 3.3481593e-09;
+                }
+                alpha.rain2
+                {
+                    type            fixedValue;
+                    value           uniform 7.048323121e-09;
+                }
+                alpha.rain3
+                {
+                    type            fixedValue;
+                    value           uniform 8.390596916e-10;
+                }
+            }
+            cylinder
+            {
+                alpha.rain1
+                {
+                    type            inletOutlet;
+                    phi             phid;
+                    fluxTransition  true;
+                    // inletValue      uniform 0;
+                    // value           uniform 0;
+                    inletValue      uniform 3.3481593e-09;
+                    value           uniform 3.3481593e-09;
+                }
+                alpha.rain2
+                {
+                    type            inletOutlet;
+                    phi             phid;
+                    fluxTransition  true;
+                    // inletValue      uniform 0;
+                    // value           uniform 0;
+                    inletValue      uniform 7.048323121e-09;
+                    value           uniform 7.048323121e-09;
+                }
+                alpha.rain3
+                {
+                    type            inletOutlet;
+                    phi             phid;
+                    fluxTransition  true;
+                    // inletValue      uniform 0;
+                    // value           uniform 0;
+                    inletValue      uniform 8.390596916e-10;
+                    value           uniform 8.390596916e-10;
+                }
+            }
+        }
+
+        boundaryTypeDefaults
+        {
+            wall
+            {
+                alpha.rain1
+                {
+                    type inletOutlet;
+                    inletValue uniform 0;
+                    value uniform 0;
+                    phi phid;
+                    fluxTransition true;
+                }
+                alpha.rain2
+                {
+                    type inletOutlet;
+                    inletValue uniform 0;
+                    value uniform 0;
+                    phi phid;
+                    fluxTransition true;
+                }
+                alpha.rain3
+                {
+                    type inletOutlet;
+                    inletValue uniform 0;
+                    value uniform 0;
+                    phi phid;
+                    fluxTransition true;
+                }
+                U.rain1
+                {
+                    type zeroGradient;
+                }
+                U.rain2
+                {
+                    type zeroGradient;
+                }
+                U.rain3
+                {
+                    type zeroGradient;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

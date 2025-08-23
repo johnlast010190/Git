@@ -1,0 +1,241 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         0.5;
+            deltaT constant 0.005;
+            writeControl    timeStep;
+            writeInterval   20;
+            purgeWrite      0;
+            writeFormat     ascii;
+            writePrecision  6;
+            writeCompression off;
+            timeFormat      general;
+            timePrecision   6;
+            runTimeModifiable true;
+        }
+    }
+    functions
+    {
+        VR
+        {
+
+            outputFileFormat tsv;
+            type volumeReport;
+            regions ( region0 );
+            fields ( U P aspectRatio determinant nonOrthogonality skewness volumeRatio );
+            writeControl timeStep;
+            writeInterval 10;
+            executeControl timeStep;
+            executeInterval 10;
+            functionObjectLibs ("libreport.so");
+            logToFile yes;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (transient ras);
+        boundaryMesh
+        {
+            movingWall
+            {
+                type wall;
+            }
+            fixedWalls
+            {
+                type wall;
+            }
+            frontAndBack
+            {
+                type empty;
+            }
+        }
+        turbulenceModel laminar;
+        materials (air);
+        materialProperties
+        {
+            air
+            {
+                materialName air;
+                materialType fluid;
+                molWeight 28.96;
+                energy sensibleEnthalpy;
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho 1;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu constant 0.01;
+                }
+                referenceFields
+                {
+                    p [1 -1 -2 0 0 0 0] 100000.0;
+                    TConst [0 0 0 1 0 0 0] 300.0;
+                }
+            }
+        }
+        constant
+        {
+            g
+            {
+                value ( 0.0 0.0 -9.81 );
+                dimensions [0  1 -2  0 0 0 0];
+            }
+            turbulenceProperties
+            {
+                simulationType laminar;
+            }
+        }
+        system
+        {
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default         Euler;
+                }
+                gradSchemes
+                {
+                    default         Gauss linear;
+                    grad(p)         Gauss linear;
+                }
+                divSchemes
+                {
+                    default         none;
+                    div(phi,U)      Gauss linear;
+                }
+                laplacianSchemes
+                {
+                    default         Gauss linear orthogonal;
+                }
+                interpolationSchemes
+                {
+                    default         linear;
+                }
+                snGradSchemes
+                {
+                    default         orthogonal;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    p
+                    {
+                        solver          PCG;
+                        preconditioner  DIC;
+                        tolerance       1e-06;
+                        relTol          0;
+                    }
+                    pFinal
+                    {
+                        solver          PCG;
+                        preconditioner  DIC;
+                        tolerance       1e-06;
+                        relTol          0;
+                    }
+                    U
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        tolerance       1e-05;
+                        relTol          0;
+                    }
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            fixedWalls
+            {
+                U
+                {
+                    type wallVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                }
+            }
+            movingWall
+            {
+                U
+                {
+                    type uniformFixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                    uniformValue constant ( 1.0 0.0 0.0 );
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

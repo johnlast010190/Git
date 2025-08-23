@@ -1,0 +1,310 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    regionGroups    ( fluid ( region0 ) );
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            stopAt          endTime;
+            endTime         10;
+            deltaT          0.001;
+            writeControl    adjustableRunTime;
+            writeInterval   0.01;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type               volumeReport;
+            functionObjectLibs ( "libreport.so" );
+            regions            (region0);
+            logToFile          true;
+            fields             ( U p );
+            writeControl       timeStep;
+            writeInterval      1;
+            outputFileFormat   tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        boundaryMesh
+        {
+            outlets
+            {
+                type            patch;
+            }
+        }
+        state ( transient ras vof dynamic );
+        turbulenceModel laminar;
+        materials ( fuel air );
+        materialProperties
+        {
+            fuel
+            {
+                materialType    fluid;
+                molWeight       16.0;
+
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho 700.0;
+                }
+
+                thermodynamics  hConst;
+                thermodynamicsCoeffs
+                {
+                    Cp          4195;
+                    Hf          0;
+                }
+
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          7e-4;
+                }
+
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr          2.289;
+                }
+            }
+            air
+            {
+                equationOfStateCoeffs
+                {
+                    rho 1;
+                }
+                muModelCoeffs
+                {
+                    mu 1.48e-5;
+                }
+            }
+
+            referenceFields
+            {
+                p [1 -1 -2 0 0 0 0] 1e5;
+            }
+
+            fuel_air
+            {
+                surfaceTensionModel constant;
+                surfaceTensionModelCoeffs
+                {
+                    sigma           0;
+                }
+            }
+        }
+        constant
+        {
+            g
+            {
+                dimensions      [ 0 1 -2 0 0 0 0 ];
+                value           ( 0 -9.81 0);
+            }
+            dynamicMeshDict
+            {
+                GIBChanger
+                {
+                    type            patchSwitch;
+                    libs            ("libfvMeshGIBChangers.so");
+
+                    patchSwitchCoeffs
+                    {
+                        td1
+                        {
+                            startTime 0.0;
+                            patchSwitch trapDoor;
+                            gibFaceZone gibZone1;
+                            closeDoorFuelVelocity 0.001;
+                            openDoorPressureDrop 1;
+                            conditionInterval 5;
+                            U U;
+                            p p;
+                            alpha alpha.fuel;
+                        }
+                        td2
+                        {
+                            startTime 0.0;
+                            patchSwitch trapDoor;
+                            gibFaceZone gibZone2;
+                            closeDoorFuelVelocity 0.001;
+                            openDoorPressureDrop 1;
+                            conditionInterval 5;
+                            U U;
+                            p p;
+                            alpha alpha.fuel;
+                        }
+                    }
+                }
+            }
+        }
+        system
+        {
+            fvOptions
+            {
+                flowSolver
+                {
+                    type multiphaseSegregatedFlowSolver;
+                    frameAcceleration table
+                    (
+                        ( 0 ( 0 0 0 ) )
+                        ( 0.001 ( -10 0 0 ) )
+                        ( 3 ( -10 0 0 ) )
+                        ( 3.001 ( 0 0 0 ) )
+                        ( 5 ( 0 0 0 ) )
+                        ( 5.001 ( 10 0 0 ) )
+                        ( 7 ( 10 0 0 ) )
+                        ( 7.001 ( 0 0 0 ) )
+                    );
+                }
+            }
+        }
+        fields
+        {
+            alpha.fuel
+            {
+                initialisation
+                {
+                    type            cellSet;
+                    defaultValue    uniform 0;
+                    setSources
+                    (
+                        boxToCell
+                        {
+                            box             ( -1 0 -1 ) ( 0.3 0.2 1 );
+                            value           1;
+                        }
+                        boxToCell
+                        {
+                            box             ( 0.7 0 -1 ) ( 1 0.2 1 );
+                            value           1;
+                        }
+                    );
+                }
+            }
+            nut
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 5e-07;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 0.00015;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 2;
+                }
+            }
+        }
+        boundaryTypeDefaults
+        {
+            wall
+            {
+                nut
+                {
+                    type            nutkWallFunction;
+                    value           uniform 0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            outlets
+            {
+                U
+                {
+                    type            pressureInletOutletVelocity;
+                    value           uniform ( 0 0 0 );
+                }
+                p
+                {
+                    type            totalPressure;
+                    p0              uniform 0;
+                    addStaticHead   true;
+                    value           uniform 0;
+                }
+                k
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 0.00015;
+                    value           uniform 0.00015;
+                }
+                omega
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 2;
+                    value           uniform 2;
+                }
+            }
+            doo1_m
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform ( 0 0 0 );
+                }
+            }
+            doo1_s
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform ( 0 0 0 );
+                }
+            }
+            doo2_m
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform ( 0 0 0 );
+                }
+            }
+            doo2_s
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform ( 0 0 0 );
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

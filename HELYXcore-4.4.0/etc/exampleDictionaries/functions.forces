@@ -1,0 +1,15 @@
+forces1
+{
+    type forces;
+    functionObjectLibs ("libforces.so");
+    log false;
+    directForceDensity false;
+    
+    pName   p;
+    UName   U;
+    rhoName rhoInf;
+    rhoInf 1;
+    pRef 0;
+    CofR (0 0 0); //centre of rotation
+    patches ( wallNames );
+}

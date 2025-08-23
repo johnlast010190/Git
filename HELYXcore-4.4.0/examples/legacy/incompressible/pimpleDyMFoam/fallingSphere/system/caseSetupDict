@@ -1,0 +1,283 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | Helyx:                                                   |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | Web:     http://www.engys.com                            |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "../system";
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields yes;
+        resetBoundaryFields yes;
+        resetSystemDicts yes;
+        resetConstDicts yes;
+        resetBoundaryMesh yes;
+        deleteUnusedFields yes;
+    }
+    regionGroups    1 ( fluid 1 ( region0 ) );
+    system
+    {
+        controlDict
+        {
+            startFrom       latestTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         1.3;
+            deltaT          0.0001;
+            writeControl    baselineTime;
+            writeInterval   0.1;
+            purgeWrite      0;
+            writeFormat     ascii;
+            writePrecision  10;
+            writeCompression uncompressed;
+            timeFormat      general;
+            timePrecision   10;
+            graphFormat     raw;
+            runTimeModifiable yes;
+            libs            ( "" );
+            adjustTimeStep  yes;
+            maxCo           4;
+            maxDeltaT       1;
+        }
+    }
+    functions
+    {
+        vr1
+        {
+            type            volumeReport;
+            fields          ( U p );
+        }
+        LD1
+        {
+            type            liftDrag;
+            functionObjectLibs ( "libforces.so" );
+            name            sphere;
+            rhoName         rhoInf;
+
+            patches ( "sphere.*" );
+
+            porosity        false;
+            nAveragingSteps 1;
+            outputRegionData true;
+            maxCp           1;
+            minCp           -2;
+            Uinf            ( 1 0 0 );
+            rhoInf          1.227;
+            liftDirection   ( 0 0 1 );
+            dragDirection   ( 0 0 1 );
+            referenceArea   1;
+            referenceLength 1;
+            referencePoint  ( 0 0 0 );
+            wheelbase       1;
+        }
+    }
+}
+
+regions
+{
+    fluid
+    {
+    }
+    region0
+    {
+        modificationSwitches
+        {
+        }
+        boundaryMesh
+        {
+            box_ffminx
+            {
+                type            wall;
+            }
+            box_ffmaxx
+            {
+                type            wall;
+            }
+            box_ffmaxy
+            {
+                type            wall;
+            }
+            box_ffmaxz
+            {
+                type            wall;
+            }
+            box_ffminz
+            {
+                type            wall;
+            }
+            sphere
+            {
+                type            wall;
+            }
+        }
+        state           ( PIMPLE incompressible ras dynamic );
+        turbulenceModel kOmegaSST;
+        materials       ( air );
+        materialProperties
+        {
+        }
+        fieldMaps
+        {
+        }
+        constant
+        {
+            dynamicMeshDict
+            {
+                mover
+                {
+                    type            motionSolver;
+                    libs            ( "libfvMeshMovers.so" "libfvMotionSolvers.so" );
+                    motionSolver    velocityLaplacian;
+                    velocityLaplacianCoeffs
+                    {
+                        diffusivity     inverseDistAndVol 2 ( sphere ring ) 1 0.33;
+                    }
+                }
+            }
+            RASProperties
+            {
+                turbulence      on;
+            }
+        }
+        system
+        {
+            fvSolution
+            {
+                PIMPLE
+                {
+                    helyxRemesh    true;
+                    maxTranslation  ( 10000 10000 10000 );
+                    maxVelocity     40;
+                    allowErrors     20;
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform ( 0 0 0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type            Prandtl;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type            Prandtl;
+                }
+            }
+        }
+        boundaryTypeDefaults
+        {
+            wall
+            {
+            }
+            inlet
+            {
+            }
+            outlet
+            {
+            }
+            patch
+            {
+            }
+        }
+        boundaryConditions
+        {
+            sphere
+            {
+                U
+                {
+                    type            movingWallVelocity;
+                    value           uniform ( 0 0 0 );
+                }
+                pointMotionU
+                {
+                    type            timeVaryingUniformFixedValue;
+                    fileName        "$FOAM_CASE/sphere_motion";
+                    value           uniform ( 0 0 0 );
+                }
+            }
+            box_symmetry
+            {
+                pointMotionU
+                {
+                    type            fixedNormalSlip;
+                    n               ( 0 -1 0 );
+                }
+                k
+                {
+                    type            slip;
+                }
+                omega
+                {
+                    type            slip;
+                }
+                U
+                {
+                    type            slip;
+                }
+            }
+            box_ffmaxy
+            {
+                pointMotionU
+                {
+                    type            fixedNormalSlip;
+                    n               ( 0 1 0 );
+                }
+            }
+            box_ffminx
+            {
+                pointMotionU
+                {
+                    type            fixedNormalSlip;
+                    n               ( -1 0 0 );
+                }
+            }
+            box_ffmaxx
+            {
+                pointMotionU
+                {
+                    type            fixedNormalSlip;
+                    n               ( 1 0 0 );
+                }
+            }
+        }
+        functions
+        {
+        }
+    }
+}
+
+
+// ************************************************************************* //

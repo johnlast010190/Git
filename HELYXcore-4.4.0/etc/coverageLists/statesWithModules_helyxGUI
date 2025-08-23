@@ -1,0 +1,102 @@
+# States with modules in HELYX-GUI
+
+aero les
+
+aero les dynamic
+aero pressureCoupled les
+aero pressureCoupled les dynamic
+aero pressureCoupled ras
+aero pressureCoupled ras dynamic
+aero ras
+aero ras dynamic
+
+PIMPLE incompressible les multiphaseEuler
+PIMPLE incompressible les multiphaseVOF
+PIMPLE incompressible les multiphaseVOF dynamic
+PIMPLE incompressible les ska
+
+
+
+PIMPLE incompressible ras multiphaseEuler
+PIMPLE incompressible ras multiphaseHydro
+
+PIMPLE incompressible ras multiphaseVOF
+PIMPLE incompressible ras multiphaseVOF dynamic
+
+PIMPLE incompressible ras ska
+
+
+SIMPLE incompressible ras cwr
+
+steady densityCoupled ras
+
+
+steady incompressible ras multiphaseVOF
+
+steady pressureCoupled les energy
+steady pressureCoupled les energy humidity
+steady pressureCoupled les energy humidity radiation
+steady pressureCoupled les energy radiation
+steady pressureCoupled ras
+steady pressureCoupled ras energy
+steady pressureCoupled ras energy humidity
+steady pressureCoupled ras energy humidity radiation
+steady pressureCoupled ras energy radiation
+steady ras
+
+steady ras energy
+steady ras energy humidity
+steady ras energy humidity radiation
+steady ras energy radiation
+steady solid
+steady solid electricalConduction
+
+
+transient densityCoupled les
+transient densityCoupled ras
+
+transient les
+transient les dynamic
+transient les energy
+transient les energy dynamic
+transient les energy humidity
+transient les energy humidity dynamic
+transient les energy humidity radiation
+transient les energy humidity radiation dynamic
+transient les energy radiation
+transient les energy radiation dynamic
+transient pressureCoupled les
+transient pressureCoupled les dynamic
+transient pressureCoupled les energy
+transient pressureCoupled les energy dynamic
+transient pressureCoupled les energy humidity
+transient pressureCoupled les energy humidity dynamic
+transient pressureCoupled les energy humidity radiation dynamic
+transient pressureCoupled les energy radiation
+transient pressureCoupled les energy radiation dynamic
+transient pressureCoupled ras
+transient pressureCoupled ras dynamic
+transient pressureCoupled ras energy
+transient pressureCoupled ras energy dynamic
+transient pressureCoupled ras energy humidity
+transient pressureCoupled ras energy humidity dynamic
+transient pressureCoupled ras energy humidity radiation dynamic
+transient pressureCoupled ras energy radiation
+transient pressureCoupled ras energy radiation dynamic
+
+transient ras
+transient ras dynamic
+transient ras energy
+transient ras energy dynamic
+transient ras energy humidity
+transient ras energy humidity dynamic
+transient ras energy humidity radiation
+transient ras energy humidity radiation dynamic
+transient ras energy radiation
+transient ras energy radiation dynamic
+
+transient solid
+transient solid dynamic
+transient solid electricalConduction
+transient solid electricalConduction dynamic
+

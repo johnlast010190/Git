@@ -1,0 +1,21 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+cd fluid
+
+helyxRun -p helyxHexMesh -constant
+
+touch fluid.foam
+
+helyxRun caseSetup
+helyxRun -b  # Run in background to start solid solver
+
+(
+cd ../solid
+export OMP_NUM_THREADS=4
+export CCX_NPROC_EQUATION_SOLVER=1
+helyxRun ccx_preCICE -i tube -precice-participant Solid
+)

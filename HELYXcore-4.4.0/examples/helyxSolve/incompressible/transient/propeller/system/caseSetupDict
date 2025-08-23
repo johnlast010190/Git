@@ -1,0 +1,715 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    functions
+    {
+        Q
+        {
+            type            Q;
+            libs            ( "libfieldFunctionObjects.so" );
+            field           U;
+            executeControl  writeTime;
+            writeControl    writeTime;
+        }
+        surfaces
+        {
+            type            surfaces;
+            regions         ( region0 );
+            fields          ( U p );
+            interpolationScheme cellPoint;
+            surfaceFormat   vtk;
+            writeFields     true;
+            writeStatistics false;
+            surfaces
+            (
+                surfaces0
+                {
+                    type            cuttingPlane;
+                    planeType       pointAndNormal;
+                    pointAndNormalDict
+                    {
+                        basePoint       ( 0 0 0 );
+                        normalVector    ( 1 0 0 );
+                    }
+                    interpolate     true;
+                }
+                surfaces1
+                {
+                    type            isoSurface;
+                    isoField        Q;
+                    isoValue        1000;
+                    interpolate     true;
+                    regularise      false;
+                }
+                surfaces2
+                {
+                    type            patch;
+                    patches         ( "propeller.*" );
+                    interpolate     true;
+                    triangulate     false;
+                }
+            )
+            writeControl    onEnd;
+            executeControl  onEnd;
+            functionObjectLibs ( "libsampling.so" );
+        }
+        FR
+        {
+            type            forces;
+            regions         ( region0 );
+            patches         ( propellerTip propellerStem1 propellerStem2 propellerStem3 );
+            CofR            ( 0 0 0 );
+            rhoName         rho;
+            writeControl    onEnd;
+            executeControl  onEnd;
+            functionObjectLibs ( "libforces.so" );
+        }
+    }
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         0.00075;
+            deltaT          1e-05;
+            writeControl    adjustableRunTime;
+            writeInterval   0.001;
+            purgeWrite      0;
+            writeFormat     binary;
+            writePrecision  6;
+            writeCompression uncompressed;
+            timeFormat      general;
+            timePrecision   6;
+            graphFormat     raw;
+            runTimeModifiable true;
+            adjustTimeStep  false;
+            maxCo           2;
+            maxDeltaT       1;
+            maxAlphaCo      0;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state           ( transient ras dynamic );
+        boundaryMesh
+        {
+            outerCylinder
+            {
+                type            wall;
+            }
+            propellerTip
+            {
+                type            wall;
+            }
+            propellerStem1
+            {
+                type            wall;
+            }
+            propellerStem2
+            {
+                type            wall;
+            }
+            propellerStem3
+            {
+                type            wall;
+            }
+            AMI1
+            {
+                type            cyclicAMI;
+                matchTolerance  0.0001;
+                neighbourPatch  AMI2;
+                transformType   none;
+            }
+            AMI2
+            {
+                type            cyclicAMI;
+                matchTolerance  0.0001;
+                neighbourPatch  AMI1;
+                transformType   none;
+            }
+            inlet
+            {
+                type            inlet;
+            }
+            outlet
+            {
+                type            outlet;
+            }
+        }
+        turbulenceModel kEpsilon;
+        materials       ( water );
+        constant
+        {
+            dynamicMeshDict
+            {
+                mover
+                {
+                    type            motionSolver;
+                    libs            ( "libfvMeshMovers.so" "libfvMotionSolvers.so" );
+                    motionSolver    motionSolverList;
+                    solvers
+                    {
+                        innerCylinderSmall
+                        {
+                            solver          solidBody;
+                            cellZone        innerCylinderSmall;
+                            referenceFrame  rotatingFrame;
+                        }
+                    }
+                }
+            }
+        }
+        system
+        {
+            meshObjects
+            {
+                rotatingFrame
+                {
+                    type            dynamicMotionCoordinateFrame;
+                    motionFunction
+                    {
+                        type            axisRotationMotion;
+                        radialVelocity  ( 0 9052.73 0 );
+                    }
+                    coordinateSystem
+                    {
+                        type            cartesian;
+                        origin          ( 0 0 0 );
+                        e1              ( 0 0 1 );
+                        e2              ( 0 1 0 );
+                    }
+                }
+            }
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default         Euler;
+                }
+                gradSchemes
+                {
+                    default         cellLimited Gauss linear 1;
+                    turbulence      cellLimited Gauss linear 1;
+                    gradU           cellLimited Gauss linear 1;
+                    grad(p)         Gauss linear;
+                    grad(k)         cellLimited Gauss linear 1;
+                    grad(epsilon)   cellLimited Gauss linear 1;
+                }
+                divSchemes
+                {
+                    div(phi,U)      bounded Gauss linearUpwindV gradU;
+                    default         none;
+                    div(R)          Gauss linear;
+                    div(nonlinearStress) Gauss linear;
+                    div((muEff*dev2(grad(U).T()))) Gauss linear;
+                    div((nuEff*dev2(T(grad(U))))) Gauss linear;
+                    div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
+                    div((nu*dev2(T(grad(U))))) Gauss linear;
+                    div(phi,k)      bounded Gauss limitedLinear 1;
+                    div(phi,epsilon) bounded Gauss limitedLinear 1;
+                    div(meshPhi,p)  Gauss linear;
+                }
+                laplacianSchemes
+                {
+                    default         Gauss linear limited 0.333;
+                    laplacian(DkEff,k) Gauss linear limited 0.333;
+                    laplacian(DepsilonEff,epsilon) Gauss linear limited 0.333;
+                    laplacian(diffusivity,cellDisplacement) Gauss linear uncorrected;
+                    laplacian(diffusivity,cellMotionU) Gauss linear uncorrected;
+                }
+                interpolationSchemes
+                {
+                    default         linear;
+                    interpolate(HbyA) linear;
+                }
+                snGradSchemes
+                {
+                    default         limited 0.333;
+                }
+                wallDist
+                {
+                    method          meshWave;
+                }
+                fluxRequired
+                {
+                    pcorr ;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    p
+                    {
+                        solver          GAMG;
+                        tolerance       1e-05;
+                        relTol          0.01;
+                        smoother        DICGaussSeidel;
+                        cacheAgglomeration false;
+                        maxIter         50;
+                    }
+                    U
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-06;
+                        relTol          0.1;
+                    }
+                    pFinal
+                    {
+                        solver          GAMG;
+                        tolerance       1e-06;
+                        relTol          0;
+                        smoother        DICGaussSeidel;
+                        cacheAgglomeration false;
+                        maxIter         50;
+                    }
+                    UFinal
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-06;
+                        relTol          0;
+                    }
+                    k
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-06;
+                        relTol          0.1;
+                    }
+                    kFinal
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-06;
+                        relTol          0;
+                    }
+                    epsilon
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-06;
+                        relTol          0.1;
+                    }
+                    epsilonFinal
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-06;
+                        relTol          0;
+                    }
+                    pcorr
+                    {
+                        solver          GAMG;
+                        agglomerator    faceAreaPair;
+                        mergeLevels     1;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 200;
+                        tolerance       1e-10;
+                        relTol          0.01;
+                        smoother        DICGaussSeidel;
+                        nPreSweeps      0;
+                        nPostSweeps     2;
+                        nFinestSweeps   2;
+                        minIter         1;
+                    }
+                    pcorrFinal
+                    {
+                        solver          GAMG;
+                        agglomerator    faceAreaPair;
+                        mergeLevels     1;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 200;
+                        tolerance       1e-10;
+                        relTol          0.01;
+                        smoother        DICGaussSeidel;
+                        nPreSweeps      0;
+                        nPostSweeps     2;
+                        nFinestSweeps   2;
+                        minIter         1;
+                    }
+                    cellMotionU
+                    {
+                        solver          PCG;
+                        preconditioner  DIC;
+                        tolerance       1e-08;
+                        relTol          0;
+                        minIter         1;
+                    }
+                    cellDisplacement
+                    {
+                        solver          GAMG;
+                        tolerance       1e-08;
+                        relTol          0;
+                        smoother        GaussSeidel;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 10;
+                        agglomerator    faceAreaPair;
+                        mergeLevels     1;
+                        minIter         1;
+                    }
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p               0.3;
+                        pFinal          1;
+                    }
+                    equations
+                    {
+                        U               0.7;
+                        UFinal          1;
+                        k               1;
+                        kFinal          1;
+                        epsilon         1;
+                        epsilonFinal    1;
+                    }
+                }
+                cache
+                {
+                    grad(U) ;
+                }
+                PIMPLE
+                {
+                    turbOnFinalIterOnly false;
+                    ddtPhiCorr      true;
+                    momentumPredictor true;
+                    nOuterCorrectors 2;
+                    nCorrectors     1;
+                    nNonOrthogonalCorrectors 0;
+                    pRefCell        0;
+                    pRefValue       0;
+                    pMin            -1e+10;
+                    pMax            1e+10;
+                    residualControl
+                    {
+                        U
+                        {
+                            relTol          0;
+                            tolerance       0;
+                        }
+                        p
+                        {
+                            relTol          0;
+                            tolerance       0;
+                        }
+                        k
+                        {
+                            relTol          0;
+                            tolerance       0;
+                        }
+                        epsilon
+                        {
+                            relTol          0;
+                            tolerance       0;
+                        }
+                    }
+                    correctPhi      true;
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform ( 0 0 0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 0.06;
+                }
+            }
+            epsilon
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 0.0495;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            outerCylinder
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform ( 0 0 0 );
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                k
+                {
+                    type            kqRWallFunction;
+                    value           uniform 1e-20;
+                }
+                epsilon
+                {
+                    type            epsilonWallFunction;
+                    value           uniform 1e-07;
+                }
+                nut
+                {
+                    type            nutUSpaldingWallFunction;
+                    value           uniform 0.001;
+                }
+                pointDisplacement
+                {
+                    type            calculated;
+                }
+            }
+            propellerTip
+            {
+                U
+                {
+                    type            movingWallVelocity;
+                    value           uniform ( 0 0 0 );
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                k
+                {
+                    type            kqRWallFunction;
+                    value           uniform 1e-20;
+                }
+                epsilon
+                {
+                    type            epsilonWallFunction;
+                    value           uniform 1e-07;
+                }
+                nut
+                {
+                    type            nutUSpaldingWallFunction;
+                    value           uniform 0.001;
+                }
+                pointDisplacement
+                {
+                    type            calculated;
+                }
+            }
+            propellerStem1
+            {
+                U
+                {
+                    type            movingWallVelocity;
+                    value           uniform ( 0 0 0 );
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                k
+                {
+                    type            kqRWallFunction;
+                    value           uniform 1e-20;
+                }
+                epsilon
+                {
+                    type            epsilonWallFunction;
+                    value           uniform 1e-07;
+                }
+                nut
+                {
+                    type            nutUSpaldingWallFunction;
+                    value           uniform 0.001;
+                }
+                pointDisplacement
+                {
+                    type            calculated;
+                }
+            }
+            propellerStem2
+            {
+                U
+                {
+                    type            movingWallVelocity;
+                    value           uniform ( 0 0 0 );
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                k
+                {
+                    type            kqRWallFunction;
+                    value           uniform 1e-20;
+                }
+                epsilon
+                {
+                    type            epsilonWallFunction;
+                    value           uniform 1e-07;
+                }
+                nut
+                {
+                    type            nutUSpaldingWallFunction;
+                    value           uniform 0.001;
+                }
+                pointDisplacement
+                {
+                    type            calculated;
+                }
+            }
+            propellerStem3
+            {
+                U
+                {
+                    type            movingWallVelocity;
+                    value           uniform ( 0 0 0 );
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                k
+                {
+                    type            kqRWallFunction;
+                    value           uniform 1e-20;
+                }
+                epsilon
+                {
+                    type            epsilonWallFunction;
+                    value           uniform 1e-07;
+                }
+                nut
+                {
+                    type            nutUSpaldingWallFunction;
+                    value           uniform 0.001;
+                }
+                pointDisplacement
+                {
+                    type            calculated;
+                }
+            }
+            inlet
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform ( 0 -5 0 );
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                k
+                {
+                    type            fixedValue;
+                    value           uniform 0.06;
+                }
+                epsilon
+                {
+                    type            fixedValue;
+                    value           uniform 0.0495;
+                }
+                nut
+                {
+                    type            calculated;
+                    value           uniform 0;
+                }
+                pointDisplacement
+                {
+                    type            calculated;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type            inletOutlet;
+                    value           uniform ( 0 0 0 );
+                    inletValue      uniform ( 0 0 0 );
+                }
+                p
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+                k
+                {
+                    type            turbulentIntensityKineticEnergyInlet;
+                    intensity       0.05;
+                    value           uniform 0.1;
+                }
+                epsilon
+                {
+                    type            turbulentMixingLengthDissipationRateInlet;
+                    mixingLength    0.01;
+                    value           uniform 0.01;
+                }
+                nut
+                {
+                    type            calculated;
+                    value           uniform 0.001;
+                }
+                pointDisplacement
+                {
+                    type            calculated;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

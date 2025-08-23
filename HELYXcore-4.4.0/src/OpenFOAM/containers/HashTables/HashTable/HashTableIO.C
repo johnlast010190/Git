@@ -1,0 +1,284 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : 4.4.0
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) 2011-2016 OpenFOAM Foundation
+    (c) 2017 OpenCFD Ltd.
+
+\*---------------------------------------------------------------------------*/
+
+#include "containers/HashTables/HashTable/HashTable.H"
+#include "db/IOstreams/IOstreams/Istream.H"
+#include "db/IOstreams/IOstreams/Ostream.H"
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+template<class T, class Key, class Hash>
+Foam::HashTable<T, Key, Hash>::HashTable(Istream& is, const label size)
+:
+    HashTableCore(),
+    nElmts_(0),
+    table_(nullptr)
+{
+    label tableSize = HashTableCore::canonicalSize(size);
+    if (tableSize)
+    {
+        table_ = List<hashedEntry*>(tableSize, nullptr);
+    }
+
+    operator>>(is, *this);
+}
+
+
+// * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
+
+template<class T, class Key, class Hash>
+Foam::Ostream& Foam::HashTable<T, Key, Hash>::printInfo(Ostream& os) const
+{
+    label used = 0;
+    label maxChain = 0;
+    unsigned avgChain = 0;
+
+    for (label hashIdx = 0; hashIdx < table_.size(); ++hashIdx)
+    {
+        label count = 0;
+        for (hashedEntry* ep = table_[hashIdx]; ep; ep = ep->next_)
+        {
+            ++count;
+        }
+
+        if (count)
+        {
+            ++used;
+            avgChain += count;
+
+            if (maxChain < count)
+            {
+                maxChain = count;
+            }
+        }
+    }
+
+    os  << "HashTable<T,Key,Hash>"
+        << " elements:" << size() << " slots:" << used << "/" << table_.size()
+        << " chaining(avg/max):" << (used ? (float(avgChain)/used) : 0)
+        << "/" << maxChain << endl;
+
+    return os;
+}
+
+
+template<class T, class Key, class Hash>
+Foam::Ostream& Foam::HashTable<T, Key, Hash>::writeKeys
+(
+    Ostream& os,
+    const label shortListLen
+) const
+{
+    // Similar to UList::writeList version except the following:
+    // - the keys can never be uniform
+    // - never write in binary
+
+    label i = this->size();
+
+    if (i <= 1 || !shortListLen || (i <= shortListLen))
+    {
+        // Write size and start delimiter
+        os << i << token::BEGIN_LIST;
+
+        i = 0;
+        for (const_iterator iter = this->cbegin(); iter != this->cend(); ++iter)
+        {
+            if (i++) os << token::SPACE;
+            os << iter.key();
+        }
+
+        os << token::END_LIST;  // End delimiter
+    }
+    else
+    {
+        // Write size and start delimiter
+        os << nl << i << nl << token::BEGIN_LIST << nl;
+
+        for (const_iterator iter = this->cbegin(); iter != this->cend(); ++iter)
+        {
+            os << iter.key() << nl;
+        }
+
+        os << token::END_LIST << nl;  // End delimiter
+    }
+
+    os.check(FUNCTION_NAME);
+    return os;
+}
+
+
+// * * * * * * * * * * * * * * * IOstream Operators  * * * * * * * * * * * * //
+
+template<class T, class Key, class Hash>
+Foam::Istream& Foam::operator>>
+(
+    Istream& is,
+    HashTable<T, Key, Hash>& L
+)
+{
+    is.fatalCheck(FUNCTION_NAME);
+
+    // Anull list
+    L.clear();
+
+    is.fatalCheck(FUNCTION_NAME);
+
+    token firstToken(is);
+
+    is.fatalCheck
+    (
+        "operator>>(Istream&, HashTable<T, Key, Hash>&) : "
+        "reading first token"
+    );
+
+    if (firstToken.isLabel())
+    {
+        const label s = firstToken.labelToken();
+
+        // Read beginning of contents
+        const char delimiter = is.readBeginList("HashTable<T, Key, Hash>");
+
+        if (s)
+        {
+            if (2*s > L.table_.size())
+            {
+                L.resize(2*s);
+            }
+
+            if (delimiter == token::BEGIN_LIST)
+            {
+                for (label i=0; i<s; ++i)
+                {
+                    Key key;
+                    is >> key;
+                    L.insert(key, pTraits<T>(is));
+
+                    is.fatalCheck
+                    (
+                        "operator>>(Istream&, HashTable<T, Key, Hash>&) : "
+                        "reading entry"
+                    );
+                }
+            }
+            else
+            {
+                FatalIOErrorInFunction
+                (
+                    is
+                )   << "incorrect first token, '(', found " << firstToken.info()
+                    << exit(FatalIOError);
+            }
+        }
+
+        // Read end of contents
+        is.readEndList("HashTable");
+    }
+    else if (firstToken.isPunctuation())
+    {
+        if (firstToken.pToken() != token::BEGIN_LIST)
+        {
+            FatalIOErrorInFunction
+            (
+                is
+            )   << "incorrect first token, '(', found " << firstToken.info()
+                << exit(FatalIOError);
+        }
+
+        token lastToken(is);
+        while
+        (
+           !(
+                lastToken.isPunctuation()
+             && lastToken.pToken() == token::END_LIST
+            )
+        )
+        {
+            is.putBack(lastToken);
+
+            Key key;
+            is >> key;
+
+            T element;
+            is >> element;
+
+            L.insert(key, element);
+
+            is.fatalCheck
+            (
+                "operator>>(Istream&, HashTable<T, Key, Hash>&) : "
+                "reading entry"
+            );
+
+            is >> lastToken;
+        }
+    }
+    else
+    {
+        FatalIOErrorInFunction
+        (
+            is
+        )   << "incorrect first token, expected <int> or '(', found "
+            << firstToken.info()
+            << exit(FatalIOError);
+    }
+
+    is.fatalCheck(FUNCTION_NAME);
+
+    return is;
+}
+
+
+template<class T, class Key, class Hash>
+Foam::Ostream& Foam::operator<<
+(
+    Ostream& os,
+    const HashTable<T, Key, Hash>& tbl
+)
+{
+    using const_iterator = typename HashTable<T, Key, Hash>::const_iterator;
+
+    // Write size and start delimiter
+    os << nl << tbl.size() << nl << token::BEGIN_LIST << nl;
+
+    // Write contents
+    for (const_iterator iter = tbl.cbegin(); iter != tbl.cend(); ++iter)
+    {
+        os << iter.key() << token::SPACE << iter.object() << nl;
+    }
+
+    // Write end delimiter
+    os << token::END_LIST;
+
+    os.check(FUNCTION_NAME);
+    return os;
+}
+
+
+// ************************************************************************* //

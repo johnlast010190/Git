@@ -1,0 +1,35 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Create mesh in series
+helyxRun blockMesh
+
+# Generate non-conformal coupling
+helyxRun createNonConformalCouples -overwrite
+
+# Decompose the geometry into few domains
+helyxRun decomposePar
+
+# Redistribute the mesh to a higher processor count
+helyxRun -parallel redistributePar -decomposeParDict system/decomposeParDict.redistribute -overwrite
+
+# Check mesh quality including NCC coverage
+helyxRun checkMesh -constant -allGeometry
+
+# Setup
+helyxRun caseSetup
+
+# Run solver specified in controlDict
+helyxRun
+
+# Reconstruct the geometry and fields
+helyxRun -serial reconstructParMesh -constant
+helyxRun -serial reconstructPar -withZero
+
+# Create dummy file for ParaView visualisation
+touch nonConformalChannel.foam
+
+#------------------------------------------------------------------------------

@@ -1,0 +1,275 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | Helyx:                                                   |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | Web:     http://www.engys.com                            |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    system
+    {
+        controlDict
+        {
+            endTime         0.05;
+            deltaT          1e-8;
+            writeControl    adjustableRunTime;
+            stopAt          endTime;
+            writeInterval   0.001;
+            maxCo           5;
+            maxAlphaCo      5;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p alpha.water );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state           (transient ras vof);
+        boundaryMesh
+        {
+            inlet
+            {
+                type            inlet;
+            }
+            outlet
+            {
+                type            outlet;
+            }
+            walls
+            {
+                type            symmetry;
+            }
+            bullet
+            {
+                type            wall;
+            }
+        }
+        turbulenceModel laminar;
+        materials       ( water vapour );
+        materialProperties
+        {
+            water
+            {
+                materialType    fluid;
+                equationOfState rhoConst;
+                thermodynamics  hConst;
+                molWeight       18.0;
+
+                equationOfStateCoeffs
+                {
+                    rho         1000;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cp          4195;
+                    Hf          0;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          9e-4;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr          2.289;
+                }
+            }
+            vapour
+            {
+                materialType    fluid;
+                equationOfState rhoConst;
+                thermodynamics  hConst;
+                molWeight       18.0;
+
+                equationOfStateCoeffs
+                {
+                    rho         0.02308;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cp          4195;
+                    Hf          0;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          9.862e-6;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr          2.289;
+                }
+            }
+            water_vapour
+            {
+                surfaceTensionModel constant;
+                surfaceTensionModelCoeffs
+                {
+                    sigma 0.07;
+                }
+
+                phaseChangeModel SchnerrSauer;
+                phaseChangeModelCoeffs
+                {
+                    pSat            -97700; //2300;
+                    n               1.6e+13;
+                    dNuc            2e-06;
+                    Cc              1;
+                    Cv              1;
+                }
+
+                /*
+                phaseChangeModel Kunz;
+                phaseChangeModelCoeffs
+                {
+                    pSat            -97700; //2300;
+                    UInf            20.0;
+                    tInf            0.005;  // L = 0.1 m
+                    Cc              1000;
+                    Cv              1000;
+                }
+                */
+                 
+                /*
+                phaseChangeModel Merkle;
+                phaseChangeModelCoeffs
+                {
+                    pSat            -97700; //2300;
+                    UInf            20.0;
+                    tInf            0.005;  // L = 0.1 m
+                    Cc              80;
+                    Cv              1e-03;
+                }
+                */
+            }
+        }
+        constant
+        {
+            g
+            {
+                value           ( 0 -9.81 0 );
+            }
+        }
+        system
+        {
+            fvOptions
+            {
+                volumeFractionSolver
+                {
+                    type            MULESVolumeFractionSolver;
+                    cAlpha          0;
+                    MULESCorr       yes;
+                    nAlphaCorr      2;
+                    nLimiterIter    10;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    p
+                    {
+                        maxIter         50;
+                    };
+                }
+                PIMPLE
+                {
+                    nOuterCorrectors            1;
+                    nCorrectors                 3;
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type            potentialFlow;
+                    nNonOrthogonalCorrectors 3;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+            }
+            alpha.water
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 1;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            outlet
+            {
+                U
+                {
+                    type            pressureInletOutletVelocity;
+                    value           uniform ( 0 0 20 );
+                }
+                p
+                {
+                    type            totalPressure;
+                    p0              uniform 0;
+                    addStaticHead   yes;
+                    value           uniform 0;
+                }
+                alpha.water
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 1;
+                    value           uniform 1;
+                }
+            }
+            inlet
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform ( 0 0 20 );
+                }
+                alpha.water
+                {
+                    type            fixedValue;
+                    value           uniform 1;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

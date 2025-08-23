@@ -1,0 +1,51 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      createBafflesDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Whether to convert internal faces only (so leave boundary faces intact).
+// This is only relevant if your face selection type can pick up boundary
+// faces.
+internalFacesOnly true;
+
+// Baffles to create
+baffles
+{
+    baffle
+    {
+        // Use predefined faceZone to select faces and orientation
+        type        faceZone;
+        zoneName    baffle;
+        patchPairs
+        {
+            type            wall;
+        }
+    }
+
+    fan
+    {
+        // Select faces and orientation through a searchableSurface
+        type        searchableSurface;
+        surface     searchablePlate;
+        origin      (0.099 -0.006 0.004);
+        span        (0 0.012 0.012);
+        patchPairs
+        {
+            type            patch;
+        }
+    }
+}
+
+
+// ************************************************************************* //

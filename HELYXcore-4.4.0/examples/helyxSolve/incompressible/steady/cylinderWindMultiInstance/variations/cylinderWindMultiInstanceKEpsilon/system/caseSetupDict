@@ -1,0 +1,637 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+    }
+    regionGroups    ( fluidRegions ( dir1 dir2 dir3 ) );
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         300;
+            deltaT          constant 1;
+            writeControl    timeStep;
+            writeInterval   50;
+        }
+    }
+    solutionMesh
+    {
+        dir1            region0;
+        dir2            region0;
+        dir3            region0;
+    }
+    solutionSchedule
+    {
+        dir1            ( ( dir1 ) );
+        dir2            ( ( dir2 ) );
+        dir3            ( ( dir3 ) );
+    }
+    functions
+    {
+        Lawson
+        {
+            type            pedestrianComfort;
+            instances       ( dir1 dir2 dir3 );
+            functionObjectLibs ( "libutilityFunctionObjects.so" );
+            writeControl    writeTime;
+            UName           U;
+            gust            true;
+            windDirections  ( dir1 dir2 dir3 );
+            WeibullParameters
+            (
+                (6.13 5.59 3.23)
+                (15.03 5.41 3.16)
+                (9.28 4.54 2.63)
+            );
+            referenceHeight ( 120 120 120 );
+            referenceVelocity ( 7.8 7.8 7.8 );
+            scaleFactor table
+            (
+                (100 0.96)
+                (120 1)
+                (160 1.07)
+                (200 1.13)
+                (250 1.19)
+                (300 1.24)
+                (450 1.37)
+                (600 1.48)
+            );
+            criteriaThresholds ( 2.5 4 6 8 );
+            criteriaExceedance ( 5 5 5 5 );
+        }
+        Safety
+        {
+            type            pedestrianComfort;
+            instances       ( dir1 dir2 dir3 );
+            functionObjectLibs ( "libutilityFunctionObjects.so" );
+            writeControl    writeTime;
+            UName           U;
+            gust            true;
+            windDirections  ( dir1 dir2 dir3 );
+            WeibullParameters
+            (
+                (6.13 5.59 3.23)
+                (15.03 5.41 3.16)
+                (9.28 4.54 2.63)
+             );
+            referenceHeight ( 120 120 120 );
+            referenceVelocity ( 7.8 7.8 7.8 );
+            scaleFactor table
+            (
+                (100 0.96)
+                (120 1)
+                (160 1.07)
+                (200 1.13)
+                (250 1.19)
+                (300 1.24)
+                (450 1.37)
+                (600 1.48)
+             );
+            criteriaThresholds ( 15 );
+            criteriaExceedance ( 0.022 );
+        }
+    }
+}
+
+regions
+{
+    fluidRegions
+    {
+        state (steady ras);
+        boundaryMesh
+        {
+            ffminz
+            {
+                type wall;
+            }
+            ffmaxz
+            {
+                type patch;
+            }
+            cylinder
+            {
+                type patch;
+            }
+            main
+            {
+                type wall;
+            }
+            annex
+            {
+                type wall;
+            }
+        }
+        turbulenceModel realizableKE;
+        materials (air);
+        materialProperties
+        {
+            air
+            {
+                equationOfState rhoConst;
+                thermodynamics  hConst;
+                energy          sensibleEnthalpy;
+                molWeight       28.96;
+                equationOfStateCoeffs
+                {
+                    rho             1.205;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cp              1006.8;
+                    Hf              0;
+                }
+                muModel         scalarFunction1;
+                muModelCoeffs
+                {
+                    mu              1.8075E-5;
+                }
+                kappaModel      kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr              0.76;
+                }
+                referenceFields
+                {
+                    p               [ 1 -1 -2 0 0 0 0 ] 100000;
+                    T               [ 0  0  0 1 0 0 0 ] 300;
+                }
+            }
+        }
+        system
+        {
+            fvSchemes
+            {
+                gradSchemes
+                {
+                    default         leastSquares;
+                    turbulence      cellLimited leastSquares 1;
+                    gradU           cellLimited leastSquares 1;
+                    grad(p)         Gauss linear;
+                    grad(k)         cellLimited Gauss linear 1;
+                    grad(epsilon)   cellLimited Gauss linear 1;
+                }
+                divSchemes
+                {
+                    div(phi,k)      bounded Gauss linearUpwind turbulence;
+                    div(phi,epsilon) bounded Gauss linearUpwind turbulence;
+                }
+            }
+            fvSolution
+            {
+                SIMPLE
+                {
+                    nNonOrthogonalCorrectors 0;
+                }
+		        cache
+                {
+                    grad(U) ;
+                }
+            }
+        }
+        fields
+        {
+            p
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+            }
+            U
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform ( 0 -5 0 );
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type            turbulentIL;
+                    I               0.05;
+                    L               0.01;
+                    Uref            1;
+                }
+            }
+            epsilon
+            {
+                initialisation
+                {
+                    type            turbulentIL;
+                    I               0.05;
+                    L               0.01;
+                    Uref            1;
+                }
+            }
+            nut
+            {
+                initialisation
+                {
+                    type            turbulentIL;
+                    I               0.05;
+                    L               0.01;
+                    Uref            1;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            ffmaxz
+            {
+                p
+                {
+                    type fixedMean;
+                    meanValue constant 0;
+                    value uniform 0;
+                }
+                U
+                {
+                    type pressureInletOutletParSlipVelocity;
+                    value uniform ( 0.0 -5.0 0.0 );
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    value uniform 0.1;
+                    intensity 0.05;
+                }
+                epsilon
+                {
+                    type turbulentMixingLengthDissipationRateInlet;
+                    value uniform 0.01;
+                    mixingLength 0.01;
+                }
+            }
+            cylinder
+            {
+                U
+                {
+                    type windProfileDirectionVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    profile AIJWindProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                    windDirection constant 0.0;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindKineticEnergyProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+                epsilon
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindDissipationRateProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+                nut
+                {
+                    type calculated;
+                    value uniform 0.0;
+                }
+            }
+        }
+    }
+    dir1
+    {
+        functions
+        {
+            VR1
+            {
+                type volumeReport;
+                region dir1;
+                instance dir1;
+                fields ( U k epsilon p );
+                writeControl onEnd;
+                executeControl onEnd;
+                functionObjectLibs ( "libreport.so");
+                outputFileFormat tsv;
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 -5.0 0.0 );
+                }
+            }
+	    }
+	    boundaryConditions
+	    {
+            cylinder
+            {
+                U
+                {
+                    type windProfileDirectionVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    profile AIJWindProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                    windDirection constant 0.0;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindKineticEnergyProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+                epsilon
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindDissipationRateProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+                nut
+                {
+                    type calculated;
+                    value uniform 0.0;
+                }
+            }
+        }
+    }
+    dir2
+    {
+        functions
+        {
+            VR2
+            {
+                type volumeReport;
+                region dir2;
+                instance dir2;
+                fields ( U k epsilon p );
+                writeControl onEnd;
+                executeControl onEnd;
+                functionObjectLibs ( "libreport.so");
+                outputFileFormat tsv;
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( -1.91 -4.62 0 );
+                }
+            }
+        }
+	    boundaryConditions
+	    {
+            cylinder
+            {
+                U
+                {
+                    type windProfileDirectionVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    profile AIJWindProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                    windDirection constant 22.5;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindKineticEnergyProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+                epsilon
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindDissipationRateProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+            }
+	    }
+    }
+    dir3
+    {
+        functions
+        {
+            VR3
+            {
+                type volumeReport;
+                region dir3;
+                instance dir3;
+                fields ( U k epsilon p );
+                writeControl onEnd;
+                executeControl onEnd;
+                functionObjectLibs ( "libreport.so");
+                outputFileFormat tsv;
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( -3.53 -3.53 0 );
+                }
+            }
+        }
+        boundaryConditions
+        {
+            cylinder
+            {
+                U
+                {
+                    type windProfileDirectionVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    profile AIJWindProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                    windDirection constant 45.0;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindKineticEnergyProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+                epsilon
+                {
+                    type interpolatedInletOutlet;
+                    value uniform 0.01;
+                    profile AIJWindDissipationRateProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 7.8;
+                        alpha 0.2;
+                        Href 120;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

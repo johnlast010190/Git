@@ -1,0 +1,22 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy mesh from resources directory
+printf "Copying mesh\n"
+mkdir -p constant/polyMesh
+cp "$HELYX_TUTORIALS"/resources/geometry/airFoil2D/polyMesh/* constant/polyMesh
+cp -f "$HELYX_TUTORIALS"/resources/geometry/airFoil2D/airFoil2DRAStat/points constant/polyMesh
+
+# Run from other script so we can loop over all the test cases
+./AllCasesRun
+
+# Plot Iterations vs Lift graph
+gnuplot system/plotScript
+
+# Create dummy file for ParaView visualisation
+touch airFoil2DRAStat.foam
+
+#------------------------------------------------------------------------------

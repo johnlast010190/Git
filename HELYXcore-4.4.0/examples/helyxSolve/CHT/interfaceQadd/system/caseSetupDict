@@ -1,0 +1,328 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    regionGroups
+    (
+        fluids ( default )
+        solids ( solid )
+    );
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom latestTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 200.0;
+            deltaT 1;
+            writeControl timeStep;
+            writeInterval 100.0;
+        }
+    }
+    functions
+    {
+        SR-out
+        {
+            type surfaceReport;
+            regions ( default );
+            fields ( T );
+            weighting flux;
+            fluxName phi;
+            homogeneity false;
+            surfaces
+            (
+                {
+                    type patch;
+                    name outlet;
+                }
+            );
+            constraints
+            (
+                {
+                    type boundBox;
+                    min ( -1000.0 -1000.0 -1000.0 );
+                    max ( 1000.0 1000.0 1000.0 );
+                    keepInside true;
+                }
+            );
+            executeControl onEnd;
+            writeControl onEnd;
+            functionObjectLibs ( "libreport.so" );
+            outputFileFormat tsv;
+        }
+        VR-solid
+        {
+            type             volumeReport;
+            regions          ( solid );
+            fields           ( T );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+        solidHeatFlux
+        {
+            type wallHeatFlux;
+            libs ( "libfieldFunctionObjects.so" );
+            region solid;
+            kappaMethod solidThermo;
+            executeControl onEnd;
+            writeControl onEnd;
+        }
+        fluidHeatFlux
+        {
+            type wallHeatFlux;
+            libs ( "libfieldFunctionObjects.so" );
+            region default;
+            patches ( default_to_solid );
+            kappaMethod fluidThermo;
+            executeControl onEnd;
+            writeControl onEnd;
+        }
+    }
+}
+
+regions
+{
+    default
+    {
+        state ( steady ras energy );
+
+        boundaryMesh
+        {
+            inlet
+            {
+                type inlet;
+            }
+            sides
+            {
+                type wall;
+            }
+            outlet
+            {
+                type outlet;
+            }
+        }
+        turbulenceModel kOmegaSST;
+        materials (air);
+        materialProperties
+        {
+            air
+            {
+                equationOfState perfectGas;
+                buoyancyModel rhoModel;
+            }
+        }
+        constant
+        {
+            g
+            {
+                value ( 0.0 0.0 -9.81 );
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type potentialFlow;
+                    initialiseUBCs true;
+                    rhoRef 1.2;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type potentialFlow;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type turbulentIL;
+                    I 0.05;
+                    L 0.01;
+                    Uref 1.0;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type turbulentIL;
+                    I 0.05;
+                    L 0.01;
+                    Uref 1.0;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 300.0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type surfaceNormalFixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                    refValue uniform -1.0;
+                    profile constant -1.0;
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                }
+                T
+                {
+                    type fixedValue;
+                    value uniform 300.0;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    value uniform 0.1;
+                    intensity 0.05;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    value uniform 0.01;
+                    mixingLength 0.01;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type inletOutlet;
+                    value uniform ( 0.0 0.0 0.0 );
+                    inletValue uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type            totalPressure;
+                    value           uniform 0.0;
+                    p0              uniform 0.0;
+                    addStaticHead   true;
+                }
+                T
+                {
+                    type inletOutlet;
+                    value uniform 300.0;
+                    inletValue uniform 300.0;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    intensity 0.05;
+                    value uniform 0.1;
+                }
+                omega
+                {
+                    type inletOutlet;
+                    inletValue uniform 0.01;
+                    k k;
+                    value uniform 0.01;
+                }
+            }
+        }
+    }
+    solid
+    {
+        state ( steady solid );
+        turbulenceModel laminar;
+        materials (copper);
+        materialProperties
+        {
+            copper
+            {
+                materialName copper;
+                materialType solid;
+                thermodynamics hConst;
+                equationOfState rhoConst;
+                energy sensibleEnthalpy;
+
+                molWeight 55.847;
+
+                thermodynamicsCoeffs
+                {
+                    Cp 386.0;
+                    Hf 0.0;
+                }
+                kappaModel constSolid;
+                kappaModelCoeffs
+                {
+                    kappa 398.0;
+                }
+                equationOfStateCoeffs
+                {
+                    rho 8880.0;
+                }
+            }
+        }
+        system
+        {
+            fvOptions
+            {
+                interfaceQ
+                {
+                    type scalarTimeDependentBoundarySource;
+                    fluxSource
+                    {
+                        // Heat flux density in W/m^2 for surfaceMode specific
+                        // or total heat flux in W for surfaceMode absolute
+                        //T table ( (0 0) (10 4000) (1e5 4000) );
+                        T
+                        {
+                            type table;
+                            T table ( (0 0) (10 4000) );
+                            outOfBounds clamp;
+                        }
+                    }
+                    surfaceMode absolute;
+                    patches ( ".*_to_.*" );
+                }
+            }
+        }
+        fields
+        {
+            T
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 300.0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,29 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/SR1/0/surfaceReport.tsv";
+                reference "verification/short/SR1/0/surfaceReport.tsv";
+                variables "massFlux" "Urelmax" "Urelmean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/SR1/0/surfaceReport.tsv";
+                reference "verification/long/SR1/0/surfaceReport.tsv";
+                variables "massFlux" "Urelmax" "Urelmean";
+            }
+        );
+    }
+);

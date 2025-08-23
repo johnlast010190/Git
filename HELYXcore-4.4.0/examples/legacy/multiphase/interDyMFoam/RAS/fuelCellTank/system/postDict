@@ -1,0 +1,560 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | HELYX(R): Open-source CFD for Enterprise                 |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | Engys Ltd. http://www.engys.com                          |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    location system;
+    object postDict;
+}
+    visualisations
+    {
+        baseMesh
+        {
+        }
+        geometry
+        {
+            monitorWall
+            {
+                visible false;
+            }
+            out1
+            {
+                visible false;
+            }
+            out2
+            {
+                visible false;
+            }
+            tank_L
+            {
+                opacity 0.5;
+                visible false;
+            }
+            tank_R
+            {
+                opacity 0.5;
+                visible false;
+            }
+        }
+        regions
+        {
+            region0
+            {
+                volumeMesh
+                {
+                    colorField "alpha.fuel.CELL";
+                    visible false;
+                }
+                monitorWall
+                {
+                    colorField "alpha.fuel.CELL";
+                    opacity 0.3;
+                    visible true;
+                }
+                out1
+                {
+                    colorField "alpha.fuel.CELL";
+                    opacity 0.3;
+                    visible true;
+                }
+                out2
+                {
+                    colorField "alpha.fuel.CELL";
+                    opacity 0.3;
+                    visible true;
+                }
+                tank_L
+                {
+                    colorField "alpha.fuel.CELL";
+                    opacity 0.3;
+                    visible true;
+                }
+                tank_R
+                {
+                    colorField "alpha.fuel.CELL";
+                    opacity 0.3;
+                    visible true;
+                }
+                internalBoundaries
+                {
+                    trap1
+                    {
+                        colorField "alpha.fuel.CELL";
+                        visible false;
+                    }
+                    trap1_slave
+                    {
+                        colorField "alpha.fuel.CELL";
+                        visible false;
+                    }
+                    trap2
+                    {
+                        colorField "alpha.fuel.CELL";
+                        visible false;
+                    }
+                    trap2_slave
+                    {
+                        colorField "alpha.fuel.CELL";
+                        visible false;
+                    }
+                }
+                cellZones
+                {
+                }
+                faceZones
+                {
+                }
+            }
+        }
+        objects
+        {
+            isosurface
+            {
+                colorField "alpha.fuel.CELL";
+                visible true;
+            }
+            threshold
+            {
+                colorField "U-Mag.CELL";
+                opacity 0.3;
+                visible true;
+            }
+        }
+        groups
+        {
+        }
+    }
+    groups
+    {
+    }
+    objects
+    {
+        isosurface
+        {
+            type isoSurface;
+            values ( 0.5 );
+            scalarField alpha.fuel;
+            enableSmoothing false;
+            iterations 100;
+            convergence 0.9;
+            source
+            {
+                type patch;
+                name "volumeMesh";
+            }
+        }
+        threshold
+        {
+            type threshold;
+            field "alpha.fuel.POINT";
+            allPointsCriterion true;
+            minThreshold 0.5;
+            maxThreshold 1.0;
+            invert false;
+            source
+            {
+                type patch;
+                name "volumeMesh";
+            }
+        }
+    }
+    colorLegends
+    {
+        p
+        {
+            title "p [Pa]";
+        }
+        U-Y
+        {
+            title "U-Y [m/s]";
+        }
+        U-X
+        {
+            title "U-X [m/s]";
+        }
+        U-Z
+        {
+            title "U-Z [m/s]";
+        }
+        U-Mag
+        {
+            title "U-Mag [m/s]";
+            position LEFT;
+            colorMap
+            {
+                automaticRange false;
+                range ( 0.0 10.0 );
+            }
+        }
+        rho
+        {
+            title "rho [Kg/m³]";
+        }
+        alphat
+        {
+            title "alphat";
+        }
+        k
+        {
+            title "k [m²/s²]";
+        }
+        nut
+        {
+            title "nut [m²/s]";
+        }
+        omega
+        {
+            title "omega [1/s]";
+            position LEFT;
+        }
+        cRegion_tDoor2
+        {
+            title "cRegion_tDoor2";
+        }
+        cRegion_trap1
+        {
+            title "cRegion_trap1";
+        }
+        p_rgh
+        {
+            title "p_rgh [Pa]";
+        }
+        alpha.air
+        {
+            title "alpha.air";
+        }
+        pointMotionU-Mag
+        {
+            title "pointMotionU-Mag";
+        }
+        pointDisplacement-X
+        {
+            title "pointDisplacement-X";
+        }
+        pointDisplacement-Y
+        {
+            title "pointDisplacement-Y";
+        }
+        alpha.fuel
+        {
+            title "alpha.fuel";
+        }
+        pointMotionU-Z
+        {
+            title "pointMotionU-Z";
+        }
+        pointDisplacement-Mag
+        {
+            title "pointDisplacement-Mag";
+        }
+        pointMotionU-Y
+        {
+            title "pointMotionU-Y";
+        }
+        pointMotionU-X
+        {
+            title "pointMotionU-X";
+        }
+        pointDisplacement-Z
+        {
+            title "pointDisplacement-Z";
+        }
+        cRegion_trap2
+        {
+            title "cRegion_trap2";
+        }
+    }
+    scenes
+    {
+        scene
+        {
+            export
+            {
+                fileNamePrefix scene;
+                fileExtension x3d;
+                timestep currentTimestep;
+            }
+            cameras
+            (
+                {
+                    focalPoint ( 0.17999999784 -0.20000000298 -0.13249999285 );
+                    position ( -0.15985574851 -1.1778028965 -0.75277337893 );
+                    parallelProjection false;
+                    up ( 0.17002915273 0.48505022129 -0.85779739452 );
+                    parallelScale 0.31233995622;
+                }
+            );
+            colors
+            {
+                background1 ( 1.0 1.0 1.0 );
+                background2 ( 1.0 1.0 1.0 );
+                widgetsColor ( 1.0 1.0 1.0 );
+                showAxes true;
+                showLogo true;
+                cubeAxesOptions
+                {
+                    showAxesGrid false;
+                    axesGridColor ( 1.0 1.0 1.0 );
+                    axesGridLabelColor ( 0.5019607843137255 0.5019607843137255 0.5019607843137255 );
+                    showAxesGridTitle false;
+                    XAxisTitle "X Axis";
+                    YAxisTitle "Y Axis";
+                    ZAxisTitle "Z Axis";
+                    manualFaceSelect false;
+                    showXYmin false;
+                    showXYmax false;
+                    showYZmin false;
+                    showYZmax false;
+                    showZXmin false;
+                    showZXmax false;
+                    useCustomBounds false;
+                    XBounds ( 0.0 1.0 );
+                    YBounds ( 0.0 1.0 );
+                    ZBounds ( 0.0 1.0 );
+                    useCustomLabels false;
+                    useXDistanceLabel false;
+                    useYDistanceLabel false;
+                    useZDistanceLabel false;
+                    useXDistance 0.0;
+                    useYDistance 0.0;
+                    useZDistance 0.0;
+                }
+                vectorWidget
+                {
+                    showVectorWidget false;
+                    vector bodyAcceleration;
+                    vector3DRepOptions
+                    {
+                        showVector3DRep false;
+                        showArrow true;
+                        showComponents false;
+                        scale 1.0;
+                        showTitle false;
+                        coordinates ( 0.0 0.7 );
+                    }
+                    vectorTextRepOptions
+                    {
+                        showVectorTextRep true;
+                        labelFormat "%.2f";
+                        fontSize 12;
+                        showTextBox false;
+                        showTitle true;
+                        coordinates ( 0.125 0.7 );
+                    }
+                }
+                showTimestep false;
+                timestepLabelFormat "%6.2f [s]";
+                timestepLabelCoordinates ( 0.95 0.95 );
+            }
+            colorLegendOptions
+            {
+                visible true;
+                position RIGHT;
+                labelFormat "%6.2f";
+                numberOfLabels 5;
+                thickness 16;
+                height 0.5;
+                vertical true;
+                resolution 256;
+                colorLegendType engys;
+                automaticLabels true;
+                showTicks false;
+                legendLabelFont
+                {
+                    font ARIAL;
+                    fontSize 12;
+                    textColor ( 0.0 0.0 0.0 );
+                    textOpacity 1.0;
+                    bold false;
+                    italics false;
+                    shadow false;
+                }
+            }
+            items
+            (
+                {
+                    type patch;
+                    name "monitorWall";
+                    visible true;
+                    colorField "alpha.fuel.CELL";
+                    opacity 0.3;
+                }
+                {
+                    type patch;
+                    name "out1";
+                    visible true;
+                    colorField "alpha.fuel.CELL";
+                    opacity 0.3;
+                }
+                {
+                    type patch;
+                    name "out2";
+                    visible true;
+                    colorField "alpha.fuel.CELL";
+                    opacity 0.3;
+                }
+                {
+                    type patch;
+                    name "tank_L";
+                    visible true;
+                    colorField "alpha.fuel.CELL";
+                    opacity 0.3;
+                }
+                {
+                    type patch;
+                    name "tank_R";
+                    visible true;
+                    colorField "alpha.fuel.CELL";
+                    opacity 0.3;
+                }
+                {
+                    type isoSurface;
+                    name "isosurface";
+                    visible true;
+                    colorField "alpha.fuel.CELL";
+                    values ( 0.5 );
+                    scalarField alpha.fuel;
+                    enableSmoothing false;
+                    iterations 100;
+                    convergence 0.9;
+                    source
+                    {
+                        type patch;
+                        name "volumeMesh";
+                    }
+                    itemType object;
+                }
+                {
+                    type threshold;
+                    name "threshold";
+                    visible true;
+                    colorField "U-Mag.CELL";
+                    opacity 0.3;
+                    field "alpha.fuel.POINT";
+                    allPointsCriterion true;
+                    minThreshold 0.5;
+                    maxThreshold 1.0;
+                    invert false;
+                    source
+                    {
+                        type patch;
+                        name "volumeMesh";
+                    }
+                    itemType object;
+                }
+            );
+            colorLegends
+            {
+                U-Mag
+                {
+                    title "U-Mag [m/s]";
+                    position LEFT;
+                    colorMap
+                    {
+                        automaticRange false;
+                        range ( 0.0 10.0 );
+                    }
+                }
+                alpha.fuel
+                {
+                    title "alpha.fuel";
+                    colorMap
+                    {
+                    }
+                }
+            }
+        }
+    }
+    displayOptions
+    {
+        background1 ( 1.0 1.0 1.0 );
+        background2 ( 1.0 1.0 1.0 );
+        widgetsColor ( 1.0 1.0 1.0 );
+        showAxes true;
+        showLogo true;
+        cubeAxesOptions
+        {
+            showAxesGrid false;
+            axesGridColor ( 1.0 1.0 1.0 );
+            axesGridLabelColor ( 0.5019607843137255 0.5019607843137255 0.5019607843137255 );
+            showAxesGridTitle false;
+            XAxisTitle "X Axis";
+            YAxisTitle "Y Axis";
+            ZAxisTitle "Z Axis";
+            manualFaceSelect false;
+            showXYmin false;
+            showXYmax false;
+            showYZmin false;
+            showYZmax false;
+            showZXmin false;
+            showZXmax false;
+            useCustomBounds false;
+            XBounds ( 0.0 1.0 );
+            YBounds ( 0.0 1.0 );
+            ZBounds ( 0.0 1.0 );
+            useCustomLabels false;
+            useXDistanceLabel false;
+            useYDistanceLabel false;
+            useZDistanceLabel false;
+            useXDistance 0.0;
+            useYDistance 0.0;
+            useZDistance 0.0;
+        }
+        vectorWidget
+        {
+            showVectorWidget false;
+            vector bodyAcceleration;
+            vector3DRepOptions
+            {
+                showVector3DRep false;
+                showArrow true;
+                showComponents false;
+                scale 1.0;
+                showTitle false;
+                coordinates ( 0.0 0.7 );
+            }
+            vectorTextRepOptions
+            {
+                showVectorTextRep true;
+                labelFormat "%.2f";
+                fontSize 12;
+                showTextBox false;
+                showTitle true;
+                coordinates ( 0.125 0.7 );
+            }
+        }
+        showTimestep true;
+        timestepLabelFormat "%6.2f [s]";
+        timestepLabelCoordinates ( 0.95 0.95 );
+    }
+    colorLegendOptions
+    {
+        visible true;
+        position RIGHT;
+        labelFormat "%6.2f";
+        numberOfLabels 5;
+        thickness 16;
+        height 0.5;
+        vertical true;
+        resolution 256;
+        colorLegendType engys;
+        automaticLabels true;
+        showTicks false;
+        legendLabelFont
+        {
+            font ARIAL;
+            fontSize 12;
+            textColor ( 0.0 0.0 0.0 );
+            textOpacity 1.0;
+            bold false;
+            italics false;
+            shadow false;
+        }
+    }

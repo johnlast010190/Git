@@ -1,0 +1,83 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+meshAlgorithm standard;
+
+blockType    auto;
+blockData       ( 0.01 0);
+
+geometry
+{
+    chamber.stl
+    {
+        type triSurfaceMesh;
+        name chamber;
+    }
+    ovoid.stl
+    {
+        type triSurfaceMesh;
+        name ovoid;
+    }
+}
+
+castellatedMeshControls
+{
+    features ();
+    refinementSurfaces
+    {
+        chamber
+        {
+            regions {}
+            level (0 0);
+        }
+        ovoid
+        {
+            cellZoneInside inside;
+            faceType internal;
+            cellZone solid;
+            level (3 3 );
+            faceZone solid;
+            baffleChecks false;
+        }
+    }
+    refinementRegions {}
+    locationInMesh ( 0.0 0.0 0.1 );
+}
+
+snapControls
+{
+    featureEdges {}
+}
+
+addLayersControls
+{
+    layers
+    {
+        chamber_walls
+        {
+            nSurfaceLayers 3;
+        }
+	    ovoid
+        {
+            nSurfaceLayers 3;
+        }
+    }
+}
+
+
+// ************************************************************************* //

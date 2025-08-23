@@ -1,0 +1,18 @@
+#!/bin/bash
+cd ${0%/*} || exit 1    # Run from this directory
+
+# Source tutorial run functions
+. $HELYX_PROJECT_DIR/bin/tools/RunFunctions
+
+
+cp $HELYX_TUTORIALS/resources/geometry/cyclone.stl.gz constant/triSurface
+
+runApplication blockMesh
+
+runApplication helyxHexMesh -overwrite
+
+runApplication decomposePar
+
+runParallel MPPICFoam
+
+#------------------------------------------------------------------------------

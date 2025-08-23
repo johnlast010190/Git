@@ -1,0 +1,21 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+# tags: asan
+
+#------------------------------------------------------------------------------
+
+# Run
+helyxRun blockMesh
+helyxRun topoSet
+mv log.topoSet log.topoSetAll
+helyxRun splitMeshRegions -cellZones -overwrite
+rm -r 0/domain0 constant/domain0 system/domain0
+
+helyxRun caseSetup
+cp system/topoSetDict.air system/air/topoSetDict
+helyxRun topoSet -region air
+helyxRun helyxSolve
+touch solarBeam.foam
+#------------------------------------------------------------------------------

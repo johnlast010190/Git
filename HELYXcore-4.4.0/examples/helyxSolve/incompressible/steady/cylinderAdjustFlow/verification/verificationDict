@@ -1,0 +1,41 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/SR1/0/surfaceReport.tsv";
+                reference "verification/short/SR1/0/surfaceReport.tsv";
+                variables "massFlux" "Umean" "pmean";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/VR_mesh/0/volumeReport.tsv";
+                reference "verification/short/VR_mesh/0/volumeReport.tsv";
+                variables "aspectRatiomean" "determinantmean" "nonOrthogonalitymean" "skewnessmean" "volumeRatiomean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/SR1/0/surfaceReport.tsv";
+                reference "verification/long/SR1/0/surfaceReport.tsv";
+                variables "massFlux" "Umean" "pmean";
+            }
+            {
+                result "postProcessing/VR_mesh/0/volumeReport.tsv";
+                reference "verification/long/VR_mesh/0/volumeReport.tsv";
+                variables "aspectRatiomean" "determinantmean" "nonOrthogonalitymean" "skewnessmean" "volumeRatiomean";
+            }
+        );
+    }
+);

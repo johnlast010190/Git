@@ -1,0 +1,235 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+    }
+    regionGroups    1 ( fluid 1 ( region0 ) );
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       latestTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         100;
+            deltaT          1;
+            writeControl    timeStep;
+            writeInterval   100;
+            purgeWrite      0;
+            writeFormat     ascii;
+            writePrecision  10;
+            writeCompression uncompressed;
+            timeFormat      general;
+            timePrecision   6;
+            graphFormat     raw;
+            runTimeModifiable true;
+        }
+    }
+    functions
+    {
+        VP
+        {
+            type           probes;
+            functionObjectLibs ( "libsampling.so" );
+            fields         (p);
+            probeLocations ( (0.5 0.5 0) );
+            executeControl onEnd;
+            writeControl   onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        boundaryMesh
+        {
+            Inlet
+            {
+                type            inlet;
+            }
+            Outlet
+            {
+                type            outlet;
+            }
+            Wall-Floor
+            {
+                type            wall;
+            }
+            Wall-Sides
+            {
+                type            wall;
+            }
+            Side1
+            {
+                type            empty;
+            }
+            Side2
+            {
+                type            empty;
+            }
+        }
+        state           ( steady ras energy );
+        turbulenceModel kOmegaSST;
+        materials       ( air );
+        materialProperties
+        {
+            air
+            {
+                buoyancyModel Boussinesq;
+                buoyancyModelCoeffs
+                {
+                    rho0 1.225;
+                    beta 0.00333;
+                    T0 288.15;
+                }
+            }
+        }
+        constant
+        {
+            g
+            {
+                dimensions      [ 0 1 -2 0 0 0 0 ];
+                value           ( 0 -9.81 0 );
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type            potentialFlow;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type            buoyantPressure;
+                    initialValue    uniform 0;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 288.15;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type            turbulentIL;
+                    I               0.06;
+                    L               0.0018;
+                    Uref            0.57;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type            turbulentIL;
+                    I               0.06;
+                    L               0.0018;
+                    Uref            0.57;
+                }
+            }
+            epsilon
+            {
+                initialisation
+                {
+                    type            turbulentIL;
+                    I               0.06;
+                    L               0.0018;
+                    Uref            0.57;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            Inlet
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform ( 0.57 0 0 );
+                }
+                k
+                {
+                    type            fixedValue;
+                    value           uniform 0.001754;
+                }
+                epsilon
+                {
+                    type            fixedValue;
+                    value           uniform 0.04083;
+                }
+                omega
+                {
+                    type            fixedValue;
+                    value           uniform 258.65;
+                }
+                T
+                {
+                    type            fixedValue;
+                    value           uniform 288.15;
+                }
+            }
+            Outlet
+            {
+                p
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+            }
+            Wall-Floor
+            {
+                T
+                {
+                    type            fixedValue;
+                    value           uniform 308.65;
+                }
+            }
+            Wall-Sides
+            {
+                T
+                {
+                    type            fixedValue;
+                    value           uniform 288.15;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

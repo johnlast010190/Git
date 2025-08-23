@@ -1,0 +1,296 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         1;
+            deltaT          1e-05;
+            writeInterval   0.005;
+            writePrecision  8;
+            timePrecision   10;
+            maxCo           0.25;
+            maxAlphaCo      0.25;
+            maxDeltaT       1e-03;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p alpha.water );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state           ( dynamic transient ras vof );
+        materials       ( water air );
+        materialProperties
+        {
+            referenceFields
+            {
+                TConst          [ 0 0 0 1 0 0 0 ] 273.15;
+                p               [ 1 -1 -2 0 0 0 0 ] 101325;
+            }
+            water
+            {
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho             1000;
+                }
+                muModelCoeffs
+                {
+                    mu              1e-03;
+                }
+                kappaModelCoeffs
+                {
+                    Pr              2.289;
+                }
+            }
+            air
+            {
+                equationOfStateCoeffs
+                {
+                    rho             1;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cp              1006.8;
+                    Hf              0;
+                }
+                muModelCoeffs
+                {
+                    mu              1.48e-05;
+                }
+            }
+            air_water
+            {
+                surfaceTensionModelCoeffs
+                {
+                    sigma           0.07;
+                }
+            }
+        }
+        boundaryMesh
+        {
+            inlet
+            {
+                physicalType inlet;
+            }
+        }
+        constant
+        {
+            g
+            {
+                dimensions      [ 0 1 -2 0 0 0 0 ];
+                value           ( 0 -9.81 0 );
+            }
+            dynamicMeshDict
+            {
+                GIBChanger
+                {
+                    type            solidBody;
+                    libs            ("libfvMeshGIBChangers.so");
+
+                    solidBodyCoeffs
+                    {
+                        triSurfaceName  GIB_box.stl;
+                        region0Patch    (atmosphere);
+                        motionFunctions
+                        {
+                            referenceFrame oscillatingFrame;
+                        }
+                    }
+                }
+            }
+        }
+        system
+        {
+            meshObjects
+            {
+                oscillatingFrame
+                {
+                    type dynamicMotionCoordinateFrame;
+                    motionFunction
+                    {
+                        type oscillatingLinearMotion;
+                        amplitude       (0.025  0 0);
+                        omega           25.132741; // 0.25 sec period
+                    }
+                    coordinateSystem
+                    {
+                        type cartesian;
+                        origin ( 0 0 0 );
+                        e1 (1 0 0);
+                        e3 (0 0 1);
+                    }
+                }
+            }
+            fvOptions
+            {
+                volumeFractionSolver
+                {
+                    type            MULESVolumeFractionSolver;
+                    nAlphaSubCycles 1;
+                    cAlpha          1;
+                }
+            }
+            fvSchemes
+            {
+                gradSchemes
+                {
+                    default         Gauss linear;
+                }
+
+                divSchemes
+                {
+                    div(phi,U)      bounded Gauss upwind;
+                }
+
+                laplacianSchemes
+                {
+                    default         Gauss linear uncorrected;
+                }
+
+                snGradSchemes
+                {
+                    default         uncorrected;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    p
+                    {
+                        solver          GAMG;
+                        preconditioner  DIC;
+                        cacheAgglomeration false;
+                        tolerance       1e-09;
+                        relTol          0.001;
+                        smoother        DIC;
+                    }
+
+                    pFinal
+                    {
+                        solver          PCG;
+                        preconditioner
+                        {
+                            preconditioner  GAMG;
+                            tolerance       1e-09;
+                            cacheAgglomeration false;
+                            relTol          0;
+                            nVcycles        2;
+                            smoother        DICGaussSeidel;
+                            nPreSweeps      2;
+                        }
+                        tolerance       1e-09;
+                        relTol          0;
+                        maxIter         20;
+                    }
+                }
+                PIMPLE
+                {
+                    momentumPredictor no;
+                    transonic       no;
+                    nOuterCorrectors 1;
+                    nCorrectors     1;
+                    nNonOrthogonalCorrectors 0;
+                }
+            }
+        }
+        fields
+        {
+            p {initialisation{type buoyantPressure; value uniform 0;}}
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform ( 0 -0.5 0 );
+                }
+                alpha.water
+                {
+                    type            fixedValue;
+                    value           uniform 1;
+                }
+            }
+            atmosphere
+            {
+                p
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+            }
+            walls
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform ( 0 0 0 );
+                }
+            }
+            bottom
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform ( 0 0 0 );
+                }
+            }
+            ib1
+            {
+                U
+                {
+                    type            movingWallVelocity;
+                    value           uniform ( 0 0 0 );
+                }
+            }
+            ib2
+            {
+                p
+                {
+                    type            fixedValueZone;
+                    value           uniform 0;
+                    cellZoneValue   0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

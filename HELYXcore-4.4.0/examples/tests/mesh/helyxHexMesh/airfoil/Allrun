@@ -1,0 +1,27 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy input surface from resources directory
+mkdir -p constant/triSurface
+cp "$HELYX_TUTORIALS"/resources/geometry/airfoil/* constant/triSurface/
+
+# Background mesh
+helyxRun blockMesh
+
+# Decompose and mesh
+helyxRun decomposePar -force
+helyxRun helyxHexMesh
+
+# Check
+helyxRun checkMesh -writeAllMetrics
+
+# Run post-processing
+helyxRun postProcess -field nonOrthogonality
+
+# Create dummy file for ParaView visualization
+touch airfoil.foam
+
+#------------------------------------------------------------------------------

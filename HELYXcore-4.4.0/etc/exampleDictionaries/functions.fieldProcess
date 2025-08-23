@@ -1,0 +1,198 @@
+    fp1
+    {
+        type fieldProcess;
+        functionObjectLibs ( "libfieldFunctionObjects.so" );
+        //libs ( "libfieldFunctionObjects.so" );
+
+        region region0;
+
+        calculationControl writeTime;//continuous 
+        //continuous makes fields permanent in the database
+        //writeTime only calculates fields during a write
+
+        //optional write control
+        outputControl outputTime;
+        outputInterval 1;
+
+        operations //performed in order in list - can re-use in order variables
+        (
+            
+            {
+                operation Unw;
+                fieldName Unwv;
+            }
+
+
+            {
+                operation ptot;
+                fieldName ptot;
+                write true; //optional, default true
+                nearCellValue false; //optional, default false
+                p p; //optional, default p
+                U U; //optional, default U
+            }
+
+
+            {
+                operation Cp;
+                fieldName Cp;
+                write true; //optional, default true
+                nearCellValue false; //optional, default false
+                p p; //optional, default p
+                Uref 40;
+                rhoRef 1.2; //only used for compressible
+                pRef 100000; //only used for compressible   
+            }
+
+
+            {
+                operation Cg;
+                fieldName Cg;
+                write true; //optional, default true
+                nearCellValue false; //optional, default false
+                p p; //optional, default p
+                U U; //optional, default U
+                Uref 40;
+                rhoRef 1.2; //only used for compressible
+            }
+
+
+            {
+                operation lambda2;
+                fieldName lambda2;
+                nearCellValue false; //optional, default false
+                write true; //optional, default true
+                U U; //optional, default U
+            }
+
+
+            {
+                operation Q;
+                fieldName Q;
+                nearCellValue false; //optional, default false
+                write true; //optional, default true
+                U U; //optional, default U
+            }
+
+
+            {
+                operation vorticity;
+                fieldName Omega;
+                nearCellValue false;
+                write true;
+                U U;
+            }
+
+            {
+                operation div;
+                fieldName divU;
+                nearCellValue false;
+                write true;
+                inField U;
+            }
+
+            {
+                operation mag;
+                fieldName magU;
+                nearCellValue false;
+                write true;
+                inField U;
+            }
+
+
+            {
+                operation grad;
+                fieldName gradp;
+                nearCellValue false;
+                write true;
+                inField p;
+            }
+
+
+            {
+                operation magGrad;
+                fieldName magGradU;
+                nearCellValue false;
+                write true;
+                inField U;
+            }
+
+            {
+                operation pow;
+                fieldName U2;
+                inField U;
+                power 2;
+                nearCellValue false;
+                write true;
+            }
+
+            {
+                operation dot;
+                fieldName UdotGradp;
+                nearCellValue true;
+                write true;
+                inField1 U;
+                inField2 gradp;
+            }
+
+            {
+                operation cross;
+                fieldName UcrossU;
+                nearCellValue true;
+                write true;
+                inField1 U;
+                inField2 U;
+            }
+
+            {
+                operation Co; //volScalarField max face courant number
+                fieldName Co;
+                phi phi; //optional, default phi
+                rho rho; //compressible only, optional default "rho"
+            }
+
+
+            {
+                operation wallShear;
+                fieldName tauw;
+                nearCellValue false;
+                write true;
+            }
+
+
+            {
+                operation yPlus;
+                fieldName yPlus;
+                shearField tauw; //optional, if not present wall shear will be calculated onthe fly
+                nearCellValue false;
+                write true;
+            }
+
+            {
+                operation Pe;
+                fieldName Pe;
+                phi phi;
+                rho rho; //compressible only, optional default "rho"
+            }
+                    
+            {
+                operation Urel;
+                fieldName Urel;
+                U U;
+            }
+  
+            //comming soon
+            //============
+            //plus
+            //minus
+            //product
+            //division
+            //max
+            //min
+            //bound
+            //pow
+            //laplacian
+            //interpreter?
+            
+        );        
+    }

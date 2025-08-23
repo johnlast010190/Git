@@ -1,0 +1,171 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application moveDynamicMesh;
+            endTime 1;
+            deltaT 1;
+            writeInterval 1;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( );
+        constant
+        {
+            dynamicMeshDict
+            {
+                mover
+                {
+                    type            motionSolver;
+                    libs            ("libfvMeshMovers.so" "libfvMotionSolvers.so");
+                    motionSolver    velocityLaplacian;
+                    diffusivity     quadratic inverseDistance 1 ( roof.snow );
+                    interpolation   patchCorrected
+                    (
+                        ( roof.snow cube bottom )
+                        ( inlet outlet top sides )
+                    );
+                }
+            }
+        }
+        system
+        {
+            fvSolution
+            {
+                solvers
+                {
+                    cellMotionUFinal
+                    {
+                        solver          GAMG;
+                        smoother        GaussSeidel;
+                        tolerance       1e-08;
+                        relTol          0;
+                    }
+                    cellMotionU
+                    {
+                        solver          PCG;
+                        preconditioner  DIC;
+                        tolerance       1e-08;
+                        relTol          0;
+                        minIter         1;
+                    }
+                }
+                PIMPLE {}
+            }
+            fvSchemes
+            {
+                laplacianSchemes
+                {
+                    laplacian(diffusivity,cellMotionU) Gauss linear uncorrected;
+                }
+                interpolationSchemes { default linear; }
+            }
+            codeDict
+            {
+                pack
+                {
+                    code
+                    #{
+                        pointField pointU(patch().meshPoints().size());
+                        const scalar maxHeight = 0.8;
+                        const scalar reposeAngle = 50;
+                        scalar edgeWidth = maxHeight / tan(degToRad(reposeAngle));
+                        const scalar front = 120;
+                        const scalar rear = 120 + 3*8;
+                        forAll(patch().localPoints(), i)
+                        {
+                            pointU[i][0] = 0;
+                            pointU[i][1] = 0;
+                            if (patch().localPoints()[i][0] < front + edgeWidth)
+                            {
+                                pointU[i][2] =
+                                    (patch().localPoints()[i][0] - front)/edgeWidth*maxHeight;
+                            }
+                            else if (patch().localPoints()[i][0] > rear - edgeWidth)
+                            {
+                                pointU[i][2] =
+                                    (rear - patch().localPoints()[i][0])/edgeWidth*maxHeight;
+                            }
+                            else
+                            {
+                                pointU[i][2] = maxHeight;
+                            }
+                        }
+                        const scalar left = 64;
+                        const scalar right = 64 + 2*8;
+                        forAll(patch().localPoints(), i)
+                        {
+                            if (patch().localPoints()[i][1] < left + edgeWidth)
+                            {
+                                scalar hTmp =
+                                    (patch().localPoints()[i][1] - left)/edgeWidth*maxHeight;
+                                pointU[i][2] = pointU[i][2] > hTmp ? hTmp : pointU[i][2];
+                            }
+                            else if (patch().localPoints()[i][1] > right - edgeWidth)
+                            {
+                                scalar hTmp =
+                                    (right - patch().localPoints()[i][1])/edgeWidth*maxHeight;
+                                pointU[i][2] = pointU[i][2] > hTmp ? hTmp : pointU[i][2];
+                            }
+                        }
+                        (*this).forceAssign(pointU);
+                    #};
+                }
+            }
+        }
+        fields
+        {
+            pointMotionU { initialisation { type fixedValue; value uniform ( 0.0 0.0 0.0 ); } }
+        }
+        fieldMaps { pointMotionU motion; }
+        boundaryConditions
+        {
+            roof.snow
+            {
+                pointMotionU
+                {
+                    value uniform (0 0 0);
+                    type codedFixedValue;
+                    name pack;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,43 @@
+README:  HELYX-Core
+AUTHOR:  ENGYS Ltd.
+WEBSITE: http://engys.com
+
+Copyright (C) 2021 ENGYS Ltd.
+Portions of HELYX-Core are original or derived work of OPENFOAM®
+<http://www.openfoam.org/>.
+
+About HELYX-Core:
+  HELYX-Core is an open source computational fluid dynamics (CFD)
+application library developed and released by ENGYS as part of
+the software products HELYX® and ELEMENTS.
+  HELYX-Core is based on OPENFOAM® <http://www.openfoam.org>.
+
+License:
+  HELYX-Core is "free software": you can redistribute it and/or
+modify it under the terms of the GNU General Public License (GNU GPL)
+as published by the Free Software Foundation, either version 3 of the
+GNU GPL, or (at your option) any later version.
+  Please refer to the file LICENSE in this directory or visit
+<http://www.gnu.org/licenses/> for a complete description of the
+GNU GPL terms under which you can copy, modify and distribute
+HELYX-Core.
+
+Third Party:
+  List of ancillary third party software provided by ENGYS as part
+of this version of HELYX-Core.
+
+  delabella		https://github.com/msokalski/delabella
+  knn (ANN)		http://www.cs.umd.edu/~mount/ANN/
+
+Documentation:
+  Documentation for HELYX-Core is available as part of the software
+products HELYX® and ELEMENTS.
+  For more information visit: http://engys.com/products, or contact:
+info@engys.com
+
+Support and development contracts:
+  Contact: info@engys.com
+
+Reporting issues with HELYX-Core
+  Contact support@engys.com for HELYX® or support@streamline-cae.com
+for ELEMENTS

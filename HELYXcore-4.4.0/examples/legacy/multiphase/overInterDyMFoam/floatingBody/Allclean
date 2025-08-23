@@ -1,0 +1,10 @@
+#!/bin/bash
+cd ${0%/*} || exit 1    # run from this directory
+
+# Source tutorial run functions
+. $HELYX_PROJECT_DIR/bin/tools/RunFunctions
+
+(cd background && ./Allclean)
+(cd floatingBody && ./Allclean)
+
+# ----------------------------------------------------------------- end-of-file

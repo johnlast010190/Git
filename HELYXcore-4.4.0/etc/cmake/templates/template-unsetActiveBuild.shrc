@@ -1,0 +1,185 @@
+#!/bin/sh
+# [---------------------------------------------------------------------------]
+# |       o        |
+# |    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+# |   o   O   o    |  Version : 4.4.0
+# |    o     o     |  ENGYS Ltd. <http://engys.com/>
+# |       o        |
+# [---------------------------------------------------------------------------]
+# License
+#     This file is part of HELYXcore.
+#     HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+#
+#     HELYXcore is free software: you can redistribute it and/or modify it
+#     under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+#
+#     HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+#     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+#     for more details.
+#
+#     You should have received a copy of the GNU General Public License
+#     along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+# Copyright
+#     (C) 2011-2016 OpenFOAM Foundation
+#     (C) 2016-2022 OpenCFD Ltd.
+#     (C) 2023 Engys Ltd.
+#
+# File
+#     platforms/unsetActiveBuild.chrc
+#     - need to be sourced manually
+#
+# Description
+#     Clear as many HELYX environment settings as possible
+#
+#------------------------------------------------------------------------------
+
+# Clean standard environment variables (PATH, LD_LIBRARY_PATH, MANPATH)
+foamClean=$HELYX_PROJECT_DIR/bin/foamCleanPath
+#[ -f "$foamClean" -a -x "$foamClean" ] || unset foamClean
+if [ ! -d "$HELYX_PROJECT_DIR" ]
+then
+    echo "WARNING: Not cleaning PATH and LD_LIBRAY_PATH. "\
+         "Unable to determine project root from 'HELYX_PROJECT_DIR'"\
+         "environment variable"
+    unset foamClean
+elif [ -f "$foamClean" ] && [ ! -x "$foamClean" ]
+then
+    echo "WARNING: Not cleaning PATH and LD_LIBRAY_PATH. " \
+         "'$HELYX_PROJECT_DIR/bin/foamCleanPath' requires execute permissions"
+    unset foamClean
+fi
+
+# The old dirs to be cleaned from the environment variables
+foamOldDirs="${HELYX_PROJECT_DIR} ${HELYX_PROJECT_DIR}/bin \
+${HELYX_RUNTIME_OUTPUT_DIRECTORY} ${HELYX_LIBRARY_OUTPUT_DIRECTORY} \
+${HELYX_PROJECT_DIR}/wmake ${HELYX_PROJECT_DIR}/platforms/${HELYX_OPTIONS}/test \
+@MPIEXEC_PATH@ @MPI_LIBRARY_PATHS_STRING@ \
+@HELYX_ADDITIONAL_LD_LIBRARY_PATHS@"
+
+
+#------------------------------------------------------------------------------
+# Unset HELYX_* environment variables
+
+# Path variables
+unset HELYX_PROJECT_DIR
+unset HELYX_SETTINGS_FILE
+unset HELYX_OPTIONS
+unset HELYX_SRC
+unset HELYX_ETC
+unset HELYX_MODULES
+unset HELYX_APPLICATIONS
+unset HELYX_SOLVERS
+unset HELYX_UTILITIES
+unset HELYX_TUTORIALS
+unset HELYX_RUNTIME_OUTPUT_DIRECTORY
+unset HELYX_LIBRARY_OUTPUT_DIRECTORY
+unset HELYX_CONFIG
+unset HELYX_THIRDPARTY_VERSION
+unset HELYX_THIRDPARTY_DIR
+unset HELYX_SIGFPE
+
+# IDE variables
+unset HELYX_BUILD_PLATFORM
+unset HELYX_COMPILER_LIB_ARCH
+unset HELYX_COMPILER_NAME
+unset HELYX_PRECISION_OPTION
+unset HELYX_LABEL_SIZE
+unset HELYX_BUILD_TYPE
+unset HELYX_PROJECT_VERSION
+unset HELYX_CC
+unset HELYX_CXX
+unset THIRDPARTY_INSTALL_DIR
+
+
+#------------------------------------------------------------------------------
+# Unset FOAM_* environment variables
+
+unset FOAM_CONFIG
+unset FOAM_CONFIG_ETC
+unset FOAM_CONFIG_MODE
+unset FOAM_SIGFPE
+unset FOAM_USER_APPBIN
+unset FOAM_USER_LIBBIN
+
+
+#------------------------------------------------------------------------------
+# Unset Third-Party environment variables
+
+unset HELYX_MPI_NAME
+unset MPI_ARCH_PATH
+unset MPI_BUFFER_SIZE
+unset OPAL_PREFIX
+unset I_MPI_ROOT
+## Cleanup mpi prefix values if set to one of the paths on foamOldDirs
+#if [ -n "$foamClean" ]
+#then
+#    # openmpi:
+#    [ -z "$($foamClean -env=OPAL_PREFIX $foamOldDirs)" ] && unset OPAL_PREFIX
+#    # intelmpi:
+#    [ -z "$($foamClean -env=I_MPI_ROOT $foamOldDirs)" ] && unset I_MPI_ROOT
+#fi
+
+
+#------------------------------------------------------------------------------
+# Cleanup environment
+# PATH, LD_LIBRARY_PATH, MANPATH
+
+if [ -n "$foamClean" ]
+then
+    eval "$($foamClean -sh-env=PATH $foamOldDirs)"
+    eval "$($foamClean -sh-env=MANPATH $foamOldDirs)"
+    eval "$($foamClean -sh-env=LD_LIBRARY_PATH $foamOldDirs)"
+fi
+
+[ -n "$MANPATH" ] || unset MANPATH
+[ -n "$LD_LIBRARY_PATH" ] || unset LD_LIBRARY_PATH
+
+
+#------------------------------------------------------------------------------
+# Cleanup aliases and functions
+
+unalias src 2>/dev/null
+unalias run 2>/dev/null
+unalias tut 2>/dev/null
+unalias sol 2>/dev/null
+unalias app 2>/dev/null
+unalias util 2>/dev/null
+unalias foam 2>/dev/null
+unalias helyx 2>/dev/null
+
+
+#------------------------------------------------------------------------------
+# Cleanup auto-completions
+
+# Remove old completions, which look like
+#     "complete ... -F _of_complete_ APPNAME
+# For economy, obtain list first
+foamOldDirs="$(complete 2>/dev/null | sed -ne 's/^.*-F _of_.* \(..*\)$/\1/p')"
+for cleaned in $foamOldDirs
+do
+    complete -r "$cleaned" 2>/dev/null
+done
+
+# Remove emake completions
+emakeOldDirs="$(complete 2>/dev/null | sed -ne 's/^.*-F _emake \(..*\)$/\1/p')"
+
+complete -r "$emakeOldDirs" 2>/dev/null
+
+# Completion functions
+unset -f foamAddCompletion 2>/dev/null
+unset -f _of_complete_  2>/dev/null
+
+# Completion cache
+unset _of_complete_cache_
+
+
+#------------------------------------------------------------------------------
+# Intermediate variables (do as last for a clean exit code)
+
+unset cleaned foamClean foamOldDirs _foamFoundDir
+
+#------------------------------------------------------------------------------

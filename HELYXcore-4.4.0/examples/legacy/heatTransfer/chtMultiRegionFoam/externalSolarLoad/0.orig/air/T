@@ -1,0 +1,79 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0/air";
+    object      T;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [ 0 0 0 1 0 0 0 ];
+
+internalField   uniform 300;
+
+boundaryField
+{
+    maxY
+    {
+        type            inletOutlet;
+        value           uniform 300;
+        inletValue      uniform 300;
+    }
+    minX
+    {
+        type            inletOutlet;
+        value           uniform 300;
+        inletValue      uniform 300;
+    }
+    maxX
+    {
+        type            inletOutlet;
+        value           uniform 300;
+        inletValue      uniform 300;
+    }
+    minY
+    {
+        type            inletOutlet;
+        value           uniform 300;
+        inletValue      uniform 300;
+    }
+    maxZ
+    {
+        type            inletOutlet;
+        value           uniform 300;
+        inletValue      uniform 300;
+    }
+    air_to_floor
+    {
+        type            turbulentTemperatureRadCoupledMixed;
+        value           uniform 300;
+        inletValue      uniform 300;
+        Tnbr            T;
+        kappaMethod     fluidThermo;
+        QrNbr           none;
+        Qr              Qr;
+        kappa           none;
+    }
+    air_to_solid
+    {
+        type            turbulentTemperatureRadCoupledMixed;
+        value           uniform 300;
+        inletValue      uniform 300;
+        Tnbr            T;
+        kappaMethod     fluidThermo;
+        QrNbr           none;
+        Qr              Qr;
+        kappa           none;
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,21 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Mesh in parallel
+helyxRun -p helyxHexMesh -constant
+
+# Split Mesh Regions
+helyxRun splitMeshRegions -overwrite -zoneToRegionMap "( (battery1 (battery1)) (battery2 (battery2)) (battery3 (battery3)) (air (air)) (busbar (busbar)) )"
+
+# Setup
+helyxRun caseSetup
+
+# Run
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch batteries.foam
+

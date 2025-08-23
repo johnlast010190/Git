@@ -1,0 +1,29 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/vr1/0/volumeReport.dat";
+                reference "verification/short/vr1/0/volumeReport.dat";
+                variables "Umax" "Umean" "pmax" "pmean";
+                absolute 0.01;
+                relative 0.01;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/vr1/0/volumeReport.dat";
+                reference "verification/long/vr1/0/volumeReport.dat";
+                variables "Umax" "Umean" "pmax" "pmean";
+            }
+        );
+    }
+);

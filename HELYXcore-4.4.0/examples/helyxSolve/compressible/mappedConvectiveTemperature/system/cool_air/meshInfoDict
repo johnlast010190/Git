@@ -1,0 +1,94 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | HELYX(R): Open-source CFD for Enterprise                 |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | Engys Ltd. http://www.engys.com                          |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    location system;
+    object meshInfoDict;
+}
+    points 140221;
+    cells 125692;
+    faces 391129;
+    internalFaces 358607;
+    boundaryPatches 7;
+    faceZones 2;
+    cellZones 3;
+    domainVolume 0.375933677;
+    hexahedra 121212;
+    prisms 4416;
+    wedges 64;
+    pyramids 0;
+    tetWedges 0;
+    tetrahedra 0;
+    polyhedra 0;
+    boundingBox ( -9.006646866E-7 -0.3992106915 -0.3995458504 ) ( 1.000000901 0.3992106915 0.3995456183 );
+    patchesInfo
+    {
+        cool_air_to_pipe
+        {
+            faces 7236;
+            points 7631;
+            area 1.254911923;
+            normal ( 8.327141764E-9 -2.205023176E-9 1.547051758E-11 );
+        }
+        outside
+        {
+            faces 3624;
+            points 3861;
+            area 0.7517822365;
+            normal ( -1.251171813E-8 3.680732793E-9 -2.582422151E-11 );
+        }
+        opening
+        {
+            faces 9916;
+            points 10462;
+            area 2.510530705;
+            normal ( -4.157455409E-10 -1.326679282E-16 1.216122675E-16 );
+        }
+    }
+    cellZonesInfo
+    {
+        cool_air
+        {
+            cells 125692;
+            volume 0.375933677;
+            centroid ( 0.4999999998 -5.159276304E-10 2.951970642E-10 );
+        }
+        hot_air
+        {
+            cells 0;
+            volume 0.0;
+            centroid ( 0.0 0.0 0.0 );
+        }
+        pipe
+        {
+            cells 0;
+            volume 0.0;
+            centroid ( 0.0 0.0 0.0 );
+        }
+    }
+    faceZonesInfo
+    {
+        pipe_to_cool_air
+        {
+            faces 7236;
+            area 1.254911923;
+            centroid ( 0.5000000026 -1.282550959E-8 -4.43643452E-9 );
+        }
+        hot_air_to_pipe
+        {
+            faces 0;
+            area 0.0;
+            centroid ( 0.0 0.0 0.0 );
+        }
+    }
+    meshingInfo
+    {
+    }

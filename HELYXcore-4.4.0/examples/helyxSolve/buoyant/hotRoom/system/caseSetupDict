@@ -1,0 +1,213 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom startTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 2000;
+            deltaT constant 2.0;
+            writeControl timeStep;
+            writeInterval 100;
+            adjustTimeStep false;
+        }
+    }
+    functions
+    {
+        VP
+        {
+            type probes;
+            regions ( region0 );
+            probeLocations ( ( 5.0 1.0 5.0 ) ( 5.0 4.0 5.0 ) );
+            fields ( U );
+            executeControl onEnd;
+            writeControl onEnd;
+            functionObjectLibs ( "libsampling.so" );
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( transient ras energy );
+        boundaryMesh
+        {
+            floor
+            {
+                type wall;
+            }
+            ceiling
+            {
+                type wall;
+            }
+            fixedWalls
+            {
+                type wall;
+            }
+        }
+        turbulenceModel kEpsilon;
+        materials (air);
+        materialProperties
+        {
+            air
+            {
+                materialName    air;
+                materialType    fluid;
+                thermodynamics  hConst;
+                equationOfState perfectGas;
+                //equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho 1.158;
+                }
+                energy          sensibleEnthalpy;
+                buoyancyModel   rhoModel;
+                //buoyancyModel Boussinesq;
+                buoyancyModelCoeffs
+                {
+                    rho0 1.158;
+                    T0 300;
+                    beta 0.003;
+                }
+
+                molWeight 28.9;
+
+                thermodynamicsCoeffs
+                {
+                    Cp 1000;
+                    Hf 0.0;
+                }
+                muModel    scalarFunction1;
+                muModelCoeffs
+                {
+                    mu 1.8E-5;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr 0.7;
+                }
+                referenceFields
+                {
+                    p [ 1 -1 -2 0 0 0 0 ] 1e5; // kg·m^−1·s^−2
+                }
+            }
+        }
+        constant
+        {
+            g
+            {
+                dimensions [0  1 -2  0 0 0 0];
+                value ( 0.0 -9.81 0.0 );
+            }
+        }
+        system
+        {
+            fvOptions
+            {
+                temperatureLimiter
+                {
+                    type temperatureLimitsConstraint;
+                    active true;
+                    temperatureLimitsConstraintCoeffs
+                    {
+                        selectionMode all;
+                        Tmin 300.0;
+                        Tmax 1000.0;
+                    }
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type buoyantPressure;
+                    initialValue uniform 0;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.1;
+                }
+            }
+            epsilon
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.01;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 300;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            floor
+            {
+                T
+                {
+                    type fixedValue;
+                    value uniform 300;
+                }
+            }
+            ceiling
+            {
+                T
+                {
+                    type            lumpedMassWallTemperature;
+                    kappaMethod     fluidThermo;
+                    kappa           none;
+                    mass            1000;
+                    Cp              4100;
+                    value           uniform 300;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

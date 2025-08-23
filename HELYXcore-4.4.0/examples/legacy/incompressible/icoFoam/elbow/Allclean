@@ -1,0 +1,12 @@
+#!/bin/bash
+cd ${0%/*} || exit 1    # Run from this directory
+
+# Source tutorial clean functions
+. $HELYX_PROJECT_DIR/bin/tools/CleanFunctions
+
+rm -f constant/polyMesh/boundary > /dev/null 2>&1
+rm -rf fluentInterface
+rm -r meshExport
+cleanCase
+
+#------------------------------------------------------------------------------

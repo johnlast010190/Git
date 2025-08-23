@@ -1,0 +1,393 @@
+#!/bin/bash
+#---------------------------------------------------------------------------
+#|       o        |
+#|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+#|   o   O   o    |  Version : 4.4.0
+#|    o     o     |  ENGYS Ltd. <http://engys.com/>
+#|       o        |
+#---------------------------------------------------------------------------
+#License
+#    This file is part of HELYXcore.
+#    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+#
+#    HELYXcore is free software: you can redistribute it and/or modify it
+#    under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+#    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+#    for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+#Copyright
+#    (c) 2011-2016 OpenFOAM Foundation
+#    (c) 2015-2016 OpenCFD Ltd.
+#
+# Script
+#     RunFunctions
+#
+# Description
+#     Miscellaneous functions for running tutorial cases
+#------------------------------------------------------------------------------
+
+#
+# Look for '-parallel' in the argument list.
+#
+isParallel()
+{
+    for i; do [ "$i" = "-parallel" ] && return 0; done
+    return 1
+}
+
+#
+# Look for '-test' in the argument list.
+#
+isTest()
+{
+    for i; do [ "$i" = "-test" ] && return 0; done
+    return 1
+}
+
+#
+# Extract 'numberOfSubdomains' from system/decomposeParDict
+# (or alternative location).
+#
+# On failure:
+#    return '1'
+#    exit status 1
+#
+getNumberOfProcessors()
+{
+    local dict="${1:-system/decomposeParDict}"
+
+    # Re-use positional parameters for automatic whitespace elimination
+    set -- $(foamDictionary -entry numberOfSubdomains -value "$dict" 2>/dev/null)
+
+    if [ "$#" -eq 1 ]
+    then
+        echo "$1"
+    else
+        echo "Warning no 'numberOfSubdomains' in '$dict'" 1>&2
+        echo 1 # serial as fallback
+        return 1
+    fi
+}
+
+
+#
+# Extract 'application' from system/controlDict
+#
+# On failure:
+#    return 'false' which is also a command (ie, shell builtin or /bin/false)
+#    exit status 1
+#
+getApplication()
+{
+    # Re-use positional parameters for automatic whitespace elimination
+    set -- $(foamDictionary -entry application -value system/controlDict)
+
+    if [ "$#" -eq 1 ]
+    then
+        echo "$1"
+    else
+        echo "Error retrieving 'application' from controlDict" 1>&2
+        echo false
+        return 1
+    fi
+}
+
+runApplication()
+{
+    APP_RUN=
+    LOG_IGNORE=false
+    LOG_APPEND=false
+    LOG_SUFFIX=
+    VERBOSE=true
+
+    # Parse options and executable
+    while [ $# -gt 0 ] && [ -z "$APP_RUN" ]; do
+        key="$1"
+        case "$key" in
+            -append|-a)
+                LOG_IGNORE=true
+                LOG_APPEND=true
+                ;;
+            -overwrite|-o)
+                LOG_IGNORE=true
+                ;;
+            -suffix|-s)
+                LOG_SUFFIX=".$2"
+                shift
+                ;;
+            -silent|-i)
+                VERBOSE=false
+                ;;
+            *)
+                APP_RUN="$key"
+                APP_NAME="${key##*/}"
+                LOG_SUFFIX="${APP_NAME}${LOG_SUFFIX}"
+                ;;
+        esac
+        shift
+    done
+
+    if [ -f log.$LOG_SUFFIX ] && [ "$LOG_IGNORE" = "false" ]
+    then
+        if [ "$VERBOSE" = "true" ]; then
+            echo "$APP_NAME already run on $PWD:" \
+                 "remove log file 'log.$LOG_SUFFIX' to re-run"
+        fi
+    else
+        if [ "$VERBOSE" = "true" ]; then
+            echo "Running $APP_RUN on $PWD"
+        fi
+
+        if [ "$LOG_APPEND" = "true" ]; then
+            $APP_RUN "$@" >> log.$LOG_SUFFIX 2>&1
+        else
+            $APP_RUN "$@" > log.$LOG_SUFFIX 2>&1
+        fi
+    fi
+}
+
+runParallel()
+{
+    APP_RUN=
+    LOG_IGNORE=false
+    LOG_APPEND=false
+    LOG_SUFFIX=
+    VERBOSE=true
+
+    MPI_OPT=
+    if [ "$WM_MPLIB" = "OPENMPI" ] || [ "$WM_MPLIB" = "SYSTEMOPENMPI" ]
+    then
+       MPI_OPT="-oversubscribe"
+    elif mpirun -np 2 -oversubscribe sleep 0.00001 > /dev/null 2>&1
+    then
+        # Manually check if the -oversubscribe flag is available
+        # We'll always hit this if using a CMake build
+        MPI_OPT="-oversubscribe"
+    fi
+
+    # Store any parsed additional arguments e.g. decomposeParDict
+    APP_PARARGS=
+
+    # Initialise number of procs to unset value
+    nProcs=-1
+
+    # Parse options and executable
+    while [ $# -gt 0 ] && [ -z "$APP_RUN" ]; do
+        key="$1"
+        case "$key" in
+            -append|-a)
+                LOG_IGNORE=true
+                LOG_APPEND=true
+                ;;
+            -overwrite|-o)
+                LOG_IGNORE=true
+                ;;
+            -suffix|-s)
+                LOG_SUFFIX=".$2"
+                shift
+                ;;
+            -np|-n)
+                nProcs="$2"
+                shift
+                ;;
+            -decomposeParDict)
+                nProcs=$(getNumberOfProcessors "$2")
+                APP_PARARGS="$APP_PARARGS -decomposeParDict $2"
+                shift
+                ;;
+            -silent|-i)
+                VERBOSE=false
+                ;;
+            *)
+                APP_RUN="$key"
+                APP_NAME="${key##*/}"
+                LOG_SUFFIX="${APP_NAME}${LOG_SUFFIX}"
+                ;;
+        esac
+
+        shift
+    done
+
+    [ "$nProcs" -eq -1 ] && nProcs=$(getNumberOfProcessors system/decomposeParDict)
+
+    if [ -f log.$LOG_SUFFIX ] && [ "$LOG_IGNORE" = "false" ]
+    then
+        if [ "$VERBOSE" = "true" ]; then
+            echo "$APP_NAME already run on $PWD:" \
+                 "remove log file 'log.$LOG_SUFFIX' to re-run"
+        fi
+    else
+        if [ "$VERBOSE" = "true" ]; then
+            echo "Running $APP_RUN in parallel on $PWD using $nProcs processes"
+        fi
+
+        if [ "$LOG_APPEND" = "true" ]; then
+            ( mpirun -np $nProcs $MPI_OPT $APP_RUN $APP_PARARGS -parallel "$@" < /dev/null >> log.$LOG_SUFFIX 2>&1 )
+        else
+            ( mpirun -np $nProcs $MPI_OPT $APP_RUN $APP_PARARGS -parallel "$@" < /dev/null > log.$LOG_SUFFIX 2>&1 )
+        fi
+    fi
+}
+
+compileApplication()
+{
+    echo "Compiling $1 application"
+    wmake $1
+}
+
+#
+# cloneCase srcDir dstDir
+#
+cloneCase()
+{
+    local src=$1
+    local dst=$2
+    shift 2
+
+    if [ -e "$dst" ]
+    then
+        echo "Case already cloned: remove case directory $dst prior to cloning"
+        return 1
+    elif [ ! -d "$src" ]
+    then
+        echo "Error: no directory to clone:  $src"
+        return 1
+    fi
+
+    echo "Cloning $dst case from $src"
+    mkdir $dst
+    # These must exist, so do not hide error messages
+    for f in constant system
+    do
+        \cp -r $src/$f $dst
+    done
+
+    # Either (or both) may exist, so error messages may be spurious
+    for f in 0 0.orig
+    do
+        \cp -r $src/$f $dst 2>/dev/null
+    done
+    return 0
+}
+
+#
+# cloneParallelCase srcDir dstDir [...times]
+#
+# If any times are specified, they will be used for the cloning.
+# Otherwise the entire processor* directories are cloned
+cloneParallelCase()
+{
+    local src=$1
+    local dst=$2
+    shift 2
+
+    if [ -e "$dst" ]
+    then
+        echo "Case already cloned: remove case directory $dst prior to cloning"
+        return 1
+    fi
+
+    [ -d "$src" ] || {
+        echo "Error: no directory to clone: $src"
+        return 1
+    }
+
+    echo "Cloning $dst parallel case from $src"
+    mkdir $dst
+    # These must exist, so do not hide error messages
+    for f in constant system
+    do
+        \cp -r $src/$f $dst
+    done
+
+    [ -d $src/processor0 ] || {
+        echo "Does not appear to be a parallel case"
+        return 1
+    }
+
+    if [ "$#" -eq 0 ]
+    then
+        # Copy all processor directories
+        echo "    clone processor* directories"
+        \cp -r $src/processor* $dst
+    else
+        # Only copy some time directories
+        echo "    clone processor directories with $# times: $@"
+
+        for proc in $(cd $src && \ls -d processor*)
+        do
+            srcProc=$src/$proc
+            dstProc=$dst/$proc
+
+            mkdir $dstProc
+            cp -r $srcProc/constant $dstProc/
+
+            for time
+            do
+                [ -d $srcProc/$time ] && cp -r $srcProc/$time $dstProc/
+            done
+
+        done
+    fi
+
+    return 0
+}
+
+# Overwrite 0/ with the contents of 0.orig/ if it exists.
+# The -processor option to do the processor directories instead
+#
+restore0Dir()
+{
+    if [ "$1" = "-processor" ]
+    then
+        echo "Restore 0/ from 0.orig/ for processor directories"
+        [ -d 0.orig ] || echo "    Warning: no 0.orig/ found"
+
+        # do nonetheless
+        \ls -d processor* | xargs -I {} \rm -rf ./{}/0
+        \ls -d processor* | xargs -I {} \cp -r 0.orig ./{}/0 > /dev/null 2>&1
+
+    else
+        echo "Restore 0/ from 0.orig/"
+        if [ -d 0.orig ]
+        then
+            \rm -rf 0
+            \cp -r 0.orig 0 2>/dev/null
+        else
+            echo "    Warning: no 0.orig/ found"
+        fi
+    fi
+}
+
+saveData()
+{
+    #echo "$HELYX_CBT_DIR"
+    DATADIR=$HELYX_CBT_DIR/results
+
+    CWD=`pwd`
+    TESTDIR=$HELYX_CBT_DIR/tests
+    LOCALDIR="${CWD#"$TESTDIR"}"
+    TARGETDIR=$HELYX_CBT_DIR/results/$LOCALDIR
+
+    mkdir -p $TARGETDIR
+
+    # Parse options and executable
+    while [ $# -gt 0 ] ; do
+        key="$1"
+
+        cp $key $TARGETDIR
+
+        shift
+    done
+
+}
+
+#------------------------------------------------------------------------------

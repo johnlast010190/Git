@@ -1,0 +1,19 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+-------------------------------------------------------------------------------
+Description
+    Calculates the difference between the average pressures on 2 specified
+    patches.
+
+\*---------------------------------------------------------------------------*/
+
+patch1 <patch1>;
+patch2 <patch2>;
+
+#includeEtc "caseDicts/postProcessing/pressure/pressureDifferencePatch.cfg"
+
+// ************************************************************************* //

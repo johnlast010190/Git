@@ -1,0 +1,17 @@
+runs
+(
+    short
+    {
+        steps 150;
+        checks
+        (
+            {
+                result "postProcessing/VR/0/volumeReport.dat";
+                reference "verification/short/VR/0/volumeReport.dat";
+                variables "Tmin" "Tmax" "Tmean" "TstDev" "Umin" "Umax" "Umean" "UstDev" "pmin" "pmax" "pmean" "pstDev";
+                absolute 0.1;
+                relative 0.1;
+            }
+        );
+    }
+);

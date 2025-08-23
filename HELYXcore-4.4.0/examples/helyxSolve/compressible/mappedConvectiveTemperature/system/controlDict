@@ -1,0 +1,142 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     helyxSolve;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         300;
+
+deltaT          constant 1;
+
+writeControl    timeStep;
+
+writeInterval   300;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  10;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   6;
+
+graphFormat     raw;
+
+runTimeModifiable yes;
+
+libs            2 ( "" "" );
+
+writeEndTime    true;
+
+adjustTimeStep  false;
+
+maxCo           0;
+
+maxAlphaCo      0;
+
+minDeltaT       0;
+
+maxDeltaT       0;
+
+functions
+{
+    VR-cool_air
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( T U k nut omega p rho );
+        executeControl  timeStep;
+        type            volumeReport;
+        regions         ( cool_air );
+        writeControl    timeStep;
+        writeInterval   1;
+        executeInterval 1;
+    }
+    FP
+    {
+        functionObjectLibs ( "libfieldFunctionObjects.so" );
+        operations      ( { operation wallHTC ; fieldName alphaConv ; } );
+        executeControl  timeStep;
+        writeControl    outputTimeAndEnd;
+        type            fieldProcess;
+        regions         ( hot_air );
+        executeInterval 1;
+        writeInterval   1;
+    }
+    VR-hot_air
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( T U k nut omega p rho );
+        executeControl  timeStep;
+        type            volumeReport;
+        regions         ( hot_air );
+        writeControl    timeStep;
+        writeInterval   1;
+        executeInterval 1;
+    }
+    SU
+    {
+        functionObjectLibs ( "libsampling.so" );
+        fields          ( T alphaConv );
+        interpolationScheme cell;
+        surfaceFormat   boundaryData;
+        surfaces        
+        (
+            surfaces0
+            {
+                type            patch;
+                patches         ( hot_air_to_pipe );
+                interpolate     false;
+                triangulate     false;
+            }
+
+        )
+;
+        writeControl    outputTimeAndEnd;
+        type            surfaces;
+        regions         ( hot_air );
+        writeFields     true;
+        writeStatistics false;
+        writeInterval   1;
+        executeControl  outputTimeAndEnd;
+        executeInterval 1;
+    }
+    VR-pipe
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( T );
+        executeControl  timeStep;
+        type            volumeReport;
+        regions         ( pipe );
+        writeControl    timeStep;
+        writeInterval   1;
+        executeInterval 1;
+    }
+}
+
+
+// ************************************************************************* //

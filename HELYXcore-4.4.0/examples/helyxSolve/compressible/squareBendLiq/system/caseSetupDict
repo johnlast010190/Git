@@ -1,0 +1,189 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields  true;
+        resetBoundaryFields  true;
+        resetSystemDicts     true;
+        resetConstDicts      true;
+        resetBoundaryMesh    true;
+        deleteUnusedFields   true;
+    }
+    system
+    {
+        controlDict
+        {
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         0.5;
+            deltaT          2e-3;
+            writeControl    timeStep;
+            writeInterval   10;
+            runTimeModifiable true;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p rho );
+            executeControl   timeStep;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (transient ras energy);
+        boundaryMesh
+        {
+            inlet { type inlet; }
+            outlet { type outlet; }
+            Default_Boundary_Region { type wall; }
+        }
+        turbulenceModel kEpsilon;
+        materials (fluid);
+        materialProperties
+        {
+            fluid
+            {
+                materialType    fluid;
+                energy          sensibleInternalEnergy;
+                #includeEtc     "thermoData/liquidProperties";
+                $H2O;
+                referenceFields {  p [ 1 -1 -2 0 0 0 0 ] 0; }
+            }
+        }
+        system
+        {
+            fvSchemes
+            {
+                ddtSchemes { default Euler; }
+                gradSchemes
+                {
+                    default         Gauss linear 1;
+                    turbulence      Gauss linear 1;
+                    gradU           Gauss linear 1;
+                    grad(k)         Gauss linear 1;
+                    grad(epsilon)   Gauss linear 1;
+                    grad(h)         Gauss linear 1;
+                    grad(e)         Gauss linear 1;
+                    grad(K)         Gauss linear 1;
+                    grad(T)         Gauss linear 1;
+                    limited cellLimited Gauss linear 1;
+                }
+
+                divSchemes
+                {
+                    default         none;
+                    div(phi,k)      Gauss linearUpwind limited;
+                    div(phi,epsilon) Gauss linearUpwind limited;
+                    div(phi,U)      Gauss linearUpwind limited;
+                    div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
+                    div(phi,h)      Gauss linearUpwind limited;
+                    div(phi,e)      Gauss linearUpwind limited;
+                    div(phi,T)      Gauss linearUpwind limited;
+                    div(phi,K)      Gauss linearUpwind limited;
+                    div(phiv,p)     Gauss linearUpwind limited;
+                }
+
+                laplacianSchemes
+                {
+                    default         Gauss linear corrected;
+                    laplacian((rho*DkEff),k) Gauss linear corrected;
+                    laplacian((rho*DepsilonEff),epsilon) Gauss linear corrected;
+                    laplacian((rho*nuEff),U) Gauss linear corrected;
+                    laplacian(rhorAUf,p) Gauss linear corrected;
+                    laplacian(kappa,T) Gauss linear corrected;
+                }
+                snGradSchemes { default corrected; }
+                wallDist { method meshWave; }
+            }
+            fvSolution
+            {
+                PIMPLE
+                {
+                    nOuterCorrectors 1;
+                    nCorrectors     3;
+                    nNonOrthogonalCorrectors 0;
+                    pMinFactor      0.1;
+                    pMaxFactor      1.5;
+                }
+                relaxationFactors
+                {
+                    fields { p 1; }
+                    equations { U 1; h 1; e 1; T 1; }
+                }
+
+            }
+        }
+        fields
+        {
+            U { initialisation { type potentialFlow; initialiseUBCs true; rhoRef 994.5114684; } }
+            p { initialisation { type potentialFlow; } }
+            k { initialisation { type fixedValue; value uniform 1; } }
+            epsilon { initialisation { type fixedValue; value uniform 200; } }
+            alphat { initialisation { type fixedValue; value uniform 0; } }
+            nut { initialisation { type fixedValue; value uniform 1; } }
+            T { initialisation { type fixedValue; value uniform 300; } }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U { type flowRateInletVelocity; massFlowRate constant 5; value uniform (0 0 0); }
+                p { type zeroGradient; }
+                k { type turbulentIntensityKineticEnergyInlet; intensity 0.05; value uniform 1; }
+                epsilon { type turbulentMixingLengthDissipationRateInlet; mixingLength 0.005; value uniform 200; }
+                T { type zeroGradient; }
+                alphat { type calculated; value uniform 0; }
+                nut { type calculated; value uniform 0; }
+            }
+            outlet
+            {
+                U { type pressureInletOutletVelocity; value uniform (0 0 0); }
+                p { type fixedValue; value uniform 1e5; inputValue uniform 1e5; }
+                k { type inletOutlet; value uniform 1; inletValue uniform 1; }
+                epsilon { type inletOutlet; value uniform 200; inletValue uniform 200; }
+                T { type inletOutlet; value uniform 300; inletValue uniform 300; }
+                alphat { type calculated; value uniform 0; }
+                nut { type calculated; value uniform 0; }
+            }
+            Default_Boundary_Region
+            {
+                U { type noSlip; }
+                p { type zeroGradient; }
+                T { type fixedValue; value uniform 350; }
+                alphat { type alphatWallFunction; Prt 0.85; value uniform 0; }
+                k { type kqRWallFunction; value uniform 1; }
+                epsilon { type epsilonWallFunction; Cmu 0.09; kappa 0.41; E 9.8; value uniform 200; }
+                nut { type nutkWallFunction; Cmu 0.09; kappa 0.41; E 9.8; value uniform 1; }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

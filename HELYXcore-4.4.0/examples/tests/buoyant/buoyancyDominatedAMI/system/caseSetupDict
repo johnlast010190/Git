@@ -1,0 +1,383 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | HELYX(R): Open-source CFD for Enterprise                 |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | Engys Ltd. http://www.engys.com                          |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    location system;
+    object caseSetupDict;
+}
+    global
+    {
+        system
+        {
+            controlDict
+            {
+                application helyxSolve;
+                startFrom latestTime;
+                startTime 0;
+                stopAt endTime;
+                endTime 20.0;
+                deltaT constant 1.0;
+                writeControl timeStep;
+                writeInterval 10;
+                purgeWrite 0;
+            }
+        }
+        functions
+        {
+            VR
+            {
+                type volumeReport;
+                regions ( region0 );
+                fields ( T U k nut omega p rho );
+                executeControl timeStep;
+                executeInterval 1;
+                functionObjectLibs ("libreport.so" );
+            }
+        }
+    }
+    regions
+    {
+        region0
+        {
+            state (transient ras energy);
+            boundaryMesh
+            {
+                building
+                {
+                    type wall;
+                }
+                ground
+                {
+                    type wall;
+                }
+                inlet
+                {
+                    type inlet;
+                }
+                outlet
+                {
+                    type patch;
+                }
+                side1
+                {
+                    type wall;
+                }
+                side2
+                {
+                    type wall;
+                }
+                top
+                {
+                    type wall;
+                }
+                AMI
+                {
+                    type cyclicAMI;
+                    neighbourPatch AMI_slave;
+                    transformType none;
+                    matchTolerance 1.0E-4;
+                }
+                AMI_slave
+                {
+                    type cyclicAMI;
+                    neighbourPatch AMI;
+                    transformType none;
+                    matchTolerance 1.0E-4;
+                }
+            }
+            turbulenceModel kOmegaSST;
+            materials (air);
+            materialProperties
+            {
+                air
+                {
+                    materialName air;
+                    materialType fluid;
+                    molWeight 28.96;
+                    buoyancyModel rhoModel;
+                    energy sensibleInternalEnergy;
+                    equationOfState incompressiblePerfectGas;
+                    equationOfStateCoeffs
+                    {
+                        pConst 0.0;
+                    }
+                    muModel scalarFunction1;
+                    muModelCoeffs
+                    {
+                        mu constant 1.846E-5;
+                    }
+                    thermodynamics hConst;
+                    thermodynamicsCoeffs
+                    {
+                        Hf 0.0;
+                        Cp 1004.9;
+                    }
+                    kappaModel scalarFunction1;
+                    kappaModelCoeffs
+                    {
+                        kappa 0.0262;
+                    }
+                    referenceFields
+                    {
+                        p [1 -1 -2 0 0 0 0] 101325.0;
+                        T [0 0 0 1 0 0 0] 0.0;
+                    }
+                }
+            }
+            constant
+            {
+                g
+                {
+                    value ( 0.0 0.0 -9.81 );
+                }
+            }
+            system
+            {
+                fvSolution
+                {
+                    PIMPLE
+                    {
+                        nOuterCorrectors 5;
+                        nCorrectors 1;
+                        nNonOrthogonalCorrectors 0;
+                    }
+                }
+            }
+            fields
+            {
+                U
+                {
+                    initialisation
+                    {
+                        type fixedValue;
+                        value uniform ( 5.0 0.0 0.0 );
+                    }
+                }
+                p
+                {
+                    initialisation
+                    {
+                        type buoyantPressure;
+                        value uniform 0;
+                    }
+                }
+                k
+                {
+                    initialisation
+                    {
+                        type turbulentIL;
+                        I 0.05;
+                        L 0.01;
+                        Uref 1.0;
+                    }
+                }
+                omega
+                {
+                    initialisation
+                    {
+                        type turbulentIL;
+                        I 0.05;
+                        L 0.01;
+                        Uref 1.0;
+                    }
+                }
+                T
+                {
+                    initialisation
+                    {
+                        type fixedValue;
+                        value uniform 300.0;
+                    }
+                }
+            }
+            boundaryConditions
+            {
+                inlet
+                {
+                    U
+                    {
+                        type windProfileDirectionVelocity;
+                        value uniform ( 0.0 0.0 0.0 );
+                        profile RHWindProfile;
+                        outOfBounds clamp;
+                        distanceType z;
+                        origin ( 0.0 0.0 0.0 );
+                        xscale constant 1.0;
+                        yscale constant 1.0;
+                        xoffset 0.0;
+                        yoffset constant 0.0;
+                        windDirection constant 90.0;
+                        profileCoeffs
+                        {
+                            Cmu 0.09;
+                            Uref 5.0;
+                            kappa 0.41;
+                            Href 10.0;
+                            z0 0.1;
+                        }
+                        normalDirection true;
+                    }
+                    p
+                    {
+                        type fixedFluxPressure;
+                        value uniform 0.0;
+                    }
+                    T
+                    {
+                        type fixedValue;
+                        value uniform 300.0;
+                    }
+                    k
+                    {
+                        type interpolatedFixedValue;
+                        value uniform 0.01;
+                        profile RHWindKineticEnergyProfile;
+                        outOfBounds clamp;
+                        distanceType z;
+                        origin ( 0.0 0.0 0.0 );
+                        xscale constant 1.0;
+                        yscale constant 1.0;
+                        xoffset 0.0;
+                        yoffset constant 0.0;
+                        profileCoeffs
+                        {
+                            Cmu 0.09;
+                            Uref 5.0;
+                            kappa 0.41;
+                            Href 10.0;
+                            z0 0.1;
+                        }
+                    }
+                    omega
+                    {
+                        type interpolatedFixedValue;
+                        value uniform 0.01;
+                        profile RHWindSpecificDissipationRateProfile;
+                        outOfBounds clamp;
+                        distanceType z;
+                        origin ( 0.0 0.0 0.0 );
+                        xscale constant 1.0;
+                        yscale constant 1.0;
+                        xoffset 0.0;
+                        yoffset constant 0.0;
+                        profileCoeffs
+                        {
+                            Cmu 0.09;
+                            Uref 5.0;
+                            kappa 0.41;
+                            Href 10.0;
+                            z0 0.1;
+                        }
+                    }
+                }
+                outlet
+                {
+                    U
+                    {
+                        type pressureVelocity;
+                        value uniform ( 0.0 0.0 0.0 );
+                    }
+                    p
+                    {
+                        type totalPressure;
+                        value uniform 0.0;
+                        p0 uniform 0.0;
+                        gamma 1.4;
+                        addStaticHead true;
+                        integrateStaticHead false;
+                    }
+                    T
+                    {
+                        type inletOutlet;
+                        value uniform 300.0;
+                        inletValue uniform 300.0;
+                    }
+                    k
+                    {
+                        type turbulentIntensityKineticEnergyInlet;
+                        value uniform 0.1;
+                        intensity 0.05;
+                    }
+                    omega
+                    {
+                        type turbulentMixingLengthFrequencyInlet;
+                        value uniform 0.01;
+                        mixingLength 0.01;
+                    }
+                    nut
+                    {
+                        type calculated;
+                        value uniform 0.001;
+                    }
+                }
+                side1
+                {
+                    U
+                    {
+                        type fixedNormalSlip;
+                        fixedValue uniform ( 0.0 0.0 0.0 );
+                    }
+                    k
+                    {
+                        type zeroGradient;
+                    }
+                    omega
+                    {
+                        type zeroGradient;
+                    }
+                    nut
+                    {
+                        type zeroGradient;
+                    }
+                }
+                side2
+                {
+                    U
+                    {
+                        type fixedNormalSlip;
+                        fixedValue uniform ( 0.0 0.0 0.0 );
+                    }
+                    k
+                    {
+                        type zeroGradient;
+                    }
+                    omega
+                    {
+                        type zeroGradient;
+                    }
+                    nut
+                    {
+                        type zeroGradient;
+                    }
+                }
+                top
+                {
+                    U
+                    {
+                        type fixedNormalSlip;
+                        fixedValue uniform ( 0.0 0.0 0.0 );
+                    }
+                    k
+                    {
+                        type zeroGradient;
+                    }
+                    omega
+                    {
+                        type zeroGradient;
+                    }
+                    nut
+                    {
+                        type zeroGradient;
+                    }
+                }
+            }
+        }
+    }

@@ -1,0 +1,367 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    system
+    {
+        controlDict
+        {
+            startFrom latestTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 10.0;
+            deltaT constant 0.05;
+            writeControl runTime;
+            writeInterval 1.0;
+            writeFormat binary;
+            writeEndTime true;
+            adjustTimeStep false;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type volumeReport;
+            regions ( region0 );
+            fields ( T U p );
+            writeControl timeStep;
+            writeInterval 1;
+            executeControl timeStep;
+            executeInterval 1;
+            functionObjectLibs ("libreport.so" );
+        }
+        SR-server_in
+        {
+            type surfaceReport;
+            regions ( region0 );
+            fields ( T U );
+            weighting flux;
+            fluxName phi;
+            homogeneity false;
+            surfaces
+            (
+                {
+                    type patch;
+                    name s_in;
+                }
+            );
+            constraints
+            (
+                {
+                    type boundBox;
+                    min ( -1000.0 -1000.0 -1000.0 );
+                    max ( 1000.0 1000.0 1000.0 );
+                    keepInside true;
+                }
+            );
+            writeControl timeStep;
+            writeInterval 1;
+            executeControl timeStep;
+            executeInterval 1;
+            functionObjectLibs ("libreport.so" );
+        }
+        SR-server_out
+        {
+            type surfaceReport;
+            regions ( region0 );
+            fields ( T U );
+            weighting flux;
+            fluxName phi;
+            homogeneity false;
+            surfaces
+            (
+                {
+                    type patch;
+                    name s_out;
+                }
+            );
+            writeControl timeStep;
+            writeInterval 1;
+            executeControl timeStep;
+            executeInterval 1;
+            functionObjectLibs ("libreport.so" );
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (transient ras energy);
+        boundaryMesh
+        {
+            ffminx
+            {
+                type wall;
+            }
+            ffmaxx
+            {
+                type wall;
+            }
+            ffminy
+            {
+                type wall;
+            }
+            ffmaxy
+            {
+                type wall;
+            }
+            ffminz
+            {
+                type wall;
+            }
+            ffmaxz
+            {
+                type wall;
+            }
+            s_in
+            {
+                type outlet;
+            }
+            server
+            {
+                type wall;
+            }
+            s_out
+            {
+                type inlet;
+            }
+        }
+        turbulenceModel kOmegaSST;
+        materials (air);
+        materialProperties
+        {
+            air
+            {
+                materialType    fluid;
+                energy          sensibleInternalEnergy;
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho 1.205;
+                }
+                molWeight 32.9;
+                buoyancyModel   Boussinesq;
+                buoyancyModelCoeffs
+                {
+                    rho0 1.205;
+                    T0   293.15;
+                    beta 0.00343;
+                }
+                thermodynamics  hConst;
+                thermodynamicsCoeffs
+                {
+                    Cp          1006.8;
+                    Hf          0;
+                    Sf          0;
+                }
+                muModel         scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          0.0000182320000043;
+                }
+                kappaModel      kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr          0.85;
+                }
+                referenceFields
+                {
+                    p [ 1 -1 -2 0 0 0 0 ] 1e5;
+                }
+            }
+        }
+        constant
+        {
+            g
+            {
+                value ( 0.0 0.0 -9.81 );
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type buoyantPressure;
+                    initialValue uniform 0.0;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type turbulentIL;
+                    I 0.05;
+                    L 0.01;
+                    Uref 1.0;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type turbulentIL;
+                    I 0.05;
+                    L 0.01;
+                    Uref 1.0;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 300.0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            ffminx
+            {
+                T
+                {
+                    type inletOutlet;
+                    value uniform 300.0;
+                    inletValue uniform 300.0;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    intensity 0.05;
+                    value uniform 0.1;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    mixingLength 0.01;
+                    k k;
+                    value uniform 0.01;
+                }
+            }
+            ffmaxx
+            {
+                T
+                {
+                    type fixedValue;
+                    value uniform 300.0;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    value uniform 0.1;
+                    intensity 0.05;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    value uniform 0.01;
+                    mixingLength 0.01;
+                }
+            }
+            s_in
+            {
+                U
+                {
+                    type flowRateOutletVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    uniform true;
+                    massFlowRate constant 0.015;
+                    rhoInlet 1.205;
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                }
+                T
+                {
+                    type inletOutlet;
+                    value uniform 300.0;
+                    inletValue uniform 300.0;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    intensity 0.05;
+                    value uniform 0.1;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    mixingLength 0.01;
+                    k k;
+                    value uniform 0.01;
+                }
+            }
+            s_out
+            {
+                U
+                {
+                    type flowRateInletVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    massFlowRate constant 0.015;
+                    rhoInlet 1.205;
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0.0;
+                }
+                T
+                {
+                    type lumpedServerOutletTemperature;
+                    value uniform 300.0;
+                    patches ( s_in );
+                    mass 15;
+                    Cps 460;
+                    effectiveness 0.8;
+                    lambda 0.1;
+                    power constant 150;
+                    massFlowRate 0.015;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    value uniform 0.1;
+                    intensity 0.05;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    value uniform 0.01;
+                    mixingLength 0.01;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

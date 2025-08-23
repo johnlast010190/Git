@@ -1,0 +1,265 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         1000;
+            deltaT          1;
+            writeControl    timeStep;
+            writeInterval   100;
+            purgeWrite      0;
+        }
+    }
+    functions
+    {
+        #includeFunc MachNo
+
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (steady ras energy);
+        boundaryMesh
+        {
+            aerofoil
+            {
+                type wall;
+            }
+            inlet
+            {
+                type patch;
+                inGroups (freestream);
+            }
+            outlet
+            {
+                type patch;
+                inGroups (freestream);
+            }
+            front
+            {
+                type empty;
+            }
+            back
+            {
+                type empty;
+            }
+        }
+        turbulenceModel kOmegaSST;
+        materials (gas);
+        materialProperties
+        {
+            gas
+            {
+                materialName    gas;
+                materialType    fluid;
+                thermodynamics  hConst;
+                equationOfState perfectGas;
+                energy          sensibleInternalEnergy;
+
+                molWeight 28.9;
+
+                thermodynamicsCoeffs
+                {
+                    Cp 1005;
+                    Hf 0.0;
+                }
+                muModel       scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          1.82e-05;
+                    Pr          0.71;
+                }
+                kappaModel       kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr          0.71;
+                }
+
+                referenceFields
+                {
+                    p [ 1 -1 -2 0 0 0 0 ] 100000;
+                }
+            }
+        }
+        system
+        {
+            fvSolution
+            {
+                SIMPLE
+                {
+                    residualControl
+                    {
+                        p               1e-4;
+                        U               1e-4;
+                        "(k|omega|e)"   1e-4;
+                    }
+
+                    nNonOrthogonalCorrectors 0;
+                    pMinFactor      0.1;
+                    pMaxFactor      2;
+                    pRefValue       0;
+                    pRefCell        0;
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        rho             0.01;
+                    }
+                    equations
+                    {
+                        h              0.7;
+                        e              0.7;
+                    }
+                }
+            }
+            fvOptions
+            {
+                limitT
+                {
+                    type       limitTemperature;
+                    min        101;
+                    max        1000;
+                    selectionMode all;
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 250 0.0 0.0 );
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.01;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 10;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 298;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            freestream
+            {
+                U
+                {
+                    type            freestreamVelocity;
+                    freestreamValue uniform (250 0 0);
+                    value           uniform (250 0 0);
+                }
+                p
+                {
+                    type            freestreamPressure;
+                    freestreamValue uniform 0;
+                }
+                T
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 293;
+                    value           uniform 293;
+                }
+                k
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 0.01;
+                    value           uniform 0.01;
+                }
+                omega
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 10;
+                    value           uniform 10;
+                }
+                Tref
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 298;
+                    value           uniform 298;
+                }
+            }
+            aerofoil
+            {
+                T
+                {
+                    type zeroGradient;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

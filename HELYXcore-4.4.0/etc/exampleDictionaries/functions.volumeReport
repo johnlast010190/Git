@@ -1,0 +1,44 @@
+volStats
+{
+    type volumeReport;
+    functionObjectLibs ( "libreport.so" );
+
+    region region0;
+
+    name VR1;
+
+    logToFile yes;
+
+
+    fields
+    (
+        nuTilda 
+        p
+        U
+    );
+
+    //if region entry is not present, all cells are selected by default
+    regions
+    (
+        boxToCell {box (-1000 -1000 -1000) (1000 1000 1000);}
+        /*
+        cellToCell {set cellSetName;}
+        faceToCell {set faceSetName; option ANY;}
+        fieldToCell {fielName nameOfField; min -10; max 10;}
+        sphereToCell {centre (1 1 1); radius 2;}
+        rotatedBoxToCell {origin (0 0 0); i (1 0  0); j (0 10 0); k (0 0 1);}
+        surfaceToCell 
+        {
+            file "constant/triSurface/surf.stl"; 
+            outsidePoints 2((1 1 1) (-1 0 0));
+            includeCut false;
+            includeInside true;
+            includeOutside false;
+            nearDist 0;
+            curvature 0;
+        }
+        zoneToCell {name cellZoneName;}
+        //see manual section 2.3.6 for detailed descriptions
+        */
+    );
+}

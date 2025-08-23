@@ -1,0 +1,211 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields  true;
+        resetBoundaryFields  true;
+        resetSystemDicts     true;
+        resetConstDicts      true;
+        resetBoundaryMesh    false;
+        deleteUnusedFields   true;
+    }
+    system
+    {
+        controlDict
+        {
+            application    helyxSolve;
+            startFrom      startTime;
+            startTime      0;
+            stopAt         endTime;
+            endTime        0.25;
+            deltaT         2e-4;
+            writeControl   runTime;
+            writeInterval  0.01;
+            writePrecision 8;
+        }
+    }
+    functions
+    {
+        #includeFunc graphs
+
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p sigma );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( transient ras );
+        turbulenceModel laminar;
+        materials (air);
+        system
+        {
+            fvSchemes
+            {
+                gradSchemes
+                {
+                    default                     Gauss linear;
+                }
+                divSchemes
+                {
+                    div(phi,sigma)              Gauss vanAlbada;
+                    div((rho*sigma))            Gauss linear;
+                    div(((rho*(mu|rho))*dev2(T(grad(U))))) Gauss linear;
+                    div(((rho*nuM)*grad(U)))    Gauss linear;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    sigma
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        tolerance       1e-6;
+                        relTol          0.1;
+                    }
+                    sigmaFinal
+                    {
+                        $sigma;
+                        relTol          0;
+                    }
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p               1;
+                    }
+                    equations
+                    {
+                        U               1;
+                    }
+                }
+                PIMPLE
+                {
+                    momentumPredictor   false;
+                    nOuterCorrectors    15;
+                }
+            }
+        }
+        constant
+        {
+            turbulenceProperties
+            {
+                laminar
+                {
+                    laminarModel        Maxwell;
+                    MaxwellCoeffs
+                    {
+                        nuM             0.002;
+                        lambda          0.03;
+                    }
+                    printCoeffs         on;
+                }
+            }
+        }
+        fieldMaps
+        {
+            sigma    R;
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform (0 0 0);
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            sigma
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform (0 0 0 0 0 0);
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform (0.03876 0 0);
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                sigma
+                {
+                    type            fixedValue;
+                    value           uniform (0 0 0 0 0 0);
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type            zeroGradient;
+                    value           uniform (0 0 0);
+                }
+                p
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+                sigma
+                {
+                    type            zeroGradient;
+                }
+            }
+            wall
+            {
+                sigma
+                {
+                    type            zeroGradient;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

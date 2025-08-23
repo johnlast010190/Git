@@ -1,0 +1,41 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/SR/0/surfaceReport.tsv";
+                reference "verification/short/SR/0/surfaceReport.tsv";
+                variables "Tmax";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/SR_window/0/surfaceReport.tsv";
+                reference "verification/short/SR_window/0/surfaceReport.tsv";
+                variables "Tmax";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/SR/0/surfaceReport.tsv";
+                reference "verification/long/SR/0/surfaceReport.tsv";
+                variables "Tmax";
+            }
+            {
+                result "postProcessing/SR_window/0/surfaceReport.tsv";
+                reference "verification/long/SR_window/0/surfaceReport.tsv";
+                variables "Tmax";
+            }
+        );
+    }
+);

@@ -1,0 +1,22 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/wallShearStress/0/wallShearStress.dat";
+                md5 "3c85993d3c943e6d81e83c3092f09570";
+            }
+        );
+    }
+
+    // No long run, md5 validation.
+);
+
+tags asan;
+
+unstable true;
+operatingSystem windows;
+reason "This example has a Bash script, which is not available on Windows";

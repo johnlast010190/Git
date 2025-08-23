@@ -1,0 +1,58 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+## First part of the mesh
+cd channelHalf
+
+# Create background mesh
+helyxRun blockMesh
+
+# Refinement iteration 1
+helyxRun topoSet -dict system/topoSetDict.1
+helyxRun refineMesh -dict system/refineMeshDict -overwrite
+
+# Refinement iteration 2
+helyxRun -append topoSet -dict system/topoSetDict.2
+helyxRun -append refineMesh -dict system/refineMeshDict -overwrite
+
+# Refinement iteration 3
+helyxRun -append topoSet -dict system/topoSetDict.3
+helyxRun -append refineMesh -dict system/refineMeshDict -overwrite
+
+## Second part of the mesh
+cd ../
+
+# Create background mesh
+helyxRun blockMesh
+
+# Refinement iteration 1
+helyxRun topoSet -dict system/topoSetDict.1
+helyxRun refineMesh -dict system/refineMeshDict -overwrite
+
+# Refinement iteration 2
+helyxRun -append topoSet -dict system/topoSetDict.2
+helyxRun -append refineMesh -dict system/refineMeshDict -overwrite
+
+# Refinement iteration 3
+helyxRun -append topoSet -dict system/topoSetDict.3
+helyxRun -append refineMesh -dict system/refineMeshDict -overwrite
+
+# Merge the two meshes
+helyxRun mergeMeshes -overwrite . ./channelHalf
+
+# Create the baffle
+helyxRun createPatch -dict system/createPatchDict -overwrite
+
+# Setup the case
+helyxRun caseSetup
+
+# Run the case
+helyxRun
+
+# Create dummy file for ParaView visualisation
+touch channelBaffleAMI.foam
+
+#------------------------------------------------------------------------------

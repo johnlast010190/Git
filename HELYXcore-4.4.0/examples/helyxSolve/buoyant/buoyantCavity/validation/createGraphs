@@ -1,0 +1,142 @@
+#!/bin/bash
+#---------------------------------------------------------------------------
+#|       o        |
+#|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+#|   o   O   o    |  Version : 4.4.0
+#|    o     o     |  ENGYS Ltd. <http://engys.com/>
+#|       o        |
+#---------------------------------------------------------------------------
+# License
+#    This file is part of HELYXcore.
+#    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+#
+#    HELYXcore is free software: you can redistribute it and/or modify it
+#    under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+#    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+#    for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright
+#    (c) 2011-2016 OpenFOAM Foundation
+#    (c) 2023 Engys Ltd.
+#
+# Script
+#     createGraphs
+#
+# Description
+#     Creates .eps graphs of HELYX results vs experiment for the buoyant
+#     cavity example case.
+#
+#------------------------------------------------------------------------------
+
+cd "${0%/*}" || exit 1    # Run from this directory
+
+# Stop on first error
+set -e
+
+createEpsT()
+{
+    index=$1
+    OF=$2
+    EXPT=$3
+
+    gnuplot<<EOF
+    set terminal postscript eps color enhanced
+    set output "OF_vs_EXPT_T$i.eps"
+    set xlabel "Channel width, x / [m]"
+    set ylabel "Temperature / [K]"
+    set grid
+    set key left top
+    set size 0.6, 0.6
+    set xrange [0:0.08]
+    set yrange [285:310]
+    plot \
+        "$EXPT" u (\$1/1000):(\$2+273.15) title "Expt 0.$index" \
+        with points lt 1 pt 6, \
+        "$OF" title "HELYX 0.$index" with lines linetype -1
+EOF
+}
+
+
+createEpsU()
+{
+    index=$1
+    OF=$2
+    EXPT=$3
+
+    gnuplot<<EOF
+    set terminal postscript eps color enhanced
+    set output "OF_vs_EXPT_U$i.eps"
+    set xlabel "Channel width, x / [m]"
+    set ylabel "Vertical velocity component, Uy / [m/s]"
+    set grid
+    set key left top
+    set size 0.6, 0.6
+    set xrange [0:0.08]
+    set yrange [-0.2:0.2]
+    plot \
+        "$EXPT" u (\$1/1000):(\$2) title "Expt 0.$index" \
+        with points lt 1 pt 6, \
+        "$OF" u 1:3 title "HELYX 0.$index" with lines linetype -1
+EOF
+}
+
+echo "createGraphs:"
+
+# test if gnuplot exists on the system
+if ! which gnuplot > /dev/null 2>&1
+then
+    echo "HELYX FATAL ERROR: gnuplot not found - skipping graph creation" >&2
+    exit 1
+fi
+
+SETSDIR="../postProcessing/sample"
+
+if [ ! -d $SETSDIR ]
+then
+    echo "HELYX FATAL ERROR: result sets not available in directory $SETSDIR" >&2
+    exit 1
+fi
+
+# paths to data
+LATESTTIME=$(ls $SETSDIR)
+OFDATAROOT=$SETSDIR/$LATESTTIME
+
+EXPTDATAROOT=./exptData
+
+# generate temperature profiles
+TSets="1 3 4 5 6 7 9"
+for i in $TSets
+do
+    echo "    processing temperature profile at y/yMax of 0.$i"
+
+    OF="$OFDATAROOT/y0.${i}_scalar.xy"
+    EXPT="$EXPTDATAROOT/mt_z0_${i}0_lo.dat"
+
+    createEpsT $i $OF $EXPT
+done
+
+
+# generate velocity profiles
+USets="1 3 4 5 6 7 9"
+for i in $USets
+do
+    echo "    processing velocity profile at y/yMax of 0.$i"
+
+    OF="$OFDATAROOT/y0.${i}_vector.xy"
+    EXPT="$EXPTDATAROOT/mv_z0_${i}0_lo.dat"
+
+    createEpsU $i $OF $EXPT
+done
+
+echo "End"
+
+
+#------------------------------------------------------------------------------

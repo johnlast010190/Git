@@ -1,0 +1,122 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : 4.4.0
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) 2011-2016 OpenFOAM Foundation
+    (c) 2015-2017 OpenCFD Ltd.
+    (c) 2021 Engys Ltd.
+
+Class
+    Foam::RhoThermo
+
+Description
+    Energy for a mixture based on density
+
+SourceFiles
+    RhoThermo.C
+
+\*---------------------------------------------------------------------------*/
+
+#ifndef RhoThermo_H
+#define RhoThermo_H
+
+#include "basicThermo/BasicThermo.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+/*---------------------------------------------------------------------------*\
+                         Class RhoThermo Declaration
+\*---------------------------------------------------------------------------*/
+
+template<class BasicRhoThermo, class MixtureType>
+class RhoThermo
+:
+    public BasicThermo<BasicRhoThermo, MixtureType>
+{
+    // Private Member Functions
+
+        //- Calculate the thermo variables
+        void calculate
+        (
+            const volScalarField& p,
+            volScalarField& T,
+            volScalarField& he,
+            volScalarField& psi,
+            volScalarField& rho,
+            volScalarField& mu,
+            volScalarField& kappa,
+            volScalarField& Cp,
+            volScalarField& Cv,
+            const bool doOldTimes
+        );
+
+        //- Construct as copy (not implemented)
+        RhoThermo(const RhoThermo&);
+
+        //- Reference to object registry
+        const objectRegistry& obr_;
+
+
+public:
+
+        TypeName("RhoThermo");
+    // Constructors
+
+        //- Construct from obr and phase name
+        RhoThermo
+        (
+            const objectRegistry& obr,
+            const word& phaseName = word::null
+        );
+
+
+    //- Destructor
+    virtual ~RhoThermo();
+
+
+    // Member functions
+
+        //- Update properties
+        virtual void correct();
+};
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#ifdef NoRepository
+    #include "RhoThermo.C"
+#endif
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

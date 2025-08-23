@@ -1,0 +1,380 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields  true;
+        resetBoundaryFields  true;
+        resetSystemDicts     true;
+        resetConstDicts      true;
+        resetBoundaryMesh    true;
+        deleteUnusedFields   true;
+    }
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         5;
+            deltaT          1e-4;
+            writeControl    adjustableRunTime;
+            writeInterval   0.2;
+            writeFormat     binary;
+            writePrecision  6;
+            maxCo           1.5;
+            maxAlphaCo      1;
+        }
+        nonConformalCouplesDict
+        {
+            nonConformalCyclic
+            {
+                patches          (nonCouple1 nonCouple2);
+                transformType    none;
+            }
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p alpha.oil );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( transient ras vof dynamic );
+        boundaryMesh
+        {
+            oilInlet
+            {
+                physicalType inlet;
+            }
+            outlet
+            {
+                physicalType outlet;
+            }
+            nonCouple1
+            {
+                type nonConformal;
+            }
+            nonCouple2
+            {
+                type nonConformal;
+            }
+        }
+        turbulenceModel kEpsilon;
+        materials ( oil water );
+        materialProperties
+        {
+            materialType multiphase;
+            passivePhase water;
+            oil
+            {
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho 300;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu 3.6e-3;
+                }
+            }
+            water
+            {
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho 1027;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu 1e-3;
+                }
+            }
+            oil_water
+            {
+                surfaceTensionModel constant;
+                surfaceTensionModelCoeffs
+                {
+                    sigma 0.027;
+                }
+            }
+            referenceFields
+            {
+                p [ 1 -1 -2 0 0 0 0 ] 0;
+            }
+        }
+        system
+        {
+            fvSolution
+            {
+                solvers
+                {
+                    MeshPhi
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        tolerance       1e-2;
+                        relTol          0;
+                    }
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p               1;
+                    }
+                    equations
+                    {
+                        U               1;
+                    }
+                }
+                PIMPLE
+                {
+                    nOuterCorrectors    2;
+                    nCorrectors         1;
+                    correctMeshPhi      true;
+                }
+            }
+            meshObjects
+            {
+                rotatingFrame
+                {
+                    type            dynamicMotionCoordinateFrame;
+                    motionFunction
+                    {
+                        type rotatingMotion;
+                        omega -5;    // rad/s
+                    }
+                    coordinateSystem
+                    {
+                        type            cartesian;
+                        origin          ( 0 0 0 );
+                        e1              ( 1 0 0 );
+                        e2              ( 0 1 0 );
+                    }
+                }
+            }
+        }
+        constant
+        {
+            dynamicMeshDict
+            {
+                mover
+                {
+                    type            motionSolver;
+                    libs            ("libfvMeshMovers.so" "libfvMotionSolvers.so");
+                    motionSolver    solidBody;
+                    cellZone        rotating;
+                    referenceFrame  rotatingFrame;
+                }
+            }
+            g
+            {
+                value           (0 0 -9.81);
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform (0 0 0);
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 125000;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.01;
+                }
+            }
+            epsilon
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.007;
+                }
+            }
+            alpha.oil
+            {
+                initialisation
+                {
+                    type cellSet;
+                    defaultValue uniform 1;
+                    setSources
+                    (
+                        boxToCell
+                        {
+                            box (-4 -4 -1) (4 4 0.74);
+                            value 0;
+                        }
+                    );
+                }
+            }
+        }
+        boundaryTypeDefaults
+        {
+            wall
+            {
+                p
+                {
+                    type fixedFluxPressure;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 0.01;
+                }
+                epsilon
+                {
+                    type epsilonWallFunction;
+                    value uniform 0.007;
+                }
+                alpha.oil
+                {
+                    type zeroGradient;
+                }
+            }
+            nonConformal
+            {
+                U
+                {
+                    type movingWallSlipVelocity;
+                    value uniform (0 0 0);
+                }
+            }
+        }
+        boundaryConditions
+        {
+            oilInlet
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform (0 0 0.2);
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                }
+                k
+                {
+                    type fixedValue;
+                    value uniform 0.01;
+                }
+                epsilon
+                {
+                    type fixedValue;
+                    value uniform 0.007;
+                }
+                alpha.oil
+                {
+                    type fixedValue;
+                    value uniform 1;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform (0 0 0);
+                }
+                p
+                {
+                    type fixedprghPressure;
+                    p_rgh uniform 125000;
+                    value uniform 125000;
+                }
+                k
+                {
+                    type inletOutlet;
+                    inletValue uniform 0.01;
+                    value uniform 0.01;
+                }
+                epsilon
+                {
+                    type inletOutlet;
+                    inletValue uniform 0.007;
+                    value uniform 0.007;
+                }
+                alpha.oil
+                {
+                    type inletOutlet;
+                    inletValue uniform 0;
+                    value uniform 0;
+                }
+            }
+            "(vessel|sparger|baffles)"
+            {
+                U
+                {
+                    type noSlip;
+                }
+            }
+            "(shaftRotating|stirrer)"
+            {
+                U
+                {
+                    type movingWallVelocity;
+                    value uniform (0 0 0);
+                }
+            }
+            shaft
+            {
+                U
+                {
+                    type rotatingWallVelocity;
+                    origin (0 0 0);
+                    axis (0 0 1);
+                    omega -5;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

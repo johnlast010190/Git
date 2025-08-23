@@ -1,0 +1,2 @@
+# Time	Umin	Umin location	Umax	Umax location	Umean	UstDev	pmin	pmin location	pmax	pmax location	pmean	pstDev	alpha.oilmin	alpha.oilmin location	alpha.oilmax	alpha.oilmax location	alpha.oilmean	alpha.oilstDev	totalVolume
+0.0050777	3.48169e-05	( -0.0152943 -0.0152943 -0.097822 )	2.95763	( -0.0827084 -0.0887318 1.09174 )	0.0491992	0.124331	119643	( -0.0734075 -0.0886806 1.09174 )	132634	( -0.0325947 0.0325947 -0.0985001 )	126897	2886.15	-4.62129e-06	( -0.140479 0.0233773 0.738534 )	1.01154	( -0.0868068 -0.0868068 1.29591 )	0.294221	0.455294	0.245908

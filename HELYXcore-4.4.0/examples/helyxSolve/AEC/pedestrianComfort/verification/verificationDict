@@ -1,0 +1,53 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/d1/VR1/0/volumeReport.dat";
+                reference "verification/short/d1/VR1/0/volumeReport.dat";
+                variables "Umean" "pmean";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/d16/VR16/0/volumeReport.dat";
+                reference "verification/short/d16/VR16/0/volumeReport.dat";
+                variables "Umean" "pmean";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/PCVR/0/volumeReport.dat";
+                reference "verification/short/PCVR/0/volumeReport.dat";
+                variables "PC-Lawsonmean" "PC-Safetymean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/d1/VR1/0/volumeReport.dat";
+                reference "verification/long/d1/VR1/0/volumeReport.dat";
+                variables "Umean" "pmean";
+            }
+            {
+                result "postProcessing/d16/VR16/0/volumeReport.dat";
+                reference "verification/long/d16/VR16/0/volumeReport.dat";
+                variables "Umean" "pmean";
+            }
+            {
+                result "postProcessing/PCVR/0/volumeReport.dat";
+                reference "verification/long/PCVR/0/volumeReport.dat";
+                variables "PC-Lawsonmean" "PC-Safetymean";
+            }
+        );
+    }
+);

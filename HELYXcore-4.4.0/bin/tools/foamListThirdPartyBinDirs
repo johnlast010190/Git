@@ -1,0 +1,127 @@
+#!/bin/bash
+#---------------------------------------------------------------------------
+#|       o        |
+#|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+#|   o   O   o    |  Version : 4.4.0
+#|    o     o     |  ENGYS Ltd. <http://engys.com/>
+#|       o        |
+#---------------------------------------------------------------------------
+#License
+#    This file is part of HELYXcore.
+#    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+#
+#    HELYXcore is free software: you can redistribute it and/or modify it
+#    under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+#    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+#    for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+#Copyright
+#    (c) 2011 OpenFOAM Foundation 
+#
+# Script
+#     foamListThirdPartyBinDirs <directory> [archOptions]
+#
+# Description
+#     Lists directories containing binary files for OpenFOAM ThirdParty
+#
+# Note
+#     Not normally called directly by the user.
+#------------------------------------------------------------------------------
+toolsDir="${0%/*}"  # this script is already located in the tools/ directory
+
+[ $# -eq 1 -o $# -eq 2 ] || {
+cat <<USAGE 1>&2
+Usage : ${0##*/} <packDir> [archOptions]
+
+* List directories containing binary files for OpenFOAM ThirdParty
+
+    The value of 'archOptions' normally corresponds to \$HELYX_OPTIONS
+    The current value of \$HELYX_OPTIONS = $HELYX_OPTIONS
+
+USAGE
+    exit 1
+}
+
+#------------------------------------------------------------------------------
+packDir="$1"
+
+# default to same as $HELYX_OPTIONS - eg, 'linux64GccDPOpt'
+archOptions="${2:-$HELYX_OPTIONS}"
+
+[ -n "$archOptions" ] || {
+    echo "Error: no archOptions specified" 1>&2
+    exit 1
+}
+
+# base arch (w/o precision, optimization, etc)
+# same as "$HELYX_BUILD_PLATFORM$HELYX_COMPILER"
+archCompiler=$(echo "$archOptions" | sed -e 's@[DS]P.*$@@')
+
+# same as $HELYX_BUILD_PLATFORM - eg, 'linux64'
+# TODO: only works for Gcc, Icc, Clang
+archOS=$(echo "$archOptions" | sed -e 's@[GI]cc.*$@@' -e 's@Clang.*$@@')
+
+# links for 32-bit version, eg convert linux64 -> linux-64
+arch3264=$(echo "$archOS" | sed -e 's@64@-64@')
+
+
+#------------------------------------------------------------------------------
+# check for essential directories
+for dir in \
+    $packDir \
+    $packDir/platforms/$archOptions/lib \
+    ;
+do
+    [ -d $dir ] || {
+        echo "Error: directory $dir does not exist" 1>&2
+        exit 1
+    }
+done
+
+#------------------------------------------------------------------------------
+# list of directories
+dirList=$(
+    for dir in \
+        $packDir/platforms/$archOptions \
+        $packDir/platforms/$archCompiler \
+        $packDir/platforms/$archOS \
+        ;
+    do
+        [ -d $dir ] && echo $dir
+    done
+
+    # add in links for 32-bit version
+    if [ "$archOS" != "$arch3264" ]
+    then
+        for dir in \
+            $packDir/platforms/$arch3264 \
+            ;
+        do
+            [ -d $dir -a -L $dir ] && echo $dir
+        done
+     fi
+)
+
+
+cat <<INFO 1>&2
+-------------------------------------------------------------------------------
+Packing $archOptions ($archCompiler) port of $packDir
+    archOS       = $archOS
+    32bit archOS = $arch3264
+
+dirs:
+    $(echo ${dirList:-NONE})
+
+INFO
+
+echo "$dirList"
+
+#------------------------------------------------------------------------------

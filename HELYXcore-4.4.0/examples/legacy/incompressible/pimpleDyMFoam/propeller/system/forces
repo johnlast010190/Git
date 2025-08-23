@@ -1,0 +1,30 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+
+forces
+{
+    type          forces;
+
+    libs          ("libforces.so");
+
+    writeControl  timeStep;
+    timeInterval  1;
+
+    log           yes;
+
+    patches       ("propeller.*");
+    rho           rhoInf;     // Indicates incompressible
+    log           true;
+    rhoInf        1;          // Redundant for incompressible
+
+    CofR          (0 0 0);    // Rotation around centre line of propeller
+    pitchAxis     (0 1 0);
+}
+
+
+// ************************************************************************* //

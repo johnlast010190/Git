@@ -1,0 +1,161 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     helyxSolve;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         10;
+
+deltaT          constant 1;
+
+writeControl    timeStep;
+
+writeInterval   10;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  10;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   6;
+
+graphFormat     raw;
+
+runTimeModifiable yes;
+
+libs            1 ( "" );
+
+functions
+{
+    Lawson
+    {
+        type            pedestrianComfort;
+        instances       ( dir1 dir2 dir3 );
+        functionObjectLibs ( "libutilityFunctionObjects.so" );
+        writeControl    onEnd;
+        UName           U;
+        windDirections  ( dir1 dir2 dir3 );
+        WeibullParameters ( ( 2.1 4.63 1.7 ) ( 2 5.06 1.8 ) ( 2.4 5.4 1.87 ) );
+        referenceHeight ( 100 200 300 );
+        referenceVelocity ( 10 10 10 );
+        scaleFactor     table ( ( 100 0.96 ) ( 120 1 ) ( 160 1.07 ) ( 200 1.13 ) ( 250 1.19 ) ( 300 1.24 ) ( 450 1.37 ) ( 600 1.48 ) );
+        criteriaThresholds ( 2.5 4 6 );
+        criteriaExceedance ( 5 5 5 );
+    }
+    VR
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U k omega p );
+        executeControl  onEnd;
+        type            volumeReport;
+        instance        dir1;
+        writeControl    onEnd;
+        outputFileFormat tsv;
+        regions         1 ( dir1 );
+    }
+    FF
+    {
+        functionObjectLibs ( "libforces.so" );
+        directForceDensity false;
+        p               p;
+        U               U;
+        rhoName         rho;
+        rhoInf          1;
+        pRef            0;
+        CofR            ( 0 0 0 );
+        patches         ( main annex );
+        executeControl  onEnd;
+        type            forces;
+        instance        dir1;
+        writeControl    onEnd;
+        log             true;
+        regions         1 ( dir1 );
+    }
+    VR2
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U k omega p );
+        executeControl  onEnd;
+        type            volumeReport;
+        instance        dir2;
+        writeControl    onEnd;
+        outputFileFormat tsv;
+        regions         1 ( dir2 );
+    }
+    FF2
+    {
+        functionObjectLibs ( "libforces.so" );
+        directForceDensity false;
+        p               p;
+        U               U;
+        rhoName         rho;
+        rhoInf          1;
+        pRef            0;
+        CofR            ( 0 0 0 );
+        patches         ( main annex );
+        executeControl  onEnd;
+        type            forces;
+        instance        dir2;
+        writeControl    onEnd;
+        log             true;
+        regions         1 ( dir2 );
+    }
+    VR3
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U k omega p );
+        executeControl  onEnd;
+        type            volumeReport;
+        instance        dir3;
+        writeControl    onEnd;
+        outputFileFormat tsv;
+        regions         1 ( dir3 );
+    }
+    FF3
+    {
+        functionObjectLibs ( "libforces.so" );
+        directForceDensity false;
+        p               p;
+        U               U;
+        rhoName         rho;
+        rhoInf          1;
+        pRef            0;
+        CofR            ( 0 0 0 );
+        patches         ( main annex );
+        executeControl  onEnd;
+        type            forces;
+        instance        dir3;
+        writeControl    onEnd;
+        log             true;
+        regions         1 ( dir3 );
+    }
+}
+
+
+// ************************************************************************* //

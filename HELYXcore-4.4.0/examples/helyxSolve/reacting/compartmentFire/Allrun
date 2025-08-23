@@ -1,0 +1,37 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Create the blockMesh file with the parametric one
+m4 system/blockMeshDict.m4 > system/blockMeshDict
+
+# Create background mesh
+helyxRun blockMesh
+helyxRun topoSet
+
+helyxRun  helyxHexMesh -overwrite
+
+# Extrude pyrolysis region
+helyxRun extrudeToRegionMesh -overwrite
+
+# Decompose mesh
+helyxRun decomposePar
+
+# Decompose the pyrolysis region
+helyxRun -append decomposePar -region panelRegion
+
+# Run setup
+helyxRun caseSetup
+
+# Create dummy file for paraview
+touch compartmentFire.foam
+
+# Run solver
+helyxRun
+
+# Create validation graphs
+./createGraphs
+
+# -----------------------------------------------------------------------------

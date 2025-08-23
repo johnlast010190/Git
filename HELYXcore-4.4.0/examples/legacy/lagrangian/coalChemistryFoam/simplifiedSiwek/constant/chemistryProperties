@@ -1,0 +1,58 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      chemistryProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+chemistryType
+{
+    solver   ode;
+}
+
+chemistry       on;
+
+initialChemicalTimeStep 1e-07;
+
+EulerImplicitCoeffs
+{
+    cTauChem        0.05;
+}
+
+odeCoeffs
+{
+    solver          seulex;
+    eps             0.05;
+}
+
+reactions
+{
+    methaneReaction
+    {
+        type     irreversibleArrheniusReaction;
+        reaction "CH4 + 2O2^1.0 = CO2 + 2H2O^1.0";
+        A        7e+06;
+        beta     0;
+        Ta       10063.8;
+    }
+    hydrogenReaction
+    {
+        type     irreversibleArrheniusReaction;
+        reaction "H2 + 0.5O2^1.0 = H2O";
+        A        4.74342e+12;
+        beta     0;
+        Ta       10063.8;
+    }
+}
+
+// ************************************************************************* //

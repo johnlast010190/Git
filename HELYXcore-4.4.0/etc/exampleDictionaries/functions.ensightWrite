@@ -1,0 +1,18 @@
+cflnumber
+{
+    type            ensightWrite;
+    libs            ("libutilityFunctionObjects.so");
+    writeControl    writeTime;
+    writeInterval   1;
+    format          binary;
+
+    overwrite       true;
+    width           12;
+    directory       "EnSight";
+
+    fields
+    (
+        U
+        p
+    );
+}

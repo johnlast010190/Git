@@ -1,0 +1,21 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+-------------------------------------------------------------------------------
+Description
+    Calculates the Reynolds stress tensor field and stores it on the database.
+
+\*---------------------------------------------------------------------------*/
+
+type            turbulenceFields;
+libs            ("libfieldFunctionObjects.so");
+
+field           R;
+
+executeControl  writeTime;
+writeControl    writeTime;
+
+// ************************************************************************* //

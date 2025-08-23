@@ -1,0 +1,47 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      modifyGIBBoundaryDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+boundary
+(
+    ib1
+    {
+        type            indirectWall;
+        faceZone        wallZone;
+        indirectPolyPatchType master;
+        nFaces          0;
+        startFace       83000;
+    }
+    ib2
+    {
+        type            indirectWall;
+        faceZone        wallZone;
+        indirectPolyPatchType slave;
+        nFaces          0;
+        startFace       83000;
+    }
+);
+
+initialization
+{
+    initializationType GIBChanger;
+    libs               ("libfvMeshGIBChangers.so");
+    type               solidBody;
+    triSurfaceName     valve.stl;
+    region0Patch       (inlet outlet);
+}
+
+
+// ************************************************************************* //

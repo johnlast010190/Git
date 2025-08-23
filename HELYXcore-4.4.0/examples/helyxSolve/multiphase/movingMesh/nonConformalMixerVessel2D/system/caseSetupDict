@@ -1,0 +1,266 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields  true;
+        resetBoundaryFields  true;
+        resetSystemDicts     true;
+        resetConstDicts      true;
+        resetBoundaryMesh    true;
+        deleteUnusedFields   true;
+    }
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         2;
+            deltaT          1e-3;
+            writeControl    adjustableRunTime;
+            writeInterval   0.01;
+            writeFormat     ascii;
+            writePrecision  6;
+            maxCo           0.5;
+            maxAlphaCo      0.5;
+        }
+        nonConformalCouplesDict
+        {
+            nonConformalCyclic
+            {
+                patches          (nonCouple1 nonCouple2);
+                transformType    none;
+            }
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p alpha.water );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( transient ras vof dynamic );
+        boundaryMesh
+        {
+            nonCouple1
+            {
+                type nonConformal;
+            }
+            nonCouple2
+            {
+                type nonConformal;
+            }
+        }
+        turbulenceModel laminar;
+        materials ( water air );
+        materialProperties
+        {
+            materialType multiphase;
+            passivePhase air;
+            water
+            {
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho 1000;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu 1e-3;
+                }
+            }
+            air
+            {
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho 1;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu 1.48e-5;
+                }
+            }
+            water_air
+            {
+                surfaceTensionModel constant;
+                surfaceTensionModelCoeffs
+                {
+                    sigma 0.07;
+                }
+            }
+            referenceFields
+            {
+                p [ 1 -1 -2 0 0 0 0 ] 0;
+            }
+        }
+        system
+        {
+            meshObjects
+            {
+                rotatingFrame1
+                {
+                    type            dynamicMotionCoordinateFrame;
+                    motionFunction
+                    {
+                        type            rotatingMotion;
+                        omega           6.2832;
+                    }
+                    coordinateSystem
+                    {
+                        type            cartesian;
+                        origin          ( 0 0 0 );
+                        e1              ( 1 0 0 );
+                        e2              ( 0 1 0 );
+                    }
+                }
+                rotatingFrame2
+                {
+                    type            dynamicMotionCoordinateFrame;
+                    motionFunction
+                    {
+                        type            rotatingMotion;
+                        omega           -6.2832;
+                    }
+                    coordinateSystem
+                    {
+                        type            cartesian;
+                        origin          ( 0 0 0 );
+                        e1              ( 1 0 0 );
+                        e2              ( 0 1 0 );
+                    }
+                }
+            }
+        }
+        constant
+        {
+            dynamicMeshDict
+            {
+                mover
+                {
+                    type            motionSolver;
+                    libs            ("libfvMeshMovers.so" "libfvMotionSolvers.so");
+                    motionSolver    motionSolverList;
+                    solvers
+                    {
+                        rotor
+                        {
+                            solver          solidBody;
+                            cellZone        rotor;
+                            referenceFrame  rotatingFrame1;
+                        }
+                        stator
+                        {
+                            solver          solidBody;
+                            cellZone        stator;
+                            referenceFrame  rotatingFrame2;
+                        }
+                    };
+                }
+            }
+            g
+            {
+                value           (0 -9.81 0);
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform (0 0 0);
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            alpha.water
+            {
+                initialisation
+                {
+                    type cellSet;
+                    defaultValue uniform 0;
+                    setSources
+                    (
+                        boxToCell
+                        {
+                            box (-0.1 -0.1 -0.005) (0.1 -0.033333 0.005);
+                            value 1;
+                        }
+                    );
+                }
+            }
+        }
+        boundaryTypeDefaults
+        {
+            nonConformal
+            {
+                U
+                {
+                    type movingWallSlipVelocity;
+                    value uniform (0 0 0);
+                }
+            }
+        }
+        boundaryConditions
+        {
+            "(rotor|stator)"
+            {
+                U
+                {
+                    type movingWallVelocity;
+                    value uniform (0 0 0);
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                alpha.water
+                {
+                    type zeroGradient;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

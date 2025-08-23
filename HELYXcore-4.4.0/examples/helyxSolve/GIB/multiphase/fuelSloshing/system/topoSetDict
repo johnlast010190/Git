@@ -1,0 +1,156 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      topoSetDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+actions
+(
+    {
+        name    subsetCells;
+        type    cellSet;
+        action  new;
+        source  boxToCell;
+        sourceInfo
+        {
+            box (0 0.4 -1) (0.18 1 1);
+        }
+    }
+    {
+        name    subsetCells;
+        type    cellSet;
+        action  add;
+        source  boxToCell;
+        sourceInfo
+        {
+            box (0.22 0.4 -1) (0.48 1 1);
+        }
+    }
+    {
+        name    subsetCells;
+        type    cellSet;
+        action  add;
+        source  boxToCell;
+        sourceInfo
+        {
+            box (0.52 0.4 -1) (0.78 1 1);
+        }
+    }
+    {
+        name    subsetCells;
+        type    cellSet;
+        action  add;
+        source  boxToCell;
+        sourceInfo
+        {
+            box (0.82 0.4 -1) (1 1 1);
+        }
+    }
+
+    {
+        name    subsetCells;
+        type    cellSet;
+        action  add;
+        source  boxToCell;
+        sourceInfo
+        {
+            box (0.3 0.2 -1) (0.48 1 1);
+        }
+    }
+    {
+        name    subsetCells;
+        type    cellSet;
+        action  add;
+        source  boxToCell;
+        sourceInfo
+        {
+            box (0.52 0.2 -1) (0.7 1 1);
+        }
+    }
+
+    {
+        name    subsetCells;
+        type    cellSet;
+        action  add;
+        source  boxToCell;
+        sourceInfo
+        {
+            box (0.3 0 -1) (0.35 0.05 1);
+        }
+    }
+    {
+        name    subsetCells;
+        type    cellSet;
+        action  add;
+        source  boxToCell;
+        sourceInfo
+        {
+            box (0.3 0.1 -1) (0.35 100 1);
+        }
+    }
+    {
+        name    subsetCells;
+        type    cellSet;
+        action  add;
+        source  boxToCell;
+        sourceInfo
+        {
+            box (0.65 0 -1) (0.7 0.05 1);
+        }
+    }
+    {
+        name    subsetCells;
+        type    cellSet;
+        action  add;
+        source  boxToCell;
+        sourceInfo
+        {
+            box (0.65 0.1 -1) (0.7 100 1);
+        }
+    }
+
+    {
+        name    subsetCells;
+        type    cellSet;
+        action  invert;
+    }
+
+    {
+        name gibZone1;
+        type faceZoneSet;
+        action new;
+        source searchableSurfaceToFaceZone;
+        sourceInfo
+        {
+            surface     searchableBox;
+            min (0.3239 -1 -1);
+            max (0.3241  1 1);
+        }
+    }
+
+    {
+        name gibZone2;
+        type faceZoneSet;
+        action new;
+        source searchableSurfaceToFaceZone;
+        sourceInfo
+        {
+            surface     searchableBox;
+            min (0.6759 -1 -1);
+            max (0.6761  1 1);
+        }
+    }
+);
+
+
+// ************************************************************************* //

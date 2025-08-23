@@ -1,0 +1,16 @@
+# Motion in HELYX-GUI
+
+axisRotationMotion
+burningMotion
+linearMotion
+oscillatingLinearMotion
+oscillatingRotatingMotion
+referenceFrameMotion
+relativeMotion
+rotatingMotion
+rotatingStepMotion
+rotatingWheelMotion
+SDA
+sixDoFRigidBodyMotion
+tankFreeMotion
+vehicleMotion

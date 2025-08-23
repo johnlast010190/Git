@@ -1,0 +1,18 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+
+T
+{
+    type            thermalBaffle1D;
+    thickness       uniform 0.005;  // thickness [m]
+    qs              uniform 100;    // heat flux [W/m2]
+    kappa           boundaryKappa;  // thermal conductivity [W/mK]
+    value           uniform 300;
+}
+
+// ************************************************************************* //

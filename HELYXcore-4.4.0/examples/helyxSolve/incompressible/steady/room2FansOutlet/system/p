@@ -1,0 +1,56 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      p;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+room
+{
+    type            fixedFluxPressure;
+    value           uniform 0;
+}
+
+fan1
+{
+    type            targetFanPressurePoint;
+    value           uniform 0;
+    initialPressure -28000;
+    referencePoint  ( 0.5 1.8 0 );
+    timeFanCurve    false;
+    fanCurve        table ( ( 0 400 ) ( 2.5 420 ) ( 5 380 ) ( 7.5 300 ) ( 9 0 ) );
+    outOfBounds     clamp;
+}
+
+fan2
+{
+    type            targetFanPressurePoint;
+    value           uniform 0;
+    initialPressure -28000;
+    referencePoint  ( 0.5 1.8 0 );
+    timeFanCurve    false;
+    fanCurve        table ( ( 0 400 ) ( 2.5 420 ) ( 5 380 ) ( 7.5 300 ) ( 9 0 ) );
+    outOfBounds     clamp;
+}
+
+opening
+{
+    type            totalPressure;
+    value           uniform 0;
+    p0              uniform 0;
+    gamma           1.4;
+    addStaticHead   true;
+    integrateStaticHead false;
+}
+
+
+// ************************************************************************* //

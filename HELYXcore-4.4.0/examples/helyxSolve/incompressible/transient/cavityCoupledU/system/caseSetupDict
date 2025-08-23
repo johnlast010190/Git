@@ -1,0 +1,254 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom latestTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 10;
+            deltaT 0.005;
+            writeControl timeStep;
+            writeInterval 100;
+            purgeWrite 0;
+            writeFormat ascii;
+            writePrecision 6;
+            writeCompression off;
+            timeFormat general;
+            timePrecision 6;
+            runTimeModifiable true;
+        }
+    }
+    functions
+    {
+        #includeFunc wallShearStress
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (transient ras);
+        boundaryMesh
+        {
+            movingWall
+            {
+                type wall;
+            }
+            fixedWalls
+            {
+                type wall;
+            }
+            frontAndBack
+            {
+                type empty;
+            }
+        }
+        turbulenceModel kEpsilon;
+        materials (air);
+        materialProperties {}
+        system
+        {
+            fvSolution
+            {
+                solvers
+                {
+                    p
+                    {
+                        solver          GAMG;
+                        tolerance       1e-06;
+                        relTol          0.1;
+                        smoother        GaussSeidel;
+                    }
+                    pFinal
+                    {
+                        $p;
+                        tolerance       1e-06;
+                        relTol          0;
+                    }
+                    U
+                    {
+                        type            coupled;
+                        solver          PBiCCCG;
+                        preconditioner  DILU;
+                        tolerance       (1e-05 1e-05 1e-05);
+                        relTol          (0 0 0);
+                    }
+                    "(k|epsilon|R|nuTilda)"
+                    {
+                        solver          smoothSolver;
+                        smoother        GaussSeidel;
+                        tolerance       1e-05;
+                        relTol          0;
+                    }
+                }
+
+                PIMPLE
+                {
+                    nCorrectors     2;
+                    nOuterCorrectors 1;
+                    nNonOrthogonalCorrectors 0;
+                    pRefCell        0;
+                    pRefValue       0;
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 3.25e-03;
+                }
+            }
+            epsilon
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.000765;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            alphat
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            movingWall
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform (1 0 0);
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 3.25e-03;
+                }
+                epsilon
+                {
+                    type epsilonWallFunction;
+                    value uniform 0.000765;
+                }
+                alphat
+                {
+                    type alphatWallFunction;
+                    Prt 1.0;
+                    value uniform 0;
+                }
+            }
+            fixedWalls
+            {
+                U
+                {
+                    type noSlip;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type kqRWallFunction;
+                    value uniform 3.25e-03;
+                }
+                epsilon
+                {
+                    type epsilonWallFunction;
+                    value uniform 0.000765;
+                }
+                alphat
+                {
+                    type alphatWallFunction;
+                    Prt 1.0;
+                    value uniform 0;
+                }
+            }
+            frontAndBack
+            {
+                U
+                {
+                    type empty;
+                }
+                p
+                {
+                    type empty;
+                }
+                k
+                {
+                    type empty;
+                }
+                epsilon
+                {
+                    type empty;
+                }
+                alphat
+                {
+                    type empty;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

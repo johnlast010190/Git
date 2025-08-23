@@ -1,0 +1,20 @@
+#!/bin/bash
+cd ${0%/*} || exit 1    # Run from this directory
+
+# Source tutorial run functions
+. $HELYX_PROJECT_DIR/bin/tools/CleanFunctions
+
+cd aeroFoil_helyxHexMesh
+cleanCase
+
+cd ../aeroFoil_overset
+cleanCase
+rm -rf 0
+
+cd ../background_helyxHexMesh
+cleanCase
+
+
+cd ../background_overset
+cleanCase
+./Allclean

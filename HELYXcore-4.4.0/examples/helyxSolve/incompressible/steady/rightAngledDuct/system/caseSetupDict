@@ -1,0 +1,134 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields yes;
+        resetBoundaryFields yes;
+        resetSystemDicts yes;
+        resetConstDicts yes;
+        resetBoundaryMesh yes;
+        deleteUnusedFields yes;
+    }
+    regionGroups    1 ( fluid 1 ( region0 ) );
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            stopAt          endTime;
+            endTime         1000;
+            deltaT          1;
+            writeControl    timeStep;
+            writeInterval   100;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state           ( steady ras );
+        turbulenceModel kOmegaSST;
+        materials       ( air );
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type            potentialFlow;
+                    initialiseUBCs  true;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type            potentialFlow;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type            Prandtl;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type            Prandtl;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type            surfaceNormalFixedValue;
+                    value           uniform ( 8 0 0 );
+                    refValue        uniform -8;
+                }
+            }
+            outlet
+            {
+                p
+                {
+                    /*
+                    //- old setup
+                    type            resistivePressure;
+                    value           uniform 0;
+                    p0              uniform 0;
+                    C1              20;
+                    Ct              0.2;
+                    */
+                    type porousPressure;
+                    porousMode alphaBeta;
+                    p0 uniform 0;
+                    alpha 20;
+                    beta 0;
+                    length 1;
+                }
+                U
+                {
+                    type            pressureVelocity;
+                    value           uniform ( 0 0 0 );
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

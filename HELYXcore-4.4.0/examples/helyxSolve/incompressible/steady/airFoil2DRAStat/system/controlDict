@@ -1,0 +1,109 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     helyxSolve;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         15000;
+
+deltaT          1;
+
+writeControl    timeStep;
+
+writeInterval   15000;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  6;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable true;
+
+libs            ( "libutilityFunctionObjects.so" );
+
+functions
+{
+    LD
+    {
+        type liftDrag;
+        regions ( region0 );
+        patches ( walls );
+        porosity true;
+        nAveragingSteps 1;
+        outputRegionData true;
+        liftDirection ( 0.0 1.0 0.0 );
+        dragDirection ( 1.0 0.0 0.0 );
+        Uinf #include "windVector";
+        Pref 0.0;
+        rhoInf 1.205;
+        referenceArea 0.00142857;
+        referenceLength 1.0;              // approximate cord lenght
+        referencePoint ( 0.0 0.0 0.0 );
+        //referencePointCP ( 0.0 0.0 0.0 );  // uses center of mass by default
+        cOfMass true;                      // "false" by default
+        wheelbase 1.0;
+        writeControl timeStep;
+        writeInterval 1;
+        binData
+        {
+            nBins 100;
+            axis ( 1.0 0.0 0.0 );
+        }
+        functionObjectLibs ( "libforces.so" );
+    }
+    RAStat
+    {
+        timeStart       1;
+        executeControl  timeStep;
+        executeInterval 1;
+        writeControl    writeTime;
+        writeInterval   1;
+        type            runTimeControl;
+        conditions
+        {
+            RASCC
+            {
+                type                    reverseAnalysisStatistical;
+                functionObject          LD;
+                fields                  ( Cl );
+                minBox                  10;
+                stdTolerance            1e-02;
+                solQualTolerance        0.95;
+                fitTolerance            1e-04;
+                discardRate             0.5;
+                vectorComp              true;
+                vectorMag               false;
+                vectorSum               false;
+                resetOnRestart          false;
+            }
+        }
+    }
+}
+
+// ************************************************************************* //

@@ -1,0 +1,41 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/mean1/0/average.dat";
+                reference "verification/short/mean1/0/average.dat";
+                variables "mean(tauw)-Average";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/vr1/0/volumeReport.dat";
+                reference "verification/short/vr1/0/volumeReport.dat";
+                variables "Umean" "pmean" "Cparticulatemean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/mean1/0/average.dat";
+                reference "verification/long/mean1/0/average.dat";
+                variables "mean(tauw)-Average";
+            }
+            {
+                result "postProcessing/vr1/0/volumeReport.dat";
+                reference "verification/long/vr1/0/volumeReport.dat";
+                variables "Umean" "pmean" "Cparticulatemean";
+            }
+        );
+    }
+);

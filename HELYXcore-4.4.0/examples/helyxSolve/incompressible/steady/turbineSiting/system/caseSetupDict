@@ -1,0 +1,498 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom latestTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 5000;
+            deltaT 1;
+            writeControl timeStep;
+            writeInterval 50;
+            writeFormat binary;
+            writePrecision 12;
+            timeFormat general;
+            timePrecision 6;
+            runTimeModifiable yes;
+            adjustTimeStep false;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (steady ras);
+        boundaryMesh
+        {
+            outlet
+            {
+                type patch;
+            }
+            sides
+            {
+                type patch;
+            }
+            inlet
+            {
+                type patch;
+            }
+            terrain
+            {
+                type wall;
+            }
+            ground
+            {
+                type wall;
+            }
+            top
+            {
+                type patch;
+            }
+        }
+        turbulenceModel kEpsilon;
+
+        constant
+        {
+            turbulenceProperties
+            {
+                RAS
+                {
+                    kEpsilonCoeffs
+                    {
+                        Cmu         0.09;
+                        C1          1.44;
+                        C2          1.92;
+                        sigmaEps    1.11; //Original value:1.44
+                        // See:
+                        // D.M. Hargreaves and N.G. Wright
+                        // "On the use of the k-Epsilon model in commercial CFD software
+                        // to model the neutral atmospheric boundary layer",
+                        // J. of wind engineering and industrial aerodymanics,
+                        // 95(2007) 355-269
+                    }
+                }
+            }
+        }
+
+        materials (air);
+        materialProperties
+        {
+            air
+            {
+                equationOfStateCoeffs
+                {
+                    rho 1.225;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cp 1004.4;
+                }
+                muModelCoeffs
+                {
+                    mu 6.125e-06;
+                }
+                kappaModelCoeffs
+                {
+                    Pr 1.0;
+                }
+                referenceFields
+                {
+                    p [ 1 -1 -2 0 0 0 0 ] 0;
+                }
+            }
+        }
+        system
+        {
+            fvOptions
+            {
+                disk1
+                {
+                    type            actuationDiskSource;
+
+                    fields      (U);
+
+                    selectionMode   cellSet;
+                    cellSet         actuationDisk1;
+                    diskDir         (1 0 0);    // Orientation of the disk
+                    Cp              0.386;
+                    Ct              0.58;
+                    diskArea        40;
+                    upstreamPoint   (581849 4785810 1065);
+                }
+
+                disk2
+                {
+                    type            actuationDiskSource;
+
+                    fields      (U);
+
+                    selectionMode   cellSet;
+                    cellSet         actuationDisk2;
+                    diskDir         (1 0 0);    // Orientation of the disk
+                    Cp              0.53;
+                    Ct              0.58;
+                    diskArea        40;
+                    upstreamPoint   (581753 4785663 1070);
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    p
+                    {
+                        solver           GAMG;
+                        tolerance        1e-7;
+                        relTol           0.1;
+                        smoother         GaussSeidel;
+                    }
+
+                    U
+                    {
+                        solver           smoothSolver;
+                        smoother         GaussSeidel;
+                        tolerance        1e-8;
+                        relTol           0.1;
+                        nSweeps          1;
+                    }
+
+                    k
+                    {
+                        solver           smoothSolver;
+                        smoother         GaussSeidel;
+                        tolerance        1e-8;
+                        relTol           0.1;
+                        nSweeps          1;
+                    }
+
+                    epsilon
+                    {
+                        solver           smoothSolver;
+                        smoother         GaussSeidel;
+                        tolerance        1e-8;
+                        relTol           0.1;
+                        nSweeps          1;
+                    }
+                }
+                SIMPLE
+                {
+                    nNonOrthogonalCorrectors 0;
+
+                    residualControl
+                    {
+                        p               1e-3;
+                        U               1e-4;
+                        "(k|epsilon)"   1e-4;
+                    }
+                }
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p               0.3;
+                    }
+                    equations
+                    {
+                        U               0.7;
+                        k               0.7;
+                        epsilon         0.7;
+                    }
+                }
+                cache
+                {
+                    grad(U);
+                }
+            }
+            fvSchemes
+            {
+                gradSchemes
+                {
+                    default         Gauss linear;
+                }
+                divSchemes
+                {
+                    default         none;
+
+                    div(phi,U)          bounded Gauss upwind;
+                    div(phi,epsilon)    bounded Gauss upwind;
+                    div(phi,k)          bounded Gauss upwind;
+                    div((nuEff*dev2(T(grad(U)))))    Gauss linear;
+                }
+                laplacianSchemes
+                {
+                    default         Gauss linear limited corrected 0.33;
+                }
+                interpolationSchemes
+                {
+                    default         linear;
+                }
+                snGradSchemes
+                {
+                    default         limited corrected 0.33;
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform (0 0 0);
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 1.3;
+                }
+            }
+            epsilon
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.01;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            outlet
+            {
+                U
+                {
+                    type            inletOutlet;
+                    value           uniform (0 0 0);
+                    inletValue      uniform (0 0 0);
+                }
+                p
+                {
+                    type            uniformFixedValue;
+                    uniformValue    constant 0;
+                }
+                k
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 1.3;
+                    value           uniform 1.3;
+                }
+                epsilon
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 0.01;
+                    value           uniform 0.01;
+                }
+                nut
+                {
+                    type            calculated;
+                    value           uniform 0;
+                }
+            }
+            inlet
+            {
+                U
+                {
+                    type            atmBoundaryLayerInletVelocity;
+                    Uref            10.0;
+                    Zref            20;
+                    zDir            (0 0 1);
+                    flowDir         (1 0 0);
+                    z0              uniform 0.1;
+                    zGround         uniform 935.0;
+                    value           uniform (0 0 0);
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                k
+                {
+                    type            atmBoundaryLayerInletK;
+                    Uref            10.0;
+                    Zref            20;
+                    zDir            (0 0 1);
+                    flowDir         (1 0 0);
+                    z0              uniform 0.1;
+                    zGround         uniform 935.0;
+                }
+                epsilon
+                {
+                    type            atmBoundaryLayerInletEpsilon;
+                    Uref            10.0;
+                    Zref            20;
+                    zDir            (0 0 1);
+                    flowDir         (1 0 0);
+                    z0              uniform 0.1;
+                    zGround         uniform 935.0;
+                }
+                nut
+                {
+                    type            calculated;
+                    value           uniform 0;
+                }
+            }
+            terrain
+            {
+                U
+                {
+                    type            uniformFixedValue;
+                    uniformValue    (0 0 0);
+                    value           uniform (0 0 0);
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                k
+                {
+                    type            kqRWallFunction;
+                    value           uniform 0.0;
+                }
+                epsilon
+                {
+                    type            epsilonWallFunction;
+                    Cmu             0.09;
+                    kappa           0.4;
+                    E               9.8;
+                    value           uniform 0.01;
+                }
+                nut
+                {
+                    type            nutkAtmRoughWallFunction;
+                    roughnessHeight 0.1;
+                    value           uniform 0;
+                }
+            }
+            ground
+            {
+                U
+                {
+                    type            uniformFixedValue;
+                    uniformValue    constant (0 0 0);
+                    value           uniform (0 0 0);
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+                k
+                {
+                    type            zeroGradient;
+                }
+                epsilon
+                {
+                    type            zeroGradient;
+                }
+                nut
+                {
+                    type            calculated;
+                    value           uniform 0;
+                }
+            }
+            top
+            {
+                U
+                {
+                    type            slip;
+                }
+                p
+                {
+                    type            slip;
+                }
+                k
+                {
+                    type            slip;
+                }
+                epsilon
+                {
+                    type            slip;
+                }
+                nut
+                {
+                    type            slip;
+                }
+            }
+            sides
+            {
+                U
+                {
+                    type            slip;
+                }
+                p
+                {
+                    type            slip;
+                }
+                k
+                {
+                    type            slip;
+                }
+                epsilon
+                {
+                    type            slip;
+                }
+                nut
+                {
+                    type            slip;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

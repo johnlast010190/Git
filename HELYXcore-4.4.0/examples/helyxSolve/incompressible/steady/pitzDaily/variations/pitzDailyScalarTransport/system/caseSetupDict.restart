@@ -1,0 +1,144 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict.restart;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        deleteUnusedFields false;
+        reuseExistingDictionaries false;
+        resetInternalFields false;
+        resetBoundaryFields false;
+    }
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       latestTime;
+            endTime         270.1;
+            deltaT          constant 0.0001;
+            writeControl    timeStep;
+            writeInterval   50;
+        }
+        materialProperties
+        {
+            CparticulateconcentrationTransport
+            {
+                D               [ 1 -1 -1 0 0 0 0 ] 0.01205;
+                Sct             1e50;
+            }
+        }
+    }
+    functions
+    {
+        VR_tracer
+        {
+            type            volumeReport;
+            fields          ( Cparticulate );
+            writeControl    onEnd;
+            executeControl  onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state           ( transient ras Cparticulate );
+        turbulenceModel kEpsilon;
+        materials       ( air );
+        materialProperties
+        {
+            air
+            {
+                muModelCoeffs
+                {
+                    mu 1.205e-5;
+                }
+            }
+        }
+        fieldMaps
+        {
+        }
+        constant
+        {
+        }
+        system
+        {
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default Euler;
+                }
+                gradSchemes
+                {
+                }
+                divSchemes
+                {
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                }
+                PIMPLE
+                {
+                    nOuterCorrectors 1;
+                }
+            }
+            fvOptions
+            {
+                flowSolver
+                {
+                    solveInterval -1;
+                }
+                turbulenceSolver
+                {
+                    solveInterval -1;
+                }
+                YCparticulate
+                {
+                    noDiffusionBoundaries ( "inlet" "outlet" "upperWall" "lowerWall" );
+                }
+            }
+        }
+        fields
+        {
+        }
+        boundaryTypeDefaults
+        {
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                Cparticulate
+                {
+                    type fixedValue;
+                    value uniform 1;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

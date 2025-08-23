@@ -1,0 +1,43 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/short/VR/0/volumeReport.tsv";
+                variables "Umean" "pmean";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/VF/0/volFieldValue.tsv";
+                reference "verification/short/VF/0/volFieldValue.tsv";
+                variables "average(alpha.water)";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/long/VR/0/volumeReport.tsv";
+                variables "Umean" "pmean";
+            }
+            {
+                result "postProcessing/VF/0/volFieldValue.tsv";
+                reference "verification/long/VF/0/volFieldValue.tsv";
+                variables "average(alpha.water)";
+            }
+        );
+    }
+);
+
+tags asan;

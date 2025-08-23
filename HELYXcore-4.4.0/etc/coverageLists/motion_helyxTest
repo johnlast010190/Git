@@ -1,0 +1,10 @@
+# Motion in helyxTest
+	
+axisRotationMotion
+linearMotion
+oscillatingLinearMotion
+oscillatingRotatingMotion
+rotatingMotion
+rotatingStepMotion
+sixDoFRigidBodyMotion
+vehicleMotion

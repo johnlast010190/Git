@@ -1,0 +1,153 @@
+#!/bin/bash
+#---------------------------------------------------------------------------
+#|       o        |
+#|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+#|   o   O   o    |  Version : 4.4.0
+#|    o     o     |  ENGYS Ltd. <http://engys.com/>
+#|       o        |
+#---------------------------------------------------------------------------
+#License
+#    This file is part of HELYXcore.
+#    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+#
+#    HELYXcore is free software: you can redistribute it and/or modify it
+#    under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+#    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+#    for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+#Copyright
+#    (c) 2011-2016 OpenFOAM Foundation
+#    (c) 2022 Engys Ltd
+#
+#
+# Script
+#     helyxExec
+#
+# Description
+#     Usage: helyxExec [-version=helyxVersion] <helyxCommand> ...
+#
+#     Runs the <helyxVersion> version of executable <helyxCommand>
+#     with the rest of the arguments.
+#
+#     Can also be used for parallel runs. For example,
+#     \code
+#         mpirun -np <nProcs> \
+#             helyxExec -version=VERSION <helyxCommand> ... -parallel
+#     \endcode
+#
+# Note
+#     foamEtcFile must be found in the same directory as this script
+#
+# See also
+#    foamEtcFile
+#
+#------------------------------------------------------------------------------
+usage() {
+    exec 1>&2
+    while [ "$#" -ge 1 ]; do echo "$1"; shift; done
+    cat<<USAGE
+
+Usage: ${0##*/} [OPTION] <application> ...
+
+options:
+  -mode=MODE        Any combination of u(user), g(group), o(other)
+  -prefix=DIR       Specify an alternative installation prefix
+                    pass through to foamEtcFile
+  -version=VER      Specify alternative OpenFOAM version (eg, 3.0, 1612, ...)
+                    pass through to foamEtcFile
+  -help             Print the usage
+
+Run a particular HELYX version of <APPLICATION>
+
+USAGE
+    exit 1
+}
+
+#-------------------------------------------------------------------------------
+binDir="${0%/*}"                # The bin dir
+projectDir="${binDir%/bin}"     # The project dir
+prefixDir="${projectDir%/*}"    # The prefix dir (same as $CMAKE_PROJECT_NAME_INST_DIR)
+
+## projectDirName="${projectDir##*/}"      # The project directory name
+
+version="${HELYX_PROJECT_VERSION:-unknown}"
+
+unset etcOpts
+# parse options
+while [ "$#" -gt 0 ]
+do
+    case "$1" in
+    -h | -help)
+        usage
+        ;;
+    -mode=*)
+        etcOpts="$etcOpts $1"       # pass-thru to foamEtcFile
+        ;;
+    -prefix=/*)
+        etcOpts="$etcOpts $1"       # pass-thru to foamEtcFile
+        prefixDir="${1#*=}"
+        ;;
+    -version=*)
+        etcOpts="$etcOpts $1"       # pass-thru to foamEtcFile
+        version="${1#*=}"
+        ;;
+    -m | -mode)
+        [ "$#" -ge 2 ] || usage "'$1' option requires an argument"
+        etcOpts="$etcOpts $1 $2"    # pass-thru to foamEtcFile
+        shift
+        ;;
+    -p | -prefix)
+        [ "$#" -ge 2 ] || usage "'$1' option requires an argument"
+        etcOpts="$etcOpts $1 $2"    # pass-thru to foamEtcFile
+        prefixDir="$2"
+        shift
+        ;;
+    -v | -version)
+        [ "$#" -ge 2 ] || usage "'$1' option requires an argument"
+        etcOpts="$etcOpts $1 $2"    # pass-thru to foamEtcFile
+        version="$2"
+        shift
+        ;;
+    --)
+        shift
+        break
+        ;;
+    -*)
+        usage "invalid option '$1'"
+        ;;
+    *)
+        break
+        ;;
+    esac
+    shift
+done
+
+#
+# Find and source HELYX settings (.shrc)
+# placed in function to preserve command-line arguments
+#
+sourceRc()
+{
+    rcFile="$($binDir/foamEtcFile $etcOpts ../platforms/activeBuild.shrc)" || {
+        echo "Error : activeBuild.shrc file could not be found for HELYXcore-$version" 1>&2
+        exit 1
+    }
+
+    . $rcFile
+}
+
+[ "$#" -ge 1 ] || usage "no application specified"
+
+sourceRc
+exec "$@"
+exit $?
+
+#------------------------------------------------------------------------------

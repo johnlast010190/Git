@@ -1,0 +1,181 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         0.0001;
+            deltaT          5e-07;
+            writeControl    timeStep;
+            writeInterval   20;
+            purgeWrite      0;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (transient ras energy);
+        boundaryMesh
+        {
+            axis
+            {
+                type symmetry;
+            }
+            outerWall
+            {
+                type wall;
+            }
+            front
+            {
+                type empty;
+            }
+            back
+            {
+                type empty;
+            }
+            nozzle
+            {
+                type patch;
+            }
+        }
+        turbulenceModel laminar;
+        materials (water);
+        materialProperties
+        {
+            water
+            {
+                materialName    water;
+                materialType    fluid;
+                thermodynamics  hConst;
+                equationOfState linear;
+                equationOfStateCoeffs
+                {
+                    rho             1000;
+                    psi             4.54e-07;
+                    rho0            1000;
+                }
+                muModel      scalarFunction1;
+                muModelCoeffs
+                {
+                    mu 0.001;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr 0.7;
+                }
+            }
+        }
+        system
+        {
+            fvSolution
+            {
+                PIMPLE
+                {
+                    nOuterCorrectors 2;
+                    nCorrectors      1;
+                    nNonOrthogonalCorrectors 0;
+                }
+            }
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                    default Euler;
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 1e+07;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            outerWall
+            {
+                U
+                {
+                    type            noSlip;
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+            }
+            nozzle
+            {
+                U
+                {
+                    type zeroGradient;
+                }
+                p
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

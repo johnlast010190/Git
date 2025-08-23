@@ -1,0 +1,43 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy input surfaces from resources directory
+mkdir -p constant/triSurface
+cp "$HELYX_TUTORIALS"/resources/geometry/mixerVessel/* constant/triSurface/
+
+# Mesh in series
+helyxRun blockMesh
+helyxRun surfaceFeatureExtract
+helyxRun helyxHexMesh -overwrite
+helyxRun createBaffles -overwrite
+helyxRun mergeOrSplitBaffles -split -overwrite
+
+# Copy fields after meshing to avoid the generation of unnecessary patch fields
+mkdir 0/
+cp 0.orig/* 0/
+
+# Initialise phase-fraction field
+helyxRun setFields
+
+# Decompose the geometry and fields into 6 processors
+helyxRun decomposePar
+
+# Redistribute the mesh to 12 processors using ParHIP partitioning
+helyxRun -np 12 -log log.redistributePar.6to12 redistributePar -overwrite -withZero -decomposeParDict system/decomposeParDict_12_parhip
+
+# Redistribute the mesh back to 6 processors using hierarchical partitioning
+helyxRun -np 12 -log log.redistributePar.12to6 redistributePar -overwrite -withZero
+
+# Rebalance the mesh using 12 processors and the ParHIP partitioning
+helyxRun -np 12 -log log.redistributePar.6to6 redistributePar -overwrite -withZero -decomposeParDict system/decomposeParDict_6_parhip
+
+# Run solver specified in controlDict
+helyxRun
+
+# Create dummy file for ParaView visualisation
+touch mixerVesselAMI.foam
+
+#------------------------------------------------------------------------------

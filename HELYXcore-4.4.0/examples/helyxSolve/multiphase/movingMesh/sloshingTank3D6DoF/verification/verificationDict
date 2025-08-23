@@ -1,0 +1,35 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/short/VR/0/volumeReport.tsv";
+                variables "Umax" "Umean" "pmax" "pmean" "Tmax" "Tmean" "Umin" "Umin location" "Umax location" "UstDev" "pmin" "pmin location" "pmax location" "pstDev" "Tmin" "Tmin location" "Tmax location" "TstDev" "totalVolume";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/long/VR/0/volumeReport.tsv";
+                variables "Umax" "Umean" "pmax" "pmean" "Tmax" "Tmean" "Umin" "Umin location" "Umax location" "UstDev" "pmin" "pmin location" "pmax location" "pstDev" "Tmin" "Tmin location" "Tmax location" "TstDev" "totalVolume";
+            }
+        );
+    }
+);
+
+tags asan;
+
+unstable true;
+operatingSystem windows;
+reason "This example uses the `m4` command, which is not available on Windows";

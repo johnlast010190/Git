@@ -1,0 +1,53 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Create mesh
+helyxRun blockMesh
+
+# Setup
+helyxRun caseSetup
+
+# Decompose the mesh into 2 processors
+helyxRun -l log.redistributePar.decompose -p redistributePar -decompose -overwrite
+
+# Renumber and run the initial case
+helyxRun -l log.renumberMesh.CuthillMcKee renumberMesh -overwrite
+helyxRun -l log.CuthillMcKee
+
+# Bit of bad renumbering and running
+helyxRun -l log.renumberMesh.random renumberMesh -overwrite -dict system/renumberMeshDict.random
+helyxRun -l log.random
+
+# Reconstruct the mesh and case
+helyxRun -l log.reconstructParMesh.init reconstructParMesh -constant -mergeTol 1e-6
+helyxRun -l log.reconstructPar.init reconstructPar
+
+# Update controlDict
+cp system/controlDict.latestTime system/controlDict
+
+# Redistribute using 5 processors
+helyxRun -np 5 redistributePar -decomposeParDict system/decomposeParDict.5 -cellDist
+
+# Run
+helyxRun
+
+# Reconstruct the mesh and case
+helyxRun -l log.reconstructParMesh.5 reconstructParMesh -mergeTol 1e-6
+helyxRun -l log.reconstructPar.5 reconstructPar -time 0.505:1.0
+
+# Check
+helyxRun checkMesh -writeAllMetrics -latestTime -constant
+
+# Post-process
+helyxRun postProcess -fields '( U P aspectRatio determinant nonOrthogonality skewness volumeRatio)' -latestTime
+
+# Restore default dictionary
+cp system/decomposeParDict.2 system/decomposeParDict
+
+# Create dummy file for ParaView visualisation
+touch cavity.foam
+
+#------------------------------------------------------------------------------

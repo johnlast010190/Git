@@ -1,0 +1,169 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     helyxSolve;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         500;
+
+deltaT          1;
+
+writeControl    timeStep;
+
+writeInterval   50;
+
+purgeWrite      2;
+
+writeFormat     ascii;
+
+writePrecision  6;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   6;
+
+graphFormat     raw;
+
+runTimeModifiable yes;
+
+libs            1 ( "" );
+
+functions
+{
+    vr1
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U p Cparticulate );
+        executeControl  timeStep;
+        type            volumeReport;
+    }
+    surfaces1
+    {
+        functionObjectLibs ( "libsampling.so" );
+        fields          ( U p );
+        interpolationScheme cellPointFace;
+        surfaceFormat   vtk;
+        surfaces        
+        (
+            xplane
+            {
+                type            plane;
+                planeType       pointAndNormal;
+                pointAndNormalDict
+                {
+                    point           ( 0 0 0 );
+                    normal          ( 1 0 0 );
+                }
+            }
+
+            yplane
+            {
+                type            plane;
+                planeType       pointAndNormal;
+                pointAndNormalDict
+                {
+                    point           ( 0 0 0 );
+                    normal          ( 0 1 0 );
+                }
+            }
+
+            zplane
+            {
+                type            plane;
+                planeType       pointAndNormal;
+                pointAndNormalDict
+                {
+                    point           ( 0 0 0 );
+                    normal          ( 0 0 1 );
+                }
+            }
+
+        )
+;
+        writeControl    outputTime;
+        type            surfaces;
+        region          region0;
+        writeInterval   1;
+        enabled         true;
+        writeStatistics true;
+        writeFields     false;
+    }
+    fp1
+    {
+        functionObjectLibs ( "libfieldFunctionObjects.so" );
+        operations      ( { operation wallShear ; fieldName tauw ; nearCellValue false ; write true ; } );
+        executeControl  timeStep;
+        writeControl    outputTime;
+        type            fieldProcess;
+        calculationControl continuous;
+    }
+    surfaceReport1
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        weighting       area;
+        fluxName        phi;
+        fields          ( tauw );
+        surfaces        ( { type patch ; name tank ; } );
+        constraints     ( );
+        executeControl  timeStep;
+        type            surfaceReport;
+        name            SR1;
+    }
+    runTimeTermination
+    {
+        functionObjectLibs ( "libutilityFunctionObjects.so" );
+        type            runTimeControl;
+        conditionLogicalOperator and;
+        conditions
+        {
+            minMax1
+            {
+                type            minMax;
+                functionObject  vr1;
+                fields          ( "mean(U)" );
+                mode            maximum;
+                value           0.131;
+            }
+            minIter1
+            {
+                type            minIter;
+                minIter         100;
+            }
+            mean1
+            {
+                type            average;
+                functionObject  surfaceReport1;
+                fields          ( "mean(tauw)" );
+                tolerance       1e-06;
+                startTime       10;
+                window          10;
+                windowType      APPROXIMATE;
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

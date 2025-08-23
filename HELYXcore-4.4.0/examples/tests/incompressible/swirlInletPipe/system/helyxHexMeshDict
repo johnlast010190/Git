@@ -1,0 +1,98 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+meshAlgorithm standard;
+
+blockType auto;
+blockData ( 0.05 0 );
+
+geometry
+{
+    in.stl
+    {
+        type triSurfaceMesh;
+        name in;
+        appendRegionName false;
+    }
+    cylinder.stl
+    {
+        type triSurfaceMesh;
+        name cylinder;
+        appendRegionName false;
+    }
+    out.stl
+    {
+        type triSurfaceMesh;
+        name out;
+        appendRegionName false;
+    }
+}
+
+castellatedMeshControls
+{
+    features ();
+    refinementSurfaces
+    {
+        in
+        {
+            level ( 0 0 );
+        }
+        cylinder
+        {
+            level ( 0 0 );
+        }
+        out
+        {
+            level ( 0 0 );
+        }
+    }
+    refinementRegions {}
+
+    locationsInMesh ( ( ( 0.5 0.0 0.0 ) none ) );
+}
+
+snapControls
+{
+    snapSurfBoundary true;
+}
+
+addLayersControls
+{
+    layers
+    {
+        in
+        {
+            nSurfaceLayers 0;
+            grownUp true;
+        }
+        cylinder
+        {
+            nSurfaceLayers 3;
+            expansionRatio 1.25;
+            finalLayerThickness 0.4;
+            grownUp automatic;
+        }
+        out
+        {
+            nSurfaceLayers 0;
+            grownUp true;
+        }
+    }
+}
+
+// ************************************************************************* //

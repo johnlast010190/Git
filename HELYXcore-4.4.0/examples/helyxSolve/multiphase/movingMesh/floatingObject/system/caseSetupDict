@@ -1,0 +1,421 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            stopAt          endTime;
+            endTime         6;
+            deltaT          0.01;
+            writeInterval   0.1;
+            purgeWrite      0;
+            adjustTimeStep  yes;
+            maxCo           1;
+            maxAlphaCo      1;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p T );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+
+regions
+{
+    region0
+    {
+        state ( dynamic transient ras vof );
+
+        materials ( water air );
+
+        materialProperties
+        {
+            materialType    multiphase;
+
+            air
+            {
+                materialType    fluid;
+                thermodynamics  hConst;
+                equationOfState rhoConst;
+                molWeight   28.9;
+
+                equationOfStateCoeffs
+                {
+                    rho        1;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cp          1007;
+                    Hf          0;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          1.48e-05;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr          0.7;
+                }
+            }
+
+            water
+            {
+                materialType    fluid;
+                thermodynamics  eConst;
+                equationOfState rhoConst;
+                molWeight   18.0;
+                R           7255;
+
+                equationOfStateCoeffs
+                {
+                    rho        998.2;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cv          4195;
+                    Hf          0;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          9.982e-04;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr          2.289;
+                }
+            }
+
+            air_water
+            {
+                surfaceTensionModel constant;
+                surfaceTensionModelCoeffs
+                {
+                    sigma 0.073;
+                }
+            }
+
+            referenceFields
+            {
+                p [1 -1 -2 0 0 0 0] 101325;
+                TConst [ 0 0 0 1 0 0 0 ] 273.15;
+            }
+        }
+
+        turbulenceModel kEpsilon;
+
+        constant
+        {
+            g
+            {
+                value           (0 0 -9.81);
+            }
+            dynamicMeshDict
+            {
+                mover
+                {
+                    type            motionSolver;
+                    libs            ("libfvMeshMovers.so" "librigidBodyMeshMotion.so");
+                    motionSolver    rigidBodyMotion;
+                    rigidBodyMotionCoeffs
+                    {
+                        report on;
+                        solver
+                        {
+                            type Newmark;
+                        }
+
+                        accelerationRelaxation 0.7;
+
+                        bodies
+                        {
+                            floatingObject
+                            {
+                                type            cuboid;
+                                parent          root;
+
+                                // Cuboid dimensions
+                                Lx              0.3;
+                                Ly              0.2;
+                                Lz              0.5;
+
+                                // Density of the cuboid
+                                rho             500;
+
+                                // Cuboid mass
+                                mass            #calc "$rho*$Lx*$Ly*$Lz";
+                                L               ($Lx $Ly $Lz);
+                                centreOfMass    (0 0 0.25);
+                                transform       (1 0 0 0 1 0 0 0 1) (0.5 0.45 0.1);
+
+                                joint
+                                {
+                                    type            composite;
+                                    joints
+                                    (
+                                        {
+                                            type Py;
+                                        }
+                                        {
+                                            type Ry;
+                                        }
+                                    );
+                                }
+
+                                patches         (floatingObject);
+                                innerDistance   0.05;
+                                outerDistance   0.35;
+                            }
+                        }
+                    }
+                }
+                topoChanger
+                {
+                    type            refiner;
+                    libs            ("libfvMeshTopoChangers.so");
+
+                    // How often to refine
+                    refineInterval  1;
+
+                    // Field to be refinement on
+                    field           alpha.water;
+
+                    // Refine field in between lower..upper
+                    lowerRefineLevel 0.001;
+                    upperRefineLevel 0.999;
+
+                    unrefineLevel   10;
+
+                    // Have slower than 2:1 refinement
+                    nBufferLayers   1;
+
+                    // Refine cells only up to maxRefinement levels
+                    maxRefinement   1;
+
+                    correctFluxes
+                    (
+                        (phi U)
+                        (phiv none)
+                        (nHatf none)
+                        (rhoPhi none)
+                        (alphaPhi none)
+                        (ghf none)
+                        (meshPhi none)
+                    );
+
+                    // Stop refinement if maxCells reached
+                    maxCells        200000;
+
+                    // Write the refinement level as a volScalarField
+                    dumpLevel       true;
+
+                    protectLayers   false;
+                }
+            }
+        }
+
+        system
+        {
+            fvOptions
+            {
+                fvMeshSolver
+                {
+                    type            fvMeshSolver;
+                    solveInterval   1;
+                }
+                volumeFractionSolver
+                {
+                    nAlphaSubCycles 1;
+                }
+            }
+            fvSchemes
+            {
+                laplacianSchemes
+                {
+                    default         Gauss linear corrected;
+                }
+            }
+        }
+
+        boundaryMesh
+        {
+            stationaryWalls
+            {
+                type wall;
+            }
+            atmosphere
+            {
+                type patch;
+            }
+            floatingObject
+            {
+                type wall;
+            }
+        }
+
+        fields
+        {
+            U {initialisation{type fixedValue; value uniform ( 0 0 0 );} }
+            pointDisplacement {initialisation{type fixedValue; value uniform ( 0 0 0 );} }
+            p {initialisation{type buoyantPressure; value uniform 0;} }
+            alpha.water
+            {
+                initialisation
+                {
+                    type cellSet;
+                    defaultValue uniform 0;
+                    setSources
+                    (
+                        boxToCell
+                        {
+                            box (-100 -100 -100) (100 100 0.5368);
+                            value 1;
+                        }
+                        boxToCell
+                        {
+                            box (0.7 0.8 -100) (100 100 0.65);
+                            value 1;
+                        }
+                    );
+                }
+            }
+        }
+
+        boundaryConditions
+        {
+            stationaryWalls
+            {
+                epsilon
+                {
+                    type            epsilonWallFunction;
+                    Cmu             0.09;
+                    kappa           0.41;
+                    E               9.8;
+                    value           uniform 0.1;
+                }
+                k
+                {
+                    type            kqRWallFunction;
+                    value           uniform 0.1;
+                }
+                nut
+                {
+                    type            nutkWallFunction;
+                    Cmu             0.09;
+                    kappa           0.41;
+                    E               9.8;
+                    value           uniform 0;
+                }
+                p
+                {
+                    type            fixedFluxPressure;
+                }
+                U
+                {
+                    type noSlip;
+                }
+            }
+            atmosphere
+            {
+                epsilon
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 0.1;
+                    value           uniform 0.1;
+                }
+                p
+                {
+                    type            totalPressure;
+                    p0              uniform 0;
+                    addStaticHead   true;
+                    value           uniform 0;
+                }
+                k
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 0.1;
+                    value           uniform 0.1;
+                }
+                nut
+                {
+                    type            calculated;
+                    value           uniform 0;
+                }
+                U
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform ( 0 0 0 );
+                }
+            }
+            floatingObject
+            {
+                epsilon
+                {
+                    type            epsilonWallFunction;
+                    Cmu             0.09;
+                    kappa           0.41;
+                    E               9.8;
+                    value           uniform 0.1;
+                }
+                k
+                {
+                    type            kqRWallFunction;
+                    value           uniform 0.1;
+                }
+                p
+                {
+                    type            fixedFluxPressure;
+                }
+                pointDisplacement
+                {
+                    type            calculated;
+                    value           uniform (0 0 0);
+                }
+                nut
+                {
+                    type            nutkWallFunction;
+                    Cmu             0.09;
+                    kappa           0.41;
+                    E               9.8;
+                    value           uniform 0;
+                }
+                U
+                {
+                    type movingWallVelocity;
+                    value uniform ( 0 0 0 );
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

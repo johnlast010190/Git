@@ -1,0 +1,33 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy input surface from resources directory
+mkdir -p constant/triSurface
+cp "$HELYX_TUTORIALS"/resources/geometry/2Dpropeller.stl constant/triSurface/
+
+# Transform geometry to its locations
+helyxRun surfaceTransformPoints constant/triSurface/2Dpropeller.stl constant/triSurface/propeller_200.stl -translate '(0 -0.05 0)'
+helyxRun -append surfaceTransformPoints constant/triSurface/2Dpropeller.stl constant/triSurface/propeller_100.stl -translate '(0.1 0.05 0)'
+
+# Remove original geometry
+rm -f constant/triSurface/2Dpropeller.stl
+
+# Background mesh in series
+helyxRun blockMesh
+
+# Mesh snapped to geometry
+helyxRun helyxHexMesh
+
+# Setup
+helyxRun caseSetup
+
+# Run
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch GRFModel.foam
+
+#------------------------------------------------------------------------------

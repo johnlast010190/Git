@@ -1,0 +1,71 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      viewFactorsDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+writeViewFactorMatrix     true;
+writeFacesAgglomeration   true;
+writePatchViewFactors     false;
+
+topAir_to_heater
+{
+    nFacesInCoarsestLevel     24;
+    featureAngle              10;
+}
+
+topAir_to_leftSolid
+{
+    nFacesInCoarsestLevel     20;
+    featureAngle              10;
+}
+
+topAir_to_rightSolid
+{
+    nFacesInCoarsestLevel     20;
+    featureAngle              10;
+}
+
+minX
+{
+    nFacesInCoarsestLevel     10;
+    featureAngle              10;
+}
+
+maxY
+{
+    nFacesInCoarsestLevel     40;
+    featureAngle              10;
+}
+
+minZ
+{
+    nFacesInCoarsestLevel     20;
+    featureAngle              10;
+}
+
+maxX
+{
+    nFacesInCoarsestLevel     10;
+    featureAngle              10;
+}
+
+maxZ
+{
+    nFacesInCoarsestLevel     20;
+    featureAngle              10;
+}
+
+
+// ************************************************************************* //

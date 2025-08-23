@@ -1,0 +1,67 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/solid/VR-solid/0/volumeReport.tsv";
+                reference "verification/short/solid/VR-solid/0/volumeReport.tsv";
+                variables "Tmean";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/default/fluidHeatFlux/0/wallHeatFlux.dat";
+                reference "verification/short/default/fluidHeatFlux/0/wallHeatFlux.dat";
+                variables "integral";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/solid/solidHeatFlux/0/wallHeatFlux.dat";
+                reference "verification/short/solid/solidHeatFlux/0/wallHeatFlux.dat";
+                variables "integral";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/default/SR-out/0/surfaceReport.tsv";
+                reference "verification/short/default/SR-out/0/surfaceReport.tsv";
+                variables "Tmean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/solid/VR-solid/0/volumeReport.tsv";
+                reference "verification/long/solid/VR-solid/0/volumeReport.tsv";
+                variables "Tmean";
+            }
+            {
+                result "postProcessing/default/fluidHeatFlux/0/wallHeatFlux.dat";
+                reference "verification/long/default/fluidHeatFlux/0/wallHeatFlux.dat";
+                variables "integral";
+            }
+            {
+                result "postProcessing/solid/solidHeatFlux/0/wallHeatFlux.dat";
+                reference "verification/long/solid/solidHeatFlux/0/wallHeatFlux.dat";
+                variables "integral";
+            }
+            {
+                result "postProcessing/default/SR-out/0/surfaceReport.tsv";
+                reference "verification/long/default/SR-out/0/surfaceReport.tsv";
+                variables "Tmean";
+            }
+        );
+    }
+);
+
+tags asan;

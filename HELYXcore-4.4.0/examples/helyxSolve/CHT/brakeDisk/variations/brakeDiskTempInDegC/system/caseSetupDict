@@ -1,0 +1,807 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    regionGroups
+    (
+        fluids ( default )
+        solids ( disk pad1 pad2 )
+    );
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom startTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 500.0;
+            deltaT 1;
+            writeControl timeStep;
+            writeInterval 100.0;
+            purgeWrite 0;
+        }
+
+        meshObjects
+        {
+            discFrame
+            {
+                type            motionCoordinateFrame;
+                motionFunction
+                {
+                    type rotatingMotion;
+                    omega       100; // (Axis of rotation = e3)
+                }
+                coordinateSystem
+                {
+                    type    cartesian;
+                    origin  (0 0 0);
+                    e1      (1 0 0);
+                    e3      (0 1 0);
+                }
+            }
+        }
+    }
+    functions
+    {
+        VR1
+        {
+            type             volumeReport;
+            regions          ( disk );
+            fields           ( T );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+        VR2
+        {
+            type             volumeReport;
+            regions          ( default );
+            fields           ( U );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+        VR3
+        {
+            type             volumeReport;
+            regions          ( default );
+            fields           ( p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+        wallHeatFlux-fluid
+        {
+            type wallHeatFlux;
+            kappaMethod fluidThermo;
+            region default;
+            libs ( "libfieldFunctionObjects.so" );
+        }
+        wallHeatFlux-disk
+        {
+            type wallHeatFlux;
+            kappaMethod solidThermo;
+            region disk;
+            libs ( "libfieldFunctionObjects.so" );
+        }
+        wallHeatFlux-pad1
+        {
+            type wallHeatFlux;
+            kappaMethod solidThermo;
+            region pad1;
+            libs ( "libfieldFunctionObjects.so" );
+        }
+        wallHeatFlux-pad2
+        {
+            type wallHeatFlux;
+            kappaMethod solidThermo;
+            region pad2;
+            libs ( "libfieldFunctionObjects.so" );
+        }
+    }
+}
+
+regions
+{
+    ".*"
+    {
+        materialProperties
+        {
+            steel
+            {
+                materialName    steel;
+                materialType    solid;
+                thermodynamics  hConst;
+                equationOfState rhoConst;
+                energy          sensibleEnthalpy;
+                kappaModel      constSolid;
+
+                molWeight 55.85;
+
+                thermodynamicsCoeffs
+                {
+                    Cp 490.0;
+                    Hf 0.0;
+                }
+                kappaModelCoeffs
+                {
+                    kappa 16.0;
+                }
+                equationOfStateCoeffs
+                {
+                    rho 7740.0;
+                }
+                referenceFields
+                {
+                    T [ 0 0 0 1 0 0 0 ] 273.15;
+                }
+            }
+
+            discMaterial
+            {
+                materialName    discMaterial;
+                materialType    solid;
+                thermodynamics  hFunctionT;
+                equationOfState rhoConst;
+                energy          sensibleEnthalpy;
+                kappaModel      functionTAnIso;
+
+                molWeight 1;
+
+                thermodynamicsCoeffs
+                {
+                    Cp  polynomial
+                    (
+                        ( -500.0 0 )
+                        ( 5.0 1 )
+                        ( -3e-3 2 )
+                        ( 7e-7 3 )
+                    ) (100 2000);
+                    Hf 0.0;
+                    Sf 0.0;
+                }
+                kappaModelCoeffs
+                {
+                    kappa table
+                    (
+                        ( 273.15 ( 120 120 0.8 ) )
+                        ( 873.15 ( 100 100 0.7 ) )
+                        ( 2873.15 ( 50 50 0.15 ) )
+                    );
+                    referenceFrame discFrame;
+                }
+                equationOfStateCoeffs
+                {
+                    rho 2000;
+                }
+                referenceFields
+                {
+                    T [ 0 0 0 1 0 0 0 ] 273.15;
+                }
+            }
+
+            air
+            {
+                materialName    air;
+                materialType    fluid;
+                thermodynamics  hFunctionT;
+                equationOfState perfectGas;
+                energy          sensibleEnthalpy;
+                muModel         scalarFunction1;
+                kappaModel      scalarFunction1;
+                buoyancyModel   rhoModel;
+
+                molWeight 28.9;
+
+                referenceFields
+                {
+                    T [ 0 0 0 1 0 0 0 ] 273.15;
+                }
+
+                thermodynamicsCoeffs
+                {
+                    Cp  select ( 1000 )
+                    (
+                        {
+                            Cp polynomial
+                            (
+                                ( 1024.1308 0 )
+                                ( -0.194795223 1 )
+                                ( 0.00044591477 2 )
+                                ( -9.4691919E-10 3 )
+                                ( -1.33855365E-10 4 )
+                            ) ( 30 1000 );
+                        }
+                        {
+                            Cp polynomial
+                            (
+                                ( 886.23591 0 )
+                                ( 0.35759339 1 )
+                                ( -0.000121607353 2 )
+                                ( 1.93660425E-08 3 )
+                                ( -1.13961099E-12 4 )
+                            ) ( 1000 6000 );
+                        }
+                    );
+                    Hf 0.0;
+                    Sf 0.0;
+                }
+                muModelCoeffs
+                {
+                    mu  table
+                    (
+                        ( 223.15 14.56e-6 )
+                        ( 273.15 17.15e-6 )
+                        ( 323.15 19.53e-6 )
+                        ( 1273.15 47.88e-6 )
+                    );
+                }
+                kappaModelCoeffs
+                {
+                    kappa   table
+                    (
+                        ( 223.15 20.41e-3 )
+                        ( 273.15 24.36e-3 )
+                        ( 323.15 28.08e-3 )
+                        ( 1273.15 81.08e-3 )
+                    );
+                }
+            }
+        }
+    }
+
+    disk
+    {
+        state (steady solid radiationSolid);
+
+        turbulenceModel laminar;
+
+        materials (discMaterial);
+
+        constant
+        {
+            radiationProperties
+            {
+                radiation       on;
+                radiationModel  opaqueSolid;
+                absorptionEmissionModel constant;
+                constantCoeffs
+                {
+                    absorptivity 0.9;
+                    emissivity 0.9;
+                    transmissivity 0;
+                    E 0;
+                }
+            }
+        }
+
+        system
+        {
+            fvOptions
+            {
+                disc_MRF
+                {
+                    type solidRotationSource;
+                    active true;
+                    referenceFrames
+                    {
+                        all
+                        {
+                            cellZone disk;
+                            selectionMode cellZone;
+                            referenceFrame discFrame;
+                            patches ( );
+                        }
+                    }
+                    fields ( T );
+                }
+            }
+        }
+
+        fields
+        {
+            T
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 26.85;
+                }
+            }
+        }
+
+        boundaryConditions
+        {
+            disk_to_default
+            {
+                T
+                {
+                    type            regionCoupledEnergyFlux;
+                    value           uniform 26.85;
+                }
+            }
+            disk_to_pad2
+            {
+                T
+                {
+                    type            regionCoupledEnergyFlux;
+                    value           uniform 26.85;
+                }
+            }
+            disk_to_pad1
+            {
+                T
+                {
+                    type            regionCoupledEnergyFlux;
+                    value           uniform 26.85;
+                }
+            }
+        }
+    }
+
+    pad1
+    {
+        state (steady solid radiationSolid);
+
+        turbulenceModel laminar;
+
+        materials (steel);
+
+        constant
+        {
+            radiationProperties
+            {
+                radiation       on;
+                radiationModel  opaqueSolid;
+                absorptionEmissionModel constant;
+                constantCoeffs
+                {
+                    absorptivity 0.9;
+                    emissivity 0.9;
+                    transmissivity 0;
+                    E [ 1 -1 -3 0 0 0 0 ] 0;
+                }
+            }
+        }
+
+        system
+        {
+            fvOptions
+            {
+                pad1_TSI
+                {
+                    type scalarTimeDependentSemiImplicitSource;
+                    active true;
+                    scalarTimeDependentSemiImplicitSourceCoeffs
+                    {
+                        selectionMode cellZone;
+                        cellZone pad1;
+                        volumeMode absolute;
+                        injectionRateSu
+                        {
+                            T constant 1500.0;
+                        }
+                        injectionRateSp
+                        {
+                            T constant 0.0;
+                        }
+                    }
+                }
+            }
+        }
+
+        fields
+        {
+            T
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 26.85;
+                }
+            }
+        }
+
+        boundaryConditions
+        {
+            pad1_to_default
+            {
+                T
+                {
+                    type            regionCoupledEnergyFlux;
+                    value           uniform 26.85;
+                }
+            }
+            pad1_to_disk
+            {
+                T
+                {
+                    type            regionCoupledEnergyFlux;
+                    value           uniform 26.85;
+                }
+            }
+        }
+    }
+
+    pad2
+    {
+        state (steady solid radiationSolid);
+
+        turbulenceModel laminar;
+
+        materials (steel);
+
+        constant
+        {
+            radiationProperties
+            {
+                radiation       on;
+                radiationModel  opaqueSolid;
+                absorptionEmissionModel constant;
+                constantCoeffs
+                {
+                    absorptivity 0.9;
+                    emissivity 0.9;
+                    transmissivity 0;
+                    E [ 1 -1 -3 0 0 0 0 ] 0;
+                }
+            }
+        }
+
+        system
+        {
+            fvOptions
+            {
+                pad2_TSI
+                {
+                    type scalarTimeDependentSemiImplicitSource;
+                    active true;
+                    scalarTimeDependentSemiImplicitSourceCoeffs
+                    {
+                        selectionMode cellZone;
+                        cellZone pad2;
+                        volumeMode absolute;
+                        injectionRateSu
+                        {
+                            T constant 1500.0;
+                        }
+                        injectionRateSp
+                        {
+                            T constant 0.0;
+                        }
+                    }
+                }
+            }
+        }
+
+        fields
+        {
+            T
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 26.85;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            pad2_to_disk
+            {
+                T
+                {
+                    type            regionCoupledEnergyFlux;
+                    neighbourFieldName ;
+                    contactResistance 0;
+                    faceBCoeff      uniform 0;
+                    faceICoeff      uniform 1;
+                    faceCorr        uniform 0;
+                    Qsum            uniform 0;
+                    QsumNbr         uniform 0;
+                    value           uniform 26.85;
+                }
+            }
+            pad2_to_default
+            {
+                T
+                {
+                    type            regionCoupledEnergyFlux;
+                    value           uniform 26.85;
+                }
+            }
+        }
+    }
+
+    default
+    {
+        state (steady ras energy radiation);
+        boundaryMesh
+        {
+            ffminx
+            {
+                type patch;
+            }
+            ffmaxx
+            {
+                type patch;
+            }
+            ffminy
+            {
+                type patch;
+            }
+            ffmaxy
+            {
+                type patch;
+            }
+            ffminz
+            {
+                type patch;
+            }
+            ffmaxz
+            {
+                type patch;
+            }
+            coolingDuct
+            {
+                type wall;
+            }
+            coolingDuct_slave
+            {
+                type wall;
+            }
+            inlet
+            {
+                type inlet;
+            }
+            inlet_slave
+            {
+                type wall;
+            }
+        }
+
+        turbulenceModel kOmegaSST;
+
+        materials (air);
+
+        constant
+        {
+            g
+            {
+                value ( 0.0 0.0 -9.81 );
+            }
+
+            radiationProperties
+            {
+                radiation       on;
+
+                participating   no;
+
+                radiationModel  fvDOM;
+
+                fvDOMCoeffs
+                {
+                    nPhi            2;
+                    nTheta          4;
+                    convergence     0.001;
+                    initialConvergence 0.001;
+                    maxIter         10;
+                    initialMaxIter  50;
+                }
+
+                solverFreq      10;
+
+                absorptionEmissionModel none;
+
+                scatterModel    none;
+
+                transmissivityModel none;
+            }
+
+            boundaryRadiationProperties
+            {
+                "ff*"
+                {
+                    mode lookup;
+                    emissivity 0;
+                    absorptivity 0;
+                    transmissivity 1;
+                }
+                "coolingDuct.*"
+                {
+                    mode lookup;
+                    emissivity 0.8;
+                    absorptivity 0.8;
+                    transmissivity 0;
+                }
+                "inlet.*"
+                {
+                    mode lookup;
+                    emissivity 0;
+                    absorptivity 0;
+                    transmissivity 1;
+                }
+            }
+        }
+
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type potentialFlow;
+                    initialiseUBCs true;
+                    rhoRef 1.0;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type buoyantPressure;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type Prandtl;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type Prandtl;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 26.85;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            "ff.*"
+            {
+                T
+                {
+                    type inletOutlet;
+                    value uniform 26.85;
+                    inletValue uniform 26.85;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    value uniform 0.01;
+                    intensity 0.05;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    value uniform 0.01;
+                    mixingLength 0.01;
+                }
+            }
+            inlet
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 50.0 0.0 0.0 );
+                }
+                T
+                {
+                    type fixedValue;
+                    value uniform 26.85;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    value uniform 0.375;
+                    intensity 0.05;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    value uniform 111.8033989;
+                    mixingLength 0.01;
+                }
+            }
+            default_to_disk
+            {
+                U
+                {
+                    type rotatingWallVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    origin ( 0.0 0.0 0.0 );
+                    axis ( 0.0 1.0 0.0 );
+                    omega constant 100.0;
+                }
+                T
+                {
+                    type regionCoupledEnergyFlux;
+                    value uniform 26.85;
+                }
+            }
+            default_to_pad1
+            {
+                T
+                {
+                    type            regionCoupledEnergyFlux;
+                    value           uniform 26.85;
+                }
+            }
+            default_to_pad2
+            {
+                T
+                {
+                    type            regionCoupledEnergyFlux;
+                    value           uniform 26.85;
+                }
+            }
+            coolingDuct
+            {
+                T
+                {
+                    type            turbulentHeatFluxTemperature;
+                    value           uniform 26.85;
+                    heatSource      flux;
+                    q               uniform 0;
+                    kappaMethod     fluidThermo;
+                    kappaName       none;
+                    QrName          Qr;
+                }
+            }
+            coolingDuct_slave
+            {
+                T
+                {
+                    type            turbulentHeatFluxTemperature;
+                    value           uniform 26.85;
+                    heatSource      flux;
+                    q               uniform 0;
+                    kappaMethod     fluidThermo;
+                    kappaName       none;
+                    QrName          Qr;
+                }
+            }
+            inlet_slave
+            {
+                T
+                {
+                    type            turbulentHeatFluxTemperature;
+                    value           uniform 26.85;
+                    heatSource      flux;
+                    q               uniform 0;
+                    kappaMethod     fluidThermo;
+                    kappaName       none;
+                    QrName          Qr;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

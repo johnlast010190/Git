@@ -1,0 +1,177 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields yes;
+        resetBoundaryFields yes;
+        resetSystemDicts yes;
+        resetConstDicts yes;
+        resetBoundaryMesh yes;
+        deleteUnusedFields no;
+    }
+
+    regionGroups    1 ( fluid 1 ( region0 ) );
+
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         0.007;
+            deltaT          1e-05;
+            writeControl    runTime;
+            writeInterval   0.001;
+            purgeWrite      0;
+        }
+    }
+
+    functions
+    {
+        #includeFunc mag(U)
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        boundaryMesh
+        {
+            sides
+            {
+                type            patch;
+            }
+            empty
+            {
+                type            empty;
+            }
+        }
+        state           ( transient ras energy transonic );
+        turbulenceModel laminar;
+        materials       ( normalisedGas );
+        materialProperties
+        {
+            normalisedGas
+            {
+                // Note: these are the properties for a "normalised" inviscid gas
+                //       for which the speed of sound is 1 m/s at a temperature of 1K
+                //       and gamma = 7/5
+
+                materialType    fluid;
+                equationOfState perfectGas;
+                energy          sensibleInternalEnergy;
+                thermodynamics  hConst;
+                thermodynamicsCoeffs
+                {
+                    Cp              1005;
+                    Hf              0;
+                }
+
+                muModel         scalarFunction1;
+                muModelCoeffs
+                {
+                    mu 0;
+                }
+                kappaModel      kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr 0.7;
+                }
+
+                molWeight       28.9;
+
+                referenceFields
+                {
+                    p [ 1 -1 -2 0 0 0 0 ] 0;
+                }
+            }
+        }
+        system
+        {
+            fvSolution
+            {
+                PIMPLE
+                {
+                    nOuterCorrectors     2;
+                    nCorrectors          1;
+                    nNonOrthogonalCorrectors 0;
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform ( 0 0 0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 1e05;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 348.432;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            sides
+            {
+                U
+                {
+                    type zeroGradient;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                T
+                {
+                    type zeroGradient;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

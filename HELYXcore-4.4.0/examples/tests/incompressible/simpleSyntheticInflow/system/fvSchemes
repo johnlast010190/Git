@@ -1,0 +1,65 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvSchemes;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+ddtSchemes
+{
+    default         backward;
+}
+
+gradSchemes
+{
+    turbulence      cellLimited Gauss linear 1;
+    grad(nuTilda)   cellLimited Gauss linear 1;
+    default         Gauss linear;
+    gradU           cellLimited Gauss linear 1;
+}
+
+divSchemes
+{
+    div(phi,k)      bounded Gauss upwind;
+    div(phi,nuTilda) bounded Gauss linearUpwind grad(nuTilda);
+    default         none;
+    div(phi,U)      bounded Gauss linearUpwindV gradU;
+    div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
+    div((nuEff*dev2(T(grad(U))))) Gauss linear;
+}
+
+laplacianSchemes
+{
+    laplacian((rho*DnuTildaEff),nuTilda) Gauss linear limited 0.333;
+    laplacian((rho*nuEff),U) Gauss linear limited 0.333;
+    laplacian(rhorAUf,p) Gauss linear limited 0.333;
+    default         Gauss linear corrected;
+}
+
+interpolationSchemes
+{
+    default         linear;
+    interpolate(HbyA) linear;
+}
+
+snGradSchemes
+{
+    default         corrected;
+}
+
+wallDist
+{
+    method          meshWave;
+}
+
+
+// ************************************************************************* //

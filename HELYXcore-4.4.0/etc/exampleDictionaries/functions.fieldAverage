@@ -1,0 +1,39 @@
+fieldAverage1
+{
+    // Type of functionObject
+    type            fieldAverage;
+
+    // Where to load it from (if not already in solver)
+    functionObjectLibs ("libfieldFunctionObjects.so");
+
+    // Function object enabled flag
+    enabled         true;
+
+    // When to output the average fields
+    outputControl   outputTime;
+
+    // When to start averaging
+    averagingStartTime 0;
+ 
+    // Fields to be averaged - runTime modifiable
+    fields
+    (
+        U
+        {
+            fieldName   U; // optional name for average fields  
+            mean        on;
+            prime2Mean  on;
+            base        time;
+            window      0.01; // optional averaging window
+        }
+
+        p
+        {
+            fieldName   p; // optional name for average field
+            mean        on;
+            prime2Mean  on;
+            base        time;
+            window      0.01; // optional averaging window
+        }
+    );
+}

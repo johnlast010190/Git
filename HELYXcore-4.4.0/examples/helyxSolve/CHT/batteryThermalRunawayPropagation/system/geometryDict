@@ -1,0 +1,54 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | HELYX(R): Open-source CFD for Enterprise                 |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | Engys Ltd. http://www.engys.com                          |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    location system;
+    object geometryDict;
+}
+    surfaces
+    {
+        battery1
+        {
+            type searchableCylinder;
+            point1 ( 0.0 0.0 0.0 );
+            point2 ( 0.0 0.0 0.065 );
+            radius 0.009;
+            resolution 50;
+        }
+        battery2
+        {
+            type searchableCylinder;
+            point1 ( 0.02 0.0 0.0 );
+            point2 ( 0.02 0.0 0.065 );
+            radius 0.009;
+            resolution 50;
+        }
+        battery3
+        {
+            type searchableCylinder;
+            point1 ( 0.04 0.0 0.0 );
+            point2 ( 0.04 0.0 0.065 );
+            radius 0.009;
+            resolution 50;
+        }
+        busbar
+        {
+            type searchableBox;
+            min ( -0.005 -0.005 0.065 );
+            max ( 0.045 0.005 0.067 );
+        }
+        enclosure
+        {
+            type searchableBox;
+            min ( -0.06 -0.1 5.0E-4 );
+            max ( 0.1 0.1 0.1 );
+        }
+    }

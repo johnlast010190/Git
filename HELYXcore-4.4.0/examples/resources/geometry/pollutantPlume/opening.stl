@@ -1,0 +1,16 @@
+solid plumeInlet
+ facet normal 0 0 -1
+  outer loop
+   vertex 10.0 5.0 20
+   vertex 0.0 -5 20
+   vertex 0.0 5.0 20
+  endloop
+ endfacet
+ facet normal 0 -0 -1
+  outer loop
+   vertex 0.0 -5 20
+   vertex 10.0 5.0 20
+   vertex 10.0 -5 20
+  endloop
+ endfacet
+endsolid plumeInlet

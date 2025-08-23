@@ -1,0 +1,26 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Create mesh for the first mapping time
+helyxRun -log log.blockMesh_0.0015 blockMesh -dict system/blockMeshDict_0.0015
+mkdir constant/meshToMesh_0.0015
+mv constant/polyMesh constant/meshToMesh_0.0015
+
+# Create mesh for the second mapping time
+helyxRun -log log.blockMesh_0.003 blockMesh -dict system/blockMeshDict_0.003
+mkdir constant/meshToMesh_0.003
+mv constant/polyMesh constant/meshToMesh_0.003
+
+# Create starting mesh
+helyxRun blockMesh
+
+# Run solver specified in controlDict
+helyxRun
+
+# Create dummy file for ParaView visualisation
+touch movingCone.foam
+
+#------------------------------------------------------------------------------

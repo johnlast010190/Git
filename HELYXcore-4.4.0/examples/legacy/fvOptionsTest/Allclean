@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Source tutorial clean functions
+. $HELYX_PROJECT_DIR/bin/tools/CleanFunctions
+
+#clean mesh
+cd mesh
+cleanTime0
+rm log.*
+cd ..
+
+
+loseCases="simpleFoam pisoFoam rhoSimpleFoam rhoPimpleFoam buoyantSimpleFoam buoyantBoussinesqSimpleFoam buoyantBoussinesqPimpleFoam buoyantBoussinesqPimpleFoamSA buoyantBoussinesqPimpleFoamOneEqEddy"
+
+for case in $loseCases
+do
+    removeCase $case
+done
+
+rm mesh/constant/polyMesh/boundary
+rm mesh/constant/polyMesh/faces
+rm mesh/constant/polyMesh/neighbour
+rm mesh/constant/polyMesh/owner
+rm mesh/constant/polyMesh/points

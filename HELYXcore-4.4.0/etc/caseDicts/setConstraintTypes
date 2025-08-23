@@ -1,0 +1,84 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+
+cyclic
+{
+    type  cyclic;
+}
+
+cyclicAMI
+{
+    type  cyclicAMI;
+}
+
+cyclicSlip
+{
+    type  cyclicSlip;
+}
+
+nonConformalCyclic
+{
+    type  nonConformalCyclic;
+    value $internalField;
+}
+
+nonConformalError
+{
+    type  nonConformalError;
+}
+
+nonConformalProcessorCyclic
+{
+    type  nonConformalProcessorCyclic;
+    value $internalField;
+}
+
+empty
+{
+    type  empty;
+}
+
+processor
+{
+    type  processor;
+    value $internalField;
+}
+
+processorCyclic
+{
+    type  processorCyclic;
+    value $internalField;
+}
+
+symmetryPlane
+{
+    type  symmetryPlane;
+}
+
+symmetry
+{
+    type  symmetry;
+}
+
+wedge
+{
+    type  wedge;
+}
+
+overset
+{
+    type  overset;
+}
+
+internal
+{
+    type  internal;
+}
+
+
+// ************************************************************************* //

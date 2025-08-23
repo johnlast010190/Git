@@ -1,0 +1,18 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+faceSet f0 new
+faceSet f0 add patchToFace walls
+
+faceSet f0 delete boxToFace (-1 -1 -1) (0.030001 1 1)
+faceSet f0 delete boxToFace (0.039999 -1 -1) (1 1 1)
+faceSet f0 delete boxToFace (-1 0.2303 -1) (1 1 1)
+
+// ************************************************************************* //

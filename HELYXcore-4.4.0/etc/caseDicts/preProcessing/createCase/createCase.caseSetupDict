@@ -1,0 +1,150 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | Helyx:                                                   |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | Web:     http://www.engys.com                            |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+//global settings
+global
+{
+    //global switches
+    modificationSwitches //all optional including section
+    {
+        resetInternalFields yes;
+        resetBoundaryFields yes;
+        resetSystemDicts yes;
+        resetConstDicts yes;
+        resetBoundaryMesh yes;
+        deleteUnusedFields yes;
+    }
+    
+    regionGroups    ( fluid ( region0 ) ); //default for single region fluids
+    
+    system{} // global system - optional
+
+    functions // global functions - can apply to all regions - optional
+    {
+        vr1
+        {
+            type            volumeReport;
+            fields          ( U p );
+        }
+    }
+}
+
+//region and regionGroup definitions
+regions
+{
+    fluid {}//group entry, add all common components here
+     
+    region0
+    {
+        modificationSwitches{} //over-rides global switches - optional
+
+        //boundary mesh name and type modification - supports regex
+        boundaryMesh //optional
+        {
+            inlet
+            {
+                type inlet;
+            }
+            outlet
+            {
+                type outlet;
+            }
+        }
+        
+        state ( steady ras ); // required here or in group
+        
+        turbulenceModel kOmegaSST; // required for fluids here or in group
+        materials       ( air ); // required for fluids here or in group
+        materialProperties{} //optional
+
+        system {} //optional
+        constant {} //optional
+        fieldMaps {} //optional
+
+        //field definitions (primarily used to edit initialisation method)
+        fields //optional
+        {
+            U
+            {
+                initialisation
+                {
+                    type            potentialFlow;
+                    initialiseUBCs  true;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type            potentialFlow;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type            Prandtl;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type            Prandtl;
+                }
+            }
+        }
+        
+        //boundary type/physical type default settings
+        boundaryTypeDefaults //completely optional
+        {
+            wall
+            {
+            }
+            inlet
+            {
+            }
+            outlet
+            {
+            }
+            patch
+            {
+            }
+        }
+
+        //edit boundary conditions per patch - supports regex
+        boundaryConditions //optional
+        {
+            inlet //optional
+            {
+                U {type fixedValue; value uniform (1 0 0);}
+            }
+            
+            outlet //optional
+            {
+                p {type fixedValue; value uniform 0;}
+            }
+        
+        }
+        
+        //regional functions - only apply to this region
+        functions{} //optional
+    }
+}
+
+
+// ************************************************************************* //

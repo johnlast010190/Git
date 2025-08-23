@@ -1,0 +1,217 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+castellatedMesh true;
+snap            true;
+addLayers       true;
+autoBlockMesh   true;
+blockData       ( 0.015 0 );
+crackDetection  true;
+crackTol        0.05;
+
+geometry
+{
+    S27kW.inflow.obj
+    {
+        type            triSurfaceMesh;
+        name            S27kW_inflow;
+    }
+    S27kW.movingWall.bolt.obj
+    {
+        type            triSurfaceMesh;
+        name            S27kW_movingWall_bolt;
+    }
+    S27kW.movingWall.impellerOD.obj
+    {
+        type            triSurfaceMesh;
+        name            S27kW_movingWall_impellerOD;
+    }
+    S27kW.movingWall.impellerTube.obj
+    {
+        type            triSurfaceMesh;
+        name            S27kW_movingWall_impellerTube;
+    }
+    S27kW.outflow.obj
+    {
+        type            triSurfaceMesh;
+        name            S27kW_outflow;
+    }
+    S27kW.wall.hub.obj
+    {
+        type            triSurfaceMesh;
+        name            S27kW_wall_hub;
+    }
+    S27kW.wall.inletPipe.obj
+    {
+        type            triSurfaceMesh;
+        name            S27kW_wall_inletPipe;
+    }
+    S27kW.wall.outletPipe.obj
+    {
+        type            triSurfaceMesh;
+        name            S27kW_wall_outletPipe;
+    }
+    S27kW.wall.shr.obj
+    {
+        type            triSurfaceMesh;
+        name            S27kW_wall_shr;
+    }
+    S27kW.wall.suctionMouth.obj
+    {
+        type            triSurfaceMesh;
+        name            S27kW_wall_suctionMouth;
+    }
+    S27kW.wall.volute.obj
+    {
+        type            triSurfaceMesh;
+        name            S27kW_wall_volute;
+    }
+    S27kW.ami1.obj
+    {
+        type            triSurfaceMesh;
+        name            S27kW_ami1;
+    }
+    S27kW.ami2.obj
+    {
+        type            triSurfaceMesh;
+        name            S27kW_ami2;
+    }
+}
+
+castellatedMeshControls
+{
+    features        ();
+    refinementSurfaces
+    {
+        S27kW_inflow
+        {
+            level           ( 1 2 );
+        }
+        S27kW_movingWall_bolt
+        {
+            level           ( 1 2 );
+        }
+        S27kW_movingWall_impellerOD
+        {
+            proximityIncrement 1;
+            level           ( 1 2 );
+        }
+        S27kW_movingWall_impellerTube
+        {
+            proximityIncrement 1;
+            level           ( 1 2 );
+        }
+        S27kW_outflow
+        {
+            level           ( 1 2 );
+        }
+        S27kW_wall_hub
+        {
+            proximityIncrement 1;
+            level           ( 1 2 );
+        }
+        S27kW_wall_inletPipe
+        {
+            level           ( 1 2 );
+        }
+        S27kW_wall_outletPipe
+        {
+            level           ( 1 2 );
+        }
+        S27kW_wall_shr
+        {
+            proximityIncrement 1;
+            level           ( 1 2 );
+        }
+        S27kW_wall_suctionMouth
+        {
+            level           ( 1 2 );
+        }
+        S27kW_wall_volute
+        {
+            level           ( 1 2 );
+        }
+        S27kW_ami1
+        {
+            level           ( 2 2 );
+            faceZone        S27kW_ami1;
+            cellZone        S27kW_ami1;
+            faceType        boundary;
+            cellZoneInside  none;
+            allowFreeStandingZoneFaces false;
+        }
+        S27kW_ami2
+        {
+            proximityIncrement 1;
+            level           ( 2 2 );
+            faceZone        S27kW_ami2;
+            faceType        boundary;
+            cellZoneInside  none;
+            allowFreeStandingZoneFaces false;
+        }
+    }
+    locationInMesh (0 0 -0.4);
+    splitCells true;
+}
+
+addLayersControls
+{
+    layers
+    {
+        S27kW_inflow
+        {
+            nSurfaceLayers  0;
+        }
+        S27kW_outflow
+        {
+            nSurfaceLayers  0;
+        }
+        "S27kW_movingWall.*"
+        {
+            nSurfaceLayers  5;
+        }
+        "S27kW_wall_.*"
+        {
+            nSurfaceLayers  5;
+        }
+        "S27kW_ami1.*"
+        {
+            nSurfaceLayers  1;
+        }
+        "S27kW_ami2.*"
+        {
+            nSurfaceLayers  1;
+        }
+    }
+}
+
+repatchRegions
+{
+    movingPatch
+    {
+        location (0.1 0 0);
+        zone movingRegion;
+        excludePatches
+        (
+            S27kW_ami1 S27kW_ami1_slave S27kW_ami2 S27kW_ami2_slave
+        );
+    }
+}
+
+
+// ************************************************************************* //

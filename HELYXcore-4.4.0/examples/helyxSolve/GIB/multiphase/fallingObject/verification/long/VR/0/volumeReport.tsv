@@ -1,0 +1,2 @@
+# Time	Umin	Umin location	Umax	Umax location	Umean	UstDev	pmin	pmin location	pmax	pmax location	pmean	pstDev	alpha.watermin	alpha.watermin location	alpha.watermax	alpha.watermax location	alpha.watermean	alpha.waterstDev	totalVolume
+0.05	0	( 0.0008074260058 0.05107613732 -3.605486044e-19 )	0.2982204699	( 0.175 0.097 0 )	0.02920600835	0.06338202601	-4.557771232	( 0.009 0.049 3.252606517e-19 )	480.1659033	( 0.199 0.001 0 )	67.66759178	129.0252606	-5.192587074e-12	( 0.133 0.055 0 )	1	( 0.002844331945 0.04921973585 -2.963665993e-19 )	0.3421443953	0.4742115657	0.0003800014327

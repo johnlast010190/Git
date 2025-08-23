@@ -1,0 +1,147 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : 4.4.0
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) 2011-2015 OpenFOAM Foundation
+    (c) 2024 Engys Ltd.
+
+Class
+    Foam::PrandtlDelta
+
+Description
+    Apply Prandtl mixing-length based damping function to the specified
+    geometric delta to improve near-wall behavior or LES models.
+
+    \verbatim
+        delta = min(geometricDelta, (kappa/Cdelta)*y)
+    \endverbatim
+
+    Example specification in the turbulenceProperties dictionary:
+    \verbatim
+    delta           Prandtl;
+
+    PrandtlCoeffs
+    {
+        delta   cubeRootVol;
+
+        cubeRootVolCoeffs
+        {
+            deltaCoeff      1;
+        }
+
+        // Default coefficients
+        kappa           0.41;
+        Cdelta          0.158;
+    }
+    \endverbatim
+
+SourceFiles
+    PrandtlDelta.C
+
+\*---------------------------------------------------------------------------*/
+
+#ifndef PrandtlDelta_H
+#define PrandtlDelta_H
+
+#include "LES/LESdeltas/LESdelta/LESdelta.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+namespace LESModels
+{
+
+/*---------------------------------------------------------------------------*\
+                           Class PrandtlDelta Declaration
+\*---------------------------------------------------------------------------*/
+
+class PrandtlDelta
+:
+    public LESdelta
+{
+    // Private data
+
+        autoPtr<LESdelta> geometricDelta_;
+        scalar kappa_;
+        scalar Cdelta_;
+
+
+    // Private Member Functions
+
+        // Calculate the delta values
+        void calcDelta();
+
+
+public:
+
+    //- Runtime type information
+    TypeName("Prandtl");
+
+
+    // Constructors
+
+        //- Construct from name, turbulenceModel and dictionary
+        PrandtlDelta
+        (
+            const word& name,
+            const turbulenceModel& turbulence,
+            const dictionary&
+        );
+
+        //- Disallow default bitwise copy construction
+        PrandtlDelta(const PrandtlDelta&) = delete;
+
+
+    //- Destructor
+    virtual ~PrandtlDelta()
+    {}
+
+
+    // Member Functions
+
+        //- Read the LESdelta dictionary
+        virtual void read(const dictionary&);
+
+        // Correct values
+        virtual void correct();
+
+
+    // Member Operators
+
+        //- Disallow default bitwise assignment
+        void operator=(const PrandtlDelta&) = delete;
+};
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace LESModels
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

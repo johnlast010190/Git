@@ -1,0 +1,22 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy input surface from resources directory
+mkdir -p constant/triSurface
+cp "$HELYX_TUTORIALS"/resources/geometry/windProfile/* constant/triSurface/
+
+helyxRun -parallel helyxHexMesh -overwrite
+helyxRun caseSetup
+helyxRun helyxSolve
+
+# Reconstruct
+helyxRun -serial reconstructParMesh -constant
+helyxRun -serial reconstructPar -withZero
+
+# Create dummy file for ParaView visualisation
+touch windProfile.foam
+
+#------------------------------------------------------------------------------

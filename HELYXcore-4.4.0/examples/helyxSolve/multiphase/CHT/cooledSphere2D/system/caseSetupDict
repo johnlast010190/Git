@@ -1,0 +1,299 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    regionGroups
+    (
+        fluids ( default )
+        solids ( sphere )
+    );
+    system
+    {
+        controlDict
+        {
+            deltaT          0.001;
+            endTime         10;
+            writeInterval   0.01;
+            adjustTimeStep  yes;
+            maxCo           0.5;
+            maxAlphaCo      0.5;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type volumeReport;
+            fields ( U p T );
+            outputFileFormat tsv;
+            region default;
+        }
+        VR-solid
+        {
+            type volumeReport;
+            fields ( T );
+            outputFileFormat tsv;
+            region sphere;
+        }
+    }
+}
+
+regions
+{
+    default
+    {
+        state ( transient ras vof energy );
+
+        materials ( liquid air );
+
+        materialProperties
+        {
+            materialType    multiphase;
+
+            air
+            {
+                materialType fluid;
+                thermodynamics hConst;
+                equationOfState perfectGas;
+                muModel scalarFunction1;
+                kappaModel kappaPrandtl;
+
+                molWeight   28.9;
+                thermodynamicsCoeffs
+                {
+                    Cp          1007;
+                    Hf          0;
+                }
+                muModelCoeffs
+                {
+                    mu          1.84e-05;
+                }
+                kappaModelCoeffs
+                {
+                    Pr          0.7;
+                }
+            }
+
+            liquid
+            {
+                materialType    fluid;
+                molWeight   18.0;
+
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho        1000;
+                }
+
+                thermodynamics  eConst;
+                thermodynamicsCoeffs
+                {
+                    Cv          4195;
+                    Hf          0;
+                }
+
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          1e-1;
+                }
+
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr          2.289;
+                }
+            }
+
+            referenceFields
+            {
+                p [1 -1 -2 0 0 0 0] 1e5;
+            }
+
+            liquid_air
+            {
+                surfaceTensionModel constant;
+                surfaceTensionModelCoeffs
+                {
+                    sigma           0.07;
+                }
+            }
+        }
+
+        turbulenceModel laminar;
+
+        constant
+        {
+            g
+            {
+                value           (0 0 -9.81);
+            }
+        }
+
+        boundaryMesh
+        {
+            patch_0_0
+            {
+                type wall;
+            }
+            patch_1_0
+            {
+                type inlet;
+            }
+            patch_2_0
+            {
+                type patch;
+            }
+            patch_0_2
+            {
+                type empty;
+            }
+            MeshRefinement
+            {
+                type mappedWall;
+                sampleRegion sphere;
+                samplePatch MeshRefinement_slave;
+            }
+        }
+
+        fields
+        {
+            U {initialisation{type fixedValue; value uniform ( 0 0 0 );} }
+            p
+            {
+                initialisation
+                {
+                    type buoyantPressure;
+                    initialValue uniform 0;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 293.15;
+                }
+            }
+            alpha.liquid
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+        }
+
+        boundaryConditions
+        {
+            patch_1_0
+            {
+                U
+                {
+                    type uniformFixedValue;
+                    uniformValue table ( ( 0 ( 0 0 0 ) ) ( 1.499 ( 0 0 0 ) ) ( 1.5 ( 0 0 -0.2) ) ( 5.999 ( 0 0 -0.2 ) ) ( 6 ( 0 0 0 ) ) ( 10 ( 0 0 0 ) ) );
+
+                }
+                T
+                {
+                    type fixedValue;
+                    value uniform 293.15;
+                }
+                alpha.liquid
+                {
+                    type uniformInletOutlet;
+                    uniformInletValue table ( ( 0 0 ) ( 1.499 0 ) ( 1.5 1 ) ( 5.999 1 ) ( 6 0 ) ( 10 0 ) );
+                }
+            }
+            patch_2_0
+            {
+                T
+                {
+                    type inletOutlet;
+                    inletValue uniform 293.15;
+                }
+                alpha.liquid
+                {
+                    type inletOutlet;
+                    inletValue uniform 0;
+                }
+            }
+        }
+    }
+    sphere
+    {
+        state ( transient solid );
+
+        materials ( steel );
+
+        materialProperties
+        {
+            steel
+            {
+                materialName    steel;
+                materialType    solid;
+                thermodynamics  hConst;
+                equationOfState rhoConst;
+                energy          sensibleEnthalpy;
+                kappaModel      constSolid;
+
+                molWeight 55.85;
+
+                thermodynamicsCoeffs
+                {
+                    Cp 300.0;
+                    Hf 0.0;
+                }
+                kappaModelCoeffs
+                {
+                    kappa 40.0;
+                }
+                equationOfStateCoeffs
+                {
+                    rho 7740.0;
+                }
+            }
+        }
+
+        boundaryMesh
+        {
+            MeshRefinement_slave
+            {
+                type mappedWall;
+                sampleRegion default;
+                samplePatch MeshRefinement;
+            }
+        }
+
+        fields
+        {
+            T
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 473.15;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //
+

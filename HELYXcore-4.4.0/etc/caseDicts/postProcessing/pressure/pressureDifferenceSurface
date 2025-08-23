@@ -1,0 +1,19 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+-------------------------------------------------------------------------------
+Description
+    Interpolates pressures onto 2 specified triangulated surfaces and
+    calculates the difference between the average pressures.
+
+\*---------------------------------------------------------------------------*/
+
+triSurface1 <triSurface1>;
+triSurface2 <triSurface2>;
+
+#includeEtc "caseDicts/postProcessing/pressure/pressureDifferenceSurface.cfg"
+
+// ************************************************************************* //

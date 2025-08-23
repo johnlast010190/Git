@@ -1,0 +1,103 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+castellatedMesh true;
+snap            true;
+addLayers       false;
+
+geometry
+{
+    wigley-scaled-oriented.stl
+    {
+        type triSurfaceMesh;
+        name hull;
+
+        patchInfo
+        {
+            type wall;
+        }
+    }
+    box1
+    {
+        type searchableBox;
+        min (-1 -0.5 -0.25);
+        max ( 1  0.5  1 );
+    }
+    box2
+    {
+        type searchableBox;
+        min (-1 -0.2 -0.15);
+        max ( 0.75 0.2 1);
+    }
+    box3
+    {
+        type searchableBox;
+        min (-10 -10 -0.03);
+        max ( 10 10 1);
+    }
+};
+
+castellatedMeshControls
+{
+    refinementSurfaces
+    {
+        hull
+        {
+            level (3 3);
+        }
+    }
+    refinementRegions
+    {
+        box1
+        {
+            mode inside;
+            levels ((1e15 1));
+        }
+        box2
+        {
+            mode inside;
+            levels ((1e15 2));
+        }
+        box3
+        {
+            mode inside;
+            levels ((1e15 2));
+        }
+    }
+    locationInMesh (-0.7 0 0);
+}
+
+snapControls
+{
+    featureEdges {}
+}
+
+addLayersControls
+{
+    layers
+    {
+        hull
+        {
+            nSurfaceLayers 1;
+
+        }
+    }
+}
+
+
+// ************************************************************************* //

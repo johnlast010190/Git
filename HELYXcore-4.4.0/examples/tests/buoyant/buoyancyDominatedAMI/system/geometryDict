@@ -1,0 +1,124 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | HELYX(R): Open-source CFD for Enterprise                 |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | Engys Ltd. http://www.engys.com                          |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    location system;
+    object geometryDict;
+}
+    surfaces
+    {
+        building
+        {
+            type searchableBox;
+            min ( 0.0 -1.0 0.0 );
+            max ( 2.0 1.0 2.0 );
+            transforms
+            (
+                {
+                    type scale;
+                    aboutPoint ( 0.0 0.0 0.0 );
+                    scaleVec ( 100.0 100.0 100.0 );
+                }
+            );
+        }
+        inlet.stl
+        {
+            type triSurfaceMesh;
+            format ascii;
+            solids ( "solid" );
+            transforms
+            (
+                {
+                    type scale;
+                    aboutPoint ( 0.0 0.0 0.0 );
+                    scaleVec ( 100.0 100.0 100.0 );
+                }
+            );
+        }
+        side2.stl
+        {
+            type triSurfaceMesh;
+            format ascii;
+            solids ( "box" );
+            transforms
+            (
+                {
+                    type scale;
+                    aboutPoint ( 0.0 0.0 0.0 );
+                    scaleVec ( 100.0 100.0 100.0 );
+                }
+            );
+        }
+        outlet.stl
+        {
+            type triSurfaceMesh;
+            format ascii;
+            solids ( "solid" );
+            transforms
+            (
+                {
+                    type scale;
+                    aboutPoint ( 0.0 0.0 0.0 );
+                    scaleVec ( 100.0 100.0 100.0 );
+                }
+            );
+        }
+        ground.stl
+        {
+            type triSurfaceMesh;
+            format ascii;
+            solids ( "solid" );
+            transforms
+            (
+                {
+                    type scale;
+                    aboutPoint ( 0.0 0.0 0.0 );
+                    scaleVec ( 100.0 100.0 100.0 );
+                }
+            );
+        }
+        top.stl
+        {
+            type triSurfaceMesh;
+            format ascii;
+            solids ( "solid" );
+            transforms
+            (
+                {
+                    type scale;
+                    aboutPoint ( 0.0 0.0 0.0 );
+                    scaleVec ( 100.0 100.0 100.0 );
+                }
+            );
+        }
+        side1.stl
+        {
+            type triSurfaceMesh;
+            format ascii;
+            solids ( "solid" );
+            transforms
+            (
+                {
+                    type scale;
+                    aboutPoint ( 0.0 0.0 0.0 );
+                    scaleVec ( 100.0 100.0 100.0 );
+                }
+            );
+        }
+        AMI
+        {
+            type searchableCylinder;
+            point1 ( 100.0 0.0 0.0 );
+            point2 ( 100.0 0.0 300.0 );
+            radius 500.0;
+            resolution 50;
+        }
+    }

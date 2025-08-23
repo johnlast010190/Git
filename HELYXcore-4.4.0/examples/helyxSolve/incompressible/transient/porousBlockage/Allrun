@@ -1,0 +1,22 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Background mesh
+helyxRun blockMesh
+
+# Create cell zone for pipe region
+helyxRun topoSet
+
+# Setup
+helyxRun caseSetup
+
+# Run
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualization
+touch porousBlockage.foam
+
+#------------------------------------------------------------------------------

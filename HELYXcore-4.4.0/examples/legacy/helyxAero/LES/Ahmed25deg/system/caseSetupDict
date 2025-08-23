@@ -1,0 +1,226 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields yes;
+        resetBoundaryFields yes;
+        resetSystemDicts yes;
+        resetConstDicts yes;
+        resetBoundaryMesh yes;
+    }
+    regionGroups    1 ( fluid 1 ( region0 ) );
+    system
+    {
+        controlDict
+        {
+            application     helyxAero;
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         0.5;
+            deltaT          0.0001;
+            writeControl    timeStep;
+            writeInterval   100;
+            purgeWrite      2;
+            writeFormat     ascii;
+            writePrecision  16;
+            writeCompression uncompressed;
+            timeFormat      general;
+            timePrecision   6;
+            graphFormat     raw;
+            runTimeModifiable yes;
+            meshChangers    false;
+        }
+    }
+    functions
+    {
+        LD1
+        {
+            type            liftDrag;
+            name            ahmed;
+            regions         1 ( region0 );
+            patches         ( "ahmed.*" );
+            porosity        true;
+            nAveragingSteps 1;
+            outputRegionData true;
+            binData
+            {
+                nBins       100;
+                axis        ( 1 0 0 );
+            }
+            maxCp           1;
+            minCp           -2;
+            Uinf            ( 40 0 0 );
+            rhoInf          1.225;
+            liftDirection   ( 0 0 1 );
+            dragDirection   ( 1 0 0 );
+            referenceArea   0.112032;
+            referenceLength 1.044;
+            referencePoint  ( 0 0 0 );
+            wheelbase       1.044;
+        }
+        runTimeTermination
+        {
+            functionObjectLibs ( "libutilityFunctionObjects.so" );
+            type            runTimeControl;
+            log             true;
+            timeStart       0.001;
+            conditions
+            {
+                confIntv
+                {
+                    type confidenceInterval;
+                    functionObject LD1;
+                    field Cd;
+
+                    confidence 0.99;
+                    targetInterval 0.001;
+                    intervalType absolute;
+                    log true;
+                    minSamples 100;
+                }
+            }
+        }
+        VR
+        {
+            type             volumeReport;
+            regions          1 ( region0 );
+            fields           ( U p nuTilda );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+            sets
+            (
+                boxToCell
+                {
+                    box ( -1000 -1000 -1000 ) ( 1000 1000 1000 );
+                }
+            );
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        boundaryMesh
+        {
+            inlet
+            {
+                type            inlet;
+            }
+            outlet
+            {
+                type            outlet;
+            }
+        }
+        state           ( aero les backwardCompatible );
+        turbulenceModel SpalartAllmarasDDES;
+        materials       ( air );
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type            potentialFlow;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type            potentialFlow;
+                }
+            }
+            nuTilda
+            {
+                initialisation
+                {
+                    type            Prandtl;
+                }
+            }
+        }
+        boundaryTypeDefaults
+        {
+            wall
+            {
+                p
+                {
+                    type wallPressure;
+                    startDampingAngle 20;
+                    zeroGradientAngle 50;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            ffmaxy
+            {
+                U
+                {
+                    type            slip;
+                }
+            }
+            ffminy
+            {
+                U
+                {
+                    type            slip;
+                }
+            }
+            ffmaxz
+            {
+                U
+                {
+                    type            slip;
+                }
+            }
+            ffminz
+            {
+                U
+                {
+                    type            tangentialVelocity;
+                    direction       ( 1 0 0 );
+                    magnitude       35.7632;
+                    value           uniform ( 35.7632 0.0 0.0 );
+                }
+            }
+            inlet
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform ( 35.7632 0.0 0.0 );
+                }
+                nuTilda
+                {
+                    type            nutTurbulentIntensityLengthScaleInlet;
+                    length          0.01;
+                    intensity       0.01;
+                    value uniform   0.001;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,220 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    regionGroups ( fluids ( default ) solids ( solid ) );
+
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         1000;
+            deltaT          1;
+            writeControl    timeStep;
+            writeInterval   100;
+            purgeWrite      10;
+        }
+    }
+
+    functions
+    {
+        VR-Tegg
+        {
+            type             volumeReport;
+            fields           ( T );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    default
+    {
+        state ( steady ras energy radiation );
+
+        materials (air);
+
+        materialProperties
+        {
+            air
+            {
+                equationOfState perfectGas;
+                buoyancyModel   rhoModel;
+            }
+        }
+
+        turbulenceModel laminar;
+
+        constant
+        {
+            g
+            {
+                value ( 0 0 -9.81);
+            }
+        }
+
+        boundaryMesh
+        {
+            chamber_inlet {type inlet;}
+            chamber_outlet {type outlet;}
+            chamber_walls {type wall;}
+        }
+
+        fields
+        {
+            T{ initialisation{type fixedValue; value uniform 282.11;} }
+            p{ initialisation{type buoyantPressure;} }
+            U{ initialisation{type fixedValue; value uniform (0.01 0.0 0.0);} }
+        }
+
+        boundaryConditions
+        {
+            chamber_outlet
+            {
+                p
+                {
+                    type            totalPressure;
+                    p0              uniform 0;
+                    addStaticHead   yes;
+                    value           uniform 0;
+                }
+                T
+                {
+                    type        inletOutlet;
+                    inletValue  uniform 282.11;
+                    value       uniform 282.11;
+                }
+            }
+            chamber_inlet
+            {
+                T
+                {
+                    type            fixedValue;
+                    value           uniform 282.11;
+                }
+                U
+                {
+                    type            fixedValue;
+                    value           uniform (0.01 0 0);
+                }
+            }
+        }
+
+    }
+
+    solid
+    {
+        state ( steady solid radiationSolid );
+
+        materials ( eggMaterial );
+
+        materialProperties
+        {
+            eggMaterial
+            {
+                materialName    eggMaterial;
+
+                materialType    solid;
+                thermodynamics  hConst;
+                equationOfState rhoConst;
+                energy          sensibleEnthalpy;
+                molWeight       50;
+
+                kappaModel      constSolid;
+                kappaModelCoeffs
+                {
+                    kappa   0.44;
+                }
+
+                thermodynamicsCoeffs
+                {
+                    Hf      0;
+                    Cp      2569.613;
+                }
+
+                equationOfStateCoeffs
+                {
+                    rho     1037;
+                }
+            }
+        }
+
+        fields
+        {
+            T {initialisation{type fixedValue; value uniform 294.45;} }
+        }
+
+        boundaryConditions
+        {
+            solid_to_default
+            {
+                T //optional - included here for example of thicknessLayers and conductivityLayers
+                {
+                    type            regionCoupledEnergyFlux;
+                    value           uniform 294.45;
+                    //thicknessLayers (1e-3);
+                    //conductivityLayers (0.02);
+                }
+            }
+        }
+
+        system
+        {
+            fvOptions
+            {
+                fixedTemperature
+                {
+                    type fixedTemperatureConstraint;
+                    active true;
+                    fixedTemperatureConstraintCoeffs
+                    {
+                        selectionMode all;
+                        mode uniform;
+                        temperature constant 350.0;
+                    }
+                }
+            }
+        }
+
+        constant
+        {
+            radiationProperties
+            {
+                radiationModel  opaqueSolid;
+
+                absorptionEmissionModel constant;
+
+                constantCoeffs
+                {
+                    absorptivity 0.8;
+                    emissivity 0.8;
+                    E 0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

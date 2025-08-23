@@ -1,0 +1,19 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+
+rm -rfv precice-run
+
+(
+cd fluid
+helyxClean
+rm -fv precice-*
+)
+
+(
+cd solid
+rm -fv ./*.cvg ./*.dat ./*.frd ./*.sta ./*.12d spooles.out dummy
+rm -fv WarnNodeMissMultiStage.nam
+rm -fv ./*.eig
+rm -fv log.*
+rm -fv precice-*.log
+)

@@ -1,0 +1,38 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy input surface from resources directory
+mkdir -p constant/triSurface
+cp "$HELYX_TUTORIALS"/resources/geometry/GIBgeometries/inletBox.stl constant/triSurface/
+
+# Background mesh
+helyxRun blockMesh
+
+# Create cell zone for pipe region
+helyxRun topoSet
+
+# Overwrite existing mesh/results files
+helyxRun refineMesh -dict system/refineMeshDict -overwrite
+
+# Create GIB interface
+helyxRun modifyGIBBoundary -addGIB
+
+# Setup
+helyxRun caseSetup
+
+# Modify faces zones for pipe region
+helyxRun -l log.setSet topoSet -dict system/topoSetDict.setSet
+
+# Set fields
+helyxRun setFields
+
+# Run
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualization
+touch injection.foam
+
+#------------------------------------------------------------------------------

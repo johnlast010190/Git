@@ -1,0 +1,30 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+-------------------------------------------------------------------------------
+Description
+    Calculates lift, drag and moment coefficients by summing forces on
+    specified patches for a case where the solver is compressible (pressure is
+    in units M/(LT^2), e.g. Pa).
+
+\*---------------------------------------------------------------------------*/
+
+patches     (patch1 patch2);
+
+magUInf     20;
+rhoInf      1.225;
+lRef        1;
+Aref        1;
+
+liftDir     (0 0 1);
+dragDir     (1 0 0);
+
+CofR        (0 0 0);
+pitchAxis   (0 1 0);
+
+#includeEtc "caseDicts/postProcessing/forces/forceCoeffs.cfg"
+
+// ************************************************************************* //

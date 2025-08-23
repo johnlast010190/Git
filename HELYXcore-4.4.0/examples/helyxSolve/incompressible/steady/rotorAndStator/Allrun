@@ -1,0 +1,33 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy input surfaces from resources directory
+mkdir -p staticMesh/constant/triSurface
+mkdir -p mainMesh/constant/triSurface
+cp "$HELYX_TUTORIALS"/resources/geometry/rotorAndStator/staticMesh/* staticMesh/constant/triSurface/
+cp "$HELYX_TUTORIALS"/resources/geometry/rotorAndStator/rotorMesh/* mainMesh/constant/triSurface/
+
+# Generate the static mesh in its directory
+cd staticMesh/
+helyxRun -parallel helyxHexMesh
+
+# Generate the rotor mesh in the main directory
+cd ../mainMesh/
+helyxRun -parallel helyxHexMesh
+
+# Merge the two meshes
+helyxRun mergeMeshes . ../staticMesh -overwrite
+
+# Setup
+helyxRun caseSetup
+
+# Run
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch rotorAndStator.foam
+
+#------------------------------------------------------------------------------

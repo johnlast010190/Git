@@ -1,0 +1,181 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : 4.4.0
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) 2016 OpenCFD Ltd.
+    (c) 2024 Engys Ltd.
+
+Class
+    Foam::functionObjects::mapFields
+
+Group
+    grpFieldFunctionObjects
+
+Description
+    Map fields from local mesh to secondary mesh at run-time.
+
+Usage
+    Example of function object specification to map fields:
+    \verbatim
+    mapFields1
+    {
+        type            mapFields;
+        libs            ("libfieldFunctionObjects.so");
+        ...
+
+        mapRegion       coarseMesh;
+        mapMethod       cellVolumeWeight;
+        consistent      yes;
+
+        fields          ("U.*" p);
+    }
+    \endverbatim
+
+    Where the entries comprise:
+    \table
+        Property     | Description                | Required  | Default value
+        type         | Type name: mapFields       | yes       |
+        mapRegion    | Name of region to map to   | yes       |
+        mapMethod    | Mapping method             | yes       |
+        patchMapMethod | Patch mapping method     | no        | <auto>
+        consistent   | Mapping meshes have consistent boundaries | yes |
+        fields       | List of field names to map | yes       |
+        log          | Log to standard output     | no        | yes
+    \endtable
+
+
+SourceFiles
+    mapFields.C
+
+\*---------------------------------------------------------------------------*/
+
+#ifndef functionObjects_mapFields_H
+#define functionObjects_mapFields_H
+
+#include "functionObjects/fvMeshFunctionObject/fvMeshFunctionObject.H"
+#include "fields/volFields/volFieldsFwd.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+class meshToMesh;
+
+namespace functionObjects
+{
+
+/*---------------------------------------------------------------------------*\
+                          Class mapFields Declaration
+\*---------------------------------------------------------------------------*/
+
+class mapFields
+:
+    public fvMeshFunctionObject
+{
+    // Private data
+
+        //- Locally cached map region mesh (map to this mesh)
+        autoPtr<fvMesh> mapRegionPtr_;
+
+        //- Mesh-to-mesh interpolation
+        autoPtr<meshToMesh> interpPtr_;
+
+        //- List of field names to interpolate
+        wordReList fieldNames_;
+
+
+    // Private Member Functions
+
+        //- Helper function to create the mesh-to-mesh interpolation
+        void createInterpolation(const dictionary& dict);
+
+        //- Helper function to evaluate constraint patches after mapping
+        template<class Type>
+        void evaluateConstraintTypes(VolField<Type>& fld) const;
+
+        //- Helper function to interpolate and write the field
+        template<class Type>
+        bool writeFieldType() const;
+
+
+public:
+
+    //- Runtime type information
+    TypeName("mapFields");
+
+
+    // Constructors
+
+        //- Construct from Time and dictionary
+        mapFields
+        (
+            const word& name,
+            const Time& runTime,
+            const dictionary& dict
+        );
+
+        //- Disallow default bitwise copy construction
+        mapFields(const mapFields&) = delete;
+
+
+    //- Destructor
+    virtual ~mapFields();
+
+
+    // Member Functions
+
+        //- Read the mapFields data
+        virtual bool read(const dictionary&);
+
+        //- Execute, currently does nothing
+        virtual bool execute();
+
+        //- Calculate the mapFields and write
+        virtual bool write();
+
+
+    // Member Operators
+
+        //- Disallow default bitwise assignment
+        void operator=(const mapFields&) = delete;
+};
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace functionObjects
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#ifdef NoRepository
+    #include "mapFields/mapFieldsTemplates.C"
+#endif
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

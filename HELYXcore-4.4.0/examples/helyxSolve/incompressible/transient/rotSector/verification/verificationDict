@@ -1,0 +1,55 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/FR/0/force.tsv";
+                reference "verification/short/FR/0/force.tsv";
+                variables "(pressure_x pressure_y pressure_z)";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/VR_mesh/0/volumeReport.tsv";
+                reference "verification/short/VR_mesh/0/volumeReport.tsv";
+                variables "aspectRatiomean" "skewnessmean" "nonOrthogonalitymax" "volumeRatiomax";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/short/VR/0/volumeReport.tsv";
+                variables "Umean" "pmean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/FR/0/force.tsv";
+                reference "verification/long/FR/0/force.tsv";
+                variables "(pressure_x pressure_y pressure_z)";
+            }
+            {
+                result "postProcessing/VR_mesh/0/volumeReport.tsv";
+                reference "verification/long/VR_mesh/0/volumeReport.tsv";
+                variables "aspectRatiomean" "skewnessmean" "nonOrthogonalitymax" "volumeRatiomax";
+            }
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/long/VR/0/volumeReport.tsv";
+                variables "Umean" "pmean";
+            }
+        );
+    }
+);
+
+tags asan;

@@ -1,0 +1,16 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+
+#------------------------------------------------------------------------------
+
+# Clean master case
+helyxClean
+rm -rf constant
+
+# Clean support mesh
+cd channelHalf/
+helyxClean
+rm -rf constant
+rm -rf 0
+
+#------------------------------------------------------------------------------

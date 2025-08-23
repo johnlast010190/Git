@@ -1,0 +1,318 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom latestTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 1000.0;
+            deltaT constant 1.0;
+            writeControl timeStep;
+            writeInterval 1000.0;
+            purgeWrite 0;
+            writeFormat ascii;
+            writePrecision 10;
+            writeCompression uncompressed;
+            timeFormat general;
+            timePrecision 6;
+            graphFormat raw;
+            runTimeModifiable yes;
+            adjustTimeStep false;
+            maxCo 0;
+            maxAlphaCo 0;
+            maxDeltaT 0;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (steady ras);
+        boundaryMesh
+        {
+            top
+            {
+                type patch;
+            }
+            sides
+            {
+                type patch;
+            }
+            ground
+            {
+                type wall;
+            }
+        }
+        turbulenceModel kOmegaSST;
+        materials (air);
+        materialProperties
+        {
+            air
+            {
+                equationOfStateCoeffs
+                {
+                    rho 1.225;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cp 1004.4;
+                }
+                muModelCoeffs
+                {
+                    mu 6.125e-06;
+                }
+                kappaModelCoeffs
+                {
+                    Pr 1.0;
+                }
+                referenceFields
+                {
+                    p [ 1 -1 -2 0 0 0 0 ] 0;
+                }
+            }
+        }
+        fvSolution
+        {
+            solvers
+            {
+                k
+                {
+                    solver          smoothSolver;
+                    smoother        symGaussSeidel;
+                    minIter         1;
+                    tolerance       1e-06;
+                    relTol          0.1;
+                }
+                omega
+                {
+                    solver          smoothSolver;
+                    smoother        symGaussSeidel;
+                    minIter         1;
+                    tolerance       1e-06;
+                    relTol          0.1;
+                }
+                p
+                {
+                    solver          GAMG;
+                    agglomerator    faceAreaPair;
+                    mergeLevels     1;
+                    cacheAgglomeration true;
+                    nCellsInCoarsestLevel 200;
+                    smoother        symGaussSeidel;
+                    minIter         1;
+                    scaleCorrection true;
+                    tolerance       1e-10;
+                    relTol          0.01;
+                }
+                U
+                {
+                    solver          smoothSolver;
+                    smoother        symGaussSeidel;
+                    minIter         1;
+                    tolerance       1e-06;
+                    relTol          0.1;
+                }
+            }
+            relaxationFactors
+            {
+                fields
+                {
+                    p               1;
+                }
+                equations
+                {
+                    k               0.8;
+                    omega           0.8;
+                    U               0.9;
+                }
+            }
+            SIMPLE
+            {
+                nNonOrthogonalCorrectors 0;
+                pRefCell        0;
+                pRefValue       0;
+                pMin            1e-10;
+                pMax            1e+10;
+                modifiedMomentumInterp true;
+                consistent      true;
+            }
+            cache
+            {
+                grad(U);
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( -3.0 0.0 0.0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.0;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type turbulentIL;
+                    I 0.05;
+                    L 0.01;
+                    Uref 1.0;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type turbulentIL;
+                    I 0.05;
+                    L 0.01;
+                    Uref 1.0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            top
+            {
+                U
+                {
+                    type pressureInletOutletParSlipVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type fixedMean;
+                    value uniform 0.0;
+                    meanValue constant 0.0;
+                }
+                k
+                {
+                    type turbulentIntensityKineticEnergyInlet;
+                    value uniform 0.1;
+                    intensity 0.05;
+                }
+                omega
+                {
+                    type turbulentMixingLengthFrequencyInlet;
+                    value uniform 0.01;
+                    mixingLength 0.01;
+                }
+            }
+            sides
+            {
+                U
+                {
+                    type windProfileDirectionVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                    profile AIJWindProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 5;
+                        alpha 0.2;
+                        Href 10;
+                        zG 10;
+                    }
+                    outOfBounds clamp;
+                    distanceType z;
+                    origin ( 0.0 0.0 0.0 );
+                    xscale constant 1.0;
+                    yscale constant 1.0;
+                    xoffset 0.0;
+                    yoffset constant 0.0;
+                    windDirection constant 90.0;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type interpolatedInletOutlet;
+                    profile AIJWindKineticEnergyProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 5;
+                        alpha 0.2;
+                        Href 10;
+                        zG 10;
+                    }
+                    distanceType z;
+                    value uniform 0.1;
+                }
+                omega
+                {
+                    type interpolatedInletOutlet;
+                    profile AIJWindSpecificDissipationRateProfile;
+                    profileCoeffs
+                    {
+                        Cmu 0.09;
+                        Uref 5;
+                        alpha 0.2;
+                        Href 10;
+                        zG 10;
+                    }
+                    distanceType z;
+                    value uniform 0.1;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

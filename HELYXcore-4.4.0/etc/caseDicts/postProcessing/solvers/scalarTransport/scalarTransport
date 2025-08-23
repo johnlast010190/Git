@@ -1,0 +1,24 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+-------------------------------------------------------------------------------
+Description
+    Solves a transport equation for a scalar field.
+
+    The name of the scalar field is specified in this file.  A sample scalar
+    field file, that must be initialised for the case, typically in the 0
+    directory, is available in $HELYX_ETC/caseDicts/solvers/scalarTransport.
+
+\*---------------------------------------------------------------------------*/
+
+type            scalarTransport;
+libs            ("libhelyxSolve.so");
+
+field           s;
+schemesField    s;
+D               1e-09;
+
+// ************************************************************************* //

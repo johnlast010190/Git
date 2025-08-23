@@ -1,0 +1,118 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     helyxSolve;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         0.25;
+
+deltaT          0.0002;
+
+writeControl    runTime;
+
+writeInterval   0.01;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  8;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   6;
+
+graphFormat     raw;
+
+runTimeModifiable yes;
+
+libs            1 ( "" );
+
+adjustTimeStep  no;
+
+maxCo           1;
+
+maxDeltaT       1;
+
+functions
+{
+    graphs
+    {
+        interpolationScheme cellPoint;
+        setFormat       raw;
+        setConfig
+        {
+            type            midPoint;
+            axis            distance;
+            nPoints         100;
+        }
+        type            sets;
+        libs            ( "libsampling.so" );
+        writeControl    writeTime;
+        sets            
+        (
+            lineA
+            {
+                type            midPoint;
+                axis            distance;
+                nPoints         100;
+                start           ( -0.0016 0 0 );
+                end             ( -0.0016 0.0128 0 );
+            }
+
+            lineB
+            {
+                type            midPoint;
+                axis            distance;
+                nPoints         100;
+                start           ( -0.0048 0 0 );
+                end             ( -0.0048 0.0128 0 );
+            }
+
+            lineC
+            {
+                type            midPoint;
+                axis            distance;
+                nPoints         100;
+                start           ( -0.032 0 0 );
+                end             ( -0.032 0.0128 0 );
+            }
+
+        )
+;
+        fields          ( U );
+    }
+    VR
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U p sigma );
+        executeControl  onEnd;
+        type            volumeReport;
+        writeControl    onEnd;
+        outputFileFormat tsv;
+    }
+}
+
+
+// ************************************************************************* //

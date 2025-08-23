@@ -1,0 +1,97 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      fvOptions;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+filter1
+{
+    type            explicitPorositySource;
+
+    explicitPorositySourceCoeffs
+    {
+        selectionMode   cellZone;
+        cellZone        filter;
+
+        type            DarcyForchheimer;
+
+        d   (500000 -1000 -1000);
+        f   (0 0 0);
+        referenceFrame  porousFrame;
+    }
+}
+
+
+massSource1
+{
+    type            scalarSemiImplicitSource;
+
+    timeStart       0.2;
+    duration        2.0;
+    selectionMode   points;
+    points
+    (
+        (2.75 0.5 0)
+    );
+
+    volumeMode      absolute;
+    injectionRateSuSp
+    {
+        rho         (1e-4 0); // kg/s
+        H2O         (1e-4 0); // kg/s
+    }
+}
+
+
+momentumSource1
+{
+    type            vectorSemiImplicitSource;
+
+    timeStart       0.2;
+    duration        2.0;
+    selectionMode   points;
+    points
+    (
+        (2.75 0.5 0)
+    );
+
+    volumeMode      absolute;
+    injectionRateSuSp
+    {
+        U           ((0 0.005 0) 0);
+    }
+}
+
+
+energySource1
+{
+    type            scalarSemiImplicitSource;
+
+    timeStart       0.2;
+    duration        2.0;
+    selectionMode   points;
+    points
+    (
+        (2.75 0.5 0)
+    );
+
+    volumeMode      absolute;
+    injectionRateSuSp
+    {
+        h           (10 0);
+    }
+}
+
+
+// ************************************************************************* //

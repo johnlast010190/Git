@@ -1,0 +1,308 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+castellatedMesh true;
+snap            true;
+addLayers       true;
+
+autoBlockMesh false;
+blockData (1.0 0);
+
+crackDetection false;
+
+geometry
+{
+    A_44444_testcar_5050_Y0.00_R0.01.stl
+    {
+        type triSurfaceMesh;
+        distributionType independent;
+        name A_44444_testcar_5050_Y0.00_R0.01;
+        regions
+        {
+            WALL_L_Barge_Board_8_8 { name wall_l_barge_board; }
+            WALL_L_Barge_Board_fine_4_4 { name wall_l_barge_board_fine; }
+            WALL_L_DY_Suspension_4_4 { name wall_l_dy_suspension; }
+            WALL_L_POROUS_Radiator_8_8 { name wall_l_porous_radiator; }
+            WALL_L_ROTFR_front_wheel_4_8 { name wall_l_rotfr_front_wheel; }
+            WALL_L_ROTFR_wheel_4_8 { name wall_l_rotfr_wheel; }
+            WALL_L_ROTRR_wheel_4_8 { name wall_l_rotrr_wheel; }
+            WALL_L_ROTRR_wheel_spokes_4_8 { name wall_l_rotrr_wheel_spokes; }
+            WALL_L_body_8_8 { name wall_l_body; }
+            WALL_R_Barge_Board_8_8 { name wall_r_barge_board; }
+            WALL_R_Barge_Board_fine_4_4 { name wall_r_barge_board_fine; }
+            WALL_R_DY_Suspension_4_4 { name wall_r_dy_suspension; }
+            WALL_R_POROUS_Radiator_8_8 { name wall_r_porous_radiator; }
+            WALL_R_ROTFR_front_wheel_4_8 { name wall_r_rotfr_front_wheel; }
+            WALL_R_ROTFR_wheel_4_8 { name wall_r_rotfr_wheel; }
+            WALL_R_ROTRR_wheel_4_8 { name wall_r_rotrr_wheel; }
+            WALL_R_ROTRR_wheel_spokes_4_8 { name wall_r_rotrr_wheel_spokes; }
+            WALL_R_body_8_8 { name wall_r_body; }
+        }
+    }
+    internal_fluid_r_mrf_fr_wheel.stl
+    {
+        type triSurfaceMesh;
+        name internal_fluid_r_mrf_fr_wheel;
+    }
+    internal_fluid_l_porous_radiator.stl
+    {
+        type triSurfaceMesh;
+        name internal_fluid_l_porous_radiator;
+    }
+    internal_fluid_l_mrf_fr_wheel.stl
+    {
+        type triSurfaceMesh;
+        name internal_fluid_l_mrf_fr_wheel;
+    }
+    internal_fluid_l_mrf_rr_wheel.stl
+    {
+        type triSurfaceMesh;
+        name internal_fluid_l_mrf_rr_wheel;
+    }
+    internal_fluid_r_porous_radiator.stl
+    {
+        type triSurfaceMesh;
+        name internal_fluid_r_porous_radiator;
+    }
+    internal_fluid_r_mrf_rr_wheel.stl
+    {
+        type triSurfaceMesh;
+        name internal_fluid_r_mrf_rr_wheel;
+    }
+    box_256
+    {
+        type searchableBox;
+        min (-10.6496 44.368 -0.375);
+        max (21.0004 55.632 5.065);
+    }
+    box_128
+    {
+        type searchableBox;
+        min (-6.2976 46.672 -0.375);
+        max (18.0004 53.328 3.529);
+    }
+    cylinder_ff
+    {
+        name lateral;
+        type searchableCylinder;
+        point1 (0 50 -2.0);
+        point2 (0 50 26);
+        endCaps true;
+        radius 50;
+    }
+    bottom
+    {
+        name ground;
+        type searchablePlate;
+        origin (-50 0 -0.05);
+        span (100 100 0);
+    }
+
+    top
+    {
+        name roof;
+        type searchablePlate;
+        origin (-50 0 25);
+        span (100 100 0);
+    }
+    INLET_R_Exhaust_.stl
+    {
+        type triSurfaceMesh;
+        name inlet_r_exhaust;
+    }
+    WALL_R_Exhaust.stl
+    {
+        type triSurfaceMesh;
+        name wall_r_exhaust;
+    }
+    INLET_L_Exhaust.stl
+    {
+        type triSurfaceMesh;
+        name inlet_l_exhaust;
+    }
+    WALL_L_Exhaust.stl
+    {
+        type triSurfaceMesh;
+        name wall_l_exhaust;
+    }
+};
+
+castellatedMeshControls
+{
+    features ();
+
+    refinementSurfaces
+    {
+        lateral
+        {
+            level (0 0);
+            regions {}
+        }
+        ground{level (0 0);}
+        roof{level (0 0);}
+
+        inlet_r_exhaust
+        {
+            level ( 8 8 );
+        }
+        wall_r_exhaust
+        {
+            level ( 8 8 );
+        }
+        inlet_l_exhaust
+        {
+            level ( 8 8 );
+        }
+        wall_l_exhaust
+        {
+            level ( 8 8 );
+        }
+
+        A_44444_testcar_5050_Y0.00_R0.01
+        {
+            level (8 8);
+            regions
+            {
+                WALL_L_Barge_Board_8_8 { level (7 7); }
+                WALL_L_Barge_Board_fine_4_4 { level (8 8); }
+                WALL_L_DY_Suspension_4_4 { level (8 8); }
+                WALL_L_POROUS_Radiator_8_8 { level (7 7); }
+                WALL_L_ROTFR_front_wheel_4_8 { level (7 8); }
+                WALL_L_ROTFR_wheel_4_8 { level (7 8); }
+                WALL_L_ROTRR_wheel_4_8 { level (7 8); }
+                WALL_L_ROTRR_wheel_spokes_4_8 { level (7 8); }
+                WALL_L_body_8_8 { level (7 7); }
+                WALL_R_Barge_Board_8_8 { level (7 7); }
+                WALL_R_Barge_Board_fine_4_4 { level (8 8); }
+                WALL_R_DY_Suspension_4_4 { level (8 8); }
+                WALL_R_POROUS_Radiator_8_8 { level (7 7); }
+                WALL_R_ROTFR_front_wheel_4_8 { level (7 8); }
+                WALL_R_ROTFR_wheel_4_8 { level (7 8); }
+                WALL_R_ROTRR_wheel_4_8 { level (7 8); }
+                WALL_R_ROTRR_wheel_spokes_4_8 { level (7 8); }
+                WALL_R_body_8_8 { level (7 7); }
+            }
+        }
+        internal_fluid_r_mrf_fr_wheel
+        {
+            level (8 8);
+            faceZone internal_r_mrf_fr_wheel;
+            faceType internal;
+            cellZone fluid_r_mrf_fr_wheel;
+            cellZoneInside inside;
+        }
+        internal_fluid_l_porous_radiator
+        {
+            level (8 8);
+            faceZone internal_l_porous_radiator;
+            faceType internal;
+            cellZone fluid_l_porous_radiator;
+            cellZoneInside inside;
+        }
+        internal_fluid_l_mrf_fr_wheel
+        {
+            level (8 8);
+            faceZone internal_l_mrf_fr_wheel;
+            faceType internal;
+            cellZone fluid_l_mrf_fr_wheel;
+            cellZoneInside inside;
+        }
+        internal_fluid_l_mrf_rr_wheel
+        {
+            level (8 8);
+            faceZone internal_l_mrf_rr_wheel;
+            faceType internal;
+            cellZone fluid_l_mrf_rr_wheel;
+            cellZoneInside inside;
+        }
+        internal_fluid_r_porous_radiator
+        {
+            level (8 8);
+            faceZone internal_r_porous_radiator;
+            faceType internal;
+            cellZone fluid_r_porous_radiator;
+            cellZoneInside inside;
+        }
+        internal_fluid_r_mrf_rr_wheel
+        {
+            level (8 8);
+            faceZone internal_r_mrf_rr_wheel;
+            faceType internal;
+            cellZone fluid_r_mrf_rr_wheel;
+            cellZoneInside inside;
+        }
+    }
+
+    refinementRegions
+    {
+        box_256
+        {
+            mode inside;
+            levels ((2 2));
+        }
+        box_128
+        {
+            mode inside;
+            levels ((3 3));
+        }
+    }
+
+    locationInMesh (1 1 10);
+}
+
+snapControls
+{
+    featureEdges {}
+    preSmoothAtBaffleEdges true;
+}
+
+addLayersControls
+{
+    layers
+    {
+        wall_r_exhaust {nSurfaceLayers 3;}
+        wall_l_exhaust {nSurfaceLayers 3;}
+        wall_l_barge_board { nSurfaceLayers 3; }
+        wall_l_barge_board_fine { nSurfaceLayers 3; }
+        wall_l_dy_suspension { nSurfaceLayers 3; }
+        wall_l_porous_radiator { nSurfaceLayers 3; }
+        wall_l_rotfr_front_wheel { nSurfaceLayers 3; }
+        wall_l_rotfr_wheel { nSurfaceLayers 3; }
+        wall_l_rotrr_wheel { nSurfaceLayers 3; }
+        wall_l_rotrr_wheel_spokes { nSurfaceLayers 3; }
+        wall_l_body { nSurfaceLayers 3; }
+        wall_r_barge_board { nSurfaceLayers 3; }
+        wall_r_barge_board_fine { nSurfaceLayers 3; }
+        wall_r_dy_suspension { nSurfaceLayers 3; }
+        wall_r_porous_radiator { nSurfaceLayers 3; }
+        wall_r_rotfr_front_wheel { nSurfaceLayers 3; }
+        wall_r_rotfr_wheel { nSurfaceLayers 3; }
+        wall_r_rotrr_wheel { nSurfaceLayers 3; }
+        wall_r_rotrr_wheel_spokes { nSurfaceLayers 3; }
+        wall_r_body { nSurfaceLayers 3; }
+        ground
+        {
+            expansionRatio 0.8;
+            firstLayerThickness 0.00125;
+            nSurfaceLayers 2;
+        }
+    }
+}
+
+
+// ************************************************************************* //

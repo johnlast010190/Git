@@ -1,0 +1,75 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : 4.4.0
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) 2011-2013 OpenFOAM Foundation
+
+Class
+    Foam::CPCCellToFaceStencil
+
+Description
+    Combined corresponding cellToCellStencil of owner and neighbour.
+
+SourceFiles
+    CPCCellToFaceStencil.C
+
+\*---------------------------------------------------------------------------*/
+
+#ifndef CPCCellToFaceStencil_H
+#define CPCCellToFaceStencil_H
+
+#include "fvMesh/extendedStencil/cellToFace/globalIndexStencils/cellToFaceStencil.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+/*---------------------------------------------------------------------------*\
+                    Class CPCCellToFaceStencil Declaration
+\*---------------------------------------------------------------------------*/
+
+class CPCCellToFaceStencil
+:
+    public cellToFaceStencil
+{
+public:
+
+    // Constructors
+
+        //- Construct from all cells and boundary faces
+        explicit CPCCellToFaceStencil(const polyMesh&);
+
+};
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

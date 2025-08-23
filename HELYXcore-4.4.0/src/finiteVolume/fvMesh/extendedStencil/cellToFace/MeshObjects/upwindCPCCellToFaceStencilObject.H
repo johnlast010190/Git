@@ -1,0 +1,114 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : 4.4.0
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) 2011-2015 OpenFOAM Foundation
+
+Class
+    Foam::upwindCPCCellToFaceStencilObject
+
+Description
+
+SourceFiles
+
+\*---------------------------------------------------------------------------*/
+
+#ifndef upwindCPCCellToFaceStencilObject_H
+#define upwindCPCCellToFaceStencilObject_H
+
+#include "fvMesh/extendedStencil/cellToFace/extendedUpwindCellToFaceStencil.H"
+#include "fvMesh/extendedStencil/cellToFace/globalIndexStencils/CPCCellToFaceStencil.H"
+#include "meshes/MeshObject/MeshObject.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+/*---------------------------------------------------------------------------*\
+              Class upwindCPCCellToFaceStencilObject Declaration
+\*---------------------------------------------------------------------------*/
+
+class upwindCPCCellToFaceStencilObject
+:
+    public MeshObject
+    <
+        fvMesh,
+        TopologicalMeshObject,
+        upwindCPCCellToFaceStencilObject
+    >,
+    public extendedUpwindCellToFaceStencil
+{
+
+public:
+
+    TypeName("upwindCPCCellToFaceStencil");
+
+    // Constructors
+
+        //- Construct from uncompacted face stencil
+        upwindCPCCellToFaceStencilObject
+        (
+            const fvMesh& mesh,
+            const bool pureUpwind,
+            const scalar minOpposedness
+        )
+        :
+            MeshObject
+            <
+                fvMesh,
+                Foam::TopologicalMeshObject,
+                upwindCPCCellToFaceStencilObject
+            >(mesh),
+            extendedUpwindCellToFaceStencil
+            (
+                CPCCellToFaceStencil(mesh),
+                pureUpwind,
+                minOpposedness
+            )
+        {
+            if (extendedCellToFaceStencil::debug)
+            {
+                Info<< "Generated off-centred stencil " << type()
+                    << nl << endl;
+                writeStencilStats(Info, ownStencil(), ownMap());
+            }
+        }
+
+
+    //- Destructor
+    virtual ~upwindCPCCellToFaceStencilObject()
+    {}
+};
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

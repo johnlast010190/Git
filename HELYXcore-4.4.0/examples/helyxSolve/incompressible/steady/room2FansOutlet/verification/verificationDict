@@ -1,0 +1,23 @@
+runs
+(
+    full
+    {
+        checks
+        (
+            {
+                result "postProcessing/SR_fan1/0/surfaceReport.dat";
+                reference "verification/full/SR_fan1/0/surfaceReport.dat";
+                variables "massFlux" "Umax" "Umean" "pmax" "pmean";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/VR/0/volumeReport.dat";
+                reference "verification/full/VR/0/volumeReport.dat";
+                variables "Umax" "Umean" "pmax" "pmean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+);

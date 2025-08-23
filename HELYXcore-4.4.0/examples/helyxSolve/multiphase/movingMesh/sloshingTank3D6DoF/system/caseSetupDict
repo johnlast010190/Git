@@ -1,0 +1,278 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            stopAt          endTime;
+            endTime         10;
+            deltaT          0.01;
+            writeInterval   0.05;
+            purgeWrite      0;
+            adjustTimeStep  yes;
+            maxCo           0.5;
+            maxAlphaCo      0.5;
+            maxDeltaT       1;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p T );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+        probes
+        {
+            type            probes;
+            libs            ("libsampling.so");
+            writeControl   timeStep;
+            writeInterval  1;
+            probeLocations
+            (
+                (0 9.95 19.77)
+                (0 -9.95 19.77)
+            );
+            fixedLocations  false;
+            fields ( p );
+        }
+    }
+}
+
+
+regions
+{
+    region0
+    {
+        state ( dynamic transient ras vof );
+        materials ( water air );
+        materialProperties
+        {
+            materialType    multiphase;
+
+            air
+            {
+                materialType    fluid;
+                thermodynamics  hConst;
+                equationOfState rhoConst;
+                molWeight   28.9;
+
+                equationOfStateCoeffs
+                {
+                    rho        1.225;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cp          1007;
+                    Hf          0;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          1.48e-05;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr          0.7;
+                }
+            }
+
+            water
+            {
+                materialType    fluid;
+                thermodynamics  eConst;
+                equationOfState rhoConst;
+                molWeight   18.0;
+                equationOfStateCoeffs
+                {
+                    rho        998.2;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cv          4195;
+                    Hf          0;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          9.982e-04;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr          2.289;
+                }
+            }
+
+            binaryProperties
+            {
+                air_water
+                {
+                    surfaceTensionModel constant;
+                    surfaceTensionModelCoeffs
+                    {
+                        sigma 0;
+                    }
+                }
+            }
+
+            referenceFields
+            {
+                p [1 -1 -2 0 0 0 0] 101325;
+                TConst [ 0 0 0 1 0 0 0 ] 273.15;
+            }
+        }
+
+        turbulenceModel laminar;
+
+        constant
+        {
+            g { value (0 0 -9.81); }
+            dynamicMeshDict
+            {
+                mover
+                {
+                    type            motionSolver;
+                    libs            ("libfvMeshMovers.so" "libfvMotionSolvers.so");
+                    motionSolver    solidBody;
+                    referenceFrame  tabulated6DoFFrame;
+                }
+            }
+        }
+
+        system
+        {
+            fvOptions
+            {
+                fvMeshSolver
+                {
+                    type            fvMeshSolver;
+                    solveInterval   1;
+                }
+                volumeFractionSolver
+                {
+                    nAlphaCorr      1;
+                    nAlphaSubCycles 3;
+                    cAlpha          1.5;
+                }
+            }
+            fvSchemes
+            {
+                laplacianSchemes
+                {
+                    default         Gauss linear corrected;
+                }
+            }
+            fvSolution
+            {
+                PIMPLE
+                {
+                    momentumPredictor no;
+                    nCorrectors     2;
+                    nNonOrthogonalCorrectors 0;
+                    correctPhi      no;
+                    pRefPoint       (0 0 0.15);
+                    pRefValue       0;
+                }
+
+                relaxationFactors
+                {
+                    equations
+                    {
+                        "U.*"           1;
+                    }
+                }
+            }
+            meshObjects
+            {
+                tabulated6DoFFrame
+                {
+                    type            dynamicMotionCoordinateFrame;
+                    motionFunction
+                    {
+                        type  tabulated6DoFMotion;
+                        timeDataFileName "$FOAM_CASE/constant/6DoF.dat";
+                    }
+                    coordinateSystem
+                    {
+                        type            cartesian;
+                        origin          ( 0 0 0 );
+                        e1              ( 1 0 0 );
+                        e2              ( 0 1 0 );
+                    }
+                }
+
+            }
+        }
+
+        boundaryMesh
+        {
+            walls
+            {
+                type wall;
+            }
+        }
+
+        fields
+        {
+            U {initialisation{type fixedValue; value uniform ( 0 0 0 );} }
+            pointDisplacement {initialisation{type fixedValue; value uniform ( 0 0 0 );} }
+            p {initialisation{type buoyantPressure; value uniform 0;} }
+            alpha.water
+            {
+                initialisation
+                {
+                    type cellSet;
+                    defaultValue uniform 0;
+                    setSources
+                    (
+                        boxToCell
+                        {
+                            box (-100 -100 -100) (100 100 0);
+                            value 1;
+                        }
+                    );
+                }
+            }
+        }
+
+        boundaryConditions
+        {
+            walls
+            {
+                U
+                {
+                    type movingWallVelocity;
+                    value uniform (0 0 0);
+                }
+                p { type fixedFluxPressure; }
+                alpha.water { type zeroGradient; }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //
+

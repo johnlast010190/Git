@@ -1,0 +1,367 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields false;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         50;
+            deltaT          1;
+            writeControl    timeStep;
+            writeInterval   50;
+            purgeWrite      0;
+            writeFormat     ascii;
+            writePrecision  10;
+        }
+    }
+    functions
+    {
+        FP1
+        {
+            type            fieldProcess;
+            functionObjectLibs ( "libfieldFunctionObjects.so" );
+            operations      ( { operation Urel; write true; } );
+            executeControl  onEnd;
+            writeControl    onEnd;
+            calculationControl continuous;
+        }
+        residuals
+        {
+            type            residuals;
+            functionObjectLibs ( "libutilityFunctionObjects.so" );
+            timeStart       0;
+            executeControl  timeStep;
+            executeInterval 25;
+            writeControl    writeTime;
+            writeInterval   25;
+            fields          ( p k omega U );
+            writeFields     false;
+        }
+        SR1
+        {
+            type            surfaceReport;
+            functionObjectLibs ( "libreport.so" );
+            logToFile       true;
+            weighting       area;
+            fluxName        phi;
+            fields          ( Urel U p );
+            surfaces        ( { type patch; name fixedOutlet; } );
+            constraints     ();
+            executeControl  onEnd;
+            writeControl    onEnd;
+            regions         1 ( region0 );
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state           ( steady ras );
+        boundaryMesh
+        {
+            ring
+            {
+                type            wall;
+            }
+            inlet
+            {
+                type            patch;
+            }
+            outlet
+            {
+                type            patch;
+            }
+            slipWalls
+            {
+                type            wall;
+            }
+            symmetryWall
+            {
+                type            wall;
+            }
+            fixedOutlet
+            {
+                type            outlet;
+            }
+            cylinder
+            {
+                type            wall;
+            }
+        }
+        turbulenceModel laminar;
+        materials       ( air );
+        materialProperties
+        {
+            air
+            {
+                materialType    fluid;
+                equationOfState rhoConst;
+                thermodynamics  hConst;
+                energy          sensibleEnthalpy;
+                equationOfStateCoeffs
+                {
+                    rho             1.205;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cp              1006;
+                    Hf              0;
+                }
+                muModel         scalarFunction1;
+                muModelCoeffs
+                {
+                    mu              1.9137e-05;
+                }
+                kappaModel      kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr              0.85;
+                }
+                molWeight       29.96;
+                referenceFields
+                {
+                    p               [ 1 -1 -2 0 0 0 0 ] 101325;
+                    T               [ 0 0 0 1 0 0 0 ] 300;
+                }
+            }
+        }
+        system
+        {
+            meshObjects
+            {
+                carFrame
+                {
+                    type            motionCoordinateFrame;
+                    motionFunction
+                    {
+                        type            vehicleMotion;
+                        vehicleMotionCoeffs
+                        {
+                            vehicleSpeed    constant 40;
+                            invTurnRadius   constant 0;
+                        }
+                    }
+                    coordinateSystem
+                    {
+                        type            cartesian;
+                        origin          ( 0 0 0 );
+                        e1              ( -1 0 0 );
+                        e3              ( 0 0 1 );
+                    }
+                }
+            }
+            fvSchemes
+            {
+                gradSchemes
+                {
+                    default cellLimited Gauss linear 1;
+                    gradU cellLimited Gauss linear 1;
+                    grad(p) Gauss linear;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    p
+                    {
+                        solver          GAMG;
+                        agglomerator    faceAreaPair;
+                        mergeLevels     1;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 200;
+                        smoother        symGaussSeidel;
+                        maxIter         10;
+                        minIter         1;
+                        scaleCorrection true;
+                        tolerance       1e-10;
+                        relTol          0.01;
+                    }
+                    U
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        maxIter         10;
+                        minIter         1;
+                        tolerance       1e-06;
+                        relTol          0.1;
+                    }
+                }
+            }
+            fvOptions
+            {
+                carMRF
+                {
+                    type            MRFSource;
+                    MRFSourceCoeffs
+                    {
+                        referenceFrame  carFrame;
+                        selectionMode   all;
+                    }
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform ( 0 0 0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type            turbulentIL;
+                    I               0.05;
+                    L               0.01;
+                    Uref            1;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type            turbulentIL;
+                    I               0.05;
+                    L               0.01;
+                    Uref            1;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type            inletOutlet;
+                    inletValue      uniform ( 0 0 0 );
+                    value           uniform ( 0 0 0 );
+                }
+                p
+                {
+                    type            zeroGradient;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type            inletOutlet;
+                    value           uniform ( 0 0 0 );
+                    inletValue      uniform ( 0 0 0 );
+                }
+                p
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+            }
+            fixedOutlet
+            {
+                U
+                {
+                    type inletOutlet;
+                    value uniform ( 0.0 0.0 0.0 );
+                    inletValue uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type targetFlowRateOutletPressure;
+                    volumetricFlowRateTarget constant 3;
+                    relax 0.2;
+                    maxP 500;
+                    minP -500;
+                    referenceFrame carFrame;
+                }
+            }
+            cylinder
+            {
+                U
+                {
+                    type            fixedValueVelocity;
+                    value           uniform ( 0 0 0 );
+                    referenceFrame  carFrame;
+                }
+            }
+            slipWalls
+            {
+                U
+                {
+                    type            fixedNormalSlip;
+                    fixedValue      uniform ( 0 0 0 );
+                }
+                p
+                {
+                    type            fixedFluxPressure;
+                }
+            }
+            ring
+            {
+                U
+                {
+                    type            fixedValueVelocity;
+                    value           uniform ( 0 0 0 );
+                    referenceFrame  carFrame;
+                }
+            }
+            symmetryWall
+            {
+                U
+                {
+                    type            fixedValueVelocity;
+                    value           uniform ( 0 0 0 );
+                    referenceFrame  carFrame;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

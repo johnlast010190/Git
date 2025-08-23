@@ -1,0 +1,1503 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | HELYX(R): Open-source CFD for Enterprise                 |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | Engys Ltd. http://www.engys.com                          |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    location system;
+    object caseSetupDict;
+}
+    global
+    {
+        regionGroups
+        (
+            fluids ( cool_air hot_air )
+            solids ( pipe )
+        );
+        modificationSwitches
+        {
+            resetInternalFields true;
+            resetBoundaryFields true;
+            resetSystemDicts true;
+            resetConstDicts true;
+            resetBoundaryMesh true;
+            deleteUnusedFields true;
+            reuseExistingDicts false;
+            strictPatchNameChecking false;
+        }
+        system
+        {
+            controlDict
+            {
+                application helyxSolve;
+                startFrom latestTime;
+                startTime 0;
+                stopAt endTime;
+                endTime 300.0;
+                deltaT constant 1.0;
+                writeControl timeStep;
+                writeInterval 300;
+                purgeWrite 0;
+                writeFormat ascii;
+                writePrecision 10;
+                writeCompression uncompressed;
+                writeEndTime true;
+                timeFormat general;
+                timePrecision 6;
+                graphFormat raw;
+                runTimeModifiable yes;
+                libs ( "" );
+                adjustTimeStep false;
+                maxCo 0;
+                maxAlphaCo 0;
+                minDeltaT 0;
+                maxDeltaT 0;
+            }
+            meshObjects
+            {
+            }
+            fvSchemes
+            {
+                ddtSchemes
+                {
+                }
+                gradSchemes
+                {
+                }
+                divSchemes
+                {
+                }
+                laplacianSchemes
+                {
+                }
+            }
+            faSchemes
+            {
+                ddtSchemes
+                {
+                }
+                gradSchemes
+                {
+                    grad(p) leastSquares;
+                }
+                divSchemes
+                {
+                    div(rhog) Gauss linear;
+                }
+                laplacianSchemes
+                {
+                    laplacian(p) Gauss linear corrected;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    electrical_V
+                    {
+                        solver GAMG;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1.0E-7;
+                        relTol 0.001;
+                        maxIter 20;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 200;
+                        agglomerator algebraicPair;
+                        mergeLevels 1;
+                        scaleCorrection true;
+                    }
+                    h
+                    {
+                        solver GAMG;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1.0E-7;
+                        relTol 0.001;
+                        maxIter 20;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 200;
+                        agglomerator algebraicPair;
+                        mergeLevels 1;
+                        scaleCorrection true;
+                    }
+                    e
+                    {
+                        solver GAMG;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1.0E-7;
+                        relTol 0.001;
+                        maxIter 20;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 200;
+                        agglomerator algebraicPair;
+                        mergeLevels 1;
+                        scaleCorrection true;
+                    }
+                    T
+                    {
+                        solver GAMG;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1.0E-7;
+                        relTol 0.001;
+                        maxIter 20;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 200;
+                        agglomerator algebraicPair;
+                        mergeLevels 1;
+                        scaleCorrection true;
+                    }
+                    e_h
+                    {
+                        solver GAMG;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1.0E-7;
+                        relTol 0.001;
+                        maxIter 20;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 200;
+                        agglomerator algebraicPair;
+                        mergeLevels 1;
+                        scaleCorrection true;
+                    }
+                    T_h
+                    {
+                        solver GAMG;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1.0E-7;
+                        relTol 0.001;
+                        maxIter 20;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 200;
+                        agglomerator algebraicPair;
+                        mergeLevels 1;
+                        scaleCorrection true;
+                    }
+                    T_e
+                    {
+                        solver GAMG;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1.0E-7;
+                        relTol 0.001;
+                        maxIter 20;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 200;
+                        agglomerator algebraicPair;
+                        mergeLevels 1;
+                        scaleCorrection true;
+                    }
+                    T_e_h
+                    {
+                        solver GAMG;
+                        smoother symGaussSeidel;
+                        minIter 1;
+                        tolerance 1.0E-7;
+                        relTol 0.001;
+                        maxIter 20;
+                        cacheAgglomeration true;
+                        nCellsInCoarsestLevel 200;
+                        agglomerator algebraicPair;
+                        mergeLevels 1;
+                        scaleCorrection true;
+                    }
+                }
+                SIMPLE
+                {
+                    nNonOrthogonalCorrectors 0;
+                }
+            }
+            faSolution
+            {
+                solvers
+                {
+                    p
+                    {
+                        solver PCG;
+                        preconditioner DIC;
+                        tolerance 1e-7;
+                        relTol 0.01;
+                    }
+                    pFinal
+                    {
+                        solver PCG;
+                        preconditioner DIC;
+                        tolerance 1e-7;
+                        relTol 0.0;
+                    }
+                }
+            }
+            fvOptions
+            {
+            }
+        }
+        constant
+        {
+            turbulenceProperties
+            {
+            }
+        }
+        functions
+        {
+            VR-cool_air
+            {
+                type volumeReport;
+                regions ( cool_air );
+                fields ( T U k nut omega p rho );
+                writeControl timeStep;
+                writeInterval 1;
+                executeControl timeStep;
+                executeInterval 1;
+                functionObjectLibs ("libreport.so" );
+            }
+            FP
+            {
+                type fieldProcess;
+                regions ( hot_air );
+                executeControl timeStep;
+                executeInterval 1;
+                writeControl outputTimeAndEnd;
+                writeInterval 1;
+                operations
+                (
+                    {
+                        operation wallHTC;
+                        fieldName alphaConv;
+                    }
+                );
+                functionObjectLibs ("libfieldFunctionObjects.so");
+            }
+            VR-hot_air
+            {
+                type volumeReport;
+                regions ( hot_air );
+                fields ( T U k nut omega p rho );
+                writeControl timeStep;
+                writeInterval 1;
+                executeControl timeStep;
+                executeInterval 1;
+                functionObjectLibs ("libreport.so" );
+            }
+            SU
+            {
+                type surfaces;
+                regions ( hot_air );
+                fields ( T alphaConv );
+                interpolationScheme cell;
+                surfaceFormat boundaryData;
+                writeFields true;
+                writeStatistics false;
+                surfaces
+                (
+                    surfaces0
+                    {
+                        type patch;
+                        patches ( hot_air_to_pipe );
+                        interpolate false;
+                        triangulate false;
+                    }
+                );
+                writeControl outputTimeAndEnd;
+                writeInterval 1;
+                executeControl outputTimeAndEnd;
+                executeInterval 1;
+                functionObjectLibs ("libsampling.so");
+            }
+            VR-pipe
+            {
+                type volumeReport;
+                regions ( pipe );
+                fields ( T );
+                writeControl timeStep;
+                writeInterval 1;
+                executeControl timeStep;
+                executeInterval 1;
+                functionObjectLibs ("libreport.so" );
+            }
+        }
+    }
+    regions
+    {
+        cool_air
+        {
+            state (steady ras energy);
+            boundaryMesh
+            {
+                outside
+                {
+                    type wall;
+                }
+                opening
+                {
+                    type patch;
+                }
+                cool_air_to_pipe
+                {
+                    type mappedWall;
+                    sampleMode nearestPatchFaceAMI;
+                    sampleRegion pipe;
+                    samplePatch pipe_to_cool_air;
+                }
+            }
+            turbulenceModel kOmegaSST;
+            materials (air);
+            materialProperties
+            {
+                air
+                {
+                    materialName air;
+                    materialType fluid;
+                    molWeight 28.96;
+                    energy sensibleEnthalpy;
+                    equationOfState perfectGas;
+                    equationOfStateCoeffs
+                    {
+                    }
+                    muModel scalarFunction1;
+                    muModelCoeffs
+                    {
+                        mu constant 1.846E-5;
+                    }
+                    thermodynamics hConst;
+                    thermodynamicsCoeffs
+                    {
+                        Hf 0.0;
+                        Cp 1004.9;
+                    }
+                    kappaModel scalarFunction1;
+                    kappaModelCoeffs
+                    {
+                        kappa 0.0262;
+                    }
+                    wconcentrationTransport
+                    {
+                        D [0 2 -1 0 0 0 0] 2.0E-5;
+                        Sct 0.6;
+                        Cp [0 2 -2 -1 0 0 0] 1930.0;
+                    }
+                    referenceFields
+                    {
+                        p [1 -1 -2 0 0 0 0] 101325.0;
+                        T [0 0 0 1 0 0 0] 0.0;
+                    }
+                    buoyancyModel rhoModel;
+                }
+            }
+            constant
+            {
+                g
+                {
+                    dimensions [0  1 -2  0 0 0 0];
+                    value ( 0.0 0.0 -9.81 );
+                }
+                turbulenceProperties
+                {
+                    simulationType RAS;
+                    RAS
+                    {
+                        RASModel kOmegaSST;
+                        turbulence on;
+                        printCoeffs on;
+                        kOmegaSSTCoeffs
+                        {
+                            curvature false;
+                        }
+                    }
+                }
+            }
+            system
+            {
+                fvSchemes
+                {
+                    ddtSchemes
+                    {
+                        default steadyState;
+                    }
+                    gradSchemes
+                    {
+                        default cellLimited Gauss linear 1.0;
+                        turbulence cellLimited Gauss linear 1.0;
+                        gradU cellLimited Gauss linear 1.0;
+                        grad(p) leastSquares;
+                        grad(k) cellLimited Gauss linear 1.0;
+                        grad(omega) cellLimited Gauss linear 1.0;
+                        grad(h) cellLimited Gauss linear 1.0;
+                        grad(T) cellLimited Gauss linear 1.0;
+                        grad(e) cellLimited Gauss linear 1.0;
+                        grad(K) cellLimited Gauss linear 1.0;
+                    }
+                    divSchemes
+                    {
+                        div(phi,U) bounded Gauss linearUpwindV gradU;
+                        default none;
+                        div(R) Gauss linear;
+                        div((rho*R)) Gauss linear;
+                        div(nonlinearStress) Gauss linear;
+                        div((muEff*dev2(grad(U).T()))) Gauss linear;
+                        div((nuEff*dev2(T(grad(U))))) Gauss linear;
+                        div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
+                        div((nu*dev2(T(grad(U))))) Gauss linear;
+                        div(((rho*(mu|rho))*dev2(T(grad(U))))) Gauss linear;
+                        div(phi,symm(grad(U))) bounded Gauss linearUpwind turbulence;
+                        div(phi,k) bounded Gauss upwind;
+                        div(phi,omega) bounded Gauss upwind;
+                        div(phi,h) bounded Gauss deferred vanLeer;
+                        div(phi,e) bounded Gauss deferred vanLeer;
+                        div(phi,T) bounded Gauss deferred vanLeer;
+                        div(phi,K) bounded Gauss deferred vanLeer;
+                        div(phiv,p) Gauss deferred vanLeer;
+                    }
+                    laplacianSchemes
+                    {
+                        laplacian((rho*nuEff),U) Gauss linear limited 0.333;
+                        laplacian(rhorAUf,p) Gauss linear limited 0.333;
+                        default Gauss linear limited 0.333;
+                        laplacian((rho*DomegaEff),omega) omegaGauss linear corrected;
+                        laplacian((rho*DkEff),k) Gauss linear limited 0.333;
+                        laplacian(kappa,T) compactGauss linear limited 0.333;
+                    }
+                    interpolationSchemes
+                    {
+                        default linear;
+                        interpolate(HbyA) linear;
+                    }
+                    snGradSchemes
+                    {
+                        default limited 0.333;
+                    }
+                    wallDist
+                    {
+                        method meshWave;
+                    }
+                }
+                fvSolution
+                {
+                    solvers
+                    {
+                        p
+                        {
+                            solver GAMG;
+                            agglomerator faceAreaPair;
+                            mergeLevels 1;
+                            cacheAgglomeration true;
+                            nCellsInCoarsestLevel 200;
+                            smoother symGaussSeidel;
+                            minIter 1;
+                            scaleCorrection true;
+                            tolerance 1e-10;
+                            relTol 0.01;
+                        }
+                        U
+                        {
+                            solver smoothSolver;
+                            smoother symGaussSeidel;
+                            minIter 1;
+                            tolerance 1e-6;
+                            relTol 0.1;
+                            nSweeps 2;
+                        }
+                        k
+                        {
+                            solver smoothSolver;
+                            smoother symGaussSeidel;
+                            minIter 1;
+                            tolerance 1e-06;
+                            relTol 0.1;
+                        }
+                        omega
+                        {
+                            solver smoothSolver;
+                            smoother symGaussSeidel;
+                            minIter 1;
+                            tolerance 1e-06;
+                            relTol 0.1;
+                        }
+                        h
+                        {
+                            solver GAMG;
+                            agglomerator algebraicPair;
+                            mergeLevels 1;
+                            cacheAgglomeration true;
+                            nCellsInCoarsestLevel 200;
+                            smoother symGaussSeidel;
+                            minIter 1;
+                            maxIter 20;
+                            scaleCorrection true;
+                            tolerance 1e-7;
+                            relTol 0.001;
+                        }
+                        e
+                        {
+                            solver GAMG;
+                            agglomerator algebraicPair;
+                            mergeLevels 1;
+                            cacheAgglomeration true;
+                            nCellsInCoarsestLevel 200;
+                            smoother symGaussSeidel;
+                            minIter 1;
+                            maxIter 20;
+                            scaleCorrection true;
+                            tolerance 1e-7;
+                            relTol 0.001;
+                        }
+                        T
+                        {
+                            solver GAMG;
+                            agglomerator algebraicPair;
+                            mergeLevels 1;
+                            cacheAgglomeration true;
+                            nCellsInCoarsestLevel 200;
+                            smoother symGaussSeidel;
+                            minIter 1;
+                            maxIter 20;
+                            scaleCorrection true;
+                            tolerance 1e-7;
+                            relTol 0.001;
+                        }
+                    }
+                    relaxationFactors
+                    {
+                        fields
+                        {
+                            p 1.0;
+                            rho 0.05;
+                        }
+                        equations
+                        {
+                            U 0.9;
+                            k 0.7;
+                            omega 0.7;
+                            h 0.9;
+                            e 0.9;
+                            T 0.9;
+                        }
+                    }
+                    SIMPLE
+                    {
+                        residualControl
+                        {
+                            U 1.0E-5;
+                            p 1.0E-5;
+                            k 1.0E-5;
+                            omega 1.0E-5;
+                            T 1.0E-5;
+                            h 1.0E-5;
+                            e 1.0E-5;
+                        }
+                        nNonOrthogonalCorrectors 0;
+                        pRefCell 0;
+                        pRefValue 0;
+                        pMin -1e10;
+                        pMax 1e10;
+                        modifiedMomentumInterp true;
+                        consistent true;
+                        transonic false;
+                    }
+                    cache
+                    {
+                        grad(U) ;
+                    }
+                }
+                fvOptions
+                {
+                    flowSolver
+                    {
+                        type rhieChowFlowSolver;
+                    }
+                    fluidEnergySolver
+                    {
+                        type fluidEnergySolver;
+                    }
+                    turbulenceSolver
+                    {
+                        type turbulenceSolver;
+                    }
+                }
+            }
+            fields
+            {
+                U
+                {
+                    initialisation
+                    {
+                        type fixedValue;
+                        value uniform ( 0.0 0.0 0.0 );
+                    }
+                }
+                p
+                {
+                    initialisation
+                    {
+                        type buoyantPressure;
+                    }
+                }
+                k
+                {
+                    initialisation
+                    {
+                        type turbulentIL;
+                        I 0.05;
+                        L 0.01;
+                        Uref 1.0;
+                    }
+                }
+                omega
+                {
+                    initialisation
+                    {
+                        type turbulentIL;
+                        I 0.05;
+                        L 0.01;
+                        Uref 1.0;
+                    }
+                }
+                T
+                {
+                    initialisation
+                    {
+                        type fixedValue;
+                        value uniform 300.0;
+                    }
+                }
+            }
+            boundaryConditions
+            {
+                outside
+                {
+                    U
+                    {
+                        type wallVelocity;
+                        value uniform ( 0.0 0.0 0.0 );
+                    }
+                    p
+                    {
+                        type fixedFluxPressure;
+                        value uniform 0.0;
+                    }
+                    T
+                    {
+                        type turbulentHeatFluxTemperature;
+                        value uniform 300.0;
+                        q uniform 0.0;
+                        heatSource flux;
+                        kappaMethod fluidThermo;
+                        kappaName none;
+                    }
+                    k
+                    {
+                        type kqRWallFunction;
+                        value uniform 1e-20;
+                    }
+                    omega
+                    {
+                        type knopOmegaWallFunction;
+                        value uniform 1;
+                    }
+                    nut
+                    {
+                        type nutUTabulatedWallFunction;
+                        value uniform 0.001;
+                    }
+                }
+                opening
+                {
+                    U
+                    {
+                        type pressureVelocity;
+                        value uniform ( 0.0 0.0 0.0 );
+                    }
+                    p
+                    {
+                        type totalPressure;
+                        value uniform 0.0;
+                        p0 uniform 0.0;
+                        gamma 1.4;
+                        addStaticHead true;
+                        integrateStaticHead false;
+                    }
+                    T
+                    {
+                        type inletOutlet;
+                        value uniform 300.0;
+                        inletValue uniform 300.0;
+                    }
+                    k
+                    {
+                        type turbulentIntensityKineticEnergyInlet;
+                        value uniform 0.1;
+                        intensity 0.05;
+                    }
+                    omega
+                    {
+                        type turbulentMixingLengthFrequencyInlet;
+                        value uniform 0.01;
+                        mixingLength 0.01;
+                    }
+                    nut
+                    {
+                        type calculated;
+                        value uniform 0.001;
+                    }
+                }
+                cool_air_to_pipe
+                {
+                    U
+                    {
+                        type wallVelocity;
+                        value uniform ( 0.0 0.0 0.0 );
+                    }
+                    p
+                    {
+                        type fixedFluxPressure;
+                        value uniform 0.0;
+                    }
+                    T
+                    {
+                        type regionCoupledEnergyFlux;
+                        value uniform 300.0;
+                    }
+                    k
+                    {
+                        type kqRWallFunction;
+                        value uniform 1e-20;
+                    }
+                    omega
+                    {
+                        type knopOmegaWallFunction;
+                        value uniform 1;
+                    }
+                    nut
+                    {
+                        type nutUTabulatedWallFunction;
+                        value uniform 0.001;
+                    }
+                }
+            }
+        }
+        hot_air
+        {
+            state (steady ras energy);
+            boundaryMesh
+            {
+                inlet
+                {
+                    type inlet;
+                }
+                outlet
+                {
+                    type outlet;
+                }
+                hot_air_to_pipe
+                {
+                    type mappedWall;
+                    sampleMode nearestPatchFaceAMI;
+                    sampleRegion pipe;
+                    samplePatch pipe_to_hot_air;
+                }
+            }
+            turbulenceModel kOmegaSST;
+            materials (air);
+            materialProperties
+            {
+                air
+                {
+                    materialName air;
+                    materialType fluid;
+                    molWeight 28.96;
+                    energy sensibleEnthalpy;
+                    equationOfState perfectGas;
+                    equationOfStateCoeffs
+                    {
+                    }
+                    muModel scalarFunction1;
+                    muModelCoeffs
+                    {
+                        mu constant 1.846E-5;
+                    }
+                    thermodynamics hConst;
+                    thermodynamicsCoeffs
+                    {
+                        Hf 0.0;
+                        Cp 1004.9;
+                    }
+                    kappaModel scalarFunction1;
+                    kappaModelCoeffs
+                    {
+                        kappa 0.0262;
+                    }
+                    wconcentrationTransport
+                    {
+                        D [0 2 -1 0 0 0 0] 2.0E-5;
+                        Sct 0.6;
+                        Cp [0 2 -2 -1 0 0 0] 1930.0;
+                    }
+                    referenceFields
+                    {
+                        p [1 -1 -2 0 0 0 0] 101325.0;
+                        T [0 0 0 1 0 0 0] 0.0;
+                    }
+                    buoyancyModel none;
+                }
+            }
+            constant
+            {
+                g
+                {
+                    value ( 0.0 0.0 -9.81 );
+                    dimensions [0  1 -2  0 0 0 0];
+                }
+                turbulenceProperties
+                {
+                    simulationType RAS;
+                    RAS
+                    {
+                        RASModel kOmegaSST;
+                        turbulence on;
+                        printCoeffs on;
+                        kOmegaSSTCoeffs
+                        {
+                            curvature false;
+                        }
+                    }
+                }
+            }
+            system
+            {
+                fvSchemes
+                {
+                    ddtSchemes
+                    {
+                        default steadyState;
+                    }
+                    gradSchemes
+                    {
+                        default cellLimited Gauss linear 1.0;
+                        turbulence cellLimited Gauss linear 1.0;
+                        gradU cellLimited Gauss linear 1.0;
+                        grad(p) cellLimited Gauss linear 1.0;
+                        grad(k) cellLimited Gauss linear 1.0;
+                        grad(omega) cellLimited Gauss linear 1.0;
+                        grad(h) cellLimited Gauss linear 1.0;
+                        grad(T) cellLimited Gauss linear 1.0;
+                        grad(e) cellLimited Gauss linear 1.0;
+                        grad(K) cellLimited Gauss linear 1.0;
+                    }
+                    divSchemes
+                    {
+                        div(phi,U) bounded Gauss linearUpwindV gradU;
+                        default none;
+                        div(R) Gauss linear;
+                        div((rho*R)) Gauss linear;
+                        div(nonlinearStress) Gauss linear;
+                        div((muEff*dev2(grad(U).T()))) Gauss linear;
+                        div((nuEff*dev2(T(grad(U))))) Gauss linear;
+                        div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
+                        div((nu*dev2(T(grad(U))))) Gauss linear;
+                        div(((rho*(mu|rho))*dev2(T(grad(U))))) Gauss linear;
+                        div(phi,symm(grad(U))) bounded Gauss linearUpwind turbulence;
+                        div(phi,k) bounded Gauss upwind;
+                        div(phi,omega) bounded Gauss upwind;
+                        div(phi,h) bounded Gauss deferred vanLeer;
+                        div(phi,e) bounded Gauss deferred vanLeer;
+                        div(phi,T) bounded Gauss deferred vanLeer;
+                        div(phi,K) bounded Gauss deferred vanLeer;
+                        div(phiv,p) Gauss deferred vanLeer;
+                    }
+                    laplacianSchemes
+                    {
+                        laplacian((rho*nuEff),U) Gauss linear limited 0.333;
+                        laplacian(rhorAUf,p) Gauss linear limited 0.333;
+                        default Gauss linear limited 0.333;
+                        laplacian((rho*DomegaEff),omega) omegaGauss linear corrected;
+                        laplacian((rho*DkEff),k) Gauss linear limited 0.333;
+                        laplacian(kappa,T) compactGauss linear limited 0.333;
+                    }
+                    interpolationSchemes
+                    {
+                        default linear;
+                        interpolate(HbyA) linear;
+                    }
+                    snGradSchemes
+                    {
+                        default limited 0.333;
+                    }
+                    wallDist
+                    {
+                        method meshWave;
+                    }
+                }
+                fvSolution
+                {
+                    solvers
+                    {
+                        p
+                        {
+                            solver GAMG;
+                            agglomerator faceAreaPair;
+                            mergeLevels 1;
+                            cacheAgglomeration true;
+                            nCellsInCoarsestLevel 200;
+                            smoother symGaussSeidel;
+                            minIter 1;
+                            scaleCorrection true;
+                            tolerance 1e-10;
+                            relTol 0.01;
+                        }
+                        U
+                        {
+                            solver smoothSolver;
+                            smoother symGaussSeidel;
+                            minIter 1;
+                            tolerance 1e-6;
+                            relTol 0.1;
+                            nSweeps 2;
+                        }
+                        k
+                        {
+                            solver smoothSolver;
+                            smoother symGaussSeidel;
+                            minIter 1;
+                            tolerance 1e-06;
+                            relTol 0.1;
+                        }
+                        omega
+                        {
+                            solver smoothSolver;
+                            smoother symGaussSeidel;
+                            minIter 1;
+                            tolerance 1e-06;
+                            relTol 0.1;
+                        }
+                        h
+                        {
+                            solver GAMG;
+                            agglomerator algebraicPair;
+                            mergeLevels 1;
+                            cacheAgglomeration true;
+                            nCellsInCoarsestLevel 200;
+                            smoother symGaussSeidel;
+                            minIter 1;
+                            maxIter 20;
+                            scaleCorrection true;
+                            tolerance 1e-7;
+                            relTol 0.001;
+                        }
+                        e
+                        {
+                            solver GAMG;
+                            agglomerator algebraicPair;
+                            mergeLevels 1;
+                            cacheAgglomeration true;
+                            nCellsInCoarsestLevel 200;
+                            smoother symGaussSeidel;
+                            minIter 1;
+                            maxIter 20;
+                            scaleCorrection true;
+                            tolerance 1e-7;
+                            relTol 0.001;
+                        }
+                        T
+                        {
+                            solver GAMG;
+                            agglomerator algebraicPair;
+                            mergeLevels 1;
+                            cacheAgglomeration true;
+                            nCellsInCoarsestLevel 200;
+                            smoother symGaussSeidel;
+                            minIter 1;
+                            maxIter 20;
+                            scaleCorrection true;
+                            tolerance 1e-7;
+                            relTol 0.001;
+                        }
+                    }
+                    relaxationFactors
+                    {
+                        fields
+                        {
+                            p 1.0;
+                            rho 0.05;
+                        }
+                        equations
+                        {
+                            U 0.9;
+                            k 0.7;
+                            omega 0.7;
+                            h 0.9;
+                            e 0.9;
+                            T 0.9;
+                        }
+                    }
+                    SIMPLE
+                    {
+                        residualControl
+                        {
+                            U 1.0E-5;
+                            p 1.0E-5;
+                            k 1.0E-5;
+                            omega 1.0E-5;
+                            T 1.0E-5;
+                            h 1.0E-5;
+                            e 1.0E-5;
+                        }
+                        nNonOrthogonalCorrectors 0;
+                        pRefCell 0;
+                        pRefValue 0;
+                        pMin -1e10;
+                        pMax 1e10;
+                        modifiedMomentumInterp true;
+                        consistent true;
+                        transonic false;
+                    }
+                    cache
+                    {
+                        grad(U) ;
+                    }
+                }
+                fvOptions
+                {
+                    flowSolver
+                    {
+                        type rhieChowFlowSolver;
+                    }
+                    fluidEnergySolver
+                    {
+                        type fluidEnergySolver;
+                    }
+                    turbulenceSolver
+                    {
+                        type turbulenceSolver;
+                    }
+                }
+            }
+            fields
+            {
+                U
+                {
+                    initialisation
+                    {
+                        type potentialFlow;
+                        initialiseUBCs true;
+                        rhoRef 1.205;
+                    }
+                }
+                p
+                {
+                    initialisation
+                    {
+                        type potentialFlow;
+                    }
+                }
+                k
+                {
+                    initialisation
+                    {
+                        type turbulentIL;
+                        I 0.05;
+                        L 0.01;
+                        Uref 1.0;
+                    }
+                }
+                omega
+                {
+                    initialisation
+                    {
+                        type turbulentIL;
+                        I 0.05;
+                        L 0.01;
+                        Uref 1.0;
+                    }
+                }
+                T
+                {
+                    initialisation
+                    {
+                        type fixedValue;
+                        value uniform 300.0;
+                    }
+                }
+            }
+            boundaryConditions
+            {
+                inlet
+                {
+                    U
+                    {
+                        type uniformFixedValue;
+                        value uniform ( 0.0 0.0 0.0 );
+                        uniformValue constant ( 10.0 0.0 0.0 );
+                    }
+                    p
+                    {
+                        type fixedFluxPressure;
+                        value uniform 0.0;
+                    }
+                    T
+                    {
+                        type fixedValue;
+                        value uniform 400.0;
+                    }
+                    k
+                    {
+                        type turbulentIntensityKineticEnergyInlet;
+                        value uniform 0.1;
+                        intensity 0.05;
+                    }
+                    omega
+                    {
+                        type turbulentMixingLengthFrequencyInlet;
+                        value uniform 0.01;
+                        mixingLength 0.01;
+                    }
+                    nut
+                    {
+                        type calculated;
+                        value uniform 0.001;
+                    }
+                }
+                outlet
+                {
+                    U
+                    {
+                        type pressureVelocity;
+                        value uniform ( 0.0 0.0 0.0 );
+                    }
+                    p
+                    {
+                        type fixedValue;
+                        value uniform 0.0;
+                    }
+                    T
+                    {
+                        type inletOutlet;
+                        value uniform 300.0;
+                        inletValue uniform 300.0;
+                    }
+                    k
+                    {
+                        type turbulentIntensityKineticEnergyInlet;
+                        intensity 0.05;
+                        value uniform 0.1;
+                    }
+                    omega
+                    {
+                        type turbulentMixingLengthFrequencyInlet;
+                        mixingLength 0.01;
+                        k k;
+                        value uniform 0.01;
+                    }
+                    nut
+                    {
+                        type calculated;
+                        value uniform 0.001;
+                    }
+                }
+                hot_air_to_pipe
+                {
+                    U
+                    {
+                        type wallVelocity;
+                        value uniform ( 0.0 0.0 0.0 );
+                    }
+                    p
+                    {
+                        type fixedFluxPressure;
+                        value uniform 0.0;
+                    }
+                    T
+                    {
+                        type regionCoupledEnergyFlux;
+                        value uniform 300.0;
+                    }
+                    k
+                    {
+                        type kqRWallFunction;
+                        value uniform 1e-20;
+                    }
+                    omega
+                    {
+                        type knopOmegaWallFunction;
+                        value uniform 1;
+                    }
+                    nut
+                    {
+                        type nutUTabulatedWallFunction;
+                        value uniform 0.001;
+                    }
+                }
+            }
+        }
+        pipe
+        {
+            state (steady solid);
+            boundaryMesh
+            {
+                pipe
+                {
+                    type wall;
+                }
+                pipe_to_hot_air
+                {
+                    type mappedWall;
+                    sampleMode nearestPatchFaceAMI;
+                    sampleRegion hot_air;
+                    samplePatch hot_air_to_pipe;
+                }
+                pipe_to_cool_air
+                {
+                    type mappedWall;
+                    sampleMode nearestPatchFaceAMI;
+                    sampleRegion cool_air;
+                    samplePatch cool_air_to_pipe;
+                }
+            }
+            turbulenceModel laminar;
+            materials (steel);
+            materialProperties
+            {
+                steel
+                {
+                    materialName steel;
+                    materialType solid;
+                    molWeight 55.85;
+                    energy sensibleEnthalpy;
+                    equationOfState rhoConst;
+                    equationOfStateCoeffs
+                    {
+                        rho 7740.0;
+                    }
+                    thermodynamics hConst;
+                    thermodynamicsCoeffs
+                    {
+                        Hf 0.0;
+                        Cp 490.0;
+                    }
+                    kappaModel constSolid;
+                    kappaModelCoeffs
+                    {
+                        anisotropic false;
+                        kappa 1.0;
+                    }
+                    buoyancyModel none;
+                }
+            }
+            constant
+            {
+                g
+                {
+                    value ( 0.0 0.0 -9.81 );
+                    dimensions [0  1 -2  0 0 0 0];
+                }
+            }
+            system
+            {
+                fvSchemes
+                {
+                    ddtSchemes
+                    {
+                        default steadyState;
+                    }
+                    gradSchemes
+                    {
+                        default Gauss linear;
+                        grad(h) Gauss linear;
+                        grad(T) Gauss linear;
+                        grad(e) Gauss linear;
+                        grad(K) Gauss linear;
+                    }
+                    divSchemes
+                    {
+                        default none;
+                    }
+                    laplacianSchemes
+                    {
+                        default Gauss linear uncorrected;
+                        laplacian(kappa,T) compactGauss linear limited 0.333;
+                    }
+                    interpolationSchemes
+                    {
+                        default linear;
+                    }
+                    snGradSchemes
+                    {
+                        default uncorrected;
+                    }
+                    wallDist
+                    {
+                        method meshWave;
+                    }
+                    fluxRequired
+                    {
+                        default no;
+                    }
+                }
+                fvSolution
+                {
+                    solvers
+                    {
+                        h
+                        {
+                            solver GAMG;
+                            agglomerator faceAreaPair;
+                            mergeLevels 1;
+                            cacheAgglomeration true;
+                            nCellsInCoarsestLevel 200;
+                            smoother symGaussSeidel;
+                            minIter 1;
+                            maxIter 20;
+                            scaleCorrection true;
+                            tolerance 1e-7;
+                            relTol 0.001;
+                        }
+                        e
+                        {
+                            solver GAMG;
+                            agglomerator faceAreaPair;
+                            mergeLevels 1;
+                            cacheAgglomeration true;
+                            nCellsInCoarsestLevel 200;
+                            smoother symGaussSeidel;
+                            minIter 1;
+                            maxIter 20;
+                            scaleCorrection true;
+                            tolerance 1e-7;
+                            relTol 0.001;
+                        }
+                        T
+                        {
+                            solver GAMG;
+                            agglomerator faceAreaPair;
+                            mergeLevels 1;
+                            cacheAgglomeration true;
+                            nCellsInCoarsestLevel 200;
+                            smoother symGaussSeidel;
+                            minIter 1;
+                            maxIter 20;
+                            scaleCorrection true;
+                            tolerance 1e-7;
+                            relTol 0.001;
+                        }
+                        e_h
+                        {
+                            solver smoothSolver;
+                            smoother symGaussSeidel;
+                            minIter 1;
+                            tolerance 1e-6;
+                            relTol 0.1;
+                        }
+                        T_h
+                        {
+                            solver smoothSolver;
+                            smoother symGaussSeidel;
+                            minIter 1;
+                            tolerance 1e-6;
+                            relTol 0.1;
+                        }
+                        T_e
+                        {
+                            solver smoothSolver;
+                            smoother symGaussSeidel;
+                            minIter 1;
+                            tolerance 1e-6;
+                            relTol 0.1;
+                        }
+                        T_e_h
+                        {
+                            solver smoothSolver;
+                            smoother symGaussSeidel;
+                            minIter 1;
+                            tolerance 1e-6;
+                            relTol 0.1;
+                        }
+                    }
+                    relaxationFactors
+                    {
+                        fields
+                        {
+                        }
+                        equations
+                        {
+                            h 0.999;
+                            e 0.999;
+                            T 0.999;
+                        }
+                    }
+                    SIMPLE
+                    {
+                        residualControl
+                        {
+                            T 1.0E-5;
+                            h 1.0E-5;
+                            e 1.0E-5;
+                        }
+                        nNonOrthogonalCorrectors 0;
+                        consistent false;
+                        transonic false;
+                    }
+                }
+                fvOptions
+                {
+                    solidHeatConductionSolver
+                    {
+                        type solidHeatConductionSolver;
+                    }
+                    turbulenceSolver
+                    {
+                        type turbulenceSolver;
+                    }
+                }
+            }
+            fields
+            {
+                T
+                {
+                    initialisation
+                    {
+                        type fixedValue;
+                        value uniform 380.0;
+                    }
+                }
+            }
+            boundaryConditions
+            {
+                pipe
+                {
+                    T
+                    {
+                        type turbulentHeatFluxTemperature;
+                        value uniform 300.0;
+                        q uniform 0.0;
+                        heatSource flux;
+                        kappaMethod solidThermo;
+                        kappaName none;
+                    }
+                }
+                pipe_to_hot_air
+                {
+                    T
+                    {
+                        type regionCoupledEnergyFlux;
+                        value uniform 300.0;
+                    }
+                }
+                pipe_to_cool_air
+                {
+                    T
+                    {
+                        type regionCoupledEnergyFlux;
+                        value uniform 300.0;
+                    }
+                }
+            }
+        }
+    }

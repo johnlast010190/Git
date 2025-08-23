@@ -1,0 +1,120 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+castellatedMesh on;
+snap            on;
+addLayers       off;
+
+blockType block;
+
+geometry
+{
+    fixed.obj
+    {
+        type triSurfaceMesh;
+        name fixed;
+        regions
+        {
+            patch0 { name slipWall; }
+            patch1 { name outlet; }
+            patch2 { name inlet; }
+        }
+    }
+    rotatingZone.obj
+    {
+        type triSurfaceMesh;
+        name rotatingZone;
+    }
+};
+
+castellatedMeshControls
+{
+    features
+    (
+    );
+
+    refinementSurfaces
+    {
+        fixed
+        {
+            level       (2 2);
+            patchInfo   { type wall; }
+            inGroups    (fixed);
+
+            regions
+            {
+                patch0
+                {
+                    level (2 2);
+                    patchInfo { type slip; }
+                }
+
+                patch1
+                {
+                    level (2 2);
+                    patchInfo { type patch; }
+                }
+
+                patch2
+                {
+                    level (2 2);
+                    patchInfo { type patch; }
+                }
+            }
+        }
+        rotatingZone
+        {
+            level       (4 4);
+            faceZone    rotatingZone;
+            cellZone    rotatingZone;
+            cellZoneInside  inside;
+        }
+
+    }
+
+    refinementRegions
+    {
+        fixed
+        {
+            mode inside;
+            levels ((1e-5 1));
+        }
+        rotatingZone
+        {
+            mode inside;
+            levels ((1e-5 4));
+        }
+    }
+
+    locationInMesh (0 0.1 0);
+
+    allowFreeStandingZoneFaces true;
+}
+
+snapControls
+{
+    featureEdges {}
+}
+
+addLayersControls
+{
+    layers {}
+}
+
+
+// ************************************************************************* //

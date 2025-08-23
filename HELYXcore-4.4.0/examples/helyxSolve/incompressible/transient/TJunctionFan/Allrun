@@ -1,0 +1,22 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+helyxRun blockMesh
+
+# Create faceZones for baffles and fan
+helyxRun topoSet
+
+helyxRun caseSetup
+
+# Create wall and cyclic baffles and the fields on them
+helyxRun createBaffles -overwrite
+
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch TJunctionFan.foam
+
+# -----------------------------------------------------------------------------

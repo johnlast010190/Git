@@ -1,0 +1,41 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/coil/vr1-coil/0/volumeReport.dat";
+                reference "verification/short/coil/vr1-coil/0/volumeReport.dat";
+                variables "Tmax" "Tmean";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/stator/vr1-stator/0/volumeReport.dat";
+                reference "verification/short/stator/vr1-stator/0/volumeReport.dat";
+                variables "Tmax" "Tmean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/coil/vr1-coil/0/volumeReport.dat";
+                reference "verification/long/coil/vr1-coil/0/volumeReport.dat";
+                variables "Tmax" "Tmean";
+            }
+            {
+                result "postProcessing/stator/vr1-stator/0/volumeReport.dat";
+                reference "verification/long/stator/vr1-stator/0/volumeReport.dat";
+                variables "Tmax" "Tmean";
+            }
+        );
+    }
+);

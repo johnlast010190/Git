@@ -1,0 +1,79 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      createPatchDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Do a synchronisation of coupled points after creation of any patches.
+// Note: this does not work with points that are on multiple coupled patches
+//       with transformations (i.e. cyclics).
+pointSync false;
+
+// Patches to create
+patches
+(
+    {
+        // Master side patch
+        name            AMI_rotor;
+        patchInfo
+        {
+            type            cyclicAMI;
+            matchTolerance  0.0001;
+            neighbourPatch  AMI_rotor_slave;
+        }
+        constructFrom patches;
+        patches (v_rotor);
+    }
+
+    {
+        // Slave side patch
+        name            AMI_rotor_slave;
+        patchInfo
+        {
+            type            cyclicAMI;
+            matchTolerance  0.0001;
+            neighbourPatch  AMI_rotor;
+        }
+        constructFrom patches;
+        patches (v_rotor_slave);
+    }
+
+    {
+        // Master side patch
+        name            AMI_dualWing;
+        patchInfo
+        {
+            type            cyclicAMI;
+            matchTolerance  0.0001;
+            neighbourPatch  AMI_dualWing_slave;
+        }
+        constructFrom patches;
+        patches (v_dualWing);
+    }
+
+    {
+        // Slave side patch
+        name            AMI_dualWing_slave;
+        patchInfo
+        {
+            type            cyclicAMI;
+            matchTolerance  0.0001;
+            neighbourPatch  AMI_dualWing;
+        }
+        constructFrom patches;
+        patches (v_dualWing_slave);
+    }
+);
+
+
+// ************************************************************************* //

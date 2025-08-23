@@ -1,0 +1,121 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : 4.4.0
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) 2014-2015 OpenFOAM Foundation
+
+Class
+    Foam::eulerianDragModels::segregated
+
+Description
+    Segregated drag model for use in regions with no obvious dispersed phase.
+
+    Reference:
+    \verbatim
+        "Towards the Numerical Simulation of Multi-scale Two-phase Flows",
+        Marschall, H.,
+        PhD Thesis, TU München, 2011
+    \endverbatim
+
+SourceFiles
+    segregated.C
+
+\*---------------------------------------------------------------------------*/
+
+#ifndef segregated_H
+#define segregated_H
+
+#include "../eulerianDragModel/eulerianDragModel.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+class eulerianPhasePair;
+
+namespace eulerianDragModels
+{
+
+/*---------------------------------------------------------------------------*\
+                           Class segregated Declaration
+\*---------------------------------------------------------------------------*/
+
+class segregated
+:
+    public eulerianDragModel
+{
+    // Private data
+
+        //- M coefficient
+        const dimensionedScalar m_;
+
+        //- N coefficient
+        const dimensionedScalar n_;
+
+
+public:
+
+    //- Runtime type information
+    TypeName("segregated");
+
+
+    // Constructors
+
+        //- Construct from components
+        segregated
+        (
+            const dictionary& dict,
+            const eulerianPhasePair& pair,
+            const bool registerObject
+        );
+
+
+    //- Destructor
+    virtual ~segregated();
+
+
+    // Member Functions
+
+        //- Drag coefficient
+        virtual tmp<volScalarField> CdRe() const;
+
+        //- The drag function used in the momentum equation
+        virtual tmp<volScalarField> K() const;
+
+        //- The drag function Kf used in the face-momentum equations
+        virtual tmp<surfaceScalarField> Kf() const;
+};
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace eulerianDragModels
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

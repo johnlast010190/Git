@@ -1,0 +1,171 @@
+#!/bin/bash
+#---------------------------------------------------------------------------
+#|       o        |
+#|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+#|   o   O   o    |  Version : 4.4.0
+#|    o     o     |  ENGYS Ltd. <http://engys.com/>
+#|       o        |
+#---------------------------------------------------------------------------
+#License
+#    This file is part of HELYXcore.
+#    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+#
+#    HELYXcore is free software: you can redistribute it and/or modify it
+#    under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+#    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+#    for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+#
+#Copyright
+#    (c) 2020 Engys Ltd.
+#
+# Description
+#     This script replaces OpenFOAM-style variables (with WM_ or FOAM_ prefixes)
+#     with HELYX-style variables (with HELYX_ prefix).  It can be used either
+#     on single files, or directories (with the -r flag).
+#
+#------------------------------------------------------------------------------
+
+
+printHelp() {
+cat <<HELP
+
+This script replaces OpenFOAM-style variables (with WM_ or FOAM_ prefixes) with
+HELYX-style variables (with HELYX_ prefix).  It can be used either on single
+files, or directories (with the -r flag).
+
+It's a very simple script, and users with more complex requirements should see
+it as a guideline and lookup table.
+
+    ${0##*/} [flags] <target>
+
+    target
+        Specifies a path to a file or directory.  Directories will only be
+        parsed if the -r flag is specified (see below).
+
+    -r
+        Recurse into a directory.
+
+    -h
+        Print this help string.
+
+    -n
+        Print variables that will be replaced, but don't do the replacement.
+
+HELP
+}
+
+printOnly=false
+recurse=false
+
+# parse options
+while [ "$#" -gt 0 ]
+do
+    case "$1" in
+    -h | -help)
+        printHelp
+        exit 0
+        ;;
+    -r)
+        recurse=true
+        shift
+        ;;
+    -n)
+        printOnly=true
+        shift
+        ;;
+    -*)
+        printHelp
+        echo "unknown option: '$*'"
+        shift
+        exit 1
+        ;;
+    *)
+        break
+        ;;
+    esac
+done
+
+if [ $# != 1 ]; then
+    echo "${0##*/} requires exactly one arugment, but it received $#:"
+    while (( "$#" )); do
+        echo "    $1"
+        shift
+    done
+    exit 1
+fi
+
+if [[ -d $1 ]]; then
+    if [[ "true" != "$recurse" ]]; then
+        echo "$1 is a directory, but the -r flag was not set"
+        echo "Set the -r flag to work on directories"
+        exit 2
+    else
+        interesting_directory=$1
+    fi
+elif [[ -f $1 ]]; then
+    files=("$1")
+fi
+
+declare -A variable_map
+# N.B.  Replace WM_PROJECT_DIR *before* replacing WM_PROJECT...
+variable_map["WM_PROJECT_DIR"]="HELYX_PROJECT_DIR"
+variable_map["WM_PROJECT_SITE"]="HELYX_PROJECT_SITE"
+variable_map["WM_PROJECT_INST_DIR"]="HELYX_PROJECT_DIR\/\.\."
+variable_map["FOAM_MOD"]="HELYX_MODULES"
+variable_map["FOAM_SRC"]="HELYX_SRC"
+variable_map["FOAM_TUTORIALS"]="HELYX_TUTORIALS"
+variable_map["FOAM_APP"]="HELYX_APPLICATIONS"
+variable_map["FOAM_ETC"]="HELYX_ETC"
+variable_map["FOAM_MOD"]="HELYX_MODULES"
+variable_map["FOAM_UTILITIES"]="HELYX_UTILITIES"
+variable_map["FOAM_SOLVERS"]="HELYX_SOLVERS"
+variable_map["WM_LABEL_SIZE"]="HELYX_LABEL_SIZE"
+variable_map["WM_LABEL_OPTION"]='Int${HELYX_LABEL_SIZE}'
+variable_map["WM_COMPILE_OPTION"]="CMAKE_BUILD_TYPE"
+variable_map["FOAM_LIBBIN"]="CMAKE_LIBRARY_OUTPUT_DIRECTORY"
+variable_map["FOAM_APPBIN"]="CMAKE_RUNTIME_OUTPUT_DIRECTORY"
+variable_map["WM_OSTYPE"]="HELYX_SYSTEM_NAME"
+variable_map["WM_PROJECT_VERSION"]="HELYX_PROJECT_VERSION"
+variable_map["WM_THIRD_PARTY_DIR"]="HELYX_THIRDPARTY_DIR"
+variable_map["WM_THIRDPARTY_VERSION"]="HELYX_THIRDPARTY_VERSION"
+variable_map["WM_PACKAGE_NAME"]="HELYX_PACKAGE_NAME"
+variable_map["FOAM_USER_LIBBIN"]="HELYX_USER_LIBBIN"
+variable_map["FOAM_USER_APPBIN"]="HELYX_USER_APPBIN"
+variable_map["WM_OPTIONS"]="HELYX_OPTIONS"
+variable_map["WM_PRECISION_OPTION"]="HELYX_PRECISION_OPTION"
+variable_map["WM_PROJECT"]="CMAKE_PROJECT_NAME"
+variable_map["WM_ARCH"]="HELYX_BUILD_PLATFORM"
+variable_map["WM_CXXFLAGS"]="CMAKE_CXX_FLAGS"
+variable_map["WM_CFLAGS"]="CMAKE_C_FLAGS"
+variable_map["FOAM_MPI"]="HELYX_MPI_NAME"
+variable_map["WM_CC"]="CMAKE_C_COMPILER"
+variable_map["WM_CXX"]="CMAKE_CXX_COMPILER"
+variable_map["WM_COMPILER"]="HELYX_COMPILER"
+
+
+for key in "${!variable_map[@]}"; do
+
+    if [[ "true" == "$recurse" ]]; then
+        files=($(grep -FIrl "$key" --exclude-dir={.git,Make,config.*,cmake} $interesting_directory))
+    fi
+
+    for interesting_file in "${files[@]}"; do
+
+        if [[ "true" == "$printOnly" ]]; then
+            grep -FHIn "$key" --exclude-dir={.git,Make} "$interesting_file"
+        else
+            echo "$interesting_file", $key
+            sed -i "s/$key/${variable_map[${key}]}/g" "$interesting_file"
+            sed -i "s/\$ENV{/\${/g" "$interesting_file"
+        fi
+
+    done
+done

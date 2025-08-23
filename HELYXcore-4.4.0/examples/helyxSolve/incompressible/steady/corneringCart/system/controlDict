@@ -1,0 +1,117 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     helyxSolve;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         300;
+
+deltaT          1;
+
+writeControl    timeStep;
+
+writeInterval   100;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  10;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   6;
+
+graphFormat     raw;
+
+runTimeModifiable yes;
+
+libs            1 ( "" );
+
+functions
+{
+    vr1
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U p omega k );
+        executeControl  timeStep;
+        type            volumeReport;
+        outputFileFormat tsv;
+    }
+    forces1
+    {
+        functionObjectLibs ( "libforces.so" );
+        directForceDensity false;
+        p               p;
+        U               U;
+        rhoName         rhoInf;
+        rhoInf          1;
+        pRef            0;
+        CofR            ( 0 50 0 );
+        patches         ( "wall.*" );
+        executeControl  timeStep;
+        type            forces;
+        log             true;
+        porosity        true;
+    }
+    ventilationDrag_RF
+    {
+        type            ventilationDrag;
+        patches         ( "wall_r_rotfr_.*" );
+        Uinf            ( 38.89 0 0 );
+        rhoInf          1.293;
+        referenceArea   1.79296625;
+        functionObjectLibs ( "libforces.so" );
+    }
+    ventilationDrag_LF
+    {
+        type            ventilationDrag;
+        patches         ( "wall_l_rotfr_.*" );
+        Uinf            ( 38.89 0 0 );
+        rhoInf          1.293;
+        referenceArea   1.79296625;
+        functionObjectLibs ( "libforces.so" );
+    }
+    ventilationDrag_RR
+    {
+        type            ventilationDrag;
+        patches         ( "wall_l_rotrr_wheel.*" );
+        Uinf            ( 38.89 0 0 );
+        rhoInf          1.293;
+        referenceArea   1.79296625;
+        functionObjectLibs ( "libforces.so" );
+    }
+    ventilationDrag_LR
+    {
+        type            ventilationDrag;
+        patches         ( "wall_r_rotrr_wheel.*" );
+        Uinf            ( 38.89 0 0 );
+        rhoInf          1.293;
+        referenceArea   1.79296625;
+        functionObjectLibs ( "libforces.so" );
+    }
+}
+
+
+// ************************************************************************* //

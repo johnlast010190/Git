@@ -1,0 +1,39 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      setFieldsDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+defaultFieldValues
+(
+    volScalarFieldValue alpha.water 0
+    volVectorFieldValue U ( 0 0 0 )
+);
+
+regions
+(
+    boxToCell
+    {
+        //box ( -1 -0.5 0 ) ( -0.5 0.5 2 );
+        //box ( -0.5 -0.5 1.5 ) ( 1.5 0.5 2 );
+        box ( 0 -0.5 1.5 ) ( 2 0.5 1.75 );
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 1
+        );
+    }
+ );
+
+
+// ************************************************************************* //

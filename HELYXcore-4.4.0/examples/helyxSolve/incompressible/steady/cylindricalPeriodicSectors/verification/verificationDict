@@ -1,0 +1,43 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/SR/0/surfaceReport.tsv";
+                reference "verification/short/SR/0/surfaceReport.tsv";
+                variables "massFlux";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/short/VR/0/volumeReport.tsv";
+                variables "Umean" "pmean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/SR/0/surfaceReport.tsv";
+                reference "verification/long/SR/0/surfaceReport.tsv";
+                variables "massFlux";
+            }
+            {
+                result "postProcessing/VR/0/volumeReport.tsv";
+                reference "verification/long/VR/0/volumeReport.tsv";
+                variables "Umean" "pmean";
+            }
+        );
+    }
+);
+
+tags asan;

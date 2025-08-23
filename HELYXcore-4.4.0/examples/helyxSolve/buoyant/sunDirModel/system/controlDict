@@ -1,0 +1,91 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     helyxSolve;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         14400;
+
+deltaT          constant 5;
+
+writeControl    runTime;
+
+writeInterval   1800;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  10;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   6;
+
+graphFormat     raw;
+
+runTimeModifiable yes;
+
+libs            1 ( "" );
+
+adjustTimeStep  false;
+
+maxCo           1;
+
+maxDeltaT       1;
+
+functions
+{
+    SR
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        weighting       area;
+        fluxName        phi;
+        fields          ( T );
+        surfaces        ( { type patch ; name building ; } );
+        constraints     ( { type boundBox ; min ( -1000 -1000 -1000 ) ; max ( 1000 1000 1000 ) ; keepInside true ; } );
+        executeControl  timeStep;
+        type            surfaceReport;
+        regions         ( region0 );
+        homogeneity     false;
+        writeControl    timeStep;
+        writeInterval   1;
+        executeInterval 1;
+    }
+    VR
+    {
+        functionObjectLibs ( "libreport.so" );
+        logToFile       yes;
+        fields          ( U );
+        executeControl  timeStep;
+        type            volumeReport;
+        regions         ( region0 );
+        writeControl    timeStep;
+        writeInterval   1;
+        executeInterval 1;
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,63 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       polyBoundaryMesh;
+    object      boundary;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+6
+(
+    topAndBottom
+    {
+        type            symmetry;
+        inGroups        1(symmetry);
+        nFaces          72;
+        startFace       25168;
+    }
+    inlet
+    {
+        type            patch;
+        physicalType    inlet;
+        nFaces          40;
+        startFace       25240;
+    }
+    outlet
+    {
+        type            patch;
+        physicalType    outlet;
+        nFaces          62;
+        startFace       25280;
+    }
+    front
+    {
+        type            empty;
+        inGroups        1(empty);
+        nFaces          12559;
+        startFace       25342;
+    }
+    back
+    {
+        type            empty;
+        inGroups        1(empty);
+        nFaces          12559;
+        startFace       37901;
+    }
+    wing
+    {
+        type            wall;
+        inGroups        1(wall);
+        nFaces          378;
+        startFace       50460;
+    }
+)
+
+// ************************************************************************* //

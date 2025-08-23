@@ -1,0 +1,24 @@
+forceCoeffs1
+{
+    type forceCoeffs;
+    functionObjectLibs ("libforces.so");
+    log false;
+    directForceDensity false;
+    
+    pName   p;
+    UName   U;
+    rhoName rhoInf;
+    rhoInf 1.205;
+    pRef 0;
+    CofR (0 0 0); //centre of rotation
+    patches ( wallNames );
+
+    liftDir (0 0 1);
+    dragDir (1 0 0);
+    pitchAxis (0 1 0);
+
+    magUInf 47;
+
+    lRef 0.27;
+    Aref 0.0572555;
+}

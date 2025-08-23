@@ -1,0 +1,33 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/VR1/0/volumeReport.dat";
+                reference "verification/short/VR1/0/volumeReport.dat";
+                variables "U.airmin" "U.airmax" "pmean" "T.airmin" "T.airmax" "T.airmean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/VR1/0/volumeReport.dat";
+                reference "verification/long/VR1/0/volumeReport.dat";
+                variables "U.airmin" "U.airmax" "pmean" "T.airmin" "T.airmax" "T.airmean";
+            }
+        );
+    }
+);
+
+unstable true;
+operatingSystem windows;
+reason "This example uses the `m4` command, which is not available on Windows";

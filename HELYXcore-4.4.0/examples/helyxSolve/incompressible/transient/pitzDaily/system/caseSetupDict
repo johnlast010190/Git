@@ -1,0 +1,214 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom latestTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 0.1;
+            deltaT 1e-4;
+            writeControl adjustableRunTime;
+            writeInterval 0.01;
+            purgeWrite 0;
+            writeFormat ascii;
+            writePrecision 10;
+            writeCompression uncompressed;
+            timeFormat general;
+            timePrecision 6;
+            runTimeModifiable yes;
+            adjustTimeStep yes;
+            maxCo 5;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p );
+            executeControl   timeStep;
+            executeInterval  1;
+            writeControl     timeStep;
+            writeInterval    1;
+            outputFileFormat tsv;
+        }
+        WSS
+        {
+            type             wallShearStress;
+            libs             ("libfieldFunctionObjects.so");
+            executeControl   onEnd;
+            writeControl     onEnd;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (transient ras);
+        boundaryMesh
+        {
+            inlet
+            {
+                type patch;
+            }
+            outlet
+            {
+                type patch;
+            }
+            "(upperWall|lowerWall)"
+            {
+                type wall;
+            }
+            frontAndBack
+            {
+                type empty;
+            }
+        }
+        turbulenceModel kEpsilon;
+        materials (air);
+        materialProperties
+        {
+           referenceFields
+           {
+              p               [ 1 -1 -2 0 0 0 0 ] 100000;
+           }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.375;
+                }
+            }
+            epsilon
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 14.855;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type            fixedValue;
+                    value           uniform (10 0 0);
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+
+                k
+                {
+                    type            fixedValue;
+                    value           uniform 0.375;
+                }
+                epsilon
+                {
+                    type            fixedValue;
+                    value           uniform 14.855;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type zeroGradient;
+                }
+                p
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+                k
+                {
+                    type zeroGradient;
+                }
+                epsilon
+                {
+                    type zeroGradient;
+                }
+            }
+            "(upperWall|lowerWall)"
+            {
+                U
+                {
+                    type noSlip;
+                }
+                p
+                {
+                    type zeroGradient;
+                }
+                k
+                {
+                    type            kqRWallFunction;
+                    value           uniform 0.375;
+                }
+                epsilon
+                {
+                    type            epsilonWallFunction;
+                    value           uniform 14.855;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

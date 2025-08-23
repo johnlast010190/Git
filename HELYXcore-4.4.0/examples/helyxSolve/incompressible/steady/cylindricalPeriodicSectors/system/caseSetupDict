@@ -1,0 +1,135 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields yes;
+        resetBoundaryFields yes;
+        resetSystemDicts yes;
+        resetConstDicts yes;
+        resetBoundaryMesh yes;
+        deleteUnusedFields yes;
+    }
+    regionGroups    1 ( fluid 1 ( region0 ) );
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            stopAt          endTime;
+            endTime         500;
+            deltaT          1;
+            writeControl    timeStep;
+            writeInterval   100;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state           ( steady ras );
+        turbulenceModel laminar;
+        materials       ( air );
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type            potentialFlow;
+                    initialiseUBCs  true;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type            potentialFlow;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type            Prandtl;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type            Prandtl;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type            cylindricalInletVelocity;
+                    centre          (0 0 0);
+                    axis            (0 0 1);
+                    axialVelocity   1;
+                    radialVelocity  0;
+                    rpm             1; // ut=40,r=3e-2,omega=ut/r,rpm=omega*60/(2*pi)
+                    value           uniform (0 0 0);
+                }
+            }
+            outlet
+            {
+                p
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+            }
+        }
+        functions
+        {
+            VR
+            {
+                type             volumeReport;
+                fields           ( U p );
+                executeControl   onEnd;
+                writeControl     onEnd;
+                outputFileFormat tsv;
+            }
+            SR
+            {
+                type             surfaceReport;
+                functionObjectLibs ( "libreport.so" );
+                logToFile        yes;
+                weighting        area;
+                fluxName         phi;
+                fields           ( p );
+                surfaces         ( { type patch ; name outlet ; } );
+                constraints      ( );
+                executeControl   onEnd;
+                writeControl     onEnd;
+                outputFileFormat tsv;
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

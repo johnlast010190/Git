@@ -1,0 +1,1063 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom latestTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 10;
+            deltaT constant 0.2;
+            writeControl timeStep;
+            writeInterval 10;
+            purgeWrite 0;
+            writeFormat ascii;
+            writePrecision 10;
+            writeCompression uncompressed;
+            timeFormat general;
+            timePrecision 6;
+            graphFormat raw;
+            runTimeModifiable yes;
+            adjustTimeStep false;
+            maxCo 0;
+            maxAlphaCo 0;
+            maxDeltaT 0;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( T U k omega p smoke );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+        visibility
+        {
+            type            visibilityIndex;
+            rho             rho;
+            C               3;
+            Lmax            30;
+            kappam          8700;
+            executeControl  timeStep;
+            writeControl    writeTime;
+            libs            ( "libfieldFunctionObjects.so" );
+            regions         1 ( region0 );
+        }
+        SR-gate
+        {
+            type surfaceReport;
+            regions ( region0 );
+            fields ( T U p smoke );
+            weighting flux;
+            fluxName phi;
+            homogeneity false;
+            surfaces
+            (
+                {
+                    type patch;
+                    name gate;
+                }
+            );
+            constraints
+            (
+                {
+                    type boundBox;
+                    min ( -1000.0 -1000.0 -1000.0 );
+                    max ( 1000.0 1000.0 1000.0 );
+                    keepInside true;
+                }
+            );
+            writeControl timeStep;
+            writeInterval 1;
+            executeControl timeStep;
+            executeInterval 1;
+            functionObjectLibs ( "libreport.so" );
+            outputFileFormat tsv;
+        }
+        SR-open1
+        {
+            type surfaceReport;
+            regions ( region0 );
+            fields ( T U p smoke );
+            weighting flux;
+            fluxName phi;
+            homogeneity false;
+            surfaces
+            (
+                {
+                    type patch;
+                    name open1;
+                }
+            );
+            constraints
+            (
+                {
+                    type boundBox;
+                    min ( -1000.0 -1000.0 -1000.0 );
+                    max ( 1000.0 1000.0 1000.0 );
+                    keepInside true;
+                }
+            );
+            writeControl timeStep;
+            writeInterval 1;
+            executeControl timeStep;
+            executeInterval 1;
+            functionObjectLibs ( "libreport.so" );
+            outputFileFormat tsv;
+        }
+        SR-open2
+        {
+            type surfaceReport;
+            regions ( region0 );
+            fields ( T U p smoke );
+            weighting flux;
+            fluxName phi;
+            homogeneity false;
+            surfaces
+            (
+                {
+                    type patch;
+                    name open2;
+                }
+            );
+            constraints
+            (
+                {
+                    type boundBox;
+                    min ( -1000.0 -1000.0 -1000.0 );
+                    max ( 1000.0 1000.0 1000.0 );
+                    keepInside true;
+                }
+            );
+            writeControl timeStep;
+            writeInterval 1;
+            executeControl timeStep;
+            executeInterval 1;
+            functionObjectLibs ( "libreport.so" );
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (transient ras energy radiation smoke)
+        boundaryMesh
+        {
+            side1
+            {
+                type wall;
+            }
+            side2
+            {
+                type wall;
+            }
+            side3
+            {
+                type wall;
+            }
+            side4
+            {
+                type wall;
+            }
+            ground
+            {
+                type wall;
+            }
+            top
+            {
+                type wall;
+            }
+            corner
+            {
+                type wall;
+            }
+            gate
+            {
+                type patch;
+            }
+            open1
+            {
+                type patch;
+            }
+            open2
+            {
+                type patch;
+            }
+            fan2
+            {
+                type wall;
+            }
+            fan3
+            {
+                type wall;
+            }
+            fan1
+            {
+                type wall;
+            }
+        }
+        turbulenceModel kOmegaSST;
+        materials (air);
+        materialProperties
+        {
+            air
+            {
+                materialName    air;
+                materialType    fluid;
+                thermodynamics  hConst;
+                equationOfState perfectGas;
+                energy          sensibleEnthalpy;
+                buoyancyModel    rhoModel;
+
+                molWeight 28.9;
+
+                thermodynamicsCoeffs
+                {
+                    Cp 1007.0;
+                    Hf 0.0;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu 1.84E-5;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr 0.7;
+                }
+                Dsmoke [0 2 -1 0 0 0 0] 2.4e-5;
+                Sctsmoke [0 0 0 0 0 0 0] 0.7;
+            }
+        }
+        constant
+        {
+            g
+            {
+                dimensions [0  1 -2  0 0 0 0];
+                value ( 0.0 0.0 -9.81 );
+            }
+            radiationProperties
+            {
+                radiationModel fvDOM;
+                fvDOMCoeffs
+                {
+                    nPhi 2;
+                    nTheta 4;
+                    convergence 0.001;
+                    maxIter 10;
+                    initialConvergence 0.001;
+                    initialMaxIter 50;
+                }
+                solverFreq 10;
+                radiation on;
+                participating on; //no;
+                scatterModel none;
+                sootModel none;
+                absorptionEmissionModel TaylorFoster;
+                TaylorFosterCoeffs
+                {
+                    absorptivity 0.0;
+                    emissivity 0.0;
+                    E 0;
+                }
+                transmissivityModel none;
+                solarLoadMode none;
+            }
+            boundaryRadiationProperties
+            {
+                side1
+                {
+                    mode lookup;
+                    emissivity 1.0;
+                    transmissivity 0.0;
+                    Ta constant 300.0;
+                }
+                side2
+                {
+                    mode lookup;
+                    emissivity 1.0;
+                    transmissivity 0.0;
+                    Ta constant 300.0;
+                }
+                side3
+                {
+                    mode lookup;
+                    emissivity 1.0;
+                    transmissivity 0.0;
+                    Ta constant 300.0;
+                }
+                side4
+                {
+                    mode lookup;
+                    emissivity 1.0;
+                    transmissivity 0.0;
+                    Ta constant 300.0;
+                }
+                ground
+                {
+                    mode lookup;
+                    emissivity 1.0;
+                    transmissivity 0.0;
+                    Ta constant 300.0;
+                }
+                top
+                {
+                    mode lookup;
+                    emissivity 1.0;
+                    transmissivity 0.0;
+                    Ta constant 300.0;
+                }
+                corner
+                {
+                    mode lookup;
+                    emissivity 1.0;
+                    transmissivity 0.0;
+                    Ta constant 300.0;
+                }
+                gate
+                {
+                    mode lookup;
+                    emissivity 1.0;
+                    transmissivity 0.0;
+                    Ta constant 300.0;
+                }
+                open1
+                {
+                    mode lookup;
+                    emissivity 1.0;
+                    transmissivity 0.0;
+                    Ta constant 300.0;
+                }
+                open2
+                {
+                    mode lookup;
+                    emissivity 1.0;
+                    transmissivity 0.0;
+                    Ta constant 300.0;
+                }
+                fan2
+                {
+                    mode lookup;
+                    emissivity 1.0;
+                    transmissivity 0.0;
+                    Ta constant 300.0;
+                }
+                fan3
+                {
+                    mode lookup;
+                    emissivity 1.0;
+                    transmissivity 0.0;
+                    Ta constant 300.0;
+                }
+                fan1
+                {
+                    mode lookup;
+                    emissivity 1.0;
+                    transmissivity 0.0;
+                    Ta constant 300.0;
+                }
+            }
+        }
+        system
+        {
+            materialProperties
+            {
+                referenceFields
+                {
+                    p [ 1 -1 -2 0 0 0 0 ] 100000;
+                }
+            }
+            fvSolution
+            {
+                solvers
+                {
+                    smoke
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-06;
+                        relTol          0;
+                    }
+                    smokeFinal
+                    {
+                        solver          smoothSolver;
+                        smoother        symGaussSeidel;
+                        minIter         1;
+                        tolerance       1e-06;
+                        relTol          0;
+                    }
+                }
+
+                relaxationFactors
+                {
+                    fields
+                    {
+                        p               0.3;
+                        rho             1;
+                        pFinal          1;
+                        p               0.3;
+                        pFinal          1;
+                    }
+                    equations
+                    {
+                        k               1;
+                        kFinal          1;
+                        omega           1;
+                        omegaFinal      1;
+                        U               0.7;
+                        h               0.5;
+                        UFinal          1;
+                        hFinal          1;
+                        "ILambda.*"     0.7;
+                        smoke           1;
+                        smokeFinal      1;
+                    }
+                }
+
+                PIMPLE
+                {
+                    turbOnFinalIterOnly false;
+                    ddtPhiCorr      true;
+                    momentumPredictor yes;
+                    nOuterCorrectors 10;
+                    nCorrectors     1;
+                    nNonOrthogonalCorrectors 0;
+                    pRefCell        0;
+                    pRefValue       100000;
+                }
+            }
+            meshObjects
+            {
+                JF1Frame
+                {
+                    type            motionCoordinateFrame;
+                    motionFunction
+                    {
+                        type rotatingMotion;
+                        omega               304.73449;
+                    }
+                    coordinateSystem
+                    {
+                        type            cartesian;
+                        origin          ( 15 30 5 );
+                        rotation
+                        {
+                            type cylindrical;
+                            axis            ( 0 1 0 );
+                        }
+                    }
+                }
+                JF2Frame
+                {
+                    type            motionCoordinateFrame;
+                    motionFunction
+                    {
+                        type rotatingMotion;
+                        omega           constant 304.73449;
+                    }
+                    coordinateSystem
+                    {
+                        type            cartesian;
+                        origin          ( 25 30 5 );
+                        rotation
+                        {
+                            type cylindrical;
+                            axis            ( 0 1 0 );
+                        }
+                    }
+                }
+                JF3Frame
+                {
+                    type            motionCoordinateFrame;
+                    motionFunction
+                    {
+                        type rotatingMotion;
+                        omega           constant 304.73449;
+                    }
+                    coordinateSystem
+                    {
+                        type            cartesian;
+                        origin          ( 35 30 5 );
+                        rotation
+                        {
+                            type cylindrical;
+                            axis            ( 0 1 0 );
+                        }
+                    }
+                }
+            }
+            fvOptions
+            {
+                Ysmoke
+                {
+                    active true;
+                    type concentrationTransport;
+                    concentrationTransportCoeffs
+                    {
+                        fieldName smoke;
+                    }
+                }
+                JF1
+                {
+                    type            thrusterActuationDiskSource;
+                    active          true;
+                    thrusterActuationDiskSourceCoeffs
+                    {
+                        selectionMode   cellZone;
+                        cellZone        fan1;
+                        fieldNames      ( U );
+                        referenceFrame  JF1Frame;
+                        f               ( 1000 0 -1 );
+                        loadProfile     constant 1;
+                        alphaProfile    constant 0;
+                        rhoRef          1.26589;
+                        fanMode         averageVelocity;
+                    }
+                }
+                JF2
+                {
+                    type            thrusterActuationDiskSource;
+                    active          true;
+                    thrusterActuationDiskSourceCoeffs
+                    {
+                        selectionMode   cellZone;
+                        cellZone        fan2;
+                        fieldNames      ( U );
+                        referenceFrame  JF2Frame;
+                        f               ( 1000 0 -1 );
+                        loadProfile     constant 1;
+                        alphaProfile    constant 0;
+                        rhoRef          1.26589;
+                        fanMode         averageVelocity;
+                    }
+                }
+                JF3
+                {
+                    type            thrusterActuationDiskSource;
+                    active          true;
+                    thrusterActuationDiskSourceCoeffs
+                    {
+                        selectionMode   cellZone;
+                        cellZone        fan3;
+                        fieldNames      ( U );
+                        referenceFrame  JF3Frame;
+                        f               ( 1000 0 -1 );
+                        loadProfile     constant 1;
+                        alphaProfile    constant 0;
+                        rhoRef          1.26589;
+                        fanMode         averageVelocity;
+                    }
+                }
+
+                volume_heat
+                {
+                    type scalarTimeDependentSemiImplicitSource;
+                    active true;
+                    scalarTimeDependentSemiImplicitSourceCoeffs
+                    {
+                        selectionMode cellZone;
+                        cellZone car;
+                        volumeMode absolute;
+                        injectionRateSu
+                        {
+                            T table ( ( 0.0 0.0 ) ( 25.0 0.0 ) ( 75.0 7000000.0 ) ( 100 7000000.0 ) );
+                        }
+                        injectionRateSp
+                        {
+                            T table ( ( 0.0 0.0 ) ( 25.0 0.0 ) ( 75.0 0.0 ) ( 100 0.0 ) );
+                        }
+                    }
+                }
+                smoke_injection
+                {
+                    type scalarTimeDependentSemiImplicitSource;
+                    active true;
+                    scalarTimeDependentSemiImplicitSourceCoeffs
+                    {
+                        selectionMode cellZone;
+                        cellZone car;
+                        volumeMode absolute;
+                        injectionRateSu
+                        {
+                            smoke table ( ( 0.0 0.0 ) ( 25.0 0.0 ) ( 75.0 0.08 ) ( 100 0.08 ) );
+                        }
+                        injectionRateSp
+                        {
+                            smoke table ( ( 0.0 0.0 ) ( 25.0 0.0 ) ( 75.0 0.0 ) ( 100 0.0 ) );
+                        }
+                    }
+                }
+                velocityLimiter
+                {
+                    type velocityLimiterSource;
+                    active true;
+                    velocityLimiterSourceCoeffs
+                    {
+                        Ulimit 100.0;
+                        selectionMode all;
+                        velocityDamp false;
+                        velocityClip true;
+                        verbose true;
+                    }
+                }
+
+                temperatureLimiter
+                {
+                    type temperatureLimitsConstraint;
+                    active true;
+                    temperatureLimitsConstraintCoeffs
+                    {
+                        selectionMode all;
+                        Tmin 273.15;
+                        Tmax 5000.0;
+                    }
+                }
+
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type turbulentIL;
+                    I 0.05;
+                    L 0.01;
+                    Uref 1.0;
+                }
+            }
+            omega
+            {
+                initialisation
+                {
+                    type turbulentIL;
+                    I 0.05;
+                    L 0.01;
+                    Uref 1.0;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 293.15;
+                }
+            }
+            smoke
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            side1
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                }
+                T
+                {
+                    type turbulentConvectiveTemperature;
+                    value uniform 293.15;
+                    alphaWall uniform 10.0;
+                    Tinf uniform 293.15;
+                    qadd uniform 0.0;
+                    layers
+                    {
+                        layer1
+                        {
+                            thickness uniform 0.1;
+                            lambda uniform 50;
+                        }
+                    }
+                    kappaMethod fluidThermo;
+                    kappaName none;
+                }
+            }
+            side2
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                }
+                T
+                {
+                    type turbulentConvectiveTemperature;
+                    value uniform 293.15;
+                    alphaWall uniform 10.0;
+                    Tinf uniform 293.15;
+                    qadd uniform 0.0;
+                    layers
+                    {
+                        layer1
+                        {
+                            thickness uniform 0.1;
+                            lambda uniform 50;
+                        }
+                    }
+                    kappaMethod fluidThermo;
+                    kappaName none;
+                }
+            }
+            side3
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                }
+                T
+                {
+                    type turbulentConvectiveTemperature;
+                    value uniform 293.15;
+                    alphaWall uniform 10.0;
+                    Tinf uniform 293.15;
+                    qadd uniform 0.0;
+                    layers
+                    {
+                        layer1
+                        {
+                            thickness uniform 0.1;
+                            lambda uniform 50;
+                        }
+                    }
+                    kappaMethod fluidThermo;
+                    kappaName none;
+                }
+            }
+            side4
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                }
+                T
+                {
+                    type turbulentConvectiveTemperature;
+                    value uniform 293.15;
+                    alphaWall uniform 10.0;
+                    Tinf uniform 293.15;
+                    qadd uniform 0.0;
+                    layers
+                    {
+                        layer1
+                        {
+                            thickness uniform 0.1;
+                            lambda uniform 50;
+                        }
+                    }
+                    kappaMethod fluidThermo;
+                    kappaName none;
+                }
+            }
+            ground
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                }
+                T
+                {
+                    type turbulentHeatFluxTemperature;
+                    value uniform 300.0;
+                    q uniform 0.0;
+                    heatSource flux;
+                    kappaMethod fluidThermo;
+                    kappaName none;
+                }
+            }
+            top
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                }
+                T
+                {
+                    type turbulentHeatFluxTemperature;
+                    value uniform 300.0;
+                    q uniform 0.0;
+                    heatSource flux;
+                    kappaMethod fluidThermo;
+                    kappaName none;
+                }
+            }
+            corner
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                }
+                T
+                {
+                    type turbulentConvectiveTemperature;
+                    value uniform 293.15;
+                    alphaWall uniform 10.0;
+                    Tinf uniform 293.15;
+                    qadd uniform 0.0;
+                    layers
+                    {
+                        layer1
+                        {
+                            thickness uniform 0.1;
+                            lambda uniform 50;
+                        }
+                    }
+                    kappaMethod fluidThermo;
+                    kappaName none;
+                }
+            }
+            gate
+            {
+                U
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type totalPressure;
+                    value uniform 0;
+                    p0 uniform 0;
+                    addStaticHead true;
+                }
+                T
+                {
+                    type inletOutlet;
+                    value uniform 293.15;
+                    inletValue uniform 293.15;
+                }
+                smoke
+                {
+                    type inletOutlet;
+                    value uniform 0.0;
+                    inletValue uniform 0.0;
+                }
+            }
+            open1
+            {
+                U
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type totalPressure;
+                    value uniform 0;
+                    p0 uniform 0;
+                    addStaticHead true;
+                }
+                T
+                {
+                    type inletOutlet;
+                    value uniform 293.15;
+                    inletValue uniform 293.15;
+                }
+                smoke
+                {
+                    type inletOutlet;
+                    value uniform 0.0;
+                    inletValue uniform 0.0;
+                }
+            }
+            open2
+            {
+                U
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type totalPressure;
+                    value uniform 0;
+                    p0 uniform 0;
+                    addStaticHead true;
+                }
+                T
+                {
+                    type inletOutlet;
+                    value uniform 293.15;
+                    inletValue uniform 293.15;
+                }
+                smoke
+                {
+                    type inletOutlet;
+                    value uniform 0.0;
+                    inletValue uniform 0.0;
+                }
+            }
+            fan2
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                }
+                T
+                {
+                    type turbulentHeatFluxTemperature;
+                    value uniform 300.0;
+                    q uniform 0.0;
+                    heatSource flux;
+                    kappaMethod fluidThermo;
+                    kappaName none;
+                }
+            }
+            fan3
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                }
+                T
+                {
+                    type turbulentHeatFluxTemperature;
+                    value uniform 300.0;
+                    q uniform 0.0;
+                    heatSource flux;
+                    kappaMethod fluidThermo;
+                    kappaName none;
+                }
+            }
+            fan1
+            {
+                U
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type fixedFluxPressure;
+                    value uniform 0;
+                }
+                T
+                {
+                    type turbulentHeatFluxTemperature;
+                    value uniform 300.0;
+                    q uniform 0.0;
+                    heatSource flux;
+                    kappaMethod fluidThermo;
+                    kappaName none;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,37 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/default/VR2/0/volumeReport.dat";
+                reference "verification/short/default/VR2/0/volumeReport.dat";
+                variables "Tmin" "Tmax" "Tmean" "Tsolid_zonemin" "Tsolid_zonemax" "Tsolid_zonemean";
+            }
+            {
+                result "postProcessing/solid/VR1/0/volumeReport.dat";
+                reference "verification/short/solid/VR1/0/volumeReport.dat";
+                variables "Tmin" "Tmax" "Tmean";
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/default/VR2/0/volumeReport.dat";
+                reference "verification/long/default/VR2/0/volumeReport.dat";
+                variables "Tmin" "Tmax" "Tmean" "Tsolid_zonemin" "Tsolid_zonemax" "Tsolid_zonemean";
+            }
+            {
+                result "postProcessing/solid/VR1/0/volumeReport.dat";
+                reference "verification/long/solid/VR1/0/volumeReport.dat";
+                variables "Tmin" "Tmax" "Tmean";
+            }
+        );
+    }
+);

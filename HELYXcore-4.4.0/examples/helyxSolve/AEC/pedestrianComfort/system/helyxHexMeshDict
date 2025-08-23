@@ -1,0 +1,235 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+castellatedMesh true;
+snap true;
+addLayers true;
+
+blockType block;
+
+finalDecomposition ptscotch;
+
+geometry
+{
+    cylinder
+    {
+        type searchableCylinder;
+        point1 ( 0.0 0.0 -1.0 );
+        point2 ( 0.0 0.0 100.0 );
+        radius 60.0;
+    }
+
+    main
+    {
+        type searchableBox;
+        min ( -6.0 -4.0 -1.0 );
+        max ( 6.0 4.0 8.0 );
+    }
+
+    annex
+    {
+        type searchableBox;
+        min ( 2.0 4.0 -1.0 );
+        max ( 10.0 8.0 5.0 );
+    }
+    t1_wall.stl
+    {
+        type triSurfaceMesh;
+        name t1_wall;
+        appendRegionName false;
+    }
+    t2_wall.stl
+    {
+        type triSurfaceMesh;
+        name t2_wall;
+        appendRegionName false;
+    }
+    t1_in.stl
+    {
+        type triSurfaceMesh;
+        name t1_in;
+        appendRegionName false;
+    }
+    t2_in.stl
+    {
+        type triSurfaceMesh;
+        name t2_in;
+        appendRegionName false;
+    }
+}
+
+castellatedMeshControls
+{
+    features
+    (
+    );
+    refinementSurfaces
+    {
+        cylinder
+        {
+            level ( 0 0 );
+            // level ( 2 2 );
+        }
+
+        main
+        {
+            level ( 2 3 );
+        }
+
+        annex
+        {
+            level ( 2 2 );
+        }
+        t1_wall
+        {
+            level ( 3 3 );
+        }
+
+        t2_wall
+        {
+            level ( 3 3 );
+        }
+        t1_in
+        {
+            level ( 3 3 );
+        }
+        t2_in
+        {
+            level ( 3 3 );
+        }
+
+    }
+
+    refinementRegions
+    {
+        main
+        {
+            mode distance;
+            levels ( ( 10.0 1 ) );
+        }
+        annex
+        {
+            mode distance;
+            levels ( ( 10.0 1 ) );
+        }
+        t1_wall
+        {
+            mode distance;
+            levels ( ( 10.0 1 ) );
+        }
+        t2_wall
+        {
+            mode distance;
+            levels ( ( 10.0 1 ) );
+        }
+        t1_in
+        {
+            mode distance;
+            levels ( ( 10.0 1 ) );
+        }
+        t2_in
+        {
+            mode distance;
+            levels ( ( 10.0 1 ) );
+        }
+    }
+
+    locationsInMesh  
+    (
+      (( -10.027305465712613 3.411703970620211 13.605309983201387) none)
+    );
+}
+
+snapControls
+{
+}
+
+addLayersControls
+{
+    layers
+    {
+        ffminz
+        {
+            nSurfaceLayers 5;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+
+        ffmaxz
+        {
+            nSurfaceLayers 0;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+
+        cylinder
+        {
+            nSurfaceLayers 0;
+            grownUp true;
+        }
+
+        main
+        {
+            nSurfaceLayers 3;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+
+        annex
+        {
+            nSurfaceLayers 3;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        t1_wall
+        {
+            nSurfaceLayers 3;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        t2_wall
+        {
+            nSurfaceLayers 3;
+            finalLayerThickness 0.4;
+            expansionRatio 1.25;
+            grownUp automatic;
+        }
+        t1_in
+        {
+            nSurfaceLayers 0;
+            grownUp true;
+        }
+        t2_in
+        {
+            nSurfaceLayers 0;
+            grownUp true;
+        }
+
+    }
+}
+
+meshQualityControls
+{
+}
+
+// ************************************************************************* //

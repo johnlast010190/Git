@@ -1,0 +1,18 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+-------------------------------------------------------------------------------
+Description
+    Writes out the minimum and maximum values, by magnitude for non-scalar
+    fields, and the locations where they occur.
+
+\*---------------------------------------------------------------------------*/
+
+#includeEtc "caseDicts/postProcessing/minMax/fieldMinMax.cfg"
+
+fields (U p);
+
+// ************************************************************************* //

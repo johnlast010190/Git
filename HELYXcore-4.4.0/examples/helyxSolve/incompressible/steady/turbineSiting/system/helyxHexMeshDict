@@ -1,0 +1,95 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+// Which of the steps to run
+castellatedMesh true;
+snap            true;
+addLayers       false;
+
+geometry
+{
+    windTurbine1
+    {
+        type searchableBox;
+        min (581845 4785805 1061);
+        max (581855 4785815 1071);
+    }
+    windTurbine2
+    {
+        type searchableBox;
+        min (581740 4785658 1065);
+        max (581771 4785671 1079);
+    }
+    terrain.stl
+    {
+        type triSurfaceMesh;
+        name terrain;
+    }
+};
+
+castellatedMeshControls
+{
+    nCellsBetweenLevels 1;
+    features ();
+    refinementSurfaces
+    {
+        terrain
+        {
+            // Surface-wise min and max refinement level
+            level (2 2);
+
+            // Optional region-wise level specification
+            /* regions
+            {
+                windTurbine
+                {
+                    level (3 3);
+                }
+            } */
+        }
+    }
+    resolveFeatureAngle 30;
+    refinementRegions
+    {
+        windTurbine1
+        {
+            mode inside;
+            levels ((6 6));
+        }
+        windTurbine2
+        {
+            mode inside;
+            levels ((6 6));
+        }
+    }
+    locationInMesh (581770 4.78580e+06 1050);
+    allowFreeStandingZoneFaces true;
+}
+
+snapControls
+{
+    featureEdges {}
+}
+
+addLayersControls
+{
+    layers {}
+}
+
+
+// ************************************************************************* //

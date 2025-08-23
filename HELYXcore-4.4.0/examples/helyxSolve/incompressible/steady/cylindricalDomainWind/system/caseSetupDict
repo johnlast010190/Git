@@ -1,0 +1,187 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts    true;
+        resetConstDicts     true;
+        resetBoundaryMesh   true;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom startTime;
+            stopAt endTime;
+            endTime 3000.0;
+            deltaT constant 1.0;
+            writeControl timeStep;
+            writeInterval 1000.0;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type volumeReport;
+            regions ( region0 );
+            fields ( U k omega p );
+            writeControl timeStep;
+            functionObjectLibs ( "libreport.so");
+        }
+        FF
+        {
+            type forces;
+            functionObjectLibs ("libforces.so");
+            log true;
+            CofR (0 0 0);
+            patches ( main annex );
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (steady ras);
+        boundaryMesh
+        {
+            ffminz { type wall; }
+            ffmaxz { type patch; }
+            cylinder { type inlet; }
+            main { type wall; }
+            annex { type wall; }
+        }
+        turbulenceModel kOmegaSST;
+        materials (air);
+        system
+        {
+            fvSchemes
+            {
+                gradSchemes
+                {
+                    default leastSquares;
+                    turbulence cellLimited leastSquares 1;
+                    gradU cellLimited leastSquares 1.0;
+                 }
+            }
+            fvSolution
+            {
+                SIMPLE
+                {
+                    nNonOrthogonalCorrectors 0;
+                    modifiedMomentumInterp true;
+                    consistent true;
+                }
+                cache { grad(U); grad(p); }
+            }
+        }
+        fields
+        {
+            p { initialisation { type fixedValue; value uniform 0; } }
+            U { initialisation { type fixedValue; value uniform ( -10.0 0.0 0.0 ); } }
+            k { initialisation { type turbulentIL; I 0.05; L 0.01; Uref 1.0; } }
+            omega { initialisation { type turbulentIL; I 0.05; L 0.01; Uref 1.0; } }
+            nut { initialisation { type turbulentIL; I 0.05; L 0.01; Uref 1.0; } }
+        }
+        boundaryConditions
+        {
+            ffmaxz
+            {
+                p
+                {
+                    type fixedMean;
+                    meanValue constant 0;
+                    value uniform 0;
+                }
+                U
+                {
+                    type pressureInletOutletParSlipVelocity;
+                    value uniform ( -10.0 0.0 0.0 );
+                }
+                omega { type turbulentMixingLengthFrequencyInlet; mixingLength 2; k k; value uniform 1;}
+                k { type turbulentIntensityKineticEnergyInlet; intensity 0.05; value uniform 0.1; }
+            }
+
+            cylinder
+            {
+                p { type zeroGradient; }
+                U
+                {
+                    type windProfileDirectionVelocity;
+                    value uniform ( 0 0 0);
+                    profile table
+                    (
+                        ( 0.0 0.0 )
+                        ( 0.5 5.0 )
+                        ( 1.0 8.0 )
+                        ( 2.0 9.0 )
+                        ( 10.0 10.0 )
+                        ( 20.0 10.0 )
+                    );
+                    distanceType z;
+                    axis (0 0 1);
+                    windDirection table
+                    (
+                        (0 90)
+                        (1000 90)
+                        (1001 100)
+                        (2000 100)
+                        (2001 110)
+                        (3000 110)
+                    );
+                    yscale table
+                    (
+                        (0 1)
+                        (1000 1)
+                        (1001 1.2)
+                        (2000 1.2)
+                        (2001 1)
+                        (3000 1)
+                    );
+                }
+                k
+                {
+                    type interpolatedInletOutlet;
+                    profile table
+                    (
+                        ( 0.0 0.001 )
+                        ( 0.5   1 )
+                        ( 10   0.4 )
+                        ( 20   0.25 )
+                    );
+                    distanceType z;
+                    value uniform 0.1;
+                }
+                omega
+                {
+                    type velocityGradientDissipationInletOutlet;
+                    Lmax 2;
+                    value uniform 0.01;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

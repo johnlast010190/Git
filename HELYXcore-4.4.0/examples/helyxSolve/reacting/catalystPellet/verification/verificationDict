@@ -1,0 +1,33 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/default/VR_default/0/volumeReport.tsv";
+                reference "verification/short/default/VR_default/0/volumeReport.tsv";
+                variables "Tmean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/default/VR_default/0/volumeReport.tsv";
+                reference "verification/long/default/VR_default/0/volumeReport.tsv";
+                variables "Tmean";
+            }
+        );
+    }
+);
+
+unstable true;
+operatingSystem windows;
+reason "This example has a Bash script, which is not available on Windows";

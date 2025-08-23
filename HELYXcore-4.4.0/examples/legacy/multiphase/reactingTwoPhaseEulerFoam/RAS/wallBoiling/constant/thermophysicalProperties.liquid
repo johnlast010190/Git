@@ -1,0 +1,64 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      thermophysicalProperties.liquid;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+thermoType
+{
+    type            heRhoThermo;
+    mixture         multicomponentMixture;
+    transport       const;
+    thermo          hConst;
+    equationOfState rhoConst;
+    specie          specie;
+    energy          sensibleEnthalpy;
+}
+
+species
+(
+    water
+);
+
+defaultSpecie water;
+
+"(mixture|H2O|water)"
+{
+    specie
+    {
+        molWeight       18.0153;
+    }
+    equationOfState
+    {
+        R           3000;
+        rho0        959;
+        rho        959;
+    }
+    thermodynamics
+    {
+        Hf          0;
+        Cp          4195;
+        Tref        373.55;
+        Hsref       417500;
+    }
+    transport
+    {
+        mu          2.8291e-4;
+        Pr          2.289;
+    }
+}
+
+
+
+// ************************************************************************* //

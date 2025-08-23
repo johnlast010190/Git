@@ -1,0 +1,152 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o          |                                                          |
+|    o     o       | HELYX(R): Open-source CFD for Enterprise                 |
+|   o   O   o      | Version: 4.4.0                                           |
+|    o     o       | Engys Ltd. http://www.engys.com                          |
+|       o          |                                                          |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    location system;
+    object customNodeDict;
+}
+    system
+    {
+        helyx_type directory;
+        helyxHexMeshDict
+        {
+            castellatedMeshControls
+            {
+                minZoneRegionSize 100;
+                namedLocationsRezone true;
+                moveCentroidsTol 1e-6;
+            }
+            addLayersControls
+            {
+                layers
+                {
+                    ".*_to_.*"
+                    {
+                        nSurfaceLayers 2;
+                        expansionRatio 1.25;
+                        finalLayerThickness 0.4;
+                        grownUp automatic;
+                    }
+                }
+            }
+            helyx_type dictionary;
+        }
+        battery1
+        {
+            helyx_type directory;
+            fvOptions
+            {
+                battery1_TSI
+                {
+                    type scalarSemiImplicitSource;
+                    active true;
+                    scalarSemiImplicitSourceCoeffs
+                    {
+                        selectionMode cellZone;
+                        cellZone battery1;
+                        volumeMode absolute;
+                        injectionRateSu
+                        {
+                            T table
+                            (
+                                ( 0.0 1000.0 )
+                                ( 6.0 1000.0 )
+                                ( 7.0 0.0 )
+                            );
+                        }
+                        injectionRateSp
+                        {
+                            T constant 0;
+                        }
+                    }
+                }
+                battery1_runAway
+                {
+                    type thermalRunawaySource;
+                    thermalRunawaySourceCoeffs
+                    {
+                        selectionMode cellZone;
+                        cellZone battery1;
+                        volumeMode absolute;
+                        Tcritical 373.15;
+                        fieldNames ( T );
+                        HRR table
+                        (
+                            ( 0.0 0.0 )
+                            ( 2.0 10000.0 )
+                            ( 6.0 0.0 )
+                        );
+                    }
+                }
+                helyx_type dictionary;
+            }
+        }
+        battery2
+        {
+            helyx_type directory;
+            fvOptions
+            {
+                battery2_runAway
+                {
+                    type thermalRunawaySource;
+                    thermalRunawaySourceCoeffs
+                    {
+                        selectionMode cellZone;
+                        cellZone battery2;
+                        volumeMode absolute;
+                        Tcritical 373.15;
+                        fieldNames ( T );
+                        HRR table
+                        (
+                            ( 0.0 0.0 )
+                            ( 2.0 10000.0 )
+                            ( 6.0 0.0 )
+                        );
+                    }
+                }
+                helyx_type dictionary;
+            }
+        }
+        battery3
+        {
+            helyx_type directory;
+            fvOptions
+            {
+                battery3_runAway
+                {
+                    type thermalRunawaySource;
+                    thermalRunawaySourceCoeffs
+                    {
+                        selectionMode cellZone;
+                        cellZone battery3;
+                        volumeMode absolute;
+                        Tcritical 373.15;
+                        fieldNames ( T );
+                        HRR table
+                        (
+                            ( 0.0 0.0 )
+                            ( 2.0 10000.0 )
+                            ( 6.0 0.0 )
+                        );
+                    }
+                }
+                helyx_type dictionary;
+            }
+        }
+    }
+    constant
+    {
+        helyx_type directory;
+    }
+    0
+    {
+        helyx_type directory;
+    }

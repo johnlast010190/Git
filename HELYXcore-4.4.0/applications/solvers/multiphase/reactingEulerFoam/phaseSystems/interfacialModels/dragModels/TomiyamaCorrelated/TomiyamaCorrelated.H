@@ -1,0 +1,114 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : 4.4.0
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) 2014-2015 OpenFOAM Foundation
+
+Class
+    Foam::dragModels::TomiyamaCorrelated
+
+Description
+    Correlation of Tomiyama et al.
+
+    Reference:
+    \verbatim
+        "Terminal velocity of single bubbles in surface tension force dominant
+         regime"
+        Tomiyama, T., Celata, G.P., Hosokawa, S., Yoshida, S.,
+        International Journal of Multiphase Flow
+        Volume 28, Issue 9, September 2002, pp. 1497-1519
+    \endverbatim
+
+SourceFiles
+    TomiyamaCorrelated.C
+
+\*---------------------------------------------------------------------------*/
+
+#ifndef TomiyamaCorrelated_H
+#define TomiyamaCorrelated_H
+
+#include "interfacialModels/dragModels/dragModel/dragModel.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+class phasePair;
+
+namespace dragModels
+{
+
+/*---------------------------------------------------------------------------*\
+                           Class TomiyamaCorrelated Declaration
+\*---------------------------------------------------------------------------*/
+
+class TomiyamaCorrelated
+:
+    public dragModel
+{
+    // Private data
+
+        //- Coefficient
+        const dimensionedScalar A_;
+
+
+public:
+
+    //- Runtime type information
+    TypeName("TomiyamaCorrelated");
+
+
+    // Constructors
+
+        //- Construct from a dictionary and a phase pair
+        TomiyamaCorrelated
+        (
+            const dictionary& dict,
+            const phasePair& pair,
+            const bool registerObject
+        );
+
+
+    //- Destructor
+    virtual ~TomiyamaCorrelated();
+
+
+    // Member Functions
+
+        //- Drag coefficient
+        virtual tmp<volScalarField> CdRe() const;
+};
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace dragModels
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

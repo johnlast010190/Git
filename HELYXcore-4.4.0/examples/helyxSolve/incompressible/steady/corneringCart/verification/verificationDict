@@ -1,0 +1,61 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/forces1/0/moment.dat";
+                reference "verification/short/forces1/0/moment.dat";
+                variables "(total_x total_y total_z)" "(pressure_x pressure_y pressure_z)" "(viscous_x viscous_y viscous_z)" "(porous_x porous_y porous_z)";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/forces1/0/force.dat";
+                reference "verification/short/forces1/0/force.dat";
+                variables "(total_x total_y total_z)" "(pressure_x pressure_y pressure_z)" "(viscous_x viscous_y viscous_z)" "(porous_x porous_y porous_z)";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/vr1/0/volumeReport.tsv";
+                reference "verification/short/vr1/0/volumeReport.tsv";
+                variables "Umin" "Umin location" "Umax" "Umax location" "Umean" "UstDev" "pmin" "pmin location" "pmax" "pmax location" "pmean" "pstDev" "omegamin" "omegamin location" "omegamax" "omegamax location" "omegamean" "omegastDev" "kmin" "kmin location" "kmax" "kmax location";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/ventilationDrag_LF/0/ventilationDrag.dat";
+                reference "verification/short/ventilationDrag_LF/0/ventilationDrag.dat";
+                variables "ventilationDragPower" "ventilationDragCoefficient";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/ventilationDrag_RR/0/ventilationDrag.dat";
+                reference "verification/short/ventilationDrag_RR/0/ventilationDrag.dat";
+                variables "ventilationDragPower" "ventilationDragCoefficient";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/ventilationDrag_RF/0/ventilationDrag.dat";
+                reference "verification/short/ventilationDrag_RF/0/ventilationDrag.dat";
+                variables "ventilationDragPower" "ventilationDragCoefficient";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/ventilationDrag_LR/0/ventilationDrag.dat";
+                reference "verification/short/ventilationDrag_LR/0/ventilationDrag.dat";
+                variables "ventilationDragPower" "ventilationDragCoefficient";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+
+    // No long run, case too lengthy.
+);

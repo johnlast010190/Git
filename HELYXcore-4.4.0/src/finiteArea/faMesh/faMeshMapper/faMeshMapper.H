@@ -1,0 +1,220 @@
+/*---------------------------------------------------------------------------*\
+|       o        |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+|   o   O   o    |  Version : 4.4.0
+|    o     o     |  ENGYS Ltd. <http://engys.com/>
+|       o        |
+\*---------------------------------------------------------------------------
+License
+    This file is part of HELYXcore.
+    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+
+    HELYXcore is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright
+    (c) 1991-2005 OpenCFD Ltd.
+    (c) 2024 Engys Ltd.
+
+Class
+    Foam::faMeshMapper
+
+Description
+    Class holds all the necessary information for mapping fields associated
+    with faMesh
+
+Note
+    In order to capture all necessary mesh sizes and mapping data, mapper
+    is created with the OLD mesh, and provides new mesh data.
+    In the process, field mapping information is assembled from the old faMesh
+    and the mapping data
+
+SourceFiles
+    faMeshMapper.C
+
+\*---------------------------------------------------------------------------*/
+
+#ifndef faMeshMapper_H
+#define faMeshMapper_H
+
+#include "meshes/polyMesh/polyTopoChangeMap/faceMapper/faceMapper.H"
+#include "faMesh/faMeshMapper/faAreaMapper.H"
+#include "faMesh/faMeshMapper/faEdgeMapper.H"
+#include "faMesh/faMeshMapper/faBoundaryMeshMapper.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+// Forward declaration of classes
+class faMesh;
+class polyTopoChangeMap;
+
+/*---------------------------------------------------------------------------*\
+                        Class faMeshMapper Declaration
+\*---------------------------------------------------------------------------*/
+
+class faMeshMapper
+{
+    // Private data
+
+        //- Reference to mesh
+        const faMesh& mesh_;
+
+
+        // Old mesh data
+
+            //- Number of old points
+            label nOldPoints_;
+
+            //- Number of old edges
+            label nOldEdges_;
+
+            //- Number of old internal edges
+            label nOldInternalEdges_;
+
+            //- Number of old faces
+            label nOldFaces_;
+
+            //- Old patch sizes
+            labelList oldPatchSizes_;
+
+            //- Old patch starts
+            labelList oldPatchStarts_;
+
+            //- Old patch edgeFaces
+            labelListList oldPatchEdgeFaces_;
+
+
+        // Mappers
+
+            //- Area mapper
+            faAreaMapper areaMap_;
+
+            //- Edge mapper
+            faEdgeMapper edgeMap_;
+
+            //- Boundary mapper
+            faBoundaryMeshMapper boundaryMap_;
+
+
+public:
+
+    // Constructors
+
+        //- Construct from components
+        faMeshMapper(const faMesh& mesh, const polyTopoChangeMap& map);
+
+        //- Disallow default bitwise copy construction
+        faMeshMapper(const faMeshMapper&) = delete;
+
+
+    // Member Functions
+
+        //- Return reference to mesh
+        const faMesh& mesh() const
+        {
+            return mesh_;
+        }
+
+        //- Return reference to objectRegistry storing fields. Can be
+        //  removed once fields stored on pointMesh.
+        const objectRegistry& thisDb() const
+        {
+            return mesh_.thisDb();
+        }
+
+
+        // Basic sizing information
+
+            //- Return number of old points
+            label nOldPoints() const
+            {
+                return nOldPoints_;
+            }
+
+            //- Return number of old edges
+            label nOldEdges() const
+            {
+                return nOldEdges_;
+            };
+
+            //- Return number of old internal edges
+            label nOldInternalEdges() const
+            {
+                return nOldInternalEdges_;
+            };
+
+            //- Return number of old faces
+            label nOldFaces() const
+            {
+                return nOldFaces_;
+            };
+
+            //- Return old patch sizes
+            const labelList& oldPatchSizes() const
+            {
+                return oldPatchSizes_;
+            };
+
+            //- Return old patch starts
+            const labelList& oldPatchStarts() const
+            {
+                return oldPatchStarts_;
+            };
+
+            //- Return old patch edgeFaces
+            const labelListList& oldPatchEdgeFaces() const
+            {
+                return oldPatchEdgeFaces_;
+            };
+
+
+        // Mappers
+
+            //- Return surface mapper
+            const faAreaMapper& areaMap() const
+            {
+                return areaMap_;
+            }
+
+            //- Return edge mapper
+            const faEdgeMapper& edgeMap() const
+            {
+                return edgeMap_;
+            }
+
+            //- Return boundary mapper
+            const faBoundaryMeshMapper& boundaryMap() const
+            {
+                return boundaryMap_;
+            }
+
+
+    // Member Operators
+
+        //- Disallow default bitwise assignment
+        void operator=(const faMeshMapper&) = delete;
+};
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

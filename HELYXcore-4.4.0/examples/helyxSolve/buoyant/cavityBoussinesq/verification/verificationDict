@@ -1,0 +1,31 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/VP/0/p.tsv";
+                reference "verification/short/VP/0/p.tsv";
+                variables "Probe 0";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/VP/0/p.tsv";
+                reference "verification/long/VP/0/p.tsv";
+                variables "Probe 0";
+            }
+        );
+    }
+);
+
+tags asan;

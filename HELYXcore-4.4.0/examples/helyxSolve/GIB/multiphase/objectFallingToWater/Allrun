@@ -1,0 +1,34 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1    # Run from this directory
+set -e                    # Exit immediately if a command fails
+
+#------------------------------------------------------------------------------
+
+# Copy geometry
+mkdir -p constant/triSurface
+cp $HELYX_TUTORIALS/resources/geometry/GIBgeometries/GIB_box.stl constant/triSurface/
+
+# Create mesh
+helyxRun blockMesh
+
+# Create GIB
+helyxRun modifyGIBBoundary -addGIB
+
+# Setup
+helyxRun caseSetup
+
+#-- alpha water field initialization ---------#
+#helyxRun setSet -batch system/setSet.batch
+#helyxRun setFields
+
+#rm 0/pointDisplacement 0/pointMotionU
+
+# Run
+helyxRun helyxSolve
+
+# Create dummy file for ParaView visualisation
+touch objectFallingToWater.foam
+
+#------------------------------------------------------------------------------
+
+

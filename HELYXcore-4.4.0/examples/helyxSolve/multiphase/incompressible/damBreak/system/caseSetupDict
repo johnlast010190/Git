@@ -1,0 +1,263 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    system
+    {
+        controlDict
+        {
+            deltaT          0.001;
+            startTime       0;
+            endTime         6;
+            writeInterval   0.01;
+            adjustTimeStep  yes;
+            maxCo           1;
+            maxAlphaCo      1;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type volumeReport;
+            fields (U p k epsilon);
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( transient ras vof );
+
+        materials ( water air );
+
+        materialProperties
+        {
+            materialType    multiphase;
+
+            passivePhase air;
+
+            air
+            {
+                materialType fluid;
+                thermodynamics hConst;
+                equationOfState rhoConst;
+                muModel scalarFunction1;
+                kappaModel kappaPrandtl;
+
+                molWeight   28.9;
+                equationOfStateCoeffs
+                {
+                    rho         1;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cp          1007;
+                    Hf          0;
+                }
+                muModelCoeffs
+                {
+                    mu          1.48e-05;
+                }
+                kappaModelCoeffs
+                {
+                    Pr          0.7;
+                }
+            }
+
+            water
+            {
+                materialType    fluid;
+                molWeight       18.0;
+
+                equationOfState rhoConst;
+                equationOfStateCoeffs
+                {
+                    rho         1000;
+                }
+
+                thermodynamics  eConst;
+                thermodynamicsCoeffs
+                {
+                    Cv          4195;
+                    Hf          0;
+                }
+
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          1e-3;
+                }
+
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr          2.289;
+                }
+            }
+
+            air_water
+            {
+                surfaceTensionModel constant;
+                surfaceTensionModelCoeffs
+                {
+                    sigma 0.07;
+                }
+            }
+
+            referenceFields
+            {
+                p [1 -1 -2 0 0 0 0] 101325;
+            }
+        }
+
+        turbulenceModel kEpsilon;
+
+        constant
+        {
+            g
+            {
+                value           (0 -9.81 0);
+            }
+        }
+
+        system
+        {
+            fvOptions
+            {
+                volumeFractionSolver
+                {
+                    nAlphaCorr      2;
+                    nAlphaSubCycles 1;
+                    cAlpha          1;
+
+                    MULESCorr       yes;
+                    nLimiterIter    5;
+                }
+            }
+        }
+
+        boundaryMesh
+        {
+            leftWall
+            {
+                type wall;
+            }
+            rightWall
+            {
+                type wall;
+            }
+            lowerWall
+            {
+                type wall;
+            }
+            atmosphere
+            {
+                type patch;
+            }
+        }
+
+        fields
+        {
+            U {initialisation{type fixedValue; value uniform ( 0 0 0 );} }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type cellSet;
+                    defaultValue uniform 300;
+                    setSources
+                    (
+                        sphereToCell
+                        {
+                            centre (0.5 0.5 0);
+                            radius 0.1;
+                            value 578;
+                        }
+                    );
+                }
+            }
+            alpha.water
+            {
+                initialisation
+                {
+                    type cellSet;
+                    defaultValue uniform 0;
+                    setSources
+                    (
+                        boxToCell
+                        {
+                            box (0 0 -1) (0.1461 0.292 1);
+                            value 1;
+                        }
+                    );
+                }
+            }
+        }
+
+        boundaryConditions
+        {
+            atmosphere
+            {
+                U
+                {
+                    type pressureInletOutletVelocity;
+                    value uniform (0 0 0);
+                }
+                p
+                {
+                    type totalPressure;
+                    addStaticHead true;
+                    p0 uniform 0;
+                    value uniform 0;
+                }
+                alpha.water
+                {
+                    type inletOutlet;
+                    inletValue uniform 0;
+                    value uniform 0;
+                }
+                k
+                {
+                    type inletOutlet;
+                    inletValue uniform 0.1;
+                    value uniform 0.1;
+                }
+                epsilon
+                {
+                    type inletOutlet;
+                    inletValue uniform 0.1;
+                    value uniform 0.1;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //
+

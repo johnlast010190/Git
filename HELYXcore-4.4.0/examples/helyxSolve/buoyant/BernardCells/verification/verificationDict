@@ -1,0 +1,44 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/VP/0/T.tsv";
+                reference "verification/short/VP/0/T.tsv";
+                variables "Probe 0" "Probe 1";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/VP/0/U.tsv";
+                reference "verification/short/VP/0/U.tsv";
+                variables "Probe 0" "Probe 1";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/VP/0/T.tsv";
+                reference "verification/long/VP/0/T.tsv";
+                variables "Probe 0" "Probe 1";
+            }
+            {
+                result "postProcessing/VP/0/U.tsv";
+                reference "verification/long/VP/0/U.tsv";
+                variables "Probe 0" "Probe 1";
+            }
+        );
+    }
+);
+
+// This case is currently unstable on the Asan build
+// tags asan;

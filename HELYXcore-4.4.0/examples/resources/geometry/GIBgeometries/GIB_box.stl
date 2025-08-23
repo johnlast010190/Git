@@ -1,0 +1,86 @@
+solid DanielGIB
+ facet normal -1 -0 -0
+  outer loop
+   vertex 0.027 0.193 0.008
+   vertex 0.027 0.193 -0.008
+   vertex 0.027 0.177 0.008
+  endloop
+ endfacet
+ facet normal -1 0 0
+  outer loop
+   vertex 0.027 0.177 0.008
+   vertex 0.027 0.193 -0.008
+   vertex 0.027 0.177 -0.008
+  endloop
+ endfacet
+ facet normal 0 0 1
+  outer loop
+   vertex 0.043 0.193 0.008
+   vertex 0.027 0.193 0.008
+   vertex 0.043 0.177 0.008
+  endloop
+ endfacet
+ facet normal 0 0 1
+  outer loop
+   vertex 0.043 0.177 0.008
+   vertex 0.027 0.193 0.008
+   vertex 0.027 0.177 0.008
+  endloop
+ endfacet
+ facet normal 1 0 -0
+  outer loop
+   vertex 0.043 0.193 -0.008
+   vertex 0.043 0.193 0.008
+   vertex 0.043 0.177 -0.008
+  endloop
+ endfacet
+ facet normal 1 0 0
+  outer loop
+   vertex 0.043 0.177 -0.008
+   vertex 0.043 0.193 0.008
+   vertex 0.043 0.177 0.008
+  endloop
+ endfacet
+ facet normal 0 0 -1
+  outer loop
+   vertex 0.027 0.193 -0.008
+   vertex 0.043 0.193 -0.008
+   vertex 0.027 0.177 -0.008
+  endloop
+ endfacet
+ facet normal 0 0 -1
+  outer loop
+   vertex 0.027 0.177 -0.008
+   vertex 0.043 0.193 -0.008
+   vertex 0.043 0.177 -0.008
+  endloop
+ endfacet
+ facet normal 0 1 0
+  outer loop
+   vertex 0.043 0.193 0.008
+   vertex 0.043 0.193 -0.008
+   vertex 0.027 0.193 0.008
+  endloop
+ endfacet
+ facet normal 0 1 0
+  outer loop
+   vertex 0.027 0.193 0.008
+   vertex 0.043 0.193 -0.008
+   vertex 0.027 0.193 -0.008
+  endloop
+ endfacet
+ facet normal 0 -1 0
+  outer loop
+   vertex 0.043 0.177 -0.008
+   vertex 0.043 0.177 0.008
+   vertex 0.027 0.177 -0.008
+  endloop
+ endfacet
+ facet normal 0 -1 0
+  outer loop
+   vertex 0.027 0.177 -0.008
+   vertex 0.043 0.177 0.008
+   vertex 0.027 0.177 0.008
+  endloop
+ endfacet
+endsolid DanielGIB

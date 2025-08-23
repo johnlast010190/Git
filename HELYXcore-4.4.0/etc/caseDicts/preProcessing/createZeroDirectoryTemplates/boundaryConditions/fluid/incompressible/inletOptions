@@ -1,0 +1,54 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "templates";
+    object      inletOptions;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+flowSpecification
+{
+    fixedTotalPressure
+    {
+        U
+        {
+            type        pressureInletVelocity;
+            value       ${:VALUE.U};
+        }
+        p
+        {
+            type        totalPressure;
+            U           U;
+            phi         phi;
+            rho         none;
+            psi         none;
+            gamma       1;
+            p0          ${:VALUE.p};
+            value       ${:VALUE.p};
+        }
+    }
+    flowRate
+    {
+        U
+        {
+            type        flowRateInletVelocity;
+            volumeFlowRate ${:VALUE.volumeFlowRate};
+            value       ${:VALUE.U};
+        }
+        p
+        {
+            type        zeroGradient;
+        }
+    }
+}
+
+// ************************************************************************* //

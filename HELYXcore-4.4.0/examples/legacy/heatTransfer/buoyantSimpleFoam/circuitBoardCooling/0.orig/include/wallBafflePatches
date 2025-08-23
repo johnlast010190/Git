@@ -1,0 +1,50 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+
+alphat
+{
+    type            alphatWallFunction;
+    value           uniform 0;
+}
+
+epsilon
+{
+    type            epsilonWallFunction;
+    value           uniform 0.01;
+}
+
+k
+{
+    type            kqRWallFunction;
+    value           uniform 0.01;
+}
+
+nut
+{
+    type            nutkWallFunction;
+    value           uniform 0;
+}
+
+p
+{
+    type            calculated;
+    value           uniform 101325;
+}
+
+p_rgh
+{
+    type            fixedFluxPressure;
+}
+
+U
+{
+    type            fixedValue;
+    value           uniform (0 0 0);
+}
+
+// ************************************************************************* //

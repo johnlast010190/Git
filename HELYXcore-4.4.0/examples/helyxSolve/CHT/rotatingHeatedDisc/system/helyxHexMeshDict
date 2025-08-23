@@ -1,0 +1,119 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      helyxHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#includeEtc "caseDicts/mesh/generation/helyxHexMeshDict.cfg"
+
+meshAlgorithm standard;
+
+blockType block;
+
+castellatedMesh true;
+snap true;
+addLayers true;
+
+geometry
+{
+    chamber
+    {
+        type searchableBox;
+        min (-0.5 -0.5 -0.5);
+        max (0.5 0.5 0.5);
+    }
+    heatedRegion
+    {
+        type searchableBox;
+        min (0.05 -0.01 -0.01);
+        max (0.1 0.01 0.01);
+    }
+    disc
+    {
+        type searchableCylinder;
+        point1 (0.0 0.0 -0.01);
+        point2 (0.0 0.0 0.01);
+        radius 0.1;
+    }
+}
+
+castellatedMeshControls
+{
+    features ();
+    refinementSurfaces
+    {
+        chamber
+        {
+            regions {}
+            level (0 0);
+        }
+        disc
+        {
+            cellZoneInside inside;
+            faceType internal;
+            cellZone disc;
+            level (3 3);
+            faceZone disc;
+            baffleChecks false;
+        }
+        heatedRegion
+        {
+            cellZoneInside inside;
+            faceType internal;
+            cellZone heatedRegion;
+            level (3 3);
+            faceZone heatedRegion;
+            baffleChecks false;
+        }
+    }
+    refinementRegions
+    {
+        disc
+        {
+            mode inside;
+            levels ( (1 2) );
+        }
+    }
+    locationInMesh ( 0.0 0.0 0.1 );
+
+    nCellsBetweenLevels 3;
+}
+
+snapControls
+{
+}
+
+addLayersControls
+{
+    layers
+    {
+        chamber
+        {
+            nSurfaceLayers 0;
+        }
+        disc_slave
+        {
+            nSurfaceLayers 5;
+        }
+        disc
+        {
+            nSurfaceLayers 0;
+        }
+    }
+}
+
+meshQualityControls
+{
+}
+
+// ************************************************************************* //

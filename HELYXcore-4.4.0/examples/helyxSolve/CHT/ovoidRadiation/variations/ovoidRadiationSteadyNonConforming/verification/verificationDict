@@ -1,0 +1,41 @@
+runs
+(
+    short
+    {
+        steps 10;
+        checks
+        (
+            {
+                result "postProcessing/solid/VR-Tegg_solid/0/volumeReport.tsv";
+                reference "verification/short/solid/VR-Tegg_solid/0/volumeReport.tsv";
+                variables "Tmean";
+                absolute 0;
+                relative 0;
+            }
+            {
+                result "postProcessing/default/VR-Tegg_default/0/volumeReport.tsv";
+                reference "verification/short/default/VR-Tegg_default/0/volumeReport.tsv";
+                variables "Tmean";
+                absolute 0;
+                relative 0;
+            }
+        );
+    }
+    long
+    {
+        steps 50;
+        checks
+        (
+            {
+                result "postProcessing/solid/VR-Tegg_solid/0/volumeReport.tsv";
+                reference "verification/long/solid/VR-Tegg_solid/0/volumeReport.tsv";
+                variables "Tmean";
+            }
+            {
+                result "postProcessing/default/VR-Tegg_default/0/volumeReport.tsv";
+                reference "verification/long/default/VR-Tegg_default/0/volumeReport.tsv";
+                variables "Tmean";
+            }
+        );
+    }
+);

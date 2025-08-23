@@ -1,0 +1,269 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            startFrom       startTime;
+            startTime       0;
+            stopAt          endTime;
+            endTime         0.3;
+            deltaT          1e-5;
+            writeControl    timeStep;
+            writeInterval   100;
+            purgeWrite      0;
+            adjustTimeStep  no;
+            maxCo           0.5;
+        }
+    }
+    functions
+    {
+        fieldAverage1
+        {
+            type            fieldAverage;
+            libs            ("libfieldFunctionObjects.so");
+            writeControl    writeTime;
+
+            fields
+            (
+                U
+                {
+                    mean        on;
+                    prime2Mean  on;
+                    base        time;
+                }
+
+                p
+                {
+                    mean        on;
+                    prime2Mean  on;
+                    base        time;
+                }
+            );
+        }
+
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (transient les energy);
+        boundaryMesh
+        {
+            inlet
+            {
+                type inlet;
+            }
+            outlet
+            {
+                type outlet;
+            }
+            lowerWall
+            {
+                type wall;
+            }
+            upperWall
+            {
+                type wall;
+            }
+            frontBack
+            {
+                type empty;
+            }
+        }
+        turbulenceModel kEqn;
+        materials (air);
+        materialProperties
+        {
+            air
+            {
+                materialName    air;
+                materialType    fluid;
+                thermodynamics  hConst;
+                equationOfState perfectGas;
+                energy          sensibleInternalEnergy;
+
+                molWeight 28.9;
+
+                thermodynamicsCoeffs
+                {
+                    Cp 1000;
+                    Hf 0.0;
+                }
+                muModel      scalarFunction1;
+                muModelCoeffs
+                {
+                    mu 1.8e-5;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr 0.7;
+                }
+            }
+        }
+        system
+        {
+            fvSolution
+            {
+                PIMPLE
+                {
+                    nOuterCorrectors 3;
+                    nCorrectors 1;
+                    nNonOrthogonalCorrectors 0;
+                    pMinFactor      0.5;
+                    pMaxFactor      2.0;
+                }
+            }
+            fvSchemes
+            {
+                divSchemes
+                {
+                    div(phi,h)      Gauss LUST grad(h);
+                    div(phi,K)      Gauss linear;
+                    div(phi,e)      Gauss LUST grad(e);
+                    div(phiv,p)     Gauss linear;
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 0.0 0.0 0.0 );
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+            T
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 300;
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            inlet
+            {
+                U
+                {
+                    type            turbulentInlet;
+                    referenceField  uniform (10 0 0);
+                    fluctuationScale (0.02 0.01 0.01);
+                    value           uniform (10 0 0);
+                }
+                T
+                {
+                    type            fixedValue;
+                    value           uniform 300;
+                }
+                k
+                {
+                    type            fixedValue;
+                    value           uniform 2e-05;
+                }
+            }
+            outlet
+            {
+                U
+                {
+                    type            pressureInletOutletVelocity;
+                    inletValue      uniform (0 0 0);
+                    value           uniform (0 0 0);
+                }
+                p
+                {
+                    type            waveTransmissive;
+                    psi             psi;
+                    gamma           1.3;
+                    fieldInf        0;
+                    lInf            0.3;
+                    value           uniform 0;
+                }
+                T
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 300;
+                    value           uniform 300;
+                }
+            }
+            upperWall
+            {
+                T
+                {
+                    type            fixedValue;
+                    value           uniform 300;
+                }
+            }
+            lowerWall
+            {
+                T
+                {
+                    type            fixedValue;
+                    value           uniform 300;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

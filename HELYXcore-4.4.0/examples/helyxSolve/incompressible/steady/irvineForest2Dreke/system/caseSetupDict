@@ -1,0 +1,354 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    modificationSwitches
+    {
+        resetInternalFields true;
+        resetBoundaryFields true;
+        resetSystemDicts true;
+        resetConstDicts true;
+        resetBoundaryMesh true;
+        deleteUnusedFields true;
+        reuseExistingDicts false;
+        strictPatchNameChecking false;
+    }
+    system
+    {
+        controlDict
+        {
+            application helyxSolve;
+            startFrom latestTime;
+            startTime 0;
+            stopAt endTime;
+            endTime 1000.0;
+            deltaT constant 1.0;
+            writeControl timeStep;
+            writeInterval 500.0;
+            purgeWrite 1;
+            writeFormat ascii;
+            writePrecision 10;
+            writeCompression uncompressed;
+            timeFormat general;
+            timePrecision 6;
+            graphFormat raw;
+            runTimeModifiable yes;
+            adjustTimeStep false;
+            maxCo 0;
+            maxAlphaCo 0;
+            maxDeltaT 0;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U epsilon k p );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+        verticalProfiles
+        {
+            h               7.5;
+            z1              0;
+            z2              500;
+            y               0.5;
+            mast1_dist      -45.75;
+            mast2_dist      0;
+            mast3_dist      27;
+            mast4_dist      108.75;
+            setConfig
+            {
+                type            uniform;
+                axis            distance;
+                nPoints         2000;
+            }
+            fields          ( U p k epsilon );
+            interpolationScheme cellPoint;
+            setFormat       raw;
+            type            sets;
+            libs            ( "libsampling.so" );
+            writeControl    writeTime;
+            sets
+            (
+                inlet_profile
+                {
+                    type            uniform;
+                    axis            distance;
+                    nPoints         2000;
+                    start           ( 5 0.5 0 );
+                    end             ( 5 0.5 500 );
+                }
+                mast1
+                {
+                    type            uniform;
+                    axis            distance;
+                    nPoints         2000;
+                    start           ( -45.75 0.5 0 );
+                    end             ( -45.75 0.5 500 );
+                }
+                mast2
+                {
+                    type            uniform;
+                    axis            distance;
+                    nPoints         2000;
+                    start           ( 0 0.5 0 );
+                    end             ( 0 0.5 500 );
+                }
+                mast3
+                {
+                    type            uniform;
+                    axis            distance;
+                    nPoints         2000;
+                    start           ( 27 0.5 0 );
+                    end             ( 27 0.5 500 );
+                }
+                mast4
+                {
+                    type            uniform;
+                    axis            distance;
+                    nPoints         2000;
+                    start           ( 108.75 0.5 0 );
+                    end             ( 108.75 0.5 500 );
+                }
+            );
+        }
+    }
+}
+
+regions
+{
+    region0
+    {
+        state (steady ras);
+        boundaryMesh
+        {
+            outlet
+            {
+                type outlet;
+            }
+            north
+            {
+                type empty;
+            }
+            south
+            {
+                type empty;
+            }
+            inlet
+            {
+                type inlet;
+            }
+            ground
+            {
+                type wall;
+            }
+            top
+            {
+                type wall;
+            }
+            forest
+            {
+                type wall;
+            }
+        }
+        turbulenceModel realizableKE;
+        materials (air);
+        materialProperties
+        {
+            air
+            {
+                muModelCoeffs
+                {
+                    mu 1.8075e-5; // nu = 1.5e-5
+                }
+            }
+        }
+        system
+        {
+            fvOptions
+            {
+                tree_source
+                {
+                    type            dalpeMassonCanopySource;
+                    active          true;
+                    dalpeMassonCanopySourceCoeffs
+                    {
+                        selectionMode   cellZone;
+                        cellZone        forest;
+                        fields          ( U k epsilon );
+                        origin          ( 350 0 0 );
+                        direction       ( 0 0 1 );
+                        Cd              0.2;
+                        LAI             2.15;
+                        LADProfile
+                        (
+                            0.05 0.1 0.15 0.35 1.1
+                            0.9 0.5 0.2 0.15 0.05 0.01
+                        );
+                    }
+                }
+            }
+        }
+        fields
+        {
+            U
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform ( 6.17 0.0 0.0 );
+                }
+            }
+            p
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.0;
+                }
+            }
+            k
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 1.3;
+                }
+            }
+            epsilon
+            {
+                initialisation
+                {
+                    type fixedValue;
+                    value uniform 0.01;
+                }
+            }
+        }
+        boundaryConditions
+        {
+            outlet
+            {
+                U
+                {
+                    type            inletOutlet;
+                    inletValue      uniform (0 0 0);
+                    value           uniform ( 0.0 0.0 0.0 );
+                }
+                p
+                {
+                    type fixedValue;
+                    value uniform 0;
+                }
+                k
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 1.3;
+                    value           uniform 1.3;
+                }
+                epsilon
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 0.01;
+                    value           uniform 0.01;
+                }
+            }
+            inlet
+            {
+                U
+                {
+                    type                 atmBoundaryLayerInletVelocity;
+                    Uref                 6.17;
+                    Zref                 15;
+                    zDir                 (0 0 1);
+                    flowDir              (1 0 0);
+                    z0                   uniform 0.06;
+                    zGround              uniform 0.0;
+                    value                uniform ( 6.17 0 0);
+                }
+                k
+                {
+                    type                 atmBoundaryLayerInletK;
+                    Uref                 6.17;
+                    Zref                 15;
+                    zDir                 (0 0 1);
+                    flowDir              (1 0 0);
+                    z0                   uniform 0.06;
+                    zGround              uniform 0.0;
+                    value                uniform 1.3;
+                }
+                epsilon
+                {
+                    type                 atmBoundaryLayerInletEpsilon;
+                    Uref                 6.17;
+                    Zref                 15;
+                    zDir                 (0 0 1);
+                    flowDir              (1 0 0);
+                    z0                   uniform 0.06;
+                    zGround              uniform 0.0;
+                    value                uniform 0.01;
+                }
+            }
+            ground
+            {
+                nut
+                {
+                    type nutkAtmRoughWallFunction;
+                    roughnessHeight 0.06;
+                    value uniform 0.0;
+                }
+            }
+            top
+            {
+                U
+                {
+                    type slip;
+                }
+                p
+                {
+                    type slip;
+                }
+                nut
+                {
+                    type slip;
+                }
+                k
+                {
+                    type slip;
+                }
+                epsilon
+                {
+                    type slip;
+                }
+            }
+            forest
+            {
+                nut
+                {
+                    type nutkAtmRoughWallFunction;
+                    roughnessHeight 0.06;
+                    value uniform 0.0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //

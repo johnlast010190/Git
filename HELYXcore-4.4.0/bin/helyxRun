@@ -1,0 +1,530 @@
+#!/bin/bash
+#---------------------------------------------------------------------------
+#|       o        |
+#|    o     o     |  HELYX (R) : Open-source CFD for Enterprise
+#|   o   O   o    |  Version : 4.4.0
+#|    o     o     |  ENGYS Ltd. <http://engys.com/>
+#|       o        |
+#---------------------------------------------------------------------------
+#License
+#    This file is part of HELYXcore.
+#    HELYXcore is based on OpenFOAM (R) <http://www.openfoam.org/>.
+#
+#    HELYXcore is free software: you can redistribute it and/or modify it
+#    under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    HELYXcore is distributed in the hope that it will be useful, but WITHOUT
+#    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+#    for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with HELYXcore.  If not, see <http://www.gnu.org/licenses/>.
+
+# Copyright
+#    (c) 2011-2015 OpenFOAM Foundation
+#    (c) 2022 Engys Ltd
+#
+# Script
+#     helyxRun
+#
+# Description
+#     Convenient script for running HELYX commands in series or parallel
+#
+#------------------------------------------------------------------------------
+usage() {
+    exec 1>&2
+    while [ "$#" -ge 1 ]; do echo "$1"; shift; done
+    cat<<USAGE
+
+Usage: ${0##*/} [OPTION] [<application>] ...
+options:
+  -case <dir>       specify alternative case directory, default is the cwd
+  -parallel         run in parallel. Number of processes deduced unless
+                    overridden by the -np option.
+  -np <numProcs>    force parallel running on <numProcs> processors
+  -serial           run in series (single process)
+  -output           send output to screen
+  -quiet            do not send output to screen
+  -append           append to log file instead of overwriting it
+  -background       do not wait for execution to complete (when not using
+                    -output)
+  -force            run regardless of whether log.<application> would be
+                    overwritten
+  -log <file>       provide an alternative log file name. Defaults to
+                    log.<application>
+  -nolog            do not create a log file
+  -version <ver>    specify an alternative OpenFOAM version
+  -help             print the usage
+
+* Run a HELYX job if log.<application> does not yet exist (or if either -append
+  or -force is specified).
+* Redirects the output to 'log.<application>' in the case directory. If the
+  application returns an error (and not running with -append), renames the log
+  file to log.<application>.err
+* If neither -parallel nor -serial is specified, the application will be run
+  in parallel if it supports the -parallel switch and the case is decomposed.
+  Deduces the number of processors from the decomposition and/or
+  decomposeParDict.
+* If neither -output nor -quiet is specified, will send output to the screen
+  if running from the command line, and not if running from a script.
+* If <application> is not specified, it will default to the application
+  specified in controlDict.
+
+
+USAGE
+    exit 1
+}
+
+# Echo strings that have single quotes
+echoArgs() {
+    addSpace=""
+
+    for stringItem in "$@"; do
+
+        echo -n "${addSpace}"
+
+        if [ "${stringItem##* }" = "$stringItem" ]
+        then
+            echo -n "$stringItem"
+            addSpace=" "
+        else
+            echo -n "'$stringItem'"
+            addSpace=" "
+        fi
+
+    done
+
+    unset stringItem addSpace
+}
+
+unset version
+
+# Replacement for possibly buggy 'which'
+findExec() {
+    case "$1" in
+    */*)
+        if [ -x "$1" ]
+        then
+            echo "$1"
+            return 0
+        fi
+        ;;
+    esac
+
+    oldIFS=$IFS
+    IFS=':'
+    for d in $PATH
+    do
+        # echo "testing: $d/$1" 1>&2
+        if [ -x "$d/$1" -a ! -d "$d/$1" ]
+        then
+            # echo "Found exec: $d/$1" 1>&2
+            IFS=$oldIFS
+            echo "$d/$1"
+            return 0
+        fi
+     done
+     IFS=$oldIFS
+     echo ""
+     return 1
+}
+
+
+# Main script
+#~~~~~~~~~~~~
+unset parallelOpt serialOpt npOpt outputOpt quietOpt appendOpt backgroundOpt forceOpt logOpt nologOpt logFile version
+
+
+# Parse options
+while [ "$#" -gt 0 ]
+do
+   case "$1" in
+   -h | -help)
+      usage
+      ;;
+   -case)
+      [ "$#" -ge 2 ] || usage "'$1' option requires an argument"
+      cd "$2" 2>/dev/null || usage "directory does not exist:  '$2'"
+      shift 2
+      ;;
+   -p | -parallel)
+      parallelOpt=true
+      shift
+      ;;
+   -s | -serial)
+      serialOpt=true
+      shift
+      ;;
+   -np )
+      [ "$#" -ge 2 ] || usage "'$1' option requires an argument"
+      npOpt=true
+      forcedNProcs="$2"
+      shift 2
+      ;;
+   -o | -output)
+      outputOpt=true
+      shift
+      ;;
+   -q | -quiet)
+      quietOpt=true
+      shift
+      ;;
+   -a | -append)
+      appendOpt=true
+      shift
+      ;;
+   -b | -background)
+      backgroundOpt=true
+      shift
+      ;;
+   -f | -force)
+      forceOpt=true
+      shift
+      ;;
+   -l | -log)
+      [ "$#" -ge 2 ] || usage "'$1' option requires an argument"
+      logOpt=true
+      logFile="$2"
+      shift 2
+      ;;
+    -nolog)
+      nologOpt=true
+      shift
+      ;;
+   -v | -version)
+      [ "$#" -ge 1 ] || usage "'$1' option requires an argument"
+      version="$2"
+      shift 2
+      ;;
+   --)
+      shift
+      break
+      ;;
+   -*)
+      usage "invalid option '$1'"
+      ;;
+   *)
+      break
+      ;;
+   esac
+done
+
+# Sanity checks
+if [ "$parallelOpt" = true ] && [ "$serialOpt" = true ]
+then
+    echo "-parallel and -serial options cannot both be specified"
+    exit 1
+fi
+if [ "$outputOpt" = true ] && [ "$quietOpt" = true ]
+then
+    echo "-output and -quiet options cannot both be specified"
+    exit 1
+fi
+if [ "$logOpt" = true ] && [ "$nologOpt" = true ]
+then
+    echo "-log and -nolog options cannot both be specified"
+    exit 1
+fi
+
+if [ "$#" -ge 1 ]
+then
+    APPNAME="$1"
+    shift
+else
+    APPNAME=$(foamDictionary -entry application -value system/controlDict 2>/dev/null)
+    if [ ! $? -eq 0 ]
+    then
+        echo "Could not determine application from entry in controlDict"
+        exit 1
+    fi
+    echo "Application name '$APPNAME' read from controlDict"
+fi
+
+# -np 1 implies -serial otherwise -parallel
+if [ "$npOpt" = true ]
+then
+    if (( "$forcedNProcs" == 1 ))
+    then
+        serialOpt=true
+        if [ "$parallelOpt" = true ]
+        then
+            echo "-np 1 and -parallel options cannot both be specified"
+            exit 1
+        fi
+    else
+        parallelOpt=true
+        if [ "$serialOpt" = true ]
+        then
+            echo "-np <n> and -serial options cannot both be specified with <n> > 1"
+            exit 1
+        fi
+    fi
+fi
+
+# Use helyxExec for a specified version
+# Also need helyxExec for remote (parallel) runs
+if [ -n "$version" -o "$parallelOpt" = true ]
+then
+    # When possible, determine if application even exists
+    if [ -z "$version" ]
+    then
+        findExec $APPNAME >/dev/null || usage "Application '$APPNAME' not found"
+    fi
+
+    # Use helyxExec for dispatching
+    APPLICATION=`findExec helyxExec` || usage "'helyxExec' not found"
+
+    if [ -n "$version" ]
+    then
+        APPLICATION="$APPLICATION -version $version $APPNAME"
+    else
+        APPLICATION="$APPLICATION $APPNAME"
+    fi
+
+else
+    APPLICATION=`findExec $APPNAME` || usage "Application '$APPNAME' not found"
+fi
+
+# Set default log file name
+if [ -z "$logFile" ] && [ ! "$nologOpt" = true ]
+then
+    logFile="log.$APPNAME"
+fi
+
+# Check for existing log file
+if [ ! "$appendOpt" = true ] && [ ! "$forceOpt" = true ] && [ -e "$logFile" ] && [ ! "$nologOpt" = true ]
+then
+    echo "Not running $APPNAME since $logFile already exists"
+    # Consider this successful
+    exit 0
+fi
+
+unset parallelAble
+if [ ! "$serialOpt" = true ] && [ ! "$parallelOpt" = true ]
+then
+    # Auto-detect serial vs parallel
+
+    # Check if application supports parallel
+    $APPLICATION -help | grep -q "\-parallel"
+    if [ $? = 0 ]
+    then
+        parallelAble=true
+    fi
+fi
+
+unset isDecomposed
+if [ "$parallelAble" = true ] || [ "$parallelOpt" = true ]
+then
+    # Check if the case is decomposed
+    if [ -r "processor0" ]
+    then
+        NPROCS="`/bin/ls -1d processor* | wc -l`"
+        isDecomposed=true
+    fi
+fi
+
+unset runParallel
+if [ ! "$serialOpt" = true ] && [ ! "$parallelOpt" = true ] && [ "$parallelAble" = true ] && [ "$isDecomposed" = true ]
+then
+    runParallel=true
+fi
+[ "$parallelOpt" = true ] && runParallel=true
+
+unset sendOutputToScreen
+if [ "$outputOpt" = true ]
+then
+    sendOutputToScreen=true
+elif [ ! "$quietOpt" = true ]
+then
+    if [ ! $SHLVL -gt 2 ]
+    then
+        sendOutputToScreen=true
+    fi
+fi
+
+set -o pipefail
+
+if [ "$runParallel" = true ]
+then
+    # parallel
+    # ~~~~~~~~
+
+    if [ "$npOpt" = true ]
+    then
+        # Use the requested number of processors
+        NPROCS="$forcedNProcs"
+    else
+        # Number of processors not stipulated - try to determine it
+        # NPROCS currently holds the number of processor directories
+        if [ ! "$isDecomposed" = true ] || [ "$APPNAME" = "redistributePar" ]
+        then
+            # Special treatment for redistributePar - run on max of
+            # number of decompose directories and num procs in decomposeParDict
+            echo "Reading number of processes from decomposeParDict"
+            if [ -r system/decomposeParDict ]
+            then
+                decomposeParProcs=$(foamDictionary -entry numberOfSubdomains -value system/decomposeParDict 2>/dev/null)
+                if [ ! $? -eq 0 ]
+                then
+                    echo "Could not read numberOfSubdomains entry in system/decomposeParDict"
+                    exit 1
+                fi
+            else
+                echo "Cannot find system/decomposeParDict file required to decompose the case for parallel running."
+                echo "Please consult the User Guide for details of parallel running"
+                exit 1
+            fi
+
+            if [ "$isDecomposed" = true ]
+            then
+                # Must be redistributePar
+                if (( "$decomposeParProcs" > "$NPROCS" ))
+                then
+                    NPROCS="$decomposeParProcs"
+                fi
+            else
+                NPROCS="$decomposeParProcs"
+            fi
+        fi
+    fi
+
+    #
+    # Find mpirun
+    #
+    mpirun=`findExec mpirun` || usage "'mpirun' not found"
+
+    # Don't append -np <numprocs> if running in SLURM as this interferes with
+    # its internal node allocations
+    if [ -z "$SLURM_JOB_ID" ]
+    then
+        mpiopts="-np $NPROCS"
+    fi
+
+    #
+    # Check if the machine ready to run parallel
+    #
+    case "$HELYX_MPI_NAME" in
+    openmpi*)
+        # add hostfile info
+        for hostfile in \
+            hostfile \
+            machines \
+            system/hostfile \
+            system/machines \
+            ;
+        do
+            if [ -r $hostfile ]
+            then
+                mpiopts="$mpiopts -hostfile $hostfile"
+                break
+            fi
+        done
+
+        #
+        # Send HELYX_SETTINGS_FILE to parallel processes, so that the proper
+        # definitions are sent as well.
+        #
+        mpiopts="$mpiopts -x HELYX_SETTINGS_FILE -oversubscribe"
+
+        ;;
+    *)
+        if $mpirun -np 2 -oversubscribe sleep 0.00001 > /dev/null 2>&1
+        then
+            # Manually check if the -oversubscribe flag is available
+            mpiopts="$mpiopts -oversubscribe"
+        fi
+        ;;
+    esac
+
+    mpiopts="$mpiopts $HELYX_MPI_OPTIONS"
+
+    #
+    # Run (in parallel)
+    #
+    echo "Running $APPNAME in parallel on $NPROCS processors"
+    if [ "$sendOutputToScreen" = true ]
+    then
+        [ "$appendOpt" = true ] && teeOpts=" -a"
+        if [ "$nologOpt" = true ]
+        then
+            $mpirun $mpiopts $APPLICATION "$@" -parallel < /dev/null &
+        else
+            $mpirun $mpiopts $APPLICATION "$@" -parallel < /dev/null 2>&1 | tee $teeOpts "$logFile" &
+        fi
+    else
+        if [ "$appendOpt" = true ]
+        then
+            if [ "$nologOpt" = true ]
+            then
+                $mpirun $mpiopts $APPLICATION "$@" -parallel < /dev/null &
+            else
+                $mpirun $mpiopts $APPLICATION "$@" -parallel < /dev/null >> "$logFile" 2>&1 &
+            fi
+        else
+            if [ "$nologOpt" = true ]
+            then
+                $mpirun $mpiopts $APPLICATION "$@" -parallel < /dev/null &
+            else
+                $mpirun $mpiopts $APPLICATION "$@" -parallel < /dev/null > "$logFile" 2>&1 &
+            fi
+        fi
+    fi
+    pid=$!
+else
+    #
+    # Run (on single processor)
+    #
+    echo "Running $APPNAME"
+    if [ "$sendOutputToScreen" = true ]
+    then
+        [ "$appendOpt" = true ] && teeOpts=" -a"
+        if [ "$nologOpt" = true ]
+        then
+            $APPLICATION "$@" &
+        else
+            $APPLICATION "$@" 2>&1 | tee $teeOpts "$logFile" &
+        fi
+    else
+        if [ "$appendOpt" = true ]
+        then
+            if [ "$nologOpt" = true ]
+            then
+                $APPLICATION "$@" >> /dev/null &
+            else
+                $APPLICATION "$@" >> "$logFile" 2>&1 &
+            fi
+        else
+            if [ "$nologOpt" = true ]
+            then
+                $APPLICATION "$@" > /dev/null &
+            else
+                $APPLICATION "$@" > "$logFile" 2>&1 &
+            fi
+        fi
+    fi
+    pid=$!
+fi
+
+if [ ! "$backgroundOpt" = true ]
+then
+    trap 'kill $pid' INT
+    wait $pid
+    exitCode=$?
+    if [ ! "$appendOpt" = true ] && [ ! "$nologOpt" = true ]
+    then
+        rm -f "$logFile.err"
+        if [ ! $exitCode = 0 ]
+        then
+            mv "$logFile" "$logFile.err"
+            echo "$APPNAME exited with error. Output saved to $logFile.err"
+        fi
+    fi
+
+    exit $exitCode
+fi
+
+
+#------------------------------------------------------------------------------

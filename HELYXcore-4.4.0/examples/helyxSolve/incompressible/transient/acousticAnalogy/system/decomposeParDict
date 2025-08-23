@@ -1,0 +1,35 @@
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+
+    root            "";
+    case            "";
+    instance        "";
+    local           "";
+
+    class           dictionary;
+    object          decomposeParDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+numberOfSubdomains  6; 
+
+method               hierarchical;
+
+hierarchicalCoeffs
+{
+    n                    (3 2 1);
+    order                yxz;
+}
+
+distributed false;
+
+//provide roots for distributed execution
+roots
+(
+
+);
+
+// ************************************************************************* //

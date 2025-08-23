@@ -1,0 +1,318 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+|       o        |                                                            |
+|    o     o     |  HELYX (R) : Open-source CFD for Enterprise                |
+|   o   O   o    |  Version : 4.4.0                                           |
+|    o     o     |  ENGYS Ltd. <http://engys.com/>                            |
+|       o        |                                                            |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      caseSetupDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+global
+{
+    system
+    {
+        controlDict
+        {
+            application     helyxSolve;
+            stopAt          endTime;
+            endTime         10;
+            deltaT          0.001;
+            writeInterval   0.1;
+            purgeWrite      0;
+            adjustTimeStep  yes;
+            maxCo           1;
+            maxAlphaCo      1;
+            maxDeltaT       1;
+        }
+    }
+    functions
+    {
+        VR
+        {
+            type             volumeReport;
+            fields           ( U p AoA );
+            executeControl   onEnd;
+            writeControl     onEnd;
+            outputFileFormat tsv;
+        }
+       
+    }
+}
+
+regions
+{
+    region0
+    {
+        state ( transient ras vof AoA );
+        
+        materials ( water air );
+
+        materialProperties
+        {
+            materialType    multiphase;
+            
+            buoyancyModel   rhoModel;
+
+            air
+            {
+                materialType    fluid;
+                thermodynamics  hConst;
+                equationOfState rhoConst;
+                molWeight   28.9;
+                equationOfStateCoeffs
+                {
+                    rho        1;
+                    rho0       0;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cp          1007;
+                    Hf          0;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          1.48e-05;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr          0.7;
+                }
+            }
+
+            water
+            {
+                materialType    fluid;
+                thermodynamics  hConst;
+                equationOfState rhoConst;
+                molWeight   18.0;
+                R           7255;
+                equationOfStateCoeffs
+                {
+                    rho        1000;
+                }
+                thermodynamicsCoeffs
+                {
+                    Cp          4195;
+                    Hf          0;
+                }
+                muModel scalarFunction1;
+                muModelCoeffs
+                {
+                    mu          1e-03;
+                }
+                kappaModel kappaPrandtl;
+                kappaModelCoeffs
+                {
+                    Pr          2.289;
+                }
+            }
+
+            referenceFields
+            {
+                p       [1 -1 -2 0 0 0 0] 101325;
+                TConst  [ 0 0 0 1 0 0 0 ] 273.15;
+            }
+            
+            air_water
+            {
+                surfaceTensionModel constant;
+                surfaceTensionModelCoeffs
+                {
+                    sigma           0.073;
+                }
+            }
+            
+            AoAconcentrationTransport
+            {
+                D [0 2 -1 0 0 0 0] 0.001;
+                Sct 1;
+                Sc 1;
+            }            
+        }
+        
+        turbulenceModel     kEpsilon;
+        
+        constant
+        {
+            g
+            {
+                dimensions      [0 1 -2 0 0 0 0];
+                value           (0 -9.81 0);
+            }
+        }
+        system
+        {
+            meshObjects
+            {
+                porousFrame
+                {
+                    type            coordinateFrame;
+                    coordinateSystem
+                    {
+                        type    cartesian;
+                        origin  (0 0 0);
+                        rotation
+                        {
+                            type    axesRotation;
+                            e1  (0.70710678 0.70710678 0);
+                            e2  (0 0 1);
+                        }
+                    }
+                }
+            }
+            fvOptions
+            {
+                volumeFractionSolver
+                {
+                    nAlphaSubCycles 2;
+                    cAlpha          1;
+                }
+                YAoA
+                {
+                    phaseName       alpha.water;
+                    phasicSources   true;
+                    stablePhasic    true;
+                }
+                porosity1
+                {
+                    type            explicitPorositySource;
+
+                    explicitPorositySourceCoeffs
+                    {
+                        selectionMode   cellZone;
+                        cellZone        porosity;
+
+                        type            DarcyForchheimer;
+
+                        d   (2e8 -1000 -1000);
+                        f   (0 0 0);
+                        referenceFrame  porousFrame;
+                    }
+                }
+            }
+        }
+
+        boundaryMesh
+        {
+            front
+            {
+                type            wall;
+            }
+            back
+            {
+                type            wall;
+            }
+            walls
+            {
+                type            wall;
+            }
+            inlet
+            {
+                type            inlet;
+            }
+            outlet
+            {
+                type            outlet;
+            }
+        }
+
+        fields
+        {
+            AoA {initialisation{type fixedValue; value uniform 0;} }
+            p {initialisation{type buoyantPressure; value uniform 0;} }
+            epsilon {initialisation{type fixedValue; value uniform 200;} }
+            k {initialisation{type fixedValue; value uniform 1;} }
+        }
+
+        boundaryConditions
+        {
+            porosityWall
+            {
+                k
+                {
+                    type            kqRWallFunction;
+                    value           uniform 1;
+                }
+                nut
+                {
+                    type            nutkWallFunction;
+                    value           uniform 0;
+                }
+                AoA
+                {
+                    type            zeroGradient;
+                }
+                U
+                {
+                    type            slip;
+                    value           uniform (0 0 0);
+                }
+            }
+            inlet
+            {
+                alpha.water
+                {
+                    type            fixedValue;
+                    value           uniform 1;
+                }
+                epsilon
+                {
+                    type            turbulentMixingLengthDissipationRateInlet;
+                    mixingLength    0.005;
+                    value           uniform 200;
+                }
+                k
+                {
+                    type            turbulentIntensityKineticEnergyInlet;
+                    intensity       0.05;
+                    value           uniform 1;
+                }
+                AoA
+                {
+                    type            fixedValue;
+                    value           uniform 0;
+                }
+                U
+                {
+                    type            flowRateInletVelocity;
+                    massFlowRate    constant 0.1;
+                    value           uniform (0 0 0);
+                }
+            }
+            outlet
+            {
+                epsilon
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 200;
+                    value           uniform 200;
+                }
+                k
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 1;
+                    value           uniform 1;
+                }
+                AoA
+                {
+                    type            inletOutlet;
+                    inletValue      uniform 0;
+                    value           uniform 0;
+                }
+            }
+        }
+    }
+}
+
+
+// ************************************************************************* //
+
